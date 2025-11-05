@@ -1,0 +1,158 @@
+{
+  "app": {
+    "title": "Komandorr Dashboard",
+    "description": "Monitor your apps, websites, panels and projects"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "services": "Services",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "allServices": "All Services",
+    "online": "Online",
+    "offline": "Offline",
+    "problem": "Problem",
+    "noServices": "No services configured yet",
+    "addService": "Add Service"
+  },
+  "service": {
+    "name": "Name",
+    "url": "URL",
+    "type": "Type",
+    "status": "Status",
+    "lastCheck": "Last Check",
+    "responseTime": "Response Time",
+    "description": "Description",
+    "checkNow": "Check Now",
+    "edit": "Edit",
+    "delete": "Delete",
+    "types": {
+      "app": "App",
+      "website": "Website",
+      "panel": "Panel",
+      "project": "Project"
+    }
+  },
+  "form": {
+    "addService": "Add Service",
+    "editService": "Edit Service",
+    "cancel": "Cancel",
+    "save": "Save",
+    "create": "Create"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "language": "Language",
+    "themes": {
+      "dark": "Dark",
+      "plex": "Plex",
+      "jellyfin": "Jellyfin",
+      "emby": "Emby",
+      "mind": "Mind Stone",
+      "power": "Power Stone",
+      "reality": "Reality Stone",
+      "soul": "Soul Stone",
+      "space": "Space Stone",
+      "time": "Time Stone",
+      "seerr": "Seerr"
+    },
+    "languages": {
+      "en": "English",
+      "de": "Deutsch"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "close": "Close",
+    "refresh": "Refresh"
+  },
+  "versionBadge": {
+    "version": "Version",
+    "upToDate": "Up to Date",
+    "updateAvailable": "Update Available",
+    "currentVersion": "You are running the latest version",
+    "clickForReleases": "Click to view releases"
+  },
+  "loading": {
+    "initializing": "Initializing Komandorr...",
+    "messages": [
+      "At least you're not on hold...",
+      "Loading your services with style...",
+      "Convincing servers that you're important...",
+      "Asking the hamsters to run faster...",
+      "Reticulating splines...",
+      "Calibrating flux capacitor...",
+      "Brewing fresh pixels...",
+      "Waking up the server hamsters...",
+      "Downloading more RAM...",
+      "Polishing your dashboard...",
+      "Teaching robots to monitor things...",
+      "Consulting the magic 8-ball...",
+      "Summoning the monitoring spirits...",
+      "Making it look effortless...",
+      "99 little bugs in the code... wait, now 100...",
+      "Time is an illusion. Loading time doubly so...",
+      "Are we there yet?",
+      "Patience, young padawan...",
+      "Loading the loading screen...",
+      "This is taking longer than expected..."
+    ]
+  },
+  "auth": {
+    "signInToContinue": "Sign in to continue",
+    "username": "Username",
+    "password": "Password",
+    "enterUsername": "Enter your username",
+    "enterPassword": "Enter your password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "logout": "Logout",
+    "invalidCredentials": "Invalid username or password",
+    "loginError": "Login failed. Please try again.",
+    "connectionError": "Connection error. Please check your network.",
+    "authSettings": "Authentication Settings",
+    "enableAuth": "Enable Authentication",
+    "authEnabled": "Authentication is enabled",
+    "authDisabled": "Authentication is disabled",
+    "changeCredentials": "Change Credentials",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "updateCredentials": "Update Credentials",
+    "updating": "Updating...",
+    "credentialsUpdated": "Credentials updated successfully",
+    "passwordMismatch": "Passwords do not match",
+    "updateError": "Failed to update credentials"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Info"
+  },
+  "about": {
+    "title": "About Komandorr",
+    "version": "Version",
+    "latestAvailable": "Latest Available",
+    "upToDate": "Up to Date",
+    "outOfDate": "Update Available",
+    "unknown": "Unknown",
+    "timeZone": "Time Zone",
+    "gettingSupport": "Getting Support",
+    "githubIssues": "GitHub Issues",
+    "discordServer": "Discord Server",
+    "supportKomandorr": "Support Komandorr",
+    "helpPayForCoffee": "Help pay for coffee",
+    "supportDevelopment": "Support continued development",
+    "preferred": "Preferred",
+    "webuiDevelopedWith": "WebUI developed with",
+    "by": "by",
+    "forTheCommunity": "for the community"
+  }
+}

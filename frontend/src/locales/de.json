@@ -1,0 +1,158 @@
+{
+  "app": {
+    "title": "Komandorr Dashboard",
+    "description": "Überwachen Sie Ihre Apps, Webseiten, Panels und Projekte"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "services": "Dienste",
+    "settings": "Einstellungen",
+    "about": "Über"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "allServices": "Alle Dienste",
+    "online": "Online",
+    "offline": "Offline",
+    "problem": "Problem",
+    "noServices": "Noch keine Dienste konfiguriert",
+    "addService": "Dienst hinzufügen"
+  },
+  "service": {
+    "name": "Name",
+    "url": "URL",
+    "type": "Typ",
+    "status": "Status",
+    "lastCheck": "Letzte Prüfung",
+    "responseTime": "Antwortzeit",
+    "description": "Beschreibung",
+    "checkNow": "Jetzt prüfen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "types": {
+      "app": "App",
+      "website": "Webseite",
+      "panel": "Panel",
+      "project": "Projekt"
+    }
+  },
+  "form": {
+    "addService": "Dienst hinzufügen",
+    "editService": "Dienst bearbeiten",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "create": "Erstellen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "theme": "Theme",
+    "language": "Sprache",
+    "themes": {
+      "dark": "Dunkel",
+      "plex": "Plex",
+      "jellyfin": "Jellyfin",
+      "emby": "Emby",
+      "mind": "Mind Stone",
+      "power": "Power Stone",
+      "reality": "Reality Stone",
+      "soul": "Soul Stone",
+      "space": "Space Stone",
+      "time": "Time Stone",
+      "seerr": "Seerr"
+    },
+    "languages": {
+      "en": "English",
+      "de": "Deutsch"
+    }
+  },
+  "common": {
+    "loading": "Lade...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "confirm": "Bestätigen",
+    "close": "Schließen",
+    "refresh": "Aktualisieren"
+  },
+  "versionBadge": {
+    "version": "Version",
+    "upToDate": "Aktuell",
+    "updateAvailable": "Update verfügbar",
+    "currentVersion": "Sie verwenden die neueste Version",
+    "clickForReleases": "Klicken Sie hier für Releases"
+  },
+  "loading": {
+    "initializing": "Komandorr wird initialisiert...",
+    "messages": [
+      "Zumindest warten Sie nicht in der Warteschleife...",
+      "Ihre Dienste werden stilvoll geladen...",
+      "Überzeugen Server, dass Sie wichtig sind...",
+      "Bitte die Hamster schneller zu laufen...",
+      "Splines werden retikuliert...",
+      "Flusskondensator wird kalibriert...",
+      "Frische Pixel werden gebraut...",
+      "Server-Hamster werden geweckt...",
+      "Mehr RAM wird heruntergeladen...",
+      "Dashboard wird poliert...",
+      "Roboter lernen zu überwachen...",
+      "Magische 8-Kugel wird konsultiert...",
+      "Überwachungsgeister werden beschworen...",
+      "Sieht mühelos aus...",
+      "99 kleine Bugs im Code... warte, jetzt 100...",
+      "Zeit ist eine Illusion. Ladezeit erst recht...",
+      "Sind wir schon da?",
+      "Geduld, junger Padawan...",
+      "Ladebildschirm wird geladen...",
+      "Das dauert länger als erwartet..."
+    ]
+  },
+  "auth": {
+    "signInToContinue": "Anmelden um fortzufahren",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "enterUsername": "Benutzername eingeben",
+    "enterPassword": "Passwort eingeben",
+    "signIn": "Anmelden",
+    "signingIn": "Anmeldung läuft...",
+    "logout": "Abmelden",
+    "invalidCredentials": "Ungültiger Benutzername oder Passwort",
+    "loginError": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "connectionError": "Verbindungsfehler. Bitte überprüfen Sie Ihr Netzwerk.",
+    "authSettings": "Authentifizierungseinstellungen",
+    "enableAuth": "Authentifizierung aktivieren",
+    "authEnabled": "Authentifizierung ist aktiviert",
+    "authDisabled": "Authentifizierung ist deaktiviert",
+    "changeCredentials": "Anmeldedaten ändern",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "updateCredentials": "Anmeldedaten aktualisieren",
+    "updating": "Aktualisierung läuft...",
+    "credentialsUpdated": "Anmeldedaten erfolgreich aktualisiert",
+    "passwordMismatch": "Passwörter stimmen nicht überein",
+    "updateError": "Anmeldedaten konnten nicht aktualisiert werden"
+  },
+  "toast": {
+    "success": "Erfolg",
+    "error": "Fehler",
+    "info": "Info"
+  },
+  "about": {
+    "title": "Über Komandorr",
+    "version": "Version",
+    "latestAvailable": "Neueste verfügbare",
+    "upToDate": "Aktuell",
+    "outOfDate": "Update verfügbar",
+    "unknown": "Unbekannt",
+    "timeZone": "Zeitzone",
+    "gettingSupport": "Support erhalten",
+    "githubIssues": "GitHub Issues",
+    "discordServer": "Discord Server",
+    "supportKomandorr": "Komandorr unterstützen",
+    "helpPayForCoffee": "Helfen Sie mir, Kaffee zu kaufen",
+    "supportDevelopment": "Unterstützen Sie die Weiterentwicklung",
+    "preferred": "Bevorzugt",
+    "webuiDevelopedWith": "WebUI entwickelt mit",
+    "by": "von",
+    "forTheCommunity": "für die Community"
+  }
+}
