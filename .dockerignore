@@ -1,0 +1,37 @@
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules
+frontend/node_modules/
+frontend/dist/
+
+# Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/venv/
+backend/env/
+
+# Data and logs (will be mounted as volumes)
+backend/data/
+backend/logs/
+
+# Documentation
+*.md
+
+# Scripts
+*.ps1
+
+# Config files
+pyrightconfig.json
+
+# Tests
+tests/
+backend/*.test.py

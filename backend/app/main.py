@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 import asyncio
@@ -132,7 +134,35 @@ async def get_config():
     }
 
 
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {"message": "Komandorr Dashboard API", "version": "1.0.0", "docs": "/docs"}
+# Mount static files for frontend (if dist folder exists)
+frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount(
+        "/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets"
+    )
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        """Serve frontend for all non-API routes"""
+        # Don't serve frontend for API routes
+        if full_path.startswith("api/"):
+            return {"error": "Not found"}
+
+        # Try to serve the requested file
+        file_path = frontend_dist / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+
+        # Default to index.html for client-side routing
+        return FileResponse(frontend_dist / "index.html")
+
+else:
+
+    @app.get("/")
+    async def root():
+        """Root endpoint when frontend is not available"""
+        return {
+            "message": "Komandorr Dashboard API",
+            "version": "1.0.0",
+            "docs": "/docs",
+        }

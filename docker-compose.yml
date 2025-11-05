@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  komandorr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: komandorr
+    ports:
+      - "8000:8000" # Web UI + API
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - APP_PORT=8000
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=http://localhost,http://localhost:8000
+      - ENABLE_AUTH=false
+      - AUTH_USERNAME=admin
+      - AUTH_PASSWORD=admin
+      - TIMEZONE=UTC
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
