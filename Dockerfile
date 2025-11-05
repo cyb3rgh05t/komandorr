@@ -41,7 +41,7 @@ set -e
 INTERNAL_PORT=${APP_PORT:-8000}
 
 echo "Starting Komandorr Web UI on port ${INTERNAL_PORT}..."
-exec python -m uvicorn main:app --host 0.0.0.0 --port ${INTERNAL_PORT}
+exec python -m uvicorn app.main:app --host 0.0.0.0 --port ${INTERNAL_PORT}
 EOF
 
 RUN chmod +x /app/start.sh
