@@ -6,6 +6,7 @@ import Layout from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Services from "./pages/Services";
 import Monitor from "./pages/Monitor";
+import Traffic from "./pages/Traffic";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import LoadingScreen from "./components/LoadingScreen";
@@ -76,6 +77,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/services" element={<Services />} />
               <Route path="/monitor" element={<Monitor />} />
+              <Route path="/traffic" element={<Traffic />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
             </Routes>

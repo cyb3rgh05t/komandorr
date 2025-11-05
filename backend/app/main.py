@@ -17,6 +17,7 @@ from app.utils.logger import logger
 from app.api.services import router as services_router
 from app.api.auth import router as auth_router
 from app.api.releases import router as releases_router
+from app.api.traffic import router as traffic_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -69,6 +70,7 @@ if settings.ENABLE_AUTH:
 app.include_router(services_router)
 app.include_router(auth_router)
 app.include_router(releases_router)
+app.include_router(traffic_router)
 
 
 @app.get("/api/health")

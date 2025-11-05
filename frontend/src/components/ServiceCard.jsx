@@ -6,8 +6,11 @@ import {
   RefreshCw,
   Edit,
   Trash2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { formatDistanceToNow } from "@/utils/dateUtils";
+import { useState } from "react";
 
 const statusConfig = {
   online: {
@@ -34,6 +37,13 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
   const { t } = useTranslation();
   const config = statusConfig[service.status] || statusConfig.offline;
   const StatusIcon = config.icon;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(service.id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div
@@ -152,6 +162,29 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
             </span>
           </div>
         )}
+
+        <div className="flex items-center justify-between text-sm pt-2 border-t border-theme">
+          <span className="text-theme-text-muted">Service ID:</span>
+          <div className="flex items-center gap-2">
+            <code className="text-xs text-theme-text-muted font-mono bg-theme-bg px-2 py-1 rounded border border-theme">
+              {service.id.slice(0, 8)}...
+            </code>
+            <button
+              onClick={handleCopyId}
+              className="p-1.5 hover:bg-theme-bg-hover rounded transition-colors"
+              title="Copy Service ID"
+            >
+              {copied ? (
+                <Check className="text-green-500" size={14} />
+              ) : (
+                <Copy
+                  className="text-theme-text-muted hover:text-theme-primary"
+                  size={14}
+                />
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

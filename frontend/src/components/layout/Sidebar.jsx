@@ -9,6 +9,7 @@ import {
   X,
   Server,
   Activity,
+  TrendingUp,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -21,6 +22,7 @@ export default function Sidebar() {
     { path: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
     { path: "/services", label: t("nav.services"), icon: Server },
     { path: "/monitor", label: t("nav.monitor"), icon: Activity },
+    { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];

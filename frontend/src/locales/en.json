@@ -7,6 +7,7 @@
     "dashboard": "Dashboard",
     "services": "Services",
     "monitor": "Monitor",
+    "traffic": "Traffic",
     "settings": "Settings",
     "about": "About"
   },
@@ -63,6 +64,26 @@
     "description": "Live monitoring dashboard",
     "totalServices": "Total",
     "avgResponse": "Avg Response"
+  },
+  "traffic": {
+    "title": "Network Traffic",
+    "subtitle": "Monitor bandwidth and data usage across all services",
+    "loading": "Loading traffic data...",
+    "total_services": "Total Services",
+    "active_monitoring": "Active Monitoring",
+    "current_upload": "Current Upload",
+    "current_download": "Current Download",
+    "total_uploaded": "Total Uploaded",
+    "total_downloaded": "Total Downloaded",
+    "services_list": "Service Traffic Statistics",
+    "service_name": "Service",
+    "upload_speed": "Upload Speed",
+    "download_speed": "Download Speed",
+    "total_up": "Total Upload",
+    "total_down": "Total Download",
+    "last_update": "Last Update",
+    "no_data": "No traffic data available. Deploy the traffic agent on your servers to start monitoring.",
+    "last_refresh": "Last refreshed"
   },
   "success": {
     "serviceCreated": "Service created successfully",

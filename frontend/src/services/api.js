@@ -73,6 +73,26 @@ class APIClient {
     });
   }
 
+  // Traffic
+  async getTrafficSummary() {
+    return this.request("/traffic/summary");
+  }
+
+  async getTrafficHistory(id, limit = 100) {
+    return this.request(`/traffic/${id}/history?limit=${limit}`);
+  }
+
+  async getCurrentTraffic(id) {
+    return this.request(`/traffic/${id}/current`);
+  }
+
+  async updateTraffic(data) {
+    return this.request("/traffic/update", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   // Health
   async getHealth() {
     return this.request("/health");

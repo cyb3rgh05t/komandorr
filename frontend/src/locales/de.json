@@ -7,6 +7,7 @@
     "dashboard": "Dashboard",
     "services": "Dienste",
     "monitor": "Monitor",
+    "traffic": "Traffic",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -63,6 +64,26 @@
     "description": "Live-Überwachungs-Dashboard",
     "totalServices": "Gesamt",
     "avgResponse": "Ø Antwortzeit"
+  },
+  "traffic": {
+    "title": "Netzwerk-Traffic",
+    "subtitle": "Überwachen Sie Bandbreite und Datennutzung aller Dienste",
+    "loading": "Lade Traffic-Daten...",
+    "total_services": "Dienste gesamt",
+    "active_monitoring": "Aktive Überwachung",
+    "current_upload": "Aktueller Upload",
+    "current_download": "Aktueller Download",
+    "total_uploaded": "Gesamt hochgeladen",
+    "total_downloaded": "Gesamt heruntergeladen",
+    "services_list": "Dienst Traffic-Statistiken",
+    "service_name": "Dienst",
+    "upload_speed": "Upload-Geschwindigkeit",
+    "download_speed": "Download-Geschwindigkeit",
+    "total_up": "Gesamt Upload",
+    "total_down": "Gesamt Download",
+    "last_update": "Letzte Aktualisierung",
+    "no_data": "Keine Traffic-Daten verfügbar. Installieren Sie den Traffic-Agent auf Ihren Servern, um die Überwachung zu starten.",
+    "last_refresh": "Zuletzt aktualisiert"
   },
   "success": {
     "serviceCreated": "Dienst erfolgreich erstellt",

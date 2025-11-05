@@ -1,31 +1,43 @@
-version: "3.8"
-
+version: "3"
 services:
   komandorr:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: komandorr
-    ports:
-      - "8000:8000" # Web UI + API
+    hostname: "komandorr"
+    container_name: "komandorr"
     environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-      - APP_PORT=8000
-      - DEBUG=false
-      - LOG_LEVEL=INFO
-      - CORS_ORIGINS=http://localhost,http://localhost:8000
-      - ENABLE_AUTH=false
-      - AUTH_USERNAME=admin
-      - AUTH_PASSWORD=admin
-      - TIMEZONE=UTC
+      - "TZ=Europe/Berlin"
+      - "TERM=xterm"
+      - "HOST=0.0.0.0"
+      - "PORT=8000"
+      - "DEBUG=false"
+      - "LOG_LEVEL=INFO"
+      - "CORS_ORIGINS=http://localhost,http://localhost:8000"
+      - "ENABLE_AUTH=false"
+      - "AUTH_USERNAME=admin"
+      - "AUTH_PASSWORD=admin"
+      - "TIMEZONE=UTC"
+    image: "ghcr.io/cyb3rgh05t/komandorr:latest"
+    restart: "unless-stopped"
+    user: "1000:1000"
+    ports:
+      - "8000:8000"
+    networks:
+      - "proxy"
     volumes:
-      - ./backend/data:/app/data
-      - ./backend/logs:/app/logs
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - "./backend/data:/app/data:rw"
+      - "./backend/logs:/app/logs:rw"
+    labels:
+      - "dockupdater.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.komandorr-rtr.entrypoints=https"
+      - "traefik.http.routers.komandorr-rtr.rule=Host(`komandorr.${DOMAIN}`)"
+      - "traefik.http.routers.komandorr-rtr.tls=true"
+      - "traefik.http.routers.komandorr-rtr.tls.certresolver=dns-cloudflare"
+      - "traefik.http.routers.komandorr-rtr.middlewares=chain-authelia@file"
+      - "traefik.http.routers.komandorr-rtr.service=komandorr-svc"
+      - "traefik.http.services.komandorr-svc.loadbalancer.server.port=8000"
+networks:
+  proxy:
+    driver: bridge
+    external: true

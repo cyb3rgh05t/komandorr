@@ -1,6 +1,26 @@
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, List
 from datetime import datetime
+
+
+class TrafficMetrics(BaseModel):
+    """Traffic metrics for a service"""
+
+    bandwidth_up: float = 0.0  # Current upload speed in MB/s
+    bandwidth_down: float = 0.0  # Current download speed in MB/s
+    total_up: float = 0.0  # Total upload in GB
+    total_down: float = 0.0  # Total download in GB
+    last_updated: datetime | None = None
+
+
+class TrafficDataPoint(BaseModel):
+    """Single traffic data point for historical data"""
+
+    timestamp: datetime
+    bandwidth_up: float  # MB/s
+    bandwidth_down: float  # MB/s
+    total_up: float  # GB
+    total_down: float  # GB
 
 
 class Service(BaseModel):
@@ -16,6 +36,8 @@ class Service(BaseModel):
     description: str | None = None
     icon: str | None = None
     group: str | None = None
+    traffic: TrafficMetrics | None = None
+    traffic_history: List[TrafficDataPoint] = []
 
 
 class ServiceCreate(BaseModel):
@@ -45,3 +67,13 @@ class StatusResponse(BaseModel):
 
     status: str
     message: str
+
+
+class TrafficUpdate(BaseModel):
+    """Model for updating traffic data from agent"""
+
+    service_id: str
+    bandwidth_up: float  # MB/s
+    bandwidth_down: float  # MB/s
+    total_up: float  # GB
+    total_down: float  # GB
