@@ -6,6 +6,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "services": "Dienste",
+    "monitor": "Monitor",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -16,7 +17,8 @@
     "offline": "Offline",
     "problem": "Problem",
     "noServices": "Noch keine Dienste konfiguriert",
-    "addService": "Dienst hinzufügen"
+    "addService": "Dienst hinzufügen",
+    "searchPlaceholder": "Dienste und Gruppen durchsuchen..."
   },
   "service": {
     "name": "Name",
@@ -26,9 +28,15 @@
     "lastCheck": "Letzte Prüfung",
     "responseTime": "Antwortzeit",
     "description": "Beschreibung",
+    "icon": "Symbol",
+    "uploadIcon": "Symbol hochladen",
     "checkNow": "Jetzt prüfen",
     "edit": "Bearbeiten",
     "delete": "Löschen",
+    "group": "Gruppe",
+    "noGroup": "Keine Gruppe",
+    "createGroup": "Neue Gruppe erstellen",
+    "newGroupName": "Gruppenname eingeben",
     "types": {
       "app": "App",
       "website": "Webseite",
@@ -41,7 +49,36 @@
     "editService": "Dienst bearbeiten",
     "cancel": "Abbrechen",
     "save": "Speichern",
-    "create": "Erstellen"
+    "create": "Erstellen",
+    "add": "Hinzufügen"
+  },
+  "services": {
+    "title": "Dienste",
+    "description": "Verwalten Sie alle Ihre überwachten Dienste",
+    "total": "Dienste gesamt",
+    "noResults": "Keine Dienste gefunden, die Ihrer Suche entsprechen"
+  },
+  "monitor": {
+    "title": "Echtzeit-Monitor",
+    "description": "Live-Überwachungs-Dashboard",
+    "totalServices": "Gesamt",
+    "avgResponse": "Ø Antwortzeit"
+  },
+  "success": {
+    "serviceCreated": "Dienst erfolgreich erstellt",
+    "serviceUpdated": "Dienst erfolgreich aktualisiert",
+    "serviceDeleted": "Dienst erfolgreich gelöscht",
+    "serviceChecked": "Dienst erfolgreich überprüft"
+  },
+  "errors": {
+    "fetchServices": "Dienste konnten nicht abgerufen werden",
+    "createService": "Dienst konnte nicht erstellt werden",
+    "updateService": "Dienst konnte nicht aktualisiert werden",
+    "deleteService": "Dienst konnte nicht gelöscht werden",
+    "checkService": "Dienst konnte nicht überprüft werden"
+  },
+  "confirmations": {
+    "deleteService": "Möchten Sie diesen Dienst wirklich löschen?"
   },
   "settings": {
     "title": "Einstellungen",

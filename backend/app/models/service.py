@@ -15,6 +15,7 @@ class Service(BaseModel):
     response_time: float | None = None
     description: str | None = None
     icon: str | None = None
+    group: str | None = None
 
 
 class ServiceCreate(BaseModel):
@@ -25,6 +26,7 @@ class ServiceCreate(BaseModel):
     type: Literal["app", "website", "panel", "project"]
     description: str | None = None
     icon: str | None = None
+    group: str | None = None
 
 
 class ServiceUpdate(BaseModel):
@@ -35,6 +37,7 @@ class ServiceUpdate(BaseModel):
     type: Literal["app", "website", "panel", "project"] | None = None
     description: str | None = None
     icon: str | None = None
+    group: str | None = None
 
 
 class StatusResponse(BaseModel):

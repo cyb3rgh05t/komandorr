@@ -42,13 +42,34 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`${config.bgColor} p-2 rounded-lg`}>
-            <StatusIcon className={`${config.color}`} size={24} />
+            {service.icon ? (
+              <img
+                src={`http://localhost:8000${service.icon}`}
+                alt={service.name}
+                className="w-6 h-6 object-contain"
+                onError={(e) => {
+                  // Fallback to status icon if image fails to load
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "block";
+                }}
+              />
+            ) : null}
+            <StatusIcon
+              className={`${config.color}`}
+              size={24}
+              style={{ display: service.icon ? "none" : "block" }}
+            />
           </div>
-          <div>
+          <div className="flex-1">
+            {service.description && (
+              <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-bg text-theme-text-muted border border-theme rounded">
+                {service.description}
+              </span>
+            )}
             <h3 className="text-lg font-semibold text-theme-text">
               {service.name}
             </h3>
-            <span className="text-sm text-theme-text-muted">
+            <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-bg text-theme-text-muted border border-theme rounded">
               {t(`service.types.${service.type}`)}
             </span>
           </div>
@@ -89,21 +110,19 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-theme-text-muted">{t("service.url")}:</span>
-          <a
-            href={service.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-theme-primary hover:text-theme-primary-hover truncate max-w-xs"
-          >
-            {service.url}
-          </a>
+        <div className="bg-theme-bg border border-theme rounded-lg p-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-theme-text-muted">{t("service.url")}:</span>
+            <a
+              href={service.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-theme-primary hover:text-theme-primary-hover truncate max-w-xs"
+            >
+              {service.url}
+            </a>
+          </div>
         </div>
-
-        {service.description && (
-          <p className="text-sm text-theme-text-muted">{service.description}</p>
-        )}
 
         <div className="flex items-center justify-between text-sm pt-2 border-t border-theme">
           <span className="text-theme-text-muted">{t("service.status")}:</span>

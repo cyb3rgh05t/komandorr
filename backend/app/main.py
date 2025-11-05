@@ -8,6 +8,9 @@ import asyncio
 import os
 import httpx
 from pathlib import Path
+from fastapi import UploadFile, File, HTTPException
+import shutil
+import uuid
 
 from app.config import settings
 from app.utils.logger import logger
@@ -133,6 +136,50 @@ async def get_config():
         "timezone": settings.TIMEZONE,
     }
 
+
+@app.post("/api/upload-icon")
+async def upload_icon(file: UploadFile = File(...)):
+    """Upload a service icon"""
+    # Validate file type
+    allowed_types = [
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+        "image/svg+xml",
+        "image/webp",
+    ]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}",
+        )
+
+    # Create icons directory if it doesn't exist
+    icons_dir = Path(__file__).parent.parent / "icons"
+    icons_dir.mkdir(exist_ok=True)
+
+    # Generate unique filename
+    file_extension = Path(file.filename or "icon.png").suffix
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = icons_dir / unique_filename
+
+    try:
+        # Save file
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        logger.info(f"Uploaded icon: {unique_filename}")
+
+        return {"path": f"/icons/{unique_filename}", "filename": unique_filename}
+    except Exception as e:
+        logger.error(f"Failed to upload icon: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload icon")
+
+
+# Mount icons directory for serving uploaded icons
+icons_dir = Path(__file__).parent.parent / "icons"
+icons_dir.mkdir(exist_ok=True)
+app.mount("/icons", StaticFiles(directory=str(icons_dir)), name="icons")
 
 # Mount static files for frontend (if dist folder exists)
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"

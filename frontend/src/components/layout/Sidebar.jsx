@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Settings, Info, Menu, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  Settings,
+  Info,
+  Menu,
+  X,
+  Server,
+  Activity,
+} from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
 export default function Sidebar() {
@@ -11,6 +19,8 @@ export default function Sidebar() {
 
   const menuItems = [
     { path: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { path: "/services", label: t("nav.services"), icon: Server },
+    { path: "/monitor", label: t("nav.monitor"), icon: Activity },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
