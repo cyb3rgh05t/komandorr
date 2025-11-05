@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # Timezone Configuration
     TIMEZONE: str = "UTC"
 
+    # GitHub Configuration (optional - for higher API rate limits)
+    GITHUB_TOKEN: str = ""
+
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
 
