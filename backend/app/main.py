@@ -4,12 +4,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 import os
+import httpx
 from pathlib import Path
 
 from app.config import settings
 from app.utils.logger import logger
 from app.api.services import router as services_router
 from app.api.auth import router as auth_router
+from app.api.releases import router as releases_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -61,6 +63,7 @@ if settings.ENABLE_AUTH:
 # Include routers
 app.include_router(services_router)
 app.include_router(auth_router)
+app.include_router(releases_router)
 
 
 @app.get("/api/health")
@@ -89,11 +92,30 @@ async def get_version():
     except Exception as e:
         logger.warning(f"Could not read release.txt: {e}")
 
-    # TODO: Implement update check against GitHub releases
-    # For now, always return up to date
+    # Check for updates from GitHub
+    remote_version = None
+    is_update_available = False
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.github.com/repos/cyb3rgh05t/komandorr/releases/latest",
+                timeout=5.0,
+            )
+            if response.status_code == 200:
+                data = response.json()
+                remote_version = data.get("tag_name", "").lstrip("v")
+
+                # Compare versions
+                if remote_version and remote_version != version:
+                    is_update_available = True
+    except Exception as e:
+        logger.warning(f"Could not check for updates: {e}")
+
     return {
         "local": version,
-        "is_update_available": False,
+        "remote": remote_version,
+        "is_update_available": is_update_available,
     }
 
 

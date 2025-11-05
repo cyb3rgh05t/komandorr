@@ -136,6 +136,19 @@
     "error": "Error",
     "info": "Info"
   },
+  "releasesSection": {
+    "title": "Recent Releases",
+    "latest": "Latest",
+    "preRelease": "Pre-Release",
+    "viewChangelog": "View Changelog",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{days}} days ago",
+    "fetchFailed": "Failed to fetch releases",
+    "fetchError": "Error fetching releases",
+    "error": "Error",
+    "noReleases": "No releases available"
+  },
   "about": {
     "title": "About Komandorr",
     "version": "Version",
@@ -146,7 +159,7 @@
     "timeZone": "Time Zone",
     "gettingSupport": "Getting Support",
     "githubIssues": "GitHub Issues",
-    "discordServer": "Discord Server",
+    "telegramSupport": "Telegram Support",
     "supportKomandorr": "Support Komandorr",
     "helpPayForCoffee": "Help pay for coffee",
     "supportDevelopment": "Support continued development",

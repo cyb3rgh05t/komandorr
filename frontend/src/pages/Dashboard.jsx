@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
 import ServiceCard from "@/components/ServiceCard";
 import ServiceModal from "@/components/ServiceModal";
+
+const API_URL = "/api";
+const REPO_URL = "https://github.com/cyb3rgh05t/komandorr/releases/latest";
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -13,10 +22,46 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
+  const [version, setVersion] = useState({
+    local: null,
+    remote: null,
+    is_update_available: false,
+    loading: true,
+  });
 
   useEffect(() => {
     loadServices();
+    fetchVersion();
+
+    // Check for updates every 12 hours
+    const versionCheckInterval = setInterval(fetchVersion, 12 * 60 * 60 * 1000);
+
+    return () => {
+      clearInterval(versionCheckInterval);
+    };
   }, []);
+
+  const fetchVersion = async () => {
+    try {
+      const response = await fetch(`${API_URL}/version`);
+      const data = await response.json();
+
+      setVersion({
+        local: data.local,
+        remote: data.remote,
+        is_update_available: data.is_update_available || false,
+        loading: false,
+      });
+    } catch (error) {
+      console.error("Error fetching version:", error);
+      setVersion({
+        local: null,
+        remote: null,
+        is_update_available: false,
+        loading: false,
+      });
+    }
+  };
 
   const loadServices = async () => {
     try {

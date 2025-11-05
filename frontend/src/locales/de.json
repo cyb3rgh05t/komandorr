@@ -136,6 +136,19 @@
     "error": "Fehler",
     "info": "Info"
   },
+  "releasesSection": {
+    "title": "Neueste Releases",
+    "latest": "Neueste",
+    "preRelease": "Vorabversion",
+    "viewChangelog": "Changelog anzeigen",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "daysAgo": "vor {{days}} Tagen",
+    "fetchFailed": "Releases konnten nicht abgerufen werden",
+    "fetchError": "Fehler beim Abrufen der Releases",
+    "error": "Fehler",
+    "noReleases": "Keine Releases verfügbar"
+  },
   "about": {
     "title": "Über Komandorr",
     "version": "Version",
@@ -146,7 +159,7 @@
     "timeZone": "Zeitzone",
     "gettingSupport": "Support erhalten",
     "githubIssues": "GitHub Issues",
-    "discordServer": "Discord Server",
+    "telegramSupport": "Telegram Support",
     "supportKomandorr": "Komandorr unterstützen",
     "helpPayForCoffee": "Helfen Sie mir, Kaffee zu kaufen",
     "supportDevelopment": "Unterstützen Sie die Weiterentwicklung",

@@ -15,9 +15,8 @@ function VersionBadge() {
 
   useEffect(() => {
     checkVersion();
-    // Check version on every component mount
-    // Also check in background every hour
-    const interval = setInterval(checkVersion, 1 * 60 * 60 * 1000);
+    // Check for updates every 12 hours
+    const interval = setInterval(checkVersion, 12 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
