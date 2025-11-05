@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from datetime import datetime
 import httpx
 from app.utils.logger import logger
 from app.config import settings
@@ -9,24 +8,10 @@ router = APIRouter()
 
 GITHUB_API_URL = "https://api.github.com/repos/cyb3rgh05t/komandorr/releases"
 
-# Cache for releases
-releases_cache: Dict[str, Any] = {
-    "data": None,
-    "timestamp": None,
-}
-CACHE_DURATION = timedelta(hours=1)  # Cache for 1 hour
-
 
 @router.get("/api/releases")
 async def get_releases():
     """Fetch releases from GitHub and format them"""
-    # Check cache first
-    now = datetime.now()
-
-    if releases_cache["data"] and releases_cache["timestamp"]:
-        if now - releases_cache["timestamp"] < CACHE_DURATION:
-            return releases_cache["data"]
-
     try:
         headers = {}
         if settings.GITHUB_TOKEN:
@@ -55,20 +40,9 @@ async def get_releases():
                 }
             )
 
-        result = {"success": True, "releases": formatted_releases}
-
-        # Update cache
-        releases_cache["data"] = result
-        releases_cache["timestamp"] = now
-
-        return result
+        return {"success": True, "releases": formatted_releases}
 
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 403:
-            logger.warning("GitHub API rate limit exceeded for releases")
-            # Return cached data if available
-            if releases_cache["data"]:
-                return releases_cache["data"]
         logger.error(f"Failed to fetch releases from GitHub: {e}")
         return {"success": False, "error": "Failed to fetch releases from GitHub"}
     except httpx.HTTPError as e:
