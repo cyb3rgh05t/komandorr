@@ -34,17 +34,27 @@ RUN mkdir -p logs data && \
     chown -R 1000:1000 /app && \
     chmod -R 755 /app
 
-# Create startup script
+# Create startup script that runs as root first to fix permissions, then drops to user 1000
 COPY <<'EOF' /app/start.sh
 #!/bin/bash
 set -e
+
+# Fix permissions for mounted volumes (runs as root before user switch)
+mkdir -p /app/logs /app/data
+chown -R 1000:1000 /app/logs /app/data 2>/dev/null || true
+chmod -R 755 /app/logs /app/data 2>/dev/null || true
 
 # Use APP_PORT environment variable, or default to 8000
 INTERNAL_PORT=${APP_PORT:-8000}
 
 echo "Starting Komandorr Web UI on port ${INTERNAL_PORT}..."
-exec python -m uvicorn app.main:app --host 0.0.0.0 --port ${INTERNAL_PORT}
+
+# Switch to user 1000 and run the application
+exec su-exec 1000:1000 python -m uvicorn app.main:app --host 0.0.0.0 --port ${INTERNAL_PORT}
 EOF
+
+# Install su-exec for user switching
+RUN apt-get update && apt-get install -y su-exec && rm -rf /var/lib/apt/lists/*
 
 RUN chmod +x /app/start.sh
 

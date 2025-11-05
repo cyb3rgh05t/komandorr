@@ -17,7 +17,6 @@ services:
       - "TIMEZONE=UTC"
     image: "ghcr.io/cyb3rgh05t/komandorr:latest"
     restart: "unless-stopped"
-    user: "1000:1000"
     ports:
       - "8000:8000"
     networks:
