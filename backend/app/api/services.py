@@ -55,6 +55,9 @@ async def update_service(service_id: str, service_data: ServiceUpdate):
     # Re-check service after update
     await monitor.check_service(service)
 
+    # Save changes to disk
+    monitor._save_services()
+
     logger.info(f"Updated service: {service.name}")
     return service
 
