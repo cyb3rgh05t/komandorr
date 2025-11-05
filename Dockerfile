@@ -29,8 +29,10 @@ COPY backend/ ./
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
-# Create necessary directories
-RUN mkdir -p logs data
+# Create necessary directories with proper permissions
+RUN mkdir -p logs data && \
+    chown -R 1000:1000 /app && \
+    chmod -R 755 /app
 
 # Create startup script
 COPY <<'EOF' /app/start.sh
