@@ -29,7 +29,10 @@ COPY backend/ ./
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
-# Copy release.txt for version information
+# Copy package.json for version information
+COPY frontend/package.json ./frontend/package.json
+
+# Copy release.txt as fallback for version information
 COPY frontend/public/release.txt ./frontend/dist/release.txt
 
 # Create necessary directories with proper permissions
