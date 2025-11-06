@@ -88,7 +88,15 @@ async def get_version():
     """Get current version and check for updates"""
     # Read version from release.txt in frontend/dist directory (production) or public (dev)
     version = "1.0.0"
-    root_dir = Path(__file__).parent.parent  # /app/app/main.py -> /app
+
+    # Determine root directory based on deployment
+    # Docker: /app/app/main.py -> /app
+    # Local: /path/to/komandorr/backend/app/main.py -> /path/to/komandorr
+    current_file = Path(__file__).resolve()
+    if current_file.parts[-3] == "backend":  # Local development
+        root_dir = current_file.parent.parent.parent  # backend/app/main.py -> root
+    else:  # Docker (app/app/main.py -> app)
+        root_dir = current_file.parent.parent
 
     # Try dist first (production), then public (development)
     release_files = [
