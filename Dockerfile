@@ -30,9 +30,7 @@ COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Create necessary directories with proper permissions
-RUN mkdir -p logs data && \
-    chown -R 1000:1000 /app && \
-    chmod -R 755 /app
+RUN mkdir -p logs data
 
 # Create startup script
 COPY <<'EOF' /app/start.sh
@@ -50,9 +48,6 @@ exec python -m uvicorn app.main:app --host 0.0.0.0 --port ${INTERNAL_PORT}
 EOF
 
 RUN chmod +x /app/start.sh
-
-# Switch to non-root user
-USER 1000:1000
 
 # Expose port
 EXPOSE 8000
