@@ -71,15 +71,21 @@ class Logger:
         console_handler.setFormatter(console_formatter)
         self._logger.addHandler(console_handler)
 
-        # File Handler
-        log_file = os.getenv("LOG_FILE", "logs/komandorr.log")
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # File Handler - with error handling
+        try:
+            log_file = os.getenv("LOG_FILE", "logs/komandorr.log")
+            log_path = Path(log_file)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
 
-        file_handler = logging.FileHandler(log_file, encoding="utf-8")
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(file_formatter)
-        self._logger.addHandler(file_handler)
+            file_handler = logging.FileHandler(log_file, encoding="utf-8")
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(file_formatter)
+            self._logger.addHandler(file_handler)
+        except (PermissionError, OSError) as e:
+            # If we can't write to log file, just use console logging
+            self._logger.warning(
+                f"Cannot write to log file {log_file}: {e}. Using console-only logging."
+            )
 
     def debug(self, message: str, **kwargs) -> None:
         """Log debug message"""
