@@ -2,6 +2,18 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Activity, ArrowUp, ArrowDown, Server, RefreshCw } from "lucide-react";
 import { api } from "../services/api";
+import { formatTime } from "../utils/dateUtils";
+
+// Component to format time asynchronously
+function FormattedTime({ date }) {
+  const [formatted, setFormatted] = useState("Loading...");
+
+  useEffect(() => {
+    formatTime(date).then(setFormatted);
+  }, [date]);
+
+  return <>{formatted}</>;
+}
 
 export default function Traffic() {
   const { t } = useTranslation();
@@ -62,6 +74,23 @@ export default function Traffic() {
 
   return (
     <div className="px-4 py-6 space-y-6">
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={fetchTrafficData}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw
+            size={18}
+            className={`text-theme-primary transition-transform duration-500 ${
+              isRefreshing ? "animate-spin" : ""
+            }`}
+          />
+          <span className="text-sm">{t("service.checkNow")}</span>
+        </button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Services */}
@@ -223,9 +252,7 @@ export default function Traffic() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-theme-text-muted">
-                        {service.last_updated
-                          ? new Date(service.last_updated).toLocaleTimeString()
-                          : "N/A"}
+                        <FormattedTime date={service.last_updated} />
                       </div>
                     </td>
                   </tr>
@@ -248,7 +275,7 @@ export default function Traffic() {
       {/* Last Update Info */}
       {lastUpdate && (
         <div className="text-center text-sm text-theme-text-muted">
-          {t("traffic.last_refresh")}: {lastUpdate.toLocaleTimeString()}
+          {t("traffic.last_refresh")}: <FormattedTime date={lastUpdate} />
         </div>
       )}
     </div>

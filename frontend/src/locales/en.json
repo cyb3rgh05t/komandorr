@@ -42,7 +42,8 @@
       "app": "App",
       "website": "Website",
       "panel": "Panel",
-      "project": "Project"
+      "project": "Project",
+      "server": "Server"
     }
   },
   "form": {

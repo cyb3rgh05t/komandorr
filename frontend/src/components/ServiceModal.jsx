@@ -227,6 +227,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               <option value="website">{t("service.types.website")}</option>
               <option value="panel">{t("service.types.panel")}</option>
               <option value="project">{t("service.types.project")}</option>
+              <option value="server">{t("service.types.server")}</option>
             </select>
           </div>
 

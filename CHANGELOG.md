@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+# [1.3.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.1...v1.3.2) (2025-11-06)
+
+### Features
+
+• **service types: added server type**
+◦ Added "Server" as a new service type option in Add/Edit Service modal
+◦ Server type available for traffic monitoring without health checks
+◦ Added translations for server type in English and German
+
+### Changed
+
+• Updated service type dropdown to include server option
+• Enhanced service type flexibility for different monitoring scenarios
+
 # [1.3.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.0...v1.3.1) (2025-11-06)
 
 ### Features

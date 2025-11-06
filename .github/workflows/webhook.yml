@@ -17,7 +17,7 @@ jobs:
           color: "2105893"
           username: "Komandorr Release Changelog"
           avatar_url: "https://github.com/cyb3rgh05t/komandorr/tree/main/images/webhook.png?raw=true"
-          content: "||@cyb3rgh05t||"
+          content: "<@408885990971670531> New Komandorr release published!"
           footer_title: "GitHub Changelog"
           footer_icon_url: "https://github.com/cyb3rgh05t/komandorr/blob/main/images/github-webhook.png?raw=true"
           footer_timestamp: true
