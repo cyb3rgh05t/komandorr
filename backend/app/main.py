@@ -89,9 +89,13 @@ async def get_version():
     # Read version from package.json (most reliable source)
     version = "1.0.0"
     root_dir = Path(__file__).parent.parent.parent
+    
+    logger.info(f"Version endpoint called, root_dir: {root_dir}")
 
     # Try reading from package.json first
     package_json_path = root_dir / "frontend" / "package.json"
+    logger.info(f"Looking for package.json at: {package_json_path}")
+    
     try:
         if package_json_path.exists():
             import json
@@ -100,6 +104,8 @@ async def get_version():
                 package_data = json.load(f)
                 version = package_data.get("version", "1.0.0")
                 logger.info(f"Read version from package.json: {version}")
+        else:
+            logger.warning(f"package.json not found at {package_json_path}")
     except Exception as e:
         logger.warning(f"Could not read package.json: {e}")
 
