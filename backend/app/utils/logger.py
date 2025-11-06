@@ -30,8 +30,8 @@ class Logger:
         log_level = os.getenv("LOG_LEVEL", "INFO").upper()
         self._logger.setLevel(getattr(logging, log_level))
 
-        # Get timezone from environment or default to UTC
-        timezone_str = os.getenv("TIMEZONE", "UTC")
+        # Get timezone from TZ environment variable (standard) or fall back to TIMEZONE
+        timezone_str = os.getenv("TZ") or os.getenv("TIMEZONE", "UTC")
         try:
             self._timezone = ZoneInfo(timezone_str)
         except Exception:

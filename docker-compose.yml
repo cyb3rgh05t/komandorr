@@ -4,6 +4,8 @@ services:
     hostname: "komandorr"
     container_name: "komandorr"
     environment:
+      - "PGID=1000"
+      - "PUID=1000"
       - "TZ=Europe/Berlin"
       - "TERM=xterm"
       - "HOST=0.0.0.0"
@@ -14,7 +16,6 @@ services:
       - "ENABLE_AUTH=false"
       - "AUTH_USERNAME=admin"
       - "AUTH_PASSWORD=admin"
-      - "TIMEZONE=UTC"
     image: "ghcr.io/cyb3rgh05t/komandorr:latest"
     restart: "unless-stopped"
     ports:
@@ -22,8 +23,8 @@ services:
     networks:
       - "proxy"
     volumes:
-      - "komandorr-data:/app/data:rw"
-      - "komandorr-logs:/app/logs:rw"
+      - "/opt/appdata/komandorr/data:/app/data:rw"
+      - "/opt/appdata/komandorr/logs:/app/logs:rw"
     labels:
       - "dockupdater.enable=true"
       - "com.centurylinklabs.watchtower.enable=true"
@@ -36,9 +37,6 @@ services:
       - "traefik.http.routers.komandorr-rtr.middlewares=chain-authelia@file"
       - "traefik.http.routers.komandorr-rtr.service=komandorr-svc"
       - "traefik.http.services.komandorr-svc.loadbalancer.server.port=8000"
-volumes:
-  komandorr-data:
-  komandorr-logs:
 networks:
   proxy:
     driver: bridge

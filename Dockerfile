@@ -29,6 +29,9 @@ COPY backend/ ./
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
+# Copy release.txt for version information
+COPY frontend/public/release.txt ./frontend/dist/release.txt
+
 # Create necessary directories with proper permissions
 RUN mkdir -p logs data
 

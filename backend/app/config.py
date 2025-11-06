@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/komandorr.log"
 
-    # Timezone Configuration
-    TIMEZONE: str = "UTC"
+    # Timezone Configuration (uses TZ environment variable)
+    TIMEZONE: str = "UTC"  # Fallback if TZ is not set
 
     # GitHub Configuration (optional - for higher API rate limits)
     GITHUB_TOKEN: str = ""
@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from comma-separated string"""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+
+    @property
+    def timezone(self) -> str:
+        """Get timezone, preferring TZ environment variable over TIMEZONE"""
+        import os
+
+        return os.getenv("TZ", self.TIMEZONE)
 
     class Config:
         env_file = ".env"

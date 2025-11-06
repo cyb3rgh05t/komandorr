@@ -17,34 +17,55 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authCredentials, setAuthCredentials] = useState(null);
+  const [authEnabled, setAuthEnabled] = useState(true);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const savedCredentials = sessionStorage.getItem("auth_credentials");
-    if (savedCredentials) {
-      // Verify the credentials are still valid
-      fetch("/api/health", {
-        headers: {
-          Authorization: `Basic ${savedCredentials}`,
-        },
-      })
-        .then((response) => {
-          if (response.ok) {
-            setAuthCredentials(savedCredentials);
-            setIsAuthenticated(true);
-          } else {
-            sessionStorage.removeItem("auth_credentials");
-          }
-        })
-        .catch(() => {
-          sessionStorage.removeItem("auth_credentials");
-        })
-        .finally(() => {
+    // First, check if authentication is enabled
+    fetch("/api/auth/status")
+      .then((response) => response.json())
+      .then((data) => {
+        setAuthEnabled(data.enabled);
+
+        // If auth is disabled, skip authentication
+        if (!data.enabled) {
+          setIsAuthenticated(true);
           setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
+          return;
+        }
+
+        // Check if user is already authenticated
+        const savedCredentials = sessionStorage.getItem("auth_credentials");
+        if (savedCredentials) {
+          // Verify the credentials are still valid
+          fetch("/api/health", {
+            headers: {
+              Authorization: `Basic ${savedCredentials}`,
+            },
+          })
+            .then((response) => {
+              if (response.ok) {
+                setAuthCredentials(savedCredentials);
+                setIsAuthenticated(true);
+              } else {
+                sessionStorage.removeItem("auth_credentials");
+              }
+            })
+            .catch(() => {
+              sessionStorage.removeItem("auth_credentials");
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        } else {
+          setIsLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error("Error checking auth status:", error);
+        // On error, assume auth is enabled for security
+        setAuthEnabled(true);
+        setIsLoading(false);
+      });
   }, []);
 
   const handleLoginSuccess = (credentials) => {
@@ -60,7 +81,7 @@ function App() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (authEnabled && !isAuthenticated) {
     return (
       <ThemeProvider>
         <LoginScreen onLoginSuccess={handleLoginSuccess} />
