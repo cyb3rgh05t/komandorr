@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState(null);
   const [version, setVersion] = useState({
     local: null,
     remote: null,
@@ -75,6 +76,12 @@ export default function Dashboard() {
       setLoading(true);
       const data = await api.getServices();
       setServices(data);
+
+      // Set initial active tab if not set
+      if (!activeTab && data.length > 0) {
+        const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
+        setActiveTab(groups[0]);
+      }
     } catch (error) {
       toast.error(t("common.error"));
       console.error("Failed to load services:", error);
@@ -233,7 +240,7 @@ export default function Dashboard() {
             }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-theme-accent border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+            className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
           />
         </div>
       </div>
@@ -279,141 +286,82 @@ export default function Dashboard() {
               return acc;
             }, {});
 
-            return Object.entries(grouped).map(([groupName, groupServices]) => (
-              <div key={groupName} className="space-y-4 mb-8">
-                <div className="bg-theme-card border border-theme rounded-lg p-4">
-                  <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
-                    <span>{groupName}</span>
-                    <span className="text-sm text-theme-text-muted font-normal">
-                      ({groupServices.length})
-                    </span>
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupServices.map((service) => {
-                    const statusConfig = {
-                      online: {
-                        icon: CheckCircle2,
-                        color: "text-green-500",
-                        bgColor: "bg-green-500/10",
-                        borderColor: "border-green-500/20",
-                      },
-                      offline: {
-                        icon: XCircle,
-                        color: "text-red-500",
-                        bgColor: "bg-red-500/10",
-                        borderColor: "border-red-500/20",
-                      },
-                      problem: {
-                        icon: AlertTriangle,
-                        color: "text-yellow-500",
-                        bgColor: "bg-yellow-500/10",
-                        borderColor: "border-yellow-500/20",
-                      },
-                    };
-                    const config =
-                      statusConfig[service.status] || statusConfig.offline;
-                    const StatusIcon = config.icon;
+            const groupNames = Object.keys(grouped);
+            const hasMultipleGroups = groupNames.length > 1;
 
-                    return (
-                      <div
-                        key={service.id}
-                        className="bg-theme-card border border-theme rounded-lg p-5 hover:bg-theme-hover transition-all duration-200 shadow-sm"
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="bg-theme-accent p-2.5 rounded-lg border border-theme">
-                              {service.icon ? (
-                                <img
-                                  src={`http://localhost:8000${service.icon}`}
-                                  alt={service.name}
-                                  className="w-6 h-6 object-contain"
-                                  onError={(e) => {
-                                    // Fallback to status icon if image fails to load
-                                    e.target.style.display = "none";
-                                    e.target.nextSibling.style.display =
-                                      "block";
-                                  }}
-                                />
-                              ) : null}
-                              <StatusIcon
-                                className={`${config.color}`}
-                                size={24}
-                                style={{
-                                  display: service.icon ? "none" : "block",
-                                }}
-                              />
-                            </div>
-                            <div className="flex-1">
-                              {service.description && (
-                                <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-accent text-theme-text-muted border border-theme rounded">
-                                  {service.description}
-                                </span>
-                              )}
-                              <h3 className="text-lg font-semibold text-theme-text">
-                                {service.name}
-                              </h3>
-                              <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-accent text-theme-text-muted border border-theme rounded">
-                                {t(`service.types.${service.type}`)}
-                              </span>
-                            </div>
-                          </div>
+            // If active tab is not set or doesn't exist in current groups, set to first group
+            if (!activeTab || !groupNames.includes(activeTab)) {
+              if (groupNames.length > 0) {
+                setActiveTab(groupNames[0]);
+              }
+            }
 
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleCheckService(service.id)}
-                              className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
-                              title={t("service.checkNow")}
-                            >
-                              <RefreshCw
-                                className="text-theme-text-muted hover:text-theme-primary"
-                                size={16}
-                              />
-                            </button>
-                            <button
-                              onClick={() => handleEditService(service)}
-                              className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
-                              title={t("service.edit")}
-                            >
-                              <Edit
-                                className="text-theme-text-muted hover:text-theme-primary"
-                                size={16}
-                              />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteService(service.id)}
-                              className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
-                              title={t("service.delete")}
-                            >
-                              <Trash2
-                                className="text-theme-text-muted hover:text-red-500"
-                                size={16}
-                              />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="bg-theme-accent border border-theme rounded-lg p-3">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-theme-text-muted">
-                              {t("service.url")}:
-                            </span>
-                            <a
-                              href={service.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-theme-primary hover:text-theme-primary-hover truncate max-w-xs"
-                            >
-                              {service.url}
-                            </a>
-                          </div>
-                        </div>
+            // If only one group or no groups, show simple list
+            if (!hasMultipleGroups) {
+              return Object.entries(grouped).map(
+                ([groupName, groupServices]) => (
+                  <div key={groupName} className="space-y-4">
+                    {groupName !== "Ungrouped" && (
+                      <div className="bg-theme-card border border-theme rounded-lg p-4">
+                        <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+                          <span>{groupName}</span>
+                          <span className="text-sm text-theme-text-muted font-normal">
+                            ({groupServices.length})
+                          </span>
+                        </h2>
                       </div>
-                    );
-                  })}
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {groupServices.map((service) =>
+                        renderServiceCard(service)
+                      )}
+                    </div>
+                  </div>
+                )
+              );
+            }
+
+            // Multiple groups - show tabs
+            return (
+              <div className="space-y-4">
+                {/* Tabs */}
+                <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+                  <div className="flex gap-2 min-w-max">
+                    {groupNames.map((groupName) => (
+                      <button
+                        key={groupName}
+                        onClick={() => setActiveTab(groupName)}
+                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                          activeTab === groupName
+                            ? "bg-theme-primary text-white shadow-md"
+                            : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                        }`}
+                      >
+                        {groupName}
+                        <span
+                          className={`ml-2 text-xs ${
+                            activeTab === groupName
+                              ? "text-white/80"
+                              : "text-theme-text-muted"
+                          }`}
+                        >
+                          ({grouped[groupName].length})
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Active Tab Content */}
+                {activeTab && grouped[activeTab] && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {grouped[activeTab].map((service) =>
+                      renderServiceCard(service)
+                    )}
+                  </div>
+                )}
               </div>
-            ));
+            );
           })()}
         </>
       )}
@@ -429,4 +377,123 @@ export default function Dashboard() {
       )}
     </div>
   );
+
+  // Helper function to render a service card
+  function renderServiceCard(service) {
+    const statusConfig = {
+      online: {
+        icon: CheckCircle2,
+        color: "text-green-500",
+        bgColor: "bg-green-500/10",
+        borderColor: "border-green-500/20",
+      },
+      offline: {
+        icon: XCircle,
+        color: "text-red-500",
+        bgColor: "bg-red-500/10",
+        borderColor: "border-red-500/20",
+      },
+      problem: {
+        icon: AlertTriangle,
+        color: "text-yellow-500",
+        bgColor: "bg-yellow-500/10",
+        borderColor: "border-yellow-500/20",
+      },
+    };
+    const config = statusConfig[service.status] || statusConfig.offline;
+    const StatusIcon = config.icon;
+
+    return (
+      <div
+        key={service.id}
+        className="bg-theme-card border border-theme rounded-lg p-5 hover:bg-theme-hover transition-all duration-200 shadow-sm"
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-theme-card p-2.5 rounded-lg border border-theme">
+              {service.icon ? (
+                <img
+                  src={`http://localhost:8000${service.icon}`}
+                  alt={service.name}
+                  className="w-6 h-6 object-contain"
+                  onError={(e) => {
+                    // Fallback to status icon if image fails to load
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
+                  }}
+                />
+              ) : null}
+              <StatusIcon
+                className={`${config.color}`}
+                size={24}
+                style={{
+                  display: service.icon ? "none" : "block",
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              {service.description && (
+                <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-card text-theme-text-muted border border-theme rounded">
+                  {service.description}
+                </span>
+              )}
+              <h3 className="text-lg font-semibold text-theme-text">
+                {service.name}
+              </h3>
+              <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-card text-theme-text-muted border border-theme rounded">
+                {t(`service.types.${service.type}`)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleCheckService(service.id)}
+              className="p-2 hover:bg-theme-card rounded-lg transition-colors"
+              title={t("service.checkNow")}
+            >
+              <RefreshCw
+                className="text-theme-text-muted hover:text-theme-primary"
+                size={16}
+              />
+            </button>
+            <button
+              onClick={() => handleEditService(service)}
+              className="p-2 hover:bg-theme-card rounded-lg transition-colors"
+              title={t("service.edit")}
+            >
+              <Edit
+                className="text-theme-text-muted hover:text-theme-primary"
+                size={16}
+              />
+            </button>
+            <button
+              onClick={() => handleDeleteService(service.id)}
+              className="p-2 hover:bg-theme-card rounded-lg transition-colors"
+              title={t("service.delete")}
+            >
+              <Trash2
+                className="text-theme-text-muted hover:text-red-500"
+                size={16}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-theme-text-muted">{t("service.url")}:</span>
+            <a
+              href={service.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-theme-primary hover:text-theme-primary-hover truncate max-w-xs"
+            >
+              {service.url}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }

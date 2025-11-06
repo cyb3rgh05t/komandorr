@@ -1,5 +1,37 @@
 # CHANGELOG.md
 
+# [1.3.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.2.2...v1.3.0) (2025-11-06)
+
+### Features
+
+• **ui: improved service card styling**
+◦ Redesigned service cards with cleaner, more cohesive theme-based appearance
+◦ Removed gradient-style colored backgrounds and borders
+◦ Unified styling using `bg-theme-card` for consistent look across all themes
+◦ Added subtle shadows for better depth perception
+◦ Improved button hover states with theme-consistent backgrounds
+◦ Reduced icon sizes (18px to 16px) for cleaner appearance
+◦ Tightened button spacing for more compact design
+
+• **themes: enhanced theme consistency**
+◦ Fixed theme variable inconsistencies between `:root` and `[data-theme="dark"]`
+◦ Unified background gradient application across default and dark themes
+◦ Improved theme variable definitions for better cross-theme compatibility
+
+### Changed
+
+• **dashboard: service grouping improvements**
+◦ Enhanced service grouping with tabbed interface for multiple groups
+◦ Single group displays in simple grid layout without tabs
+◦ Improved group header styling and count badges
+◦ Better visual separation between grouped and ungrouped services
+
+• **services: consistent card styling**
+◦ Applied unified styling to ServiceCard component
+◦ Improved icon container presentation with borders
+◦ Enhanced badge styling for service descriptions and types
+◦ Better visual hierarchy in service information display
+
 # [1.2.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.2.1...v1.2.2) (2025-11-06)
 
 ### Documentation

@@ -144,9 +144,27 @@ class ServiceMonitor:
             services_data = []
             for service in self.services.values():
                 service_dict = service.model_dump()
+
                 # Convert datetime to ISO format string
                 if service_dict.get("last_check"):
                     service_dict["last_check"] = service_dict["last_check"].isoformat()
+
+                # Handle traffic metrics datetime
+                if service_dict.get("traffic") and service_dict["traffic"].get(
+                    "last_updated"
+                ):
+                    service_dict["traffic"]["last_updated"] = service_dict["traffic"][
+                        "last_updated"
+                    ].isoformat()
+
+                # Handle traffic history timestamps
+                if service_dict.get("traffic_history"):
+                    for data_point in service_dict["traffic_history"]:
+                        if data_point.get("timestamp"):
+                            data_point["timestamp"] = data_point[
+                                "timestamp"
+                            ].isoformat()
+
                 services_data.append(service_dict)
 
             with open(self.storage_file, "w", encoding="utf-8") as f:

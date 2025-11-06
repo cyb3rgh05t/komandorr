@@ -71,7 +71,7 @@ function VersionBadge() {
           className={`flex flex-col gap-2 px-3 py-2 rounded-lg transition-all hover:scale-105 ${
             isOutOfDate
               ? "bg-orange-500/20 border border-orange-500/40"
-              : "bg-theme-bg border border-theme"
+              : "bg-theme-card border border-theme"
           }`}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
