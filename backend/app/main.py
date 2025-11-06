@@ -86,18 +86,26 @@ async def health_check():
 @app.get("/api/version")
 async def get_version():
     """Get current version and check for updates"""
-    # Read version from release.txt in frontend/public directory
+    # Read version from release.txt in frontend/dist directory (production) or public (dev)
     version = "1.0.0"
     root_dir = Path(__file__).parent.parent.parent
-    release_file = root_dir / "frontend" / "public" / "release.txt"
 
-    try:
-        if release_file.exists():
-            version = release_file.read_text().strip()
-            if version.startswith("v"):
-                version = version[1:]
-    except Exception as e:
-        logger.warning(f"Could not read release.txt: {e}")
+    # Try dist first (production), then public (development)
+    release_files = [
+        root_dir / "frontend" / "dist" / "release.txt",
+        root_dir / "frontend" / "public" / "release.txt",
+    ]
+
+    for release_file in release_files:
+        try:
+            if release_file.exists():
+                version = release_file.read_text().strip()
+                if version.startswith("v"):
+                    version = version[1:]
+                break
+        except Exception as e:
+            logger.warning(f"Could not read {release_file}: {e}")
+            continue
 
     # Check for updates from GitHub
     remote_version = None
