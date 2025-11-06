@@ -22,8 +22,8 @@ services:
     networks:
       - "proxy"
     volumes:
-      - "./backend/data:/app/data:rw"
-      - "./backend/logs:/app/logs:rw"
+      - "komandorr-data:/app/data:rw"
+      - "komandorr-logs:/app/logs:rw"
     labels:
       - "dockupdater.enable=true"
       - "com.centurylinklabs.watchtower.enable=true"
@@ -36,6 +36,9 @@ services:
       - "traefik.http.routers.komandorr-rtr.middlewares=chain-authelia@file"
       - "traefik.http.routers.komandorr-rtr.service=komandorr-svc"
       - "traefik.http.services.komandorr-svc.loadbalancer.server.port=8000"
+volumes:
+  komandorr-data:
+  komandorr-logs:
 networks:
   proxy:
     driver: bridge
