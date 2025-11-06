@@ -23,6 +23,8 @@ A lightweight Python agent that monitors network traffic on your servers and rep
 
 ```bash
 # Download the script
+mkdir /opt/scripts
+cd /opt/scripts
 wget https://raw.githubusercontent.com/cyb3rgh05t/komandorr/refs/heads/main/traffic/traffic_agent.py
 wget https://raw.githubusercontent.com/cyb3rgh05t/komandorr/refs/heads/main/traffic/requirements.txt
 ```
@@ -42,6 +44,10 @@ pip install -r requirements.txt
 ### 3. Configure the agent
 
 Edit `traffic_agent.py` and set the following variables:
+
+```bash
+sudo nano traffic_agent.py
+```
 
 ```python
 # URL of your Komandorr dashboard

@@ -1,5 +1,58 @@
 # CHANGELOG.md
 
+# [1.3.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.0...v1.3.1) (2025-11-06)
+
+### Features
+
+• **ui: logo integration**
+◦ Added Komandorr logo to sidebar, loading screen, and README
+◦ Integrated favicon.png for browser tabs
+◦ Sidebar logo displays at 48px height with auto-width
+◦ Loading screen logo displays at 64px height
+◦ README logo displays centered at 400px width
+
+• **ui: refresh button improvements**
+◦ Added smooth spin animation to all refresh buttons
+◦ Renamed "Check Now" buttons to "Refresh" across all pages
+◦ Added 500ms transition duration for smooth rotation
+◦ Implemented disabled state during refresh operations
+
+• **ui: loading improvements**
+◦ Replaced in-app LoadingScreen with themed Loader2 spinner
+◦ LoadingScreen now only used for initial app startup
+◦ Added minimum display time (1 second) for smooth UX
+◦ Implemented 300ms transition delay before hiding loading screen
+◦ Monitor and Services pages now use simple Loader2 component
+
+• **ui: consistent page padding**
+◦ Unified all page containers to use `px-4 py-6 space-y-6`
+◦ Removed inconsistent padding across Dashboard, Traffic, and other pages
+◦ All pages now have uniform spacing and alignment
+
+• **logging: colored and consistent output**
+◦ Implemented ColoredFormatter with ANSI color codes for different log levels
+◦ Removed timestamps from console output for cleaner formatting
+◦ All log messages now follow format: `LEVELNAME - message`
+◦ Color scheme: DEBUG (Cyan), INFO (Green), WARNING (Yellow), ERROR (Red), CRITICAL (Magenta)
+◦ Created custom UvicornFormatter to match application logging style
+◦ Unified all uvicorn logs (startup, requests, errors) with consistent formatting
+
+### Changed
+
+• **traffic: header removal**
+◦ Removed header section from Traffic page for cleaner layout
+◦ Traffic page now directly displays summary cards
+
+• **translations: updated labels**
+◦ Updated German translation: "Jetzt prüfen" → "Aktualisieren"
+◦ Updated English translation: "Check Now" → "Refresh"
+
+### Fixed
+
+• **ui: width consistency**
+◦ Fixed inconsistent page widths between Dashboard and other pages
+◦ Standardized container padding across all page components
+
 # [1.3.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.2.2...v1.3.0) (2025-11-06)
 
 ### Features

@@ -6,10 +6,10 @@ import {
   Search,
   RefreshCw,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
-import LoadingScreen from "../components/LoadingScreen";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
 import { useToast } from "../context/ToastContext";
@@ -90,12 +90,15 @@ export default function Services() {
 
   const handleCheckService = async (id) => {
     try {
+      setRefreshing(true);
       const updatedService = await api.checkService(id);
       setServices(services.map((s) => (s.id === id ? updatedService : s)));
       showToast(t("success.serviceChecked"), "success");
     } catch (error) {
       console.error("Failed to check service:", error);
       showToast(t("errors.checkService"), "error");
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -105,7 +108,11 @@ export default function Services() {
   };
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
+      </div>
+    );
   }
 
   // Filter services based on search term
@@ -149,7 +156,7 @@ export default function Services() {
           >
             <RefreshCw
               size={18}
-              className={`text-theme-primary ${
+              className={`text-theme-primary transition-transform duration-500 ${
                 refreshing ? "animate-spin" : ""
               }`}
             />

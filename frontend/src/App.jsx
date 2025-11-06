@@ -18,8 +18,14 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authCredentials, setAuthCredentials] = useState(null);
   const [authEnabled, setAuthEnabled] = useState(true);
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
+    // Ensure loading screen shows for at least 1 second for smooth UX
+    const minLoadingTime = setTimeout(() => {
+      setAppReady(true);
+    }, 1000);
+
     // First, check if authentication is enabled
     fetch("/api/auth/status")
       .then((response) => response.json())
@@ -29,7 +35,6 @@ function App() {
         // If auth is disabled, skip authentication
         if (!data.enabled) {
           setIsAuthenticated(true);
-          setIsLoading(false);
           return;
         }
 
@@ -52,21 +57,28 @@ function App() {
             })
             .catch(() => {
               sessionStorage.removeItem("auth_credentials");
-            })
-            .finally(() => {
-              setIsLoading(false);
             });
-        } else {
-          setIsLoading(false);
         }
       })
       .catch((error) => {
         console.error("Error checking auth status:", error);
         // On error, assume auth is enabled for security
         setAuthEnabled(true);
-        setIsLoading(false);
       });
+
+    return () => clearTimeout(minLoadingTime);
   }, []);
+
+  // Only hide loading screen when both auth check is done AND minimum time has passed
+  useEffect(() => {
+    if (appReady && (isAuthenticated || !authEnabled)) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [appReady, isAuthenticated, authEnabled]);
 
   const handleLoginSuccess = (credentials) => {
     setAuthCredentials(credentials);

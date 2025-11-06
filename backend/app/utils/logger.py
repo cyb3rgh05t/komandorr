@@ -6,6 +6,42 @@ from typing import Optional
 from zoneinfo import ZoneInfo
 
 
+class ColoredFormatter(logging.Formatter):
+    """Custom formatter with colors for different log levels"""
+
+    # ANSI color codes
+    COLORS = {
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
+        "CRITICAL": "\033[35m",  # Magenta
+    }
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+
+    def __init__(self, tz):
+        # Format without timestamp - clean and consistent
+        super().__init__("%(levelname)s - %(message)s")
+        self.tz = tz
+
+    def format(self, record):
+        # Add color to level name
+        levelname = record.levelname
+        if levelname in self.COLORS:
+            record.levelname = (
+                f"{self.BOLD}{self.COLORS[levelname]}{levelname}{self.RESET}"
+            )
+
+        # Format the message
+        result = super().format(record)
+
+        # Reset levelname for next use
+        record.levelname = levelname
+
+        return result
+
+
 class Logger:
     """Custom Logger with console and file output support"""
 
@@ -40,29 +76,13 @@ class Logger:
             )
             self._timezone = ZoneInfo("UTC")
 
-        # Create custom formatter that uses the configured timezone
-        class TimezoneFormatter(logging.Formatter):
-            def __init__(self, fmt, datefmt, tz):
-                super().__init__(fmt, datefmt)
-                self.tz = tz
+        # Create custom colored formatter
+        console_formatter = ColoredFormatter(tz=self._timezone)
 
-            def formatTime(self, record, datefmt=None):
-                dt = datetime.fromtimestamp(record.created, tz=self.tz)
-                if datefmt:
-                    return dt.strftime(datefmt)
-                return dt.isoformat()
-
-        # Create formatters with timezone
-        console_formatter = TimezoneFormatter(
+        # Create file formatter (no colors for file)
+        file_formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
-            tz=self._timezone,
-        )
-
-        file_formatter = TimezoneFormatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-            tz=self._timezone,
         )
 
         # Console Handler

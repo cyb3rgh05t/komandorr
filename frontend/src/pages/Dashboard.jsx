@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [version, setVersion] = useState({
     local: null,
     remote: null,
@@ -87,17 +88,21 @@ export default function Dashboard() {
       console.error("Failed to load services:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   const handleCheckService = async (id) => {
     try {
+      setRefreshing(true);
       const updated = await api.checkService(id);
       setServices(services.map((s) => (s.id === id ? updated : s)));
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));
       console.error("Failed to check service:", error);
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -156,7 +161,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -169,10 +174,19 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={loadServices}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            onClick={() => {
+              setRefreshing(true);
+              loadServices();
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw size={18} className="text-theme-primary" />
+            <RefreshCw
+              size={18}
+              className={`text-theme-primary transition-transform duration-500 ${
+                refreshing ? "animate-spin" : ""
+              }`}
+            />
             <span className="text-sm">{t("service.checkNow")}</span>
           </button>
           <button
@@ -453,7 +467,9 @@ export default function Dashboard() {
               title={t("service.checkNow")}
             >
               <RefreshCw
-                className="text-theme-text-muted hover:text-theme-primary"
+                className={`text-theme-text-muted hover:text-theme-primary transition-transform duration-500 ${
+                  refreshing ? "animate-spin" : ""
+                }`}
                 size={16}
               />
             </button>

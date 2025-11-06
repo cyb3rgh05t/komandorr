@@ -9,10 +9,10 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
-import LoadingScreen from "../components/LoadingScreen";
 import { useToast } from "../context/ToastContext";
 
 export default function Monitor() {
@@ -54,7 +54,11 @@ export default function Monitor() {
   };
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
+      </div>
+    );
   }
 
   // Filter services based on search term
@@ -158,7 +162,7 @@ export default function Monitor() {
           >
             <RefreshCw
               size={18}
-              className={`text-theme-primary ${
+              className={`text-theme-primary transition-transform duration-500 ${
                 refreshing ? "animate-spin" : ""
               }`}
             />

@@ -8,9 +8,11 @@ export default function Traffic() {
   const [trafficSummary, setTrafficSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchTrafficData = async () => {
     try {
+      setIsRefreshing(true);
       const data = await api.getTrafficSummary();
       setTrafficSummary(data);
       setLastUpdate(new Date());
@@ -18,6 +20,8 @@ export default function Traffic() {
     } catch (error) {
       console.error("Error fetching traffic data:", error);
       setLoading(false);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   };
 
@@ -57,25 +61,7 @@ export default function Traffic() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-2">
-            <Activity className="w-8 h-8 text-theme-primary" />
-            {t("traffic.title")}
-          </h1>
-          <p className="text-theme-text-muted mt-1">{t("traffic.subtitle")}</p>
-        </div>
-        <button
-          onClick={fetchTrafficData}
-          className="flex items-center gap-2 px-4 py-2 bg-theme-bg-card hover:bg-theme-bg-hover border border-theme-border rounded-lg transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          {t("common.refresh")}
-        </button>
-      </div>
-
+    <div className="px-4 py-6 space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Services */}

@@ -30,7 +30,7 @@ from typing import Dict
 # ============================================
 
 # URL of your Komandorr dashboard
-KOMANDORR_URL = "http://localhost:8000"
+KOMANDORR_URL = "https://komandorr.mystreamnet.club"
 
 # Service ID from Komandorr (get this from the dashboard)
 SERVICE_ID = "your-service-id-here"

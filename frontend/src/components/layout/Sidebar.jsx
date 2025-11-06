@@ -57,9 +57,13 @@ export default function Sidebar() {
         `}
       >
         <div className="flex flex-col h-full">
-          {/* Logo/Title */}
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-theme-primary">Komandorr</h1>
+          {/* Logo */}
+          <div className="flex items-center p-4 h-20">
+            <img
+              src="/logo.png"
+              alt="Komandorr Logo"
+              className="h-12 w-auto object-contain"
+            />
           </div>
 
           {/* Navigation */}

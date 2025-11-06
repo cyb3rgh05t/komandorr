@@ -59,9 +59,13 @@ function LoadingScreen() {
         }
       `}</style>
 
-      {/* Komandorr Logo/Title */}
+      {/* Komandorr Logo */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-theme-primary">Komandorr</h1>
+        <img
+          src="/logo.png"
+          alt="Komandorr Logo"
+          className="h-16 w-auto object-contain"
+        />
       </div>
 
       {/* Spinning radar animation */}

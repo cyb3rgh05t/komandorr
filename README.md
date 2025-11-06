@@ -1,6 +1,9 @@
-# Komandorr Dashboard
+<div align="center">
+  <img src="frontend/public/logo.png" alt="Komandorr Logo" width="400"/>
 
 Ein modernes WebUI Dashboard zum Überwachen von Apps, Webseiten, Panels und Projekten auf ihren Online/Offline/Problem-Status.
+
+</div>
 
 ## Features
 

@@ -33,7 +33,6 @@ if (-not (Test-Path '.env')) {
     Write-Host 'Warning: .env file not found, using defaults' -ForegroundColor Yellow
 }
 
-Write-Host 'Starting FastAPI server...' -ForegroundColor Green
 Write-Host 'Backend: http://localhost:8000' -ForegroundColor Green
 Write-Host 'API Docs: http://localhost:8000/docs' -ForegroundColor Green
 Write-Host ''
