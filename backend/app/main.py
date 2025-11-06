@@ -88,14 +88,14 @@ async def get_version():
     """Get current version and check for updates"""
     # Read version from package.json (most reliable source)
     version = "1.0.0"
-    root_dir = Path(__file__).parent.parent.parent
-    
+    root_dir = Path(__file__).parent.parent  # /app/app/main.py -> /app
+
     logger.info(f"Version endpoint called, root_dir: {root_dir}")
 
     # Try reading from package.json first
     package_json_path = root_dir / "frontend" / "package.json"
     logger.info(f"Looking for package.json at: {package_json_path}")
-    
+
     try:
         if package_json_path.exists():
             import json
