@@ -86,48 +86,27 @@ async def health_check():
 @app.get("/api/version")
 async def get_version():
     """Get current version and check for updates"""
-    # Read version from package.json (most reliable source)
+    # Read version from release.txt in frontend/dist directory (production) or public (dev)
     version = "1.0.0"
     root_dir = Path(__file__).parent.parent  # /app/app/main.py -> /app
 
-    logger.info(f"Version endpoint called, root_dir: {root_dir}")
+    # Try dist first (production), then public (development)
+    release_files = [
+        root_dir / "frontend" / "dist" / "release.txt",
+        root_dir / "frontend" / "public" / "release.txt",
+    ]
 
-    # Try reading from package.json first
-    package_json_path = root_dir / "frontend" / "package.json"
-    logger.info(f"Looking for package.json at: {package_json_path}")
-
-    try:
-        if package_json_path.exists():
-            import json
-
-            with open(package_json_path, "r") as f:
-                package_data = json.load(f)
-                version = package_data.get("version", "1.0.0")
-                logger.info(f"Read version from package.json: {version}")
-        else:
-            logger.warning(f"package.json not found at {package_json_path}")
-    except Exception as e:
-        logger.warning(f"Could not read package.json: {e}")
-
-        # Fallback to release.txt
-        release_files = [
-            root_dir / "frontend" / "dist" / "release.txt",
-            root_dir / "frontend" / "public" / "release.txt",
-        ]
-
-        for release_file in release_files:
-            try:
-                if release_file.exists():
-                    version = release_file.read_text().strip()
-                    if version.startswith("v"):
-                        version = version[1:]
-                    logger.info(f"Read version from {release_file}: {version}")
-                    break
-            except Exception as e:
-                logger.warning(f"Could not read {release_file}: {e}")
-                continue
-
-    # Check for updates from GitHub
+    for release_file in release_files:
+        try:
+            if release_file.exists():
+                version = release_file.read_text().strip()
+                if version.startswith("v"):
+                    version = version[1:]
+                logger.info(f"Read version from {release_file}: {version}")
+                break
+        except Exception as e:
+            logger.warning(f"Could not read {release_file}: {e}")
+            continue  # Check for updates from GitHub
     remote_version = None
     is_update_available = False
 
