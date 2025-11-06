@@ -1,5 +1,20 @@
 # CHANGELOG.md
 
+# [1.2.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.2.1...v1.2.2) (2025-11-06)
+
+### Documentation
+
+• **changelog: adopt vodwisharr format**
+◦ Reformatted changelog to match vodwisharr style
+◦ Added compare links in version headers
+◦ Changed to bullet point format with `•` and `◦` symbols
+◦ Categorized sections with prefixes (settings:, auth:, docker:, etc.)
+
+• **traffic: improve agent documentation**
+◦ Clarified systemd service WorkingDirectory configuration
+◦ Added recommended directory structure examples
+◦ Included common installation paths and best practices
+
 # [1.2.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.2.0...v1.2.1) (2025-11-06)
 
 ### Changed
