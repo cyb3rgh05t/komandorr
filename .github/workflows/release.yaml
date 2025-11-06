@@ -9,6 +9,11 @@ on:
         description: "Version to use for testing (e.g., test-1.0.0)"
         required: true
         default: "test-1.0.0"
+      force_rebuild:
+        description: "Force rebuild without cache"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -58,7 +63,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true # Force clean build
           build-args: |
             COMMIT_TAG=${{ github.sha }}

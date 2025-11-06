@@ -13,6 +13,7 @@ i18n
       de: { translation: de },
     },
     fallbackLng: "en",
+    lng: "en", // Set English as default language
     interpolation: {
       escapeValue: false,
     },
