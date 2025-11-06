@@ -23,10 +23,8 @@ A lightweight Python agent that monitors network traffic on your servers and rep
 
 ```bash
 # Download the script
-wget https://raw.githubusercontent.com/YOUR_REPO/komandorr/main/traffic_agent.py
-
-# Or copy it manually to your server
-scp traffic_agent.py user@your-server:/path/to/traffic_agent.py
+wget https://raw.githubusercontent.com/cyb3rgh05t/komandorr/refs/heads/main/traffic/traffic_agent.py
+wget https://raw.githubusercontent.com/cyb3rgh05t/komandorr/refs/heads/main/traffic/requirements.txt
 ```
 
 ### 2. Install dependencies
@@ -35,11 +33,9 @@ scp traffic_agent.py user@your-server:/path/to/traffic_agent.py
 pip install psutil requests
 ```
 
-Or create a requirements file:
+Or use the a requirements file:
 
 ```bash
-echo "psutil>=5.9.0" > requirements.txt
-echo "requests>=2.31.0" >> requirements.txt
 pip install -r requirements.txt
 ```
 
@@ -49,7 +45,7 @@ Edit `traffic_agent.py` and set the following variables:
 
 ```python
 # URL of your Komandorr dashboard
-KOMANDORR_URL = "http://your-komandorr-server:8000"
+KOMANDORR_URL = "https://komandorr.mystreamnet.club"
 
 # Service ID from Komandorr (get this from the dashboard)
 SERVICE_ID = "your-service-id-here"
@@ -58,7 +54,7 @@ SERVICE_ID = "your-service-id-here"
 UPDATE_INTERVAL = 30
 
 # Optional: Specific network interface to monitor
-NETWORK_INTERFACE = None  # or "eth0", "ens18", etc.
+NETWORK_INTERFACE = None  # None for all or "eth0", "ens18", etc.
 
 # Optional: Authentication if enabled in Komandorr
 AUTH_USERNAME = None
@@ -99,9 +95,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=your-username
-WorkingDirectory=/path/to/agent
-ExecStart=/usr/bin/python3 /path/to/traffic_agent.py
+User=root
+WorkingDirectory=/opt/scripts
+ExecStart=/usr/bin/python3 /opt/scripts/traffic_agent.py
 Restart=always
 RestartSec=10
 
@@ -134,7 +130,7 @@ crontab -e
 Add this line:
 
 ```
-@reboot /usr/bin/python3 /path/to/traffic_agent.py &
+@reboot /usr/bin/python3 /opt/scripts/traffic_agent.py &
 ```
 
 ## Monitoring Specific Network Interfaces
@@ -234,5 +230,5 @@ This agent is part of the Komandorr project and follows the same license.
 
 For issues and questions:
 
-- GitHub Issues: https://github.com/YOUR_REPO/komandorr/issues
-- Telegram: https://t.me/YOUR_TELEGRAM
+- GitHub Issues: https://github.com/cyb3rgh05t/komandorr/issues
+- Telegram: https://t.me/cyb3rgh05t_01
