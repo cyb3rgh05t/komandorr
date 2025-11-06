@@ -46,12 +46,10 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
   };
 
   return (
-    <div
-      className={`bg-theme-card border ${config.borderColor} rounded-lg p-5 hover:bg-theme-hover transition-all duration-200`}
-    >
+    <div className="bg-theme-card border border-theme rounded-lg p-5 hover:bg-theme-hover transition-all duration-200 shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`${config.bgColor} p-2 rounded-lg`}>
+          <div className="bg-theme-accent p-2.5 rounded-lg border border-theme">
             {service.icon ? (
               <img
                 src={`http://localhost:8000${service.icon}`}
@@ -72,55 +70,55 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
           </div>
           <div className="flex-1">
             {service.description && (
-              <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-bg text-theme-text-muted border border-theme rounded">
+              <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-accent text-theme-text-muted border border-theme rounded">
                 {service.description}
               </span>
             )}
             <h3 className="text-lg font-semibold text-theme-text">
               {service.name}
             </h3>
-            <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-bg text-theme-text-muted border border-theme rounded">
+            <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-accent text-theme-text-muted border border-theme rounded">
               {t(`service.types.${service.type}`)}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onCheck(service.id)}
-            className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+            className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
             title={t("service.checkNow")}
           >
             <RefreshCw
               className="text-theme-text-muted hover:text-theme-primary"
-              size={18}
+              size={16}
             />
           </button>
           <button
             onClick={() => onEdit(service)}
-            className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+            className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
             title={t("service.edit")}
           >
             <Edit
               className="text-theme-text-muted hover:text-theme-primary"
-              size={18}
+              size={16}
             />
           </button>
           <button
             onClick={() => onDelete(service.id)}
-            className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+            className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
             title={t("service.delete")}
           >
             <Trash2
               className="text-theme-text-muted hover:text-red-500"
-              size={18}
+              size={16}
             />
           </button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className="bg-theme-bg border border-theme rounded-lg p-3">
+        <div className="bg-theme-accent border border-theme rounded-lg p-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-theme-text-muted">{t("service.url")}:</span>
             <a
@@ -166,12 +164,12 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
         <div className="flex items-center justify-between text-sm pt-2 border-t border-theme">
           <span className="text-theme-text-muted">Service ID:</span>
           <div className="flex items-center gap-2">
-            <code className="text-xs text-theme-text-muted font-mono bg-theme-bg px-2 py-1 rounded border border-theme">
+            <code className="text-xs text-theme-text-muted font-mono bg-theme-accent px-2 py-1 rounded border border-theme">
               {service.id.slice(0, 8)}...
             </code>
             <button
               onClick={handleCopyId}
-              className="p-1.5 hover:bg-theme-bg-hover rounded transition-colors"
+              className="p-1.5 hover:bg-theme-accent rounded transition-colors"
               title="Copy Service ID"
             >
               {copied ? (

@@ -233,7 +233,7 @@ export default function Dashboard() {
             }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+            className="w-full pl-10 pr-4 py-2.5 bg-theme-accent border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
           />
         </div>
       </div>
@@ -318,11 +318,11 @@ export default function Dashboard() {
                     return (
                       <div
                         key={service.id}
-                        className={`bg-theme-card border ${config.borderColor} rounded-lg p-5 hover:bg-theme-hover transition-all duration-200`}
+                        className="bg-theme-card border border-theme rounded-lg p-5 hover:bg-theme-hover transition-all duration-200 shadow-sm"
                       >
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className={`${config.bgColor} p-2 rounded-lg`}>
+                            <div className="bg-theme-accent p-2.5 rounded-lg border border-theme">
                               {service.icon ? (
                                 <img
                                   src={`http://localhost:8000${service.icon}`}
@@ -346,54 +346,54 @@ export default function Dashboard() {
                             </div>
                             <div className="flex-1">
                               {service.description && (
-                                <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-bg text-theme-text-muted border border-theme rounded">
+                                <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-accent text-theme-text-muted border border-theme rounded">
                                   {service.description}
                                 </span>
                               )}
                               <h3 className="text-lg font-semibold text-theme-text">
                                 {service.name}
                               </h3>
-                              <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-bg text-theme-text-muted border border-theme rounded">
+                              <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-accent text-theme-text-muted border border-theme rounded">
                                 {t(`service.types.${service.type}`)}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleCheckService(service.id)}
-                              className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+                              className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
                               title={t("service.checkNow")}
                             >
                               <RefreshCw
                                 className="text-theme-text-muted hover:text-theme-primary"
-                                size={18}
+                                size={16}
                               />
                             </button>
                             <button
                               onClick={() => handleEditService(service)}
-                              className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+                              className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
                               title={t("service.edit")}
                             >
                               <Edit
                                 className="text-theme-text-muted hover:text-theme-primary"
-                                size={18}
+                                size={16}
                               />
                             </button>
                             <button
                               onClick={() => handleDeleteService(service.id)}
-                              className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+                              className="p-2 hover:bg-theme-accent rounded-lg transition-colors"
                               title={t("service.delete")}
                             >
                               <Trash2
                                 className="text-theme-text-muted hover:text-red-500"
-                                size={18}
+                                size={16}
                               />
                             </button>
                           </div>
                         </div>
 
-                        <div className="bg-theme-bg border border-theme rounded-lg p-3">
+                        <div className="bg-theme-accent border border-theme rounded-lg p-3">
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-theme-text-muted">
                               {t("service.url")}:
