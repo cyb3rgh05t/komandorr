@@ -1,20 +1,20 @@
 <div align="center">
   <img src="frontend/public/logo.png" alt="Komandorr Logo" width="400"/>
 
-Ein modernes WebUI Dashboard zum Überwachen von Apps, Webseiten, Panels und Projekten auf ihren Online/Offline/Problem-Status.
+A modern WebUI dashboard for monitoring apps, websites, panels, and projects for their Online/Offline/Problem status.
 
 </div>
 
 ## Features
 
-- **Backend**: Python FastAPI mit Service-Monitoring und Logger-System
-- **Frontend**: React mit Vite, TailwindCSS und Lucide React Icons
+- **Backend**: Python FastAPI with service monitoring and logger system
+- **Frontend**: React with Vite, TailwindCSS, and Lucide React Icons
 - **11 Themes**: Dark, Plex, Jellyfin, Emby, Mind/Power/Reality/Soul/Space/Time Stones, Seerr
-- **Multi-Language**: Englisch (Standard) und Deutsch
-- **Responsive**: Sidebar und TopNavbar Layout (wie Sonarr/Radarr)
-- **Real-time Monitoring**: Automatische Service-Überwachung
+- **Multi-Language**: English (default) and German
+- **Responsive**: Sidebar and TopNavbar layout (like Sonarr/Radarr)
+- **Real-time Monitoring**: Automatic service monitoring
 
-## Projekt-Struktur
+## Project Structure
 
 ```
 komandorr/
@@ -41,25 +41,25 @@ komandorr/
 └── README.md
 ```
 
-## Installation & Start
+## Installation & Setup
 
-### Automatisches Setup (Empfohlen)
+### Automatic Setup (Recommended)
 
-Führe das Setup-Script aus, um alle Dependencies zu installieren:
+Run the setup script to install all dependencies:
 
 ```powershell
 .\setup.ps1
 ```
 
-Das Script installiert:
+The script installs:
 
 - Backend: Python Virtual Environment + Dependencies
 - Frontend: Node.js Dependencies
-- Erstellt .env Datei und Logs-Verzeichnis
+- Creates .env file and logs directory
 
-### Anwendung starten
+### Starting the Application
 
-**Option 1: Mit Start-Scripts**
+**Option 1: With Start Scripts**
 
 Terminal 1 - Backend:
 
@@ -73,7 +73,7 @@ Terminal 2 - Frontend:
 .\start-frontend.ps1
 ```
 
-**Option 2: Manuell**
+**Option 2: Manually**
 
 ### Backend
 
@@ -86,7 +86,7 @@ cp .env.example .env
 python run.py
 ```
 
-Backend läuft auf: `http://localhost:8000`
+Backend runs on: `http://localhost:8000`
 API Docs: `http://localhost:8000/docs`
 
 ### Frontend
@@ -97,23 +97,23 @@ npm install
 npm run dev
 ```
 
-Frontend läuft auf: `http://localhost:3000`
+Frontend runs on: `http://localhost:3000`
 
-## Verwendung
+## Usage
 
-1. Backend starten
-2. Frontend starten
-3. Dashboard unter `http://localhost:3000` öffnen
-4. Services hinzufügen über den "Add Service" Button
-5. Theme und Sprache in den Einstellungen anpassen
+1. Start the backend
+2. Start the frontend
+3. Open the dashboard at `http://localhost:3000`
+4. Add services via the "Add Service" button
+5. Customize theme and language in the settings
 
 ## Authentication
 
-Komandorr unterstützt Basic Authentication zum Schutz des Dashboards.
+Komandorr supports Basic Authentication to protect the dashboard.
 
-### Authentication aktivieren
+### Enable Authentication
 
-Erstelle eine `.env` Datei im `backend` Verzeichnis:
+Create a `.env` file in the `backend` directory:
 
 ```env
 ENABLE_AUTH=true
@@ -121,73 +121,73 @@ AUTH_USERNAME=dein_benutzername
 AUTH_PASSWORD=dein_passwort
 ```
 
-### Timezone Konfiguration
+### Timezone Configuration
 
-Komandorr verwendet standardmäßig UTC für alle Zeitstempel. Du kannst die Zeitzone in der `.env` Datei anpassen:
+Komandorr uses UTC by default for all timestamps. You can customize the timezone in the `.env` file:
 
 ```env
 TIMEZONE=Europe/Berlin
-# Oder andere gültige Zeitzonen:
+# Or other valid timezones:
 # TIMEZONE=America/New_York
 # TIMEZONE=Asia/Tokyo
 # TIMEZONE=Europe/London
 ```
 
-**Hinweis**: Die konfigurierte Zeitzone wird für:
+**Note**: The configured timezone is used for:
 
-- Backend-Logging verwendet
-- Im About-Tab der UI angezeigt
+- Backend logging
+- Display in the About tab of the UI
 
-Siehe die vollständige Liste gültiger Zeitzonen: [Wikipedia - TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+See the full list of valid timezones: [Wikipedia - TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 
-### Standard-Credentials (wenn aktiviert)
+### Default Credentials (when enabled)
 
 - **Username**: admin
 - **Password**: admin
 
-**⚠️ WICHTIG**: Ändere die Standard-Credentials in der Produktion!
+**⚠️ IMPORTANT**: Change the default credentials in production!
 
-### Authentication verwalten
+### Managing Authentication
 
-Nach der Anmeldung kannst du:
+After logging in, you can:
 
-1. **Logout**: Klicke auf das Benutzer-Symbol in der oberen Navigationsleiste und wähle "Logout"
-2. **Einstellungen öffnen**: Über das Benutzer-Menü oder direkt unter Settings
-3. **Authentication ein/ausschalten**: In den Einstellungen unter "Authentication Settings"
-4. **Credentials ändern**: Benutzername und Passwort in den Einstellungen aktualisieren
+1. **Logout**: Click on the user icon in the top navigation bar and select "Logout"
+2. **Open Settings**: Via the user menu or directly under Settings
+3. **Enable/Disable Authentication**: In the settings under "Authentication Settings"
+4. **Change Credentials**: Update username and password in the settings
 
-**Hinweis**: Beim Aktivieren der Authentication wirst du automatisch zur Login-Seite weitergeleitet.
+**Note**: When enabling authentication, you will be automatically redirected to the login page.
 
-### Authentication deaktivieren
+### Disable Authentication
 
-Setze in der `.env` Datei:
+Set in the `.env` file:
 
 ```env
 ENABLE_AUTH=false
 ```
 
-Oder deaktiviere es direkt in den Einstellungen (wenn angemeldet).
+Or disable it directly in the settings (when logged in).
 
 ## Themes
 
-- **Dark** (Default): Dunkles Theme mit Grautönen
-- **Plex**: Orangefarbenes Plex-Theme
-- **Jellyfin**: Lila Jellyfin-Theme
-- **Emby**: Grünes Emby-Theme
-- **Mind Stone**: Gelbes Theme
-- **Power Stone**: Magenta/Lila Theme
-- **Reality Stone**: Rotes Theme
-- **Soul Stone**: Orange Theme
-- **Space Stone**: Blaues Theme
-- **Time Stone**: Grünes Theme
-- **Seerr**: Indigo Theme
+- **Dark** (Default): Dark theme with gray tones
+- **Plex**: Orange Plex theme
+- **Jellyfin**: Purple Jellyfin theme
+- **Emby**: Green Emby theme
+- **Mind Stone**: Yellow theme
+- **Power Stone**: Magenta/Purple theme
+- **Reality Stone**: Red theme
+- **Soul Stone**: Orange theme
+- **Space Stone**: Blue theme
+- **Time Stone**: Green theme
+- **Seerr**: Indigo theme
 
-## Sprachen
+## Languages
 
-- English (en) - Standard
-- Deutsch (de)
+- English (en) - Default
+- German (de)
 
-## Technologien
+## Technologies
 
 ### Backend
 
