@@ -1,5 +1,37 @@
 # CHANGELOG.md
 
+# [1.4.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.1...v1.4.2) (2025-11-08)
+
+### Bug Fixes
+
+• **version: hardcoded fallback causing false update alerts**
+◦ Removed hardcoded version fallback from '1.4.0' to 'unknown'
+◦ Fixed "Update Available" badge showing incorrectly when on latest version
+◦ Version now properly read from release.txt in Docker containers
+
+• **monitoring: timezone issues in service check timestamps**
+◦ Changed backend to use UTC timestamps (`datetime.now(timezone.utc)`) for all service checks
+◦ Fixed "Last Check" showing incorrect times (e.g., "1h ago" when just checked)
+◦ Improved `formatDistanceToNow()` with validation and edge case handling
+◦ Added null/undefined checks and invalid date handling
+◦ Timestamps now consistent across all timezones in Docker deployments
+
+### Features
+
+• **debug: version troubleshooting endpoint**
+◦ Added `/api/version/debug` endpoint for diagnosing version detection issues
+◦ Shows environment type (docker/local), file paths, existence, and content
+◦ Helps troubleshoot path issues in containerized deployments
+
+### Documentation
+
+• **docs: cleaner appearance and proper branding**
+◦ Removed all emoji characters from documentation files
+◦ Copied logo.png and favicon.png from frontend to docs/images
+◦ Updated mkdocs.yml to use separate favicon.png file
+◦ Replaced emoji bullets with plain text throughout documentation
+◦ Changed 'Made with ❤️' to 'Made with love'
+
 # [1.4.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.0...v1.4.1) (2025-11-08)
 
 ### Bug Fixes
