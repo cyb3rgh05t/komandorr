@@ -1,5 +1,95 @@
 # CHANGELOG.md
 
+# [1.4.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.2...v1.4.0) (2025-11-08)
+
+### Features
+
+• **vod streams: plex integration**
+◦ Added new "VOD Streams" sidebar tab for monitoring Plex Media Server activities
+◦ Implemented Plex server configuration in Settings page with URL and token input
+◦ Added validation for Plex server connection before saving configuration
+◦ Real-time display of Plex downloads, streams, and transcode activities
+◦ Activity cards show progress bars, type badges (download/stream/transcode/pause), and titles
+◦ Monitor-style header with search functionality, LIVE indicator, and refresh button
+◦ Auto-refresh every 10 seconds for real-time activity updates
+◦ Three stat cards: Total activities, Online (downloads), Problem (errors)
+◦ Pagination support (10 items per page) for large activity lists
+◦ "Not configured" state with direct link to Settings when Plex is not set up
+◦ Bilingual support (English/German) for all UI elements
+
+• **plex backend: comprehensive api**
+◦ Created `/api/plex/config` endpoints (GET/POST) for Plex server configuration management
+◦ Added `/api/plex/validate` endpoint for testing Plex connection before saving
+◦ Implemented `/api/plex/activities` endpoint fetching from both `/activities` (downloads) and `/status/sessions` (streams)
+◦ Added `/api/downloads` alias endpoint for compatibility
+◦ JSON file storage for Plex configuration at `backend/data/plex_config.json`
+◦ Debug endpoint `/api/plex/debug/raw-activities` for troubleshooting
+◦ Proper error handling and logging for all Plex operations
+
+• **traffic monitoring: dashboard integration**
+◦ Added traffic data display to Dashboard service cards
+◦ Shows upload/download speeds with color-coded icons (blue for upload, green for download)
+◦ Auto-refresh traffic data every 30 seconds
+◦ Traffic only displays when bandwidth > 0 for cleaner UI
+◦ Maintains separate layouts for Dashboard (inline cards) and Services page (ServiceCard component)
+
+• **search functionality: vod streams**
+◦ Implemented real-time search filtering for VOD activities
+◦ Search by title, subtitle, or activity type
+◦ Auto-reset to page 1 when search query changes
+◦ Clear search button when no results found
+◦ Different empty state messages for no activities vs. no search results
+
+• **settings page: plex configuration**
+◦ Added Plex Server Settings section below Authentication settings
+◦ Server URL and token input fields with validation
+◦ Visual feedback: green button for validated connection, red for failed
+◦ Loading spinner during validation process
+◦ Help text for finding Plex token
+◦ Theme-compatible button styling (smaller size, proper colors)
+
+### Fixed
+
+• **timezone: configuration bug**
+◦ Fixed timezone always showing UTC in About page
+◦ Removed conflicting `@property timezone` that was checking for TZ environment variable
+◦ Now correctly reads TIMEZONE from .env file (e.g., Europe/Berlin)
+◦ Backend properly returns configured timezone via `/api/config` endpoint
+◦ Frontend dateUtils correctly fetches and caches timezone for all date formatting
+
+• **settings: duplicate authentication section**
+◦ Removed duplicate Authentication Settings section that appeared after Plex settings
+◦ Proper order: Authentication → Plex → Language → Theme
+
+• **plex settings: button sizing**
+◦ Changed buttons from flex-1 (full width) to fixed width with px-6 padding
+◦ Reduced button height (py-2 instead of py-3) and font size (text-sm)
+◦ Smaller icons (16px instead of 20px, h-4 w-4 spinner)
+
+### Changed
+
+• **dateUtils: improved timezone fetching**
+◦ Added caching mechanism to prevent multiple simultaneous timezone fetches
+◦ Console logging of loaded timezone for debugging
+◦ Proper async handling with promise reuse during concurrent requests
+
+### Technical
+
+• **service layer: plex abstraction**
+◦ Created `frontend/src/services/plexService.js` with clean API methods
+◦ Methods: testPlexConnection, getPlexConfig, savePlexConfig, fetchPlexActivities
+◦ Normalized data structure from different Plex endpoints
+◦ Proper error handling and user-friendly error messages
+
+• **translations: comprehensive coverage**
+◦ Added `vodStreams` section to en.json and de.json
+◦ Added `plex` section with server settings, validation, and status messages
+◦ All UI elements fully translated in English and German
+
+• **dependencies: pydantic settings**
+◦ Added pydantic-settings package for proper configuration management
+◦ Required for Pydantic v2 BaseSettings functionality
+
 # [1.3.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.1...v1.3.2) (2025-11-06)
 
 ### Features
