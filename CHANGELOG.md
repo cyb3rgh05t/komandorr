@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+# [1.4.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.0...v1.4.1) (2025-11-08)
+
+### Bug Fixes
+
+• **traffic: timestamp display and timezone handling**
+◦ Fixed traffic `last_updated` timestamp not being loaded correctly from JSON storage
+◦ Added proper datetime deserialization for traffic metrics and history on service load
+◦ Changed backend to use UTC timestamps (`datetime.now(timezone.utc)`) for consistency
+◦ Updated frontend to display timestamps in 24-hour format (DD/MM/YYYY, HH:MM:SS)
+◦ Timestamps now automatically convert from UTC to user's local timezone
+◦ Added "Never" fallback when no traffic data has been received
+◦ Created `formatDateTime()` helper function for consistent datetime formatting across Traffic page
+
 # [1.4.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.2...v1.4.0) (2025-11-08)
 
 ### Features

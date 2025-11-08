@@ -3,7 +3,7 @@ from typing import List
 from app.models.service import TrafficUpdate, TrafficDataPoint
 from app.services.monitor import monitor
 from app.utils.logger import logger
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"])
 
@@ -28,11 +28,11 @@ async def update_traffic(traffic_data: TrafficUpdate):
     service.traffic.bandwidth_down = traffic_data.bandwidth_down
     service.traffic.total_up = traffic_data.total_up
     service.traffic.total_down = traffic_data.total_down
-    service.traffic.last_updated = datetime.now()
+    service.traffic.last_updated = datetime.now(timezone.utc)
 
     # Add to history (keep last 100 data points)
     data_point = TrafficDataPoint(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(timezone.utc),
         bandwidth_up=traffic_data.bandwidth_up,
         bandwidth_down=traffic_data.bandwidth_down,
         total_up=traffic_data.total_up,

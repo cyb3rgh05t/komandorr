@@ -129,6 +129,25 @@ class ServiceMonitor:
                         service_data["last_check"] = datetime.fromisoformat(
                             service_data["last_check"]
                         )
+
+                    # Convert traffic last_updated back to datetime
+                    if service_data.get("traffic") and service_data["traffic"].get(
+                        "last_updated"
+                    ):
+                        service_data["traffic"]["last_updated"] = (
+                            datetime.fromisoformat(
+                                service_data["traffic"]["last_updated"]
+                            )
+                        )
+
+                    # Convert traffic history timestamps back to datetime
+                    if service_data.get("traffic_history"):
+                        for data_point in service_data["traffic_history"]:
+                            if data_point.get("timestamp"):
+                                data_point["timestamp"] = datetime.fromisoformat(
+                                    data_point["timestamp"]
+                                )
+
                     service = Service(**service_data)
                     self.services[service.id] = service
             logger.info(

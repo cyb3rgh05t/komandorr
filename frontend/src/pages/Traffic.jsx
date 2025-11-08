@@ -4,6 +4,25 @@ import { Activity, ArrowUp, ArrowDown, Server, RefreshCw } from "lucide-react";
 import { api } from "../services/api";
 import { formatTime } from "../utils/dateUtils";
 
+// Format datetime to local time in 24-hour format
+const formatDateTime = (dateString) => {
+  if (!dateString) return "Never";
+
+  const date = new Date(dateString);
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "Invalid date";
+
+  return date.toLocaleString("en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+};
+
 // Component to format time asynchronously
 function FormattedTime({ date }) {
   const [formatted, setFormatted] = useState("Loading...");
@@ -252,7 +271,7 @@ export default function Traffic() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-theme-text-muted">
-                        <FormattedTime date={service.last_updated} />
+                        {formatDateTime(service.last_updated)}
                       </div>
                     </td>
                   </tr>
@@ -275,7 +294,7 @@ export default function Traffic() {
       {/* Last Update Info */}
       {lastUpdate && (
         <div className="text-center text-sm text-theme-text-muted">
-          {t("traffic.last_refresh")}: <FormattedTime date={lastUpdate} />
+          {t("traffic.last_refresh")}: {formatDateTime(lastUpdate)}
         </div>
       )}
     </div>
