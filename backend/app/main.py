@@ -480,6 +480,57 @@ async def get_version():
     }
 
 
+@app.get("/api/version/debug")
+async def debug_version():
+    """Debug endpoint to check version file paths and existence"""
+    current_file = Path(__file__).resolve()
+    
+    # Determine root directory
+    if current_file.parts[-3] == "backend":
+        root_dir = current_file.parent.parent.parent
+        environment = "local"
+    else:
+        root_dir = current_file.parent.parent
+        environment = "docker"
+    
+    # Check all possible paths
+    dist_path = root_dir / "frontend" / "dist" / "release.txt"
+    public_path = root_dir / "frontend" / "public" / "release.txt"
+    
+    debug_info = {
+        "environment": environment,
+        "current_file": str(current_file),
+        "root_dir": str(root_dir),
+        "paths_checked": {
+            "dist": {
+                "path": str(dist_path),
+                "exists": dist_path.exists(),
+                "content": None
+            },
+            "public": {
+                "path": str(public_path),
+                "exists": public_path.exists(),
+                "content": None
+            }
+        }
+    }
+    
+    # Try to read content from existing files
+    if dist_path.exists():
+        try:
+            debug_info["paths_checked"]["dist"]["content"] = dist_path.read_text().strip()
+        except Exception as e:
+            debug_info["paths_checked"]["dist"]["error"] = str(e)
+    
+    if public_path.exists():
+        try:
+            debug_info["paths_checked"]["public"]["content"] = public_path.read_text().strip()
+        except Exception as e:
+            debug_info["paths_checked"]["public"]["error"] = str(e)
+    
+    return debug_info
+
+
 @app.get("/api/config")
 async def get_config():
     """Get application configuration"""
