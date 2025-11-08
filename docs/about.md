@@ -145,5 +145,5 @@ Special thanks to:
 ---
 
 <div align="center">
-  Made with ❤️ by cyb3rgh05t
+  Made with love by cyb3rgh05t
 </div>

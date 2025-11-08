@@ -51,7 +51,7 @@ Your service will appear on the dashboard with its current status!
 
 Monitor your Plex Media Server activities:
 
-1. Go to **Settings** (⚙️)
+1. Go to **Settings**
 2. Scroll to **Plex Server Settings**
 3. Enter your Plex server URL: `http://your-plex-server:32400`
 4. Add your [Plex token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)

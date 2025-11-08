@@ -72,7 +72,7 @@ Stay up-to-date automatically:
 
 ### Configuration
 
-1. Navigate to **Settings** (⚙️ icon)
+1. Navigate to **Settings**
 2. Scroll to **Plex Server Settings**
 3. Enter your Plex server URL:
    ```

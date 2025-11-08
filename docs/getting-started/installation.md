@@ -111,9 +111,9 @@ After installation, verify everything is working:
 
 You should see:
 
-- ✅ Frontend loads with the dashboard
-- ✅ Backend health check returns `{"status": "healthy"}`
-- ✅ Swagger UI documentation displays
+- Frontend loads with the dashboard
+- Backend health check returns `{"status": "healthy"}`
+- Swagger UI documentation displays
 
 ## Post-Installation
 

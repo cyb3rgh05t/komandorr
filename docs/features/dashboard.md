@@ -13,7 +13,7 @@ The Dashboard displays all your services in a clean, organized layout with real-
 Each service is displayed in a card showing:
 
 - **Service Name**: The display name of your service
-- **Status Indicator**: Color-coded status (🟢 Online, 🔴 Offline, ⚠️ Error)
+- **Status Indicator**: Color-coded status (Online, Offline, Error)
 - **Service Type**: Icon and label (Website, App, Panel, Server)
 - **Description**: Optional service description
 - **Response Time**: Last measured response time in milliseconds
@@ -32,11 +32,11 @@ Organize services into logical groups:
 
 Services are color-coded by status:
 
-| Status     | Color  | Meaning                     |
-| ---------- | ------ | --------------------------- |
-| 🟢 Online  | Green  | Service responding normally |
-| 🔴 Offline | Red    | Service not responding      |
-| ⚠️ Error   | Yellow | Service error or timeout    |
+| Status  | Color  | Meaning                     |
+| ------- | ------ | --------------------------- |
+| Online  | Green  | Service responding normally |
+| Offline | Red    | Service not responding      |
+| Error   | Yellow | Service error or timeout    |
 
 ### Traffic Integration
 
@@ -98,7 +98,7 @@ The Dashboard automatically updates service status:
 │                                                      │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
 │  │ Service1 │  │ Service2 │  │ Service3 │          │
-│  │ 🟢 Online│  │ 🟢 Online│  │ 🔴 Offline│         │
+│  │  Online  │  │  Online  │  │  Offline │          │
 │  │ 45ms     │  │ 120ms    │  │ Timeout  │          │
 │  │ ↑ 2.5MB/s│  │ ↑ 0.8MB/s│  │          │          │
 │  │ ↓ 5.1MB/s│  │ ↓ 1.2MB/s│  │          │          │
@@ -113,11 +113,11 @@ The Dashboard automatically updates service status:
 
 Use clear, descriptive names:
 
-- ✅ `Plex Media Server`
-- ✅ `Website - Production`
-- ✅ `VPN Gateway`
-- ❌ `srv1`
-- ❌ `test`
+- Good: `Plex Media Server`
+- Good: `Website - Production`
+- Good: `VPN Gateway`
+- Bad: `srv1`
+- Bad: `test`
 
 ### Grouping Strategy
 

@@ -18,40 +18,40 @@ Komandorr is a modern, feature-rich service monitoring dashboard designed to kee
 
 ## Key Features
 
-### 🎯 Service Monitoring
+### Service Monitoring
 
 - **Real-time Health Checks**: Monitor HTTP/HTTPS endpoints with customizable intervals
 - **Service Groups**: Organize services into logical groups
 - **Visual Status**: Color-coded service cards with instant status visibility
 - **Service Types**: Support for websites, apps, panels, and servers
 
-### 📺 VOD Streams (Plex Integration)
+### VOD Streams (Plex Integration)
 
 - **Real-time Activity Monitoring**: Track Plex downloads, streams, and transcodes
 - **Progress Tracking**: Visual progress bars for active operations
 - **Search & Filter**: Quickly find specific activities
 - **Auto-refresh**: Live updates every 10 seconds
 
-### 📊 Traffic Monitoring
+### Traffic Monitoring
 
 - **Bandwidth Tracking**: Monitor upload/download speeds per service
 - **Real-time Data**: Auto-refresh traffic statistics
 - **Dashboard Integration**: Traffic data displayed directly on service cards
 - **Remote Agent**: Monitor traffic from remote servers
 
-### 🎨 Themes & Customization
+### Themes & Customization
 
 - **Multiple Themes**: Dark, Plex, Jellyfin, Emby, and more
 - **Theme Switching**: Instant theme changes with smooth transitions
 - **Custom Branding**: Komandorr orange accent color throughout
 
-### 🌍 Multi-Language Support
+### Multi-Language Support
 
 - **English & German**: Full bilingual support
 - **Easy Switching**: Change language on-the-fly
 - **Complete Translation**: All UI elements translated
 
-### 🔐 Security
+### Security
 
 - **Optional Authentication**: Basic HTTP authentication
 - **Token-based**: Secure API access
@@ -105,19 +105,19 @@ graph TD
 
 ## What's New in v1.4.0
 
-- ✨ **VOD Streams**: Complete Plex integration for monitoring media server activities
-- 📊 **Traffic Integration**: Dashboard service cards now display bandwidth data
-- 🔧 **Timezone Fixes**: Proper timezone configuration
-- 📚 **API Documentation**: Custom dark-themed Swagger UI
-- 🔍 **Search**: Real-time search filtering for VOD activities
+- **VOD Streams**: Complete Plex integration for monitoring media server activities
+- **Traffic Integration**: Dashboard service cards now display bandwidth data
+- **Timezone Fixes**: Proper timezone configuration
+- **API Documentation**: Custom dark-themed Swagger UI
+- **Search**: Real-time search filtering for VOD activities
 
 [View Full Changelog](changelog.md){ .md-button }
 
 ## Community & Support
 
-- 📖 [Documentation](https://cyb3rgh05t.github.io/komandorr)
-- 🐛 [Issue Tracker](https://github.com/cyb3rgh05t/komandorr/issues)
-- 💬 [Discussions](https://github.com/cyb3rgh05t/komandorr/discussions)
+- [Documentation](https://cyb3rgh05t.github.io/komandorr)
+- [Issue Tracker](https://github.com/cyb3rgh05t/komandorr/issues)
+- [Discussions](https://github.com/cyb3rgh05t/komandorr/discussions)
 
 ## License
 
@@ -126,5 +126,5 @@ Komandorr is released under the [MIT License](https://github.com/cyb3rgh05t/koma
 ---
 
 <div align="center">
-  Made with ❤️ by <a href="https://github.com/cyb3rgh05t">cyb3rgh05t</a>
+  Made with love by <a href="https://github.com/cyb3rgh05t">cyb3rgh05t</a>
 </div>

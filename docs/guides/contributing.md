@@ -4,11 +4,11 @@ Thank you for considering contributing to Komandorr!
 
 ## Ways to Contribute
 
-- 🐛 **Report bugs** - Open an issue
-- 💡 **Suggest features** - Start a discussion
-- 📝 **Improve documentation** - Submit PR
-- 🌍 **Add translations** - Add new language files
-- 💻 **Submit code** - Fix bugs or add features
+- **Report bugs** - Open an issue
+- **Suggest features** - Start a discussion
+- **Improve documentation** - Submit PR
+- **Add translations** - Add new language files
+- **Submit code** - Fix bugs or add features
 
 ## Getting Started
 
