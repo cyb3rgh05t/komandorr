@@ -7,6 +7,7 @@ Common issues and solutions.
 **Issue**: Services show old status or don't update.
 
 **Solutions**:
+
 - Check backend is running: `http://localhost:8000/api/health`
 - Verify service URL is accessible
 - Check logs: `backend/logs/app.log`
@@ -17,6 +18,7 @@ Common issues and solutions.
 **Issue**: Can't login or auth not working.
 
 **Solutions**:
+
 - Verify `ENABLE_AUTH=true` in environment
 - Check username/password are correct
 - Clear browser cache and cookies
@@ -27,6 +29,7 @@ Common issues and solutions.
 **Issue**: Can't connect to Plex server.
 
 **Solutions**:
+
 - Verify Plex server is running
 - Check server URL is correct (include `:32400`)
 - Ensure token is valid
@@ -38,6 +41,7 @@ Common issues and solutions.
 **Issue**: Traffic data not appearing on dashboard.
 
 **Solutions**:
+
 - Ensure traffic agent is running on server
 - Verify service ID matches in agent config
 - Check network connectivity
@@ -49,6 +53,7 @@ Common issues and solutions.
 **Issue**: Container won't start or crashes.
 
 **Solutions**:
+
 - Check logs: `docker-compose logs -f`
 - Verify ports aren't already in use
 - Check volume permissions
@@ -60,6 +65,7 @@ Common issues and solutions.
 **Issue**: Slow loading or high resource usage.
 
 **Solutions**:
+
 - Increase check intervals for services
 - Reduce number of concurrent checks
 - Check system resources (CPU, RAM)
@@ -71,6 +77,7 @@ Common issues and solutions.
 **Issue**: UI not loading or blank page.
 
 **Solutions**:
+
 - Hard refresh: Ctrl+Shift+R (Cmd+Shift+R on Mac)
 - Clear browser cache
 - Check browser console for errors

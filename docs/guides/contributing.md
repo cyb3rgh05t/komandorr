@@ -50,6 +50,7 @@ See [Development Guide](development.md) for setup instructions.
 ## Reporting Bugs
 
 Include:
+
 - Komandorr version
 - Operating system
 - Steps to reproduce
@@ -59,6 +60,7 @@ Include:
 ## Feature Requests
 
 Start a discussion:
+
 - Describe the feature
 - Explain use case
 - Suggest implementation (optional)

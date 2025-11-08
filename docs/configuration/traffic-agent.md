@@ -18,6 +18,7 @@ python traffic_agent.py --setup
 ## Configuration
 
 Provide:
+
 - Komandorr backend URL: `http://your-server:8000`
 - Service ID: Copy from Komandorr UI
 
