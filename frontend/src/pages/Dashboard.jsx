@@ -12,6 +12,8 @@ import {
   Edit,
   Trash2,
   Search,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [trafficData, setTrafficData] = useState(null);
   const [version, setVersion] = useState({
     local: null,
     remote: null,
@@ -41,12 +44,17 @@ export default function Dashboard() {
   useEffect(() => {
     loadServices();
     fetchVersion();
+    fetchTrafficData();
 
     // Check for updates every 12 hours
     const versionCheckInterval = setInterval(fetchVersion, 12 * 60 * 60 * 1000);
 
+    // Fetch traffic data every 30 seconds
+    const trafficInterval = setInterval(fetchTrafficData, 30000);
+
     return () => {
       clearInterval(versionCheckInterval);
+      clearInterval(trafficInterval);
     };
   }, []);
 
@@ -69,6 +77,16 @@ export default function Dashboard() {
         is_update_available: false,
         loading: false,
       });
+    }
+  };
+
+  const fetchTrafficData = async () => {
+    try {
+      const data = await api.getTrafficSummary();
+      setTrafficData(data);
+    } catch (error) {
+      console.error("Error fetching traffic data:", error);
+      // Don't show error to user, traffic is optional
     }
   };
 
@@ -327,7 +345,7 @@ export default function Dashboard() {
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {groupServices.map((service) =>
-                        renderServiceCard(service)
+                        renderServiceCard(service, trafficData)
                       )}
                     </div>
                   </div>
@@ -370,7 +388,7 @@ export default function Dashboard() {
                 {activeTab && grouped[activeTab] && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {grouped[activeTab].map((service) =>
-                      renderServiceCard(service)
+                      renderServiceCard(service, trafficData)
                     )}
                   </div>
                 )}
@@ -393,7 +411,20 @@ export default function Dashboard() {
   );
 
   // Helper function to render a service card
-  function renderServiceCard(service) {
+  function renderServiceCard(service, trafficData) {
+    // Find traffic data for this service
+    const serviceTraffic = trafficData?.services?.find(
+      (s) => s.id === service.id
+    );
+
+    const formatBandwidth = (mbps) => {
+      if (!mbps || mbps === 0) return "0 KB/s";
+      if (mbps < 1) {
+        return `${(mbps * 1024).toFixed(1)} KB/s`;
+      }
+      return `${mbps.toFixed(1)} MB/s`;
+    };
+
     const statusConfig = {
       online: {
         icon: CheckCircle2,
@@ -509,6 +540,31 @@ export default function Dashboard() {
             </a>
           </div>
         </div>
+
+        {/* Traffic Data */}
+        {serviceTraffic &&
+          (serviceTraffic.bandwidth_up > 0 ||
+            serviceTraffic.bandwidth_down > 0) && (
+            <div className="mt-2 bg-theme-card border border-theme rounded-lg p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-theme-text-muted">Traffic:</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <ArrowUp size={14} className="text-blue-500" />
+                    <span className="text-blue-500 font-mono text-xs">
+                      {formatBandwidth(serviceTraffic.bandwidth_up)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <ArrowDown size={14} className="text-green-500" />
+                    <span className="text-green-500 font-mono text-xs">
+                      {formatBandwidth(serviceTraffic.bandwidth_down)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     );
   }
