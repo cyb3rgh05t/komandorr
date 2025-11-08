@@ -73,20 +73,6 @@ Visit `http://localhost:3000` and start monitoring!
 [Installation Guide](getting-started/installation.md){ .md-button .md-button--primary }
 [Configuration](getting-started/configuration.md){ .md-button }
 
-## Screenshots
-
-### Dashboard
-
-![Dashboard](images/screenshots/dashboard.png)
-
-### VOD Streams
-
-![VOD Streams](images/screenshots/vod-streams.png)
-
-### Traffic Monitor
-
-![Traffic](images/screenshots/traffic.png)
-
 ## Architecture
 
 ```mermaid

@@ -102,6 +102,11 @@ plugins:
       enable_creation_date: true
       type: timeago
 
+# Exclude files from build
+exclude_docs: |
+  README.md
+  images/README.md
+
 extra:
   version:
     provider: mike
