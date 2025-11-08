@@ -421,7 +421,7 @@ async def get_downloads():
 async def get_version():
     """Get current version and check for updates"""
     # Read version from release.txt in frontend/dist directory (production) or public (dev)
-    version = "1.4.0"
+    version = "unknown"
 
     # Determine root directory based on deployment
     # Docker: /app/app/main.py -> /app
