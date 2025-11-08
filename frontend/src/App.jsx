@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Services from "./pages/Services";
 import Monitor from "./pages/Monitor";
 import Traffic from "./pages/Traffic";
+import VODStreams from "./pages/VODStreams";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import LoadingScreen from "./components/LoadingScreen";
@@ -111,6 +112,7 @@ function App() {
               <Route path="/services" element={<Services />} />
               <Route path="/monitor" element={<Monitor />} />
               <Route path="/traffic" element={<Traffic />} />
+              <Route path="/vod-streams" element={<VODStreams />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
             </Routes>

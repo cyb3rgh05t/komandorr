@@ -18,6 +18,7 @@ from app.api.services import router as services_router
 from app.api.auth import router as auth_router
 from app.api.releases import router as releases_router
 from app.api.traffic import router as traffic_router
+from app.api.plex import router as plex_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -71,6 +72,7 @@ app.include_router(services_router)
 app.include_router(auth_router)
 app.include_router(releases_router)
 app.include_router(traffic_router)
+app.include_router(plex_router)
 
 
 @app.get("/api/health")
@@ -81,6 +83,17 @@ async def health_check():
         "version": "1.0.0",
         "services_count": len(monitor.get_all_services()),
     }
+
+
+@app.get("/api/downloads")
+async def get_downloads():
+    """
+    Get Plex download/sync activities
+    This is an alias for /api/plex/activities for compatibility
+    """
+    from app.api.plex import get_plex_activities
+
+    return await get_plex_activities()
 
 
 @app.get("/api/version")
