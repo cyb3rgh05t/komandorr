@@ -2,7 +2,7 @@ import httpx
 import asyncio
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict
 from app.models.service import Service
 from app.utils.logger import logger
@@ -43,12 +43,12 @@ class ServiceMonitor:
     async def check_service(self, service: Service) -> None:
         """Check a single service status"""
         try:
-            start_time = datetime.now()
+            start_time = datetime.now(timezone.utc)
 
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(service.url, follow_redirects=True)
 
-                end_time = datetime.now()
+                end_time = datetime.now(timezone.utc)
                 response_time = (end_time - start_time).total_seconds() * 1000
 
                 if response.status_code < 400:
@@ -64,16 +64,16 @@ class ServiceMonitor:
                         f"Service {service.name} returned status {response.status_code}"
                     )
 
-                service.last_check = datetime.now()
+                service.last_check = datetime.now(timezone.utc)
 
         except httpx.TimeoutException:
             service.status = "problem"
-            service.last_check = datetime.now()
+            service.last_check = datetime.now(timezone.utc)
             logger.warning(f"Service {service.name} timed out")
 
         except Exception as e:
             service.status = "offline"
-            service.last_check = datetime.now()
+            service.last_check = datetime.now(timezone.utc)
             logger.error(f"Service {service.name} check failed: {str(e)}")
 
     async def check_all_services(self) -> None:

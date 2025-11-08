@@ -36,9 +36,19 @@ async function getTimezone() {
 }
 
 export function formatDistanceToNow(date) {
+  if (!date) return "N/A";
+
   const now = new Date();
   const past = new Date(date);
+
+  // Check if date is valid
+  if (isNaN(past.getTime())) return "Invalid Date";
+
   const diffInSeconds = Math.floor((now - past) / 1000);
+
+  if (diffInSeconds < 0) {
+    return "just now";
+  }
 
   if (diffInSeconds < 60) {
     return `${diffInSeconds}s ago`;
