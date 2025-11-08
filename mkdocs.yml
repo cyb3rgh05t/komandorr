@@ -1,0 +1,156 @@
+site_name: Komandorr Documentation
+site_description: Modern service monitoring dashboard with Plex integration and traffic monitoring
+site_author: cyb3rgh05t
+site_url: https://cyb3rgh05t.github.io/komandorr
+
+repo_name: cyb3rgh05t/komandorr
+repo_url: https://github.com/cyb3rgh05t/komandorr
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: images/logo.png
+  favicon: images/logo.png
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search:
+      lang: en
+      separator: '[\s\-\.]+'
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cyb3rgh05t
+      name: GitHub Profile
+    - icon: fontawesome/brands/docker
+      link: https://github.com/cyb3rgh05t/komandorr/pkgs/container/komandorr
+      name: Docker Hub
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Configuration: getting-started/configuration.md
+      - Docker Setup: getting-started/docker.md
+  - Features:
+      - Dashboard: features/dashboard.md
+      - Service Monitoring: features/services.md
+      - VOD Streams (Plex): features/vod-streams.md
+      - Traffic Monitoring: features/traffic.md
+      - Themes: features/themes.md
+      - Multi-Language: features/languages.md
+      - Authentication: features/authentication.md
+  - Configuration:
+      - Environment Variables: configuration/environment.md
+      - Services: configuration/services.md
+      - Plex Server: configuration/plex.md
+      - Traffic Agent: configuration/traffic-agent.md
+  - API Reference:
+      - Overview: api/overview.md
+      - Services API: api/services.md
+      - Plex API: api/plex.md
+      - Traffic API: api/traffic.md
+      - Authentication: api/auth.md
+  - Guides:
+      - Troubleshooting: guides/troubleshooting.md
+      - Development: guides/development.md
+      - Contributing: guides/contributing.md
+  - Changelog: changelog.md
+  - About: about.md
+
+copyright: Copyright &copy; 2024-2025 cyb3rgh05t

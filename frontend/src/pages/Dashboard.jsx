@@ -52,9 +52,13 @@ export default function Dashboard() {
     // Fetch traffic data every 30 seconds
     const trafficInterval = setInterval(fetchTrafficData, 30000);
 
+    // Refresh services every 30 seconds for updated stats
+    const servicesInterval = setInterval(loadServices, 30000);
+
     return () => {
       clearInterval(versionCheckInterval);
       clearInterval(trafficInterval);
+      clearInterval(servicesInterval);
     };
   }, []);
 
@@ -107,6 +111,20 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleRefreshAll = async () => {
+    try {
+      setRefreshing(true);
+      const data = await api.checkAllServices();
+      setServices(data);
+      toast.success(t("common.success"));
+    } catch (error) {
+      toast.error(t("common.error"));
+      console.error("Failed to check all services:", error);
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -192,10 +210,7 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              setRefreshing(true);
-              loadServices();
-            }}
+            onClick={handleRefreshAll}
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >

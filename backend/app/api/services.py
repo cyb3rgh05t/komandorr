@@ -84,5 +84,15 @@ async def check_service(service_id: str):
         raise HTTPException(status_code=404, detail="Service not found")
 
     await monitor.check_service(service)
+    monitor._save_services()  # Save the updated status and last_check
     logger.info(f"Manually checked service: {service.name}")
     return service
+
+
+@router.post("/check-all", response_model=List[Service])
+async def check_all_services():
+    """Manually trigger a check for all services"""
+    await monitor.check_all_services()
+    monitor._save_services()  # Save all updated statuses and last_check times
+    logger.info("Manually checked all services")
+    return monitor.get_all_services()

@@ -1,0 +1,109 @@
+/* Custom styles for Komandorr documentation */
+
+:root {
+  --md-primary-fg-color: #e97b2e;
+  --md-accent-fg-color: #ff8c42;
+}
+
+/* Logo styling */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2rem;
+  width: auto;
+}
+
+/* Code block enhancements */
+.md-typeset code {
+  border-radius: 0.2rem;
+}
+
+.md-typeset pre > code {
+  border-radius: 0.4rem;
+}
+
+/* Button styling */
+.md-button {
+  border-radius: 0.3rem;
+  font-weight: 500;
+}
+
+.md-button--primary {
+  background-color: var(--md-primary-fg-color);
+  border-color: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+}
+
+.md-button--primary:hover {
+  background-color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+}
+
+/* Admonition styling */
+.md-typeset .admonition,
+.md-typeset details {
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+}
+
+/* Table enhancements */
+.md-typeset table:not([class]) {
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.2rem;
+}
+
+/* Search result highlighting */
+.md-search-result__link:hover {
+  background-color: rgba(233, 123, 46, 0.1);
+}
+
+/* Version banner */
+.md-banner {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* Footer customization */
+.md-footer-meta {
+  background-color: var(--md-footer-bg-color);
+}
+
+/* Navigation tabs */
+.md-tabs {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom badge styles */
+.md-typeset .badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.md-typeset .badge-primary {
+  background-color: var(--md-primary-fg-color);
+  color: white;
+}
+
+.md-typeset .badge-success {
+  background-color: #4caf50;
+  color: white;
+}
+
+.md-typeset .badge-warning {
+  background-color: #ff9800;
+  color: white;
+}
+
+.md-typeset .badge-danger {
+  background-color: #f44336;
+  color: white;
+}

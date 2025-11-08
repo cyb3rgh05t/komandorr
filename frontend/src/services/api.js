@@ -73,6 +73,12 @@ class APIClient {
     });
   }
 
+  async checkAllServices() {
+    return this.request("/services/check-all", {
+      method: "POST",
+    });
+  }
+
   // Traffic
   async getTrafficSummary() {
     return this.request("/traffic/summary");

@@ -49,8 +49,20 @@ export default function Monitor() {
   };
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchServices();
+    try {
+      setRefreshing(true);
+      const data = await api.checkAllServices();
+      setServices(data);
+      showToast(t("success.servicesChecked") || "Services checked", "success");
+    } catch (error) {
+      console.error("Failed to check all services:", error);
+      showToast(
+        t("errors.checkServices") || "Failed to check services",
+        "error"
+      );
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
+    }
   };
 
   if (loading) {
