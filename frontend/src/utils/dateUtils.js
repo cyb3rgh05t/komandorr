@@ -1,5 +1,6 @@
 // Cache for timezone from backend
 let cachedTimezone = null;
+let fetchingTimezone = null;
 
 /**
  * Fetch timezone from backend config
@@ -10,16 +11,28 @@ async function getTimezone() {
     return cachedTimezone;
   }
 
-  try {
-    const response = await fetch("/api/config");
-    const data = await response.json();
-    cachedTimezone = data.timezone || "UTC";
-    return cachedTimezone;
-  } catch (error) {
-    console.error("Failed to fetch timezone, using UTC:", error);
-    cachedTimezone = "UTC";
-    return cachedTimezone;
+  // Prevent multiple simultaneous fetches
+  if (fetchingTimezone) {
+    return fetchingTimezone;
   }
+
+  fetchingTimezone = (async () => {
+    try {
+      const response = await fetch("/api/config");
+      const data = await response.json();
+      cachedTimezone = data.timezone || "UTC";
+      console.log(`Timezone loaded from backend: ${cachedTimezone}`);
+      return cachedTimezone;
+    } catch (error) {
+      console.error("Failed to fetch timezone, using UTC:", error);
+      cachedTimezone = "UTC";
+      return cachedTimezone;
+    } finally {
+      fetchingTimezone = null;
+    }
+  })();
+
+  return fetchingTimezone;
 }
 
 export function formatDistanceToNow(date) {

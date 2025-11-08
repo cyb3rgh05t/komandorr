@@ -33,13 +33,6 @@ class Settings(BaseSettings):
         """Parse CORS origins from comma-separated string"""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
-    @property
-    def timezone(self) -> str:
-        """Get timezone, preferring TZ environment variable over TIMEZONE"""
-        import os
-
-        return os.getenv("TZ", self.TIMEZONE)
-
     class Config:
         env_file = ".env"
         case_sensitive = True
