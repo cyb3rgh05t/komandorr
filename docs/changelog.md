@@ -6,6 +6,42 @@ This file mirrors the main [CHANGELOG.md](https://github.com/cyb3rgh05t/komandor
 
 ---
 
+## [1.5.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.0...v1.5.1) (2025-11-09)
+
+### Features
+
+**UI: Group-based Filtering Across All Pages**
+
+- Added group tabs to Monitor page with service filtering by selected group
+- Added group tabs to Traffic page with service filtering by selected group
+- Added group tabs to Services page with service filtering by selected group
+- Tabs display group name and service count for each group
+- Only visible when multiple groups exist
+- Consistent tab styling across Dashboard, Monitor, Traffic, and Services pages
+
+**UX: Background Refresh Improvements**
+
+- Dashboard now preserves scroll position during automatic 30-second updates
+- Dashboard maintains active group tab selection during background refresh
+- Monitor preserves scroll position during automatic 10-second updates
+- Monitor maintains active group tab selection during background refresh
+- Traffic preserves scroll position during automatic 10-second updates
+- Traffic maintains active group tab selection during background refresh
+- Services preserves scroll position during automatic 30-second updates
+- Services maintains active group tab selection during background refresh
+- All pages update seamlessly without disrupting user's current view or context
+- Loading states only shown on initial load, not during auto-refresh
+
+### Changed
+
+**Navigation: Improved User Experience**
+
+- All pages now support consistent group-based filtering
+- Auto-refresh intervals maintained: Dashboard/Services (30s), Monitor/Traffic (10s)
+- Scroll position and tab context preserved across all pages
+
+---
+
 ## [1.5.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.2...v1.5.0) (2025-11-09)
 
 ### Features

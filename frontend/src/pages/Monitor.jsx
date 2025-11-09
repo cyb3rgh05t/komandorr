@@ -143,11 +143,14 @@ export default function Monitor() {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
+  const [activeTab, setActiveTab] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
     fetchServices();
-    const interval = setInterval(fetchServices, 10000); // Update every 10 seconds for real-time monitoring
+    const interval = setInterval(() => {
+      fetchServices(true); // Pass true to indicate auto-refresh
+    }, 10000); // Update every 10 seconds for real-time monitoring
     return () => clearInterval(interval);
   }, []);
 
@@ -164,10 +167,27 @@ export default function Monitor() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const fetchServices = async () => {
+  const fetchServices = async (isAutoRefresh = false) => {
     try {
+      // Save current scroll position and page before updating
+      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
+      const currentPageNum = isAutoRefresh ? currentPage : 1;
+
       const data = await api.getServices();
       setServices(data);
+
+      // Set initial active tab if not set
+      if (!activeTab && data.length > 0) {
+        const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
+        setActiveTab(groups[0]);
+      }
+
+      // Restore scroll position after state update for auto-refresh
+      if (isAutoRefresh && currentScrollY > 0) {
+        setTimeout(() => {
+          window.scrollTo(0, currentScrollY);
+        }, 0);
+      }
     } catch (error) {
       console.error("Failed to fetch services:", error);
     } finally {
@@ -237,13 +257,26 @@ export default function Monitor() {
     );
   }
 
-  // Filter services based on search term
-  const filteredServices = services.filter(
-    (service) =>
+  // Filter services based on search term and active tab
+  const filteredServices = services.filter((service) => {
+    const matchesSearch =
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      service.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const serviceGroup = service.group || "Ungrouped";
+    const matchesTab = activeTab ? serviceGroup === activeTab : true;
+
+    return matchesSearch && matchesTab;
+  });
+
+  // Get all unique groups for tabs
+  const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
+
+  // If active tab is not set or doesn't exist in current groups, set to first group
+  if ((!activeTab || !allGroups.includes(activeTab)) && allGroups.length > 0) {
+    setActiveTab(allGroups[0]);
+  }
 
   // Pagination
   const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
@@ -420,6 +453,44 @@ export default function Monitor() {
           </div>
         </div>
       </div>
+
+      {/* Group Tabs */}
+      {allGroups.length > 1 && (
+        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            {allGroups.map((groupName) => {
+              const groupServices = services.filter(
+                (s) => (s.group || "Ungrouped") === groupName
+              );
+              return (
+                <button
+                  key={groupName}
+                  onClick={() => {
+                    setActiveTab(groupName);
+                    setCurrentPage(1); // Reset to first page when changing tabs
+                  }}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    activeTab === groupName
+                      ? "bg-theme-primary text-white shadow-md"
+                      : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                  }`}
+                >
+                  {groupName}
+                  <span
+                    className={`ml-2 text-xs ${
+                      activeTab === groupName
+                        ? "text-white/80"
+                        : "text-theme-text-muted"
+                    }`}
+                  >
+                    ({groupServices.length})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Services List */}
       <div className="space-y-4">

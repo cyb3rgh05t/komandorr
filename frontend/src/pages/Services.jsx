@@ -23,17 +23,40 @@ export default function Services() {
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState(null);
 
   useEffect(() => {
     fetchServices();
-    const interval = setInterval(fetchServices, 30000);
+    const interval = setInterval(() => {
+      fetchServices(true); // Pass true to indicate auto-refresh
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchServices = async () => {
+  const fetchServices = async (isAutoRefresh = false) => {
     try {
+      // Save current scroll position before updating
+      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
+
+      if (!isAutoRefresh) {
+        setLoading(true);
+      }
+
       const data = await api.getServices();
       setServices(data);
+
+      // Set initial active tab if not set
+      if (!activeTab && data.length > 0) {
+        const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
+        setActiveTab(groups[0]);
+      }
+
+      // Restore scroll position after state update for auto-refresh
+      if (isAutoRefresh && currentScrollY > 0) {
+        setTimeout(() => {
+          window.scrollTo(0, currentScrollY);
+        }, 0);
+      }
     } catch (error) {
       console.error("Failed to fetch services:", error);
       showToast(t("errors.fetchServices"), "error");
@@ -167,13 +190,26 @@ export default function Services() {
     );
   }
 
-  // Filter services based on search term
-  const filteredServices = services.filter(
-    (service) =>
+  // Filter services based on search term and active tab
+  const filteredServices = services.filter((service) => {
+    const matchesSearch =
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      service.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const serviceGroup = service.group || "Ungrouped";
+    const matchesTab = activeTab ? serviceGroup === activeTab : true;
+
+    return matchesSearch && matchesTab;
+  });
+
+  // Get all unique groups for tabs
+  const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
+
+  // If active tab is not set or doesn't exist in current groups, set to first group
+  if ((!activeTab || !allGroups.includes(activeTab)) && allGroups.length > 0) {
+    setActiveTab(allGroups[0]);
+  }
 
   const stats = {
     total: services.length,
@@ -289,6 +325,41 @@ export default function Services() {
           </div>
         </div>
       </div>
+
+      {/* Group Tabs */}
+      {allGroups.length > 1 && (
+        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            {allGroups.map((groupName) => {
+              const groupServices = services.filter(
+                (s) => (s.group || "Ungrouped") === groupName
+              );
+              return (
+                <button
+                  key={groupName}
+                  onClick={() => setActiveTab(groupName)}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    activeTab === groupName
+                      ? "bg-theme-primary text-white shadow-md"
+                      : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                  }`}
+                >
+                  {groupName}
+                  <span
+                    className={`ml-2 text-xs ${
+                      activeTab === groupName
+                        ? "text-white/80"
+                        : "text-theme-text-muted"
+                    }`}
+                  >
+                    ({groupServices.length})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Services List */}
       {filteredServices.length === 0 ? (

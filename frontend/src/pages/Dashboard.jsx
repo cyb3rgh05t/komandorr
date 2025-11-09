@@ -80,7 +80,10 @@ export default function Dashboard() {
     const trafficInterval = setInterval(fetchTrafficData, 30000);
 
     // Refresh services every 30 seconds for updated stats
-    const servicesInterval = setInterval(loadServices, 30000);
+    // Don't reset scroll position or active tab during auto-refresh
+    const servicesInterval = setInterval(() => {
+      loadServices(true); // Pass true to indicate this is auto-refresh
+    }, 30000);
 
     return () => {
       clearInterval(versionCheckInterval);
@@ -121,16 +124,30 @@ export default function Dashboard() {
     }
   };
 
-  const loadServices = async () => {
+  const loadServices = async (isAutoRefresh = false) => {
     try {
-      setLoading(true);
+      // Save current scroll position before updating
+      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
+
+      if (!isAutoRefresh) {
+        setLoading(true);
+      }
+
       const data = await api.getServices();
       setServices(data);
 
-      // Set initial active tab if not set
+      // Set initial active tab if not set (only on first load)
       if (!activeTab && data.length > 0) {
         const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
         setActiveTab(groups[0]);
+      }
+
+      // Restore scroll position after state update for auto-refresh
+      if (isAutoRefresh && currentScrollY > 0) {
+        // Use setTimeout to ensure DOM has updated
+        setTimeout(() => {
+          window.scrollTo(0, currentScrollY);
+        }, 0);
       }
     } catch (error) {
       toast.error(t("common.error"));
