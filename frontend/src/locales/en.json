@@ -20,7 +20,16 @@
     "problem": "Problem",
     "noServices": "No services configured yet",
     "addService": "Add Service",
-    "searchPlaceholder": "Search services and groups..."
+    "searchPlaceholder": "Search services and groups...",
+    "trafficChart": "Traffic Overview",
+    "customize": "Customize",
+    "dashboardVisibility": "Dashboard Visibility",
+    "showStatsCard": "Statistics Card",
+    "showTrafficChart": "Traffic Chart",
+    "showServiceCards": "Service Cards",
+    "chartLineThickness": "Chart Line Thickness",
+    "thin": "Thin",
+    "thick": "Thick"
   },
   "service": {
     "name": "Name",
@@ -85,6 +94,8 @@
     "total_down": "Total Download",
     "last_update": "Last Update",
     "no_data": "No traffic data available. Deploy the traffic agent on your servers to start monitoring.",
+    "noData": "No traffic data available",
+    "noActiveTraffic": "No active traffic",
     "last_refresh": "Last refreshed"
   },
   "vodStreams": {

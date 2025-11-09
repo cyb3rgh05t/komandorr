@@ -105,7 +105,7 @@ graph TD
 - **httpx**: Async HTTP client
 - **uvicorn**: ASGI server
 
-## What's New in v1.4.0
+## What's New in v1.5.0
 
 - **VOD Streams**: Complete Plex integration for monitoring media server activities
 - **Traffic Integration**: Dashboard service cards now display bandwidth data

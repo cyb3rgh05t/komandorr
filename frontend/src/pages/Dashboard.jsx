@@ -7,10 +7,14 @@ import {
   CheckCircle,
   Loader2,
   Search,
+  Settings,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
+import DashboardTrafficChart from "@/components/DashboardTrafficChart";
 import ServiceModal from "@/components/ServiceModal";
 
 const API_URL = "/api";
@@ -27,12 +31,42 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [trafficData, setTrafficData] = useState(null);
+  const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
+  const [dashboardVisibility, setDashboardVisibility] = useState(() => {
+    // Load from localStorage or use defaults
+    const saved = localStorage.getItem("dashboardVisibility");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          stats: true,
+          trafficChart: true,
+          services: true,
+        };
+  });
+  const [chartLineThickness, setChartLineThickness] = useState(() => {
+    // Load from localStorage or use default (0.25px for ultra-thin lines)
+    const saved = localStorage.getItem("chartLineThickness");
+    return saved ? parseFloat(saved) : 0.25;
+  });
   const [version, setVersion] = useState({
     local: null,
     remote: null,
     is_update_available: false,
     loading: true,
   });
+
+  // Save visibility settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(
+      "dashboardVisibility",
+      JSON.stringify(dashboardVisibility)
+    );
+  }, [dashboardVisibility]);
+
+  // Save chart line thickness to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("chartLineThickness", chartLineThickness.toString());
+  }, [chartLineThickness]);
 
   useEffect(() => {
     loadServices();
@@ -119,6 +153,12 @@ export default function Dashboard() {
     } finally {
       setTimeout(() => setRefreshing(false), 500);
     }
+  };
+
+  const handleRefreshTraffic = async () => {
+    setRefreshing(true);
+    await fetchTrafficData();
+    setTimeout(() => setRefreshing(false), 500);
   };
 
   const handleCheckService = async (id) => {
@@ -224,6 +264,16 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowCustomizeMenu(!showCustomizeMenu)}
+            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            title={t("dashboard.customize")}
+          >
+            <Settings size={18} className="text-theme-primary" />
+            <span className="text-sm hidden sm:inline">
+              {t("dashboard.customize")}
+            </span>
+          </button>
+          <button
             onClick={handleRefreshAll}
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -246,214 +296,461 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats & Search Card */}
-      <div className="bg-theme-card border border-theme rounded-xl p-6 space-y-6 shadow-sm">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-theme-text mb-1">
-              {services.length}
+      {/* Customize Modal */}
+      {showCustomizeMenu && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-theme-card border border-theme rounded-xl shadow-2xl max-w-md w-full">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-theme">
+              <h3 className="text-xl font-bold text-theme-text flex items-center gap-2">
+                <Settings size={20} className="text-theme-primary" />
+                {t("dashboard.dashboardVisibility")}
+              </h3>
+              <button
+                onClick={() => setShowCustomizeMenu(false)}
+                className="text-theme-text-muted hover:text-theme-text transition-colors p-1 hover:bg-theme-hover rounded"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
-            <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-              {t("dashboard.allServices")}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-500 mb-1">
-              {stats.online}
-            </div>
-            <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-              {t("dashboard.online")}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-red-500 mb-1">
-              {stats.offline}
-            </div>
-            <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-              {t("dashboard.offline")}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-500 mb-1">
-              {stats.problem}
-            </div>
-            <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-              {t("dashboard.problem")}
-            </div>
-          </div>
-        </div>
 
-        {/* Divider */}
-        <div className="border-t border-theme"></div>
-
-        {/* Search Bar */}
-        <div className="relative w-full">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={20}
-          />
-          <input
-            type="text"
-            placeholder={
-              t("dashboard.searchPlaceholder") ||
-              "Search services and groups..."
-            }
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
-          />
-        </div>
-      </div>
-
-      {/* Services Grid */}
-      {loading ? (
-        <div className="space-y-6">
-          {/* Stats Cards Loading */}
-          <div className="bg-theme-card border border-theme rounded-xl p-6 shadow-sm">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="text-center space-y-2">
-                  <div className="h-9 bg-theme-hover rounded w-16 mx-auto" />
-                  <div className="h-3 bg-theme-hover rounded w-24 mx-auto" />
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {/* Stats Card Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.stats ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showStatsCard")}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-          {/* Service Cards Loading */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <LoadingServiceCard key={i} />
-            ))}
-          </div>
-        </div>
-      ) : services.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-theme-text-muted mb-4">
-            {t("dashboard.noServices")}
-          </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-          >
-            <Plus size={20} className="text-theme-primary" />
-            <span className="text-sm">{t("dashboard.addService")}</span>
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Group services by group field */}
-          {(() => {
-            // Filter services based on search term
-            const filteredServices = services.filter((service) => {
-              const searchLower = searchTerm.toLowerCase();
-              return (
-                service.name.toLowerCase().includes(searchLower) ||
-                service.url.toLowerCase().includes(searchLower) ||
-                service.type.toLowerCase().includes(searchLower) ||
-                (service.group &&
-                  service.group.toLowerCase().includes(searchLower))
-              );
-            });
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      stats: !dashboardVisibility.stats,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.stats
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.stats ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
 
-            const grouped = filteredServices.reduce((acc, service) => {
-              const groupName = service.group || "Ungrouped";
-              if (!acc[groupName]) acc[groupName] = [];
-              acc[groupName].push(service);
-              return acc;
-            }, {});
+              {/* Traffic Chart Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.trafficChart ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showTrafficChart")}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      trafficChart: !dashboardVisibility.trafficChart,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.trafficChart
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.trafficChart ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
 
-            const groupNames = Object.keys(grouped);
-            const hasMultipleGroups = groupNames.length > 1;
+              {/* Service Cards Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.services ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showServiceCards")}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      services: !dashboardVisibility.services,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.services
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.services ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
 
-            // If active tab is not set or doesn't exist in current groups, set to first group
-            if (!activeTab || !groupNames.includes(activeTab)) {
-              if (groupNames.length > 0) {
-                setActiveTab(groupNames[0]);
-              }
-            }
+              {/* Divider */}
+              <div className="border-t border-theme my-4"></div>
 
-            // If only one group or no groups, show simple list
-            if (!hasMultipleGroups) {
-              return Object.entries(grouped).map(
-                ([groupName, groupServices]) => (
-                  <div key={groupName} className="space-y-4">
-                    {groupName !== "Ungrouped" && (
-                      <div className="bg-theme-card border border-theme rounded-lg p-4">
-                        <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
-                          <span>{groupName}</span>
-                          <span className="text-sm text-theme-text-muted font-normal">
-                            ({groupServices.length})
-                          </span>
-                        </h2>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupServices.map((service) => (
-                        <DashboardServiceCard
-                          key={service.id}
-                          service={service}
-                          trafficData={trafficData}
-                          onCheck={handleCheckService}
-                          onEdit={handleEditService}
-                          onDelete={handleDeleteService}
-                        />
-                      ))}
+              {/* Chart Line Thickness Slider */}
+              <div className="p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.chartLineThickness")}
+                  </span>
+                  <span className="text-xs text-theme-text-muted bg-theme-card px-2 py-1 rounded">
+                    {chartLineThickness.toFixed(2)}px
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {/* Custom Slider */}
+                  <div className="relative pt-1">
+                    <div className="relative h-2 bg-gray-700 rounded-full">
+                      {/* Filled track */}
+                      <div
+                        className="absolute h-2 bg-gradient-to-r from-theme-primary to-theme-primary/80 rounded-full transition-all duration-200"
+                        style={{
+                          width: `${((chartLineThickness - 0.1) / 1.9) * 100}%`,
+                        }}
+                      />
+                      {/* Slider input */}
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="2"
+                        step="0.05"
+                        value={chartLineThickness}
+                        onChange={(e) =>
+                          setChartLineThickness(parseFloat(e.target.value))
+                        }
+                        className="absolute w-full h-2 opacity-0 cursor-pointer"
+                      />
+                      {/* Slider thumb */}
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-theme-primary rounded-full shadow-lg pointer-events-none transition-all duration-200"
+                        style={{
+                          left: `calc(${
+                            ((chartLineThickness - 0.1) / 1.9) * 100
+                          }% - 8px)`,
+                        }}
+                      />
                     </div>
                   </div>
-                )
-              );
-            }
-
-            // Multiple groups - show tabs
-            return (
-              <div className="space-y-4">
-                {/* Tabs */}
-                <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-                  <div className="flex gap-2 min-w-max">
-                    {groupNames.map((groupName) => (
-                      <button
-                        key={groupName}
-                        onClick={() => setActiveTab(groupName)}
-                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                          activeTab === groupName
-                            ? "bg-theme-primary text-white shadow-md"
-                            : "bg-theme-accent text-theme-text hover:bg-theme-hover"
-                        }`}
-                      >
-                        {groupName}
-                        <span
-                          className={`ml-2 text-xs ${
-                            activeTab === groupName
-                              ? "text-white/80"
-                              : "text-theme-text-muted"
-                          }`}
-                        >
-                          ({grouped[groupName].length})
-                        </span>
-                      </button>
-                    ))}
+                  <div className="flex justify-between text-xs text-theme-text-muted">
+                    <span>{t("dashboard.thin")} (0.1px)</span>
+                    <span>{t("dashboard.thick")} (2px)</span>
                   </div>
                 </div>
-
-                {/* Active Tab Content */}
-                {activeTab && grouped[activeTab] && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {grouped[activeTab].map((service) => (
-                      <DashboardServiceCard
-                        key={service.id}
-                        service={service}
-                        trafficData={trafficData}
-                        onCheck={handleCheckService}
-                        onEdit={handleEditService}
-                        onDelete={handleDeleteService}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
-            );
-          })()}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-theme">
+              <button
+                onClick={() => setShowCustomizeMenu(false)}
+                className="px-4 py-2 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stats & Search Card */}
+      {dashboardVisibility.stats && (
+        <div className="bg-theme-card border border-theme rounded-xl p-6 space-y-6 shadow-sm">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-theme-text mb-1">
+                {services.length}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
+                {t("dashboard.allServices")}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-500 mb-1">
+                {stats.online}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
+                {t("dashboard.online")}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-red-500 mb-1">
+                {stats.offline}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
+                {t("dashboard.offline")}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-yellow-500 mb-1">
+                {stats.problem}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
+                {t("dashboard.problem")}
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-theme"></div>
+
+          {/* Search Bar */}
+          <div className="relative w-full">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder={
+                t("dashboard.searchPlaceholder") ||
+                "Search services and groups..."
+              }
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Services Grid */}
+      {dashboardVisibility.services && (
+        <>
+          {loading ? (
+            <div className="space-y-6">
+              {/* Stats Cards Loading */}
+              <div className="bg-theme-card border border-theme rounded-xl p-6 shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="text-center space-y-2">
+                      <div className="h-9 bg-theme-hover rounded w-16 mx-auto" />
+                      <div className="h-3 bg-theme-hover rounded w-24 mx-auto" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Service Cards Loading */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <LoadingServiceCard key={i} />
+                ))}
+              </div>
+            </div>
+          ) : services.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-theme-text-muted mb-4">
+                {t("dashboard.noServices")}
+              </p>
+              <button
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+              >
+                <Plus size={20} className="text-theme-primary" />
+                <span className="text-sm">{t("dashboard.addService")}</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Group services by group field */}
+              {(() => {
+                // Filter services based on search term
+                const filteredServices = services.filter((service) => {
+                  const searchLower = searchTerm.toLowerCase();
+                  return (
+                    service.name.toLowerCase().includes(searchLower) ||
+                    service.url.toLowerCase().includes(searchLower) ||
+                    service.type.toLowerCase().includes(searchLower) ||
+                    (service.group &&
+                      service.group.toLowerCase().includes(searchLower))
+                  );
+                });
+
+                const grouped = filteredServices.reduce((acc, service) => {
+                  const groupName = service.group || "Ungrouped";
+                  if (!acc[groupName]) acc[groupName] = [];
+                  acc[groupName].push(service);
+                  return acc;
+                }, {});
+
+                const groupNames = Object.keys(grouped);
+                const hasMultipleGroups = groupNames.length > 1;
+
+                // If active tab is not set or doesn't exist in current groups, set to first group
+                if (!activeTab || !groupNames.includes(activeTab)) {
+                  if (groupNames.length > 0) {
+                    setActiveTab(groupNames[0]);
+                  }
+                }
+
+                // Filter traffic data by active group
+                const filteredTrafficData = trafficData
+                  ? {
+                      ...trafficData,
+                      services:
+                        trafficData.services?.filter((service) => {
+                          // Find the service in the filtered services list to get its group
+                          const matchingService = filteredServices.find(
+                            (s) => s.id === service.id
+                          );
+                          if (!matchingService) return false;
+                          const serviceGroup =
+                            matchingService.group || "Ungrouped";
+                          return activeTab ? serviceGroup === activeTab : true;
+                        }) || [],
+                    }
+                  : null;
+
+                // If only one group or no groups, show simple list
+                if (!hasMultipleGroups) {
+                  return (
+                    <div className="space-y-6">
+                      {/* Traffic Chart */}
+                      {dashboardVisibility.trafficChart && (
+                        <DashboardTrafficChart
+                          trafficData={filteredTrafficData}
+                          onRefresh={handleRefreshTraffic}
+                          refreshing={refreshing}
+                          lineThickness={chartLineThickness}
+                        />
+                      )}
+
+                      {Object.entries(grouped).map(
+                        ([groupName, groupServices]) => (
+                          <div key={groupName} className="space-y-4">
+                            {groupName !== "Ungrouped" && (
+                              <div className="bg-theme-card border border-theme rounded-lg p-4">
+                                <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+                                  <span>{groupName}</span>
+                                  <span className="text-sm text-theme-text-muted font-normal">
+                                    ({groupServices.length})
+                                  </span>
+                                </h2>
+                              </div>
+                            )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {groupServices.map((service) => (
+                                <DashboardServiceCard
+                                  key={service.id}
+                                  service={service}
+                                  trafficData={trafficData}
+                                  onCheck={handleCheckService}
+                                  onEdit={handleEditService}
+                                  onDelete={handleDeleteService}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  );
+                }
+
+                // Multiple groups - show tabs
+                return (
+                  <div className="space-y-6">
+                    {/* Tabs */}
+                    <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+                      <div className="flex gap-2 min-w-max">
+                        {groupNames.map((groupName) => (
+                          <button
+                            key={groupName}
+                            onClick={() => setActiveTab(groupName)}
+                            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                              activeTab === groupName
+                                ? "bg-theme-primary text-white shadow-md"
+                                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                            }`}
+                          >
+                            {groupName}
+                            <span
+                              className={`ml-2 text-xs ${
+                                activeTab === groupName
+                                  ? "text-white/80"
+                                  : "text-theme-text-muted"
+                              }`}
+                            >
+                              ({grouped[groupName].length})
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Traffic Chart - filtered by active tab */}
+                    {dashboardVisibility.trafficChart && (
+                      <DashboardTrafficChart
+                        trafficData={filteredTrafficData}
+                        onRefresh={handleRefreshTraffic}
+                        refreshing={refreshing}
+                        lineThickness={chartLineThickness}
+                      />
+                    )}
+
+                    {/* Active Tab Content */}
+                    {activeTab && grouped[activeTab] && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {grouped[activeTab].map((service) => (
+                          <DashboardServiceCard
+                            key={service.id}
+                            service={service}
+                            trafficData={trafficData}
+                            onCheck={handleCheckService}
+                            onEdit={handleEditService}
+                            onDelete={handleDeleteService}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </>
+          )}
         </>
       )}
 

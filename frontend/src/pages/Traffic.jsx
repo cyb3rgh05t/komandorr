@@ -154,7 +154,7 @@ export default function Traffic() {
     return () => clearInterval(timer);
   }, []);
 
-  const fetchTrafficData = async () => {
+  const fetchTrafficData = async (isManualRefresh = false) => {
     try {
       const data = await api.getServices();
       // Filter services that have traffic data
@@ -164,13 +164,15 @@ export default function Traffic() {
       console.error("Error fetching traffic data:", error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      if (isManualRefresh) {
+        setRefreshing(false);
+      }
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchTrafficData();
+    await fetchTrafficData(true);
   };
 
   const formatBandwidth = (mbps) => {

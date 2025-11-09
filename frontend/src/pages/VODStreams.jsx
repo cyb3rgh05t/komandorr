@@ -12,7 +12,6 @@ import {
   Search,
   Server,
   Activity,
-  Clock,
 } from "lucide-react";
 import { fetchPlexActivities } from "@/services/plexService";
 import { Link } from "react-router-dom";
@@ -55,13 +54,7 @@ const ActivityBadge = ({ type }) => {
   );
 };
 
-const ProgressBar = ({
-  progress,
-  activity,
-  startTime,
-  completedInfo,
-  showTimer = false,
-}) => {
+const ProgressBar = ({ progress, activity, startTime, completedInfo }) => {
   const percent = typeof progress === "number" ? Math.min(progress, 100) : 0;
   const isCompleted = percent >= 100;
 
@@ -92,74 +85,6 @@ const ProgressBar = ({
   );
 };
 
-const TimerBadge = ({ startTime, completedInfo, progress }) => {
-  const [, setTick] = useState(0);
-  const percent = typeof progress === "number" ? Math.min(progress, 100) : 0;
-  const isCompleted = percent >= 100;
-
-  // Update elapsed time display every second for active activities
-  useEffect(() => {
-    if ((startTime || !isCompleted) && !completedInfo && percent < 100) {
-      const timer = setInterval(() => {
-        setTick((t) => t + 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [startTime, completedInfo, percent, isCompleted]);
-
-  // Calculate elapsed time
-  const formatElapsedTime = (ms) => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    } else {
-      return `${seconds}s`;
-    }
-  };
-
-  const getElapsedTime = () => {
-    if (completedInfo) {
-      return formatElapsedTime(completedInfo.elapsedMs);
-    } else if (startTime) {
-      return formatElapsedTime(Date.now() - startTime);
-    }
-    return null;
-  };
-
-  const elapsedTime = getElapsedTime();
-
-  // Show timer badge for all activities
-  if (!elapsedTime && !isCompleted) {
-    // Activity in progress but we haven't started tracking yet
-    return (
-      <div className="px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/30">
-        <Clock size={12} />
-        Tracking...
-      </div>
-    );
-  }
-
-  if (!elapsedTime) return null;
-
-  return (
-    <div
-      className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 ${
-        isCompleted
-          ? "bg-green-500/10 text-green-400 border border-green-500/30"
-          : "bg-blue-500/10 text-blue-400 border border-blue-500/30"
-      }`}
-    >
-      <Clock size={12} />
-      {isCompleted ? "Completed in " : ""}
-      {elapsedTime}
-    </div>
-  );
-};
 const ActivityItem = ({ activity, startTime, completedInfo }) => {
   if (!activity || typeof activity !== "object") {
     return null;
@@ -183,11 +108,6 @@ const ActivityItem = ({ activity, startTime, completedInfo }) => {
           </div>
           <div className="flex items-center gap-2">
             <ActivityBadge type={activity.type} />
-            <TimerBadge
-              startTime={startTime}
-              completedInfo={completedInfo}
-              progress={activity.progress}
-            />
           </div>
         </div>
 

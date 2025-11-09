@@ -11,6 +11,42 @@
 ◦ Integrated real-time traffic data directly into dashboard service cards
 ◦ Stats now display with proper labels above values for consistent card sizing
 ◦ Added conditional rendering for traffic data (only shows when available)
+◦ Created `DashboardTrafficChart` component with enhanced multi-service bandwidth visualization
+
+- Traffic chart displays all active services with distinct colored wave lines
+- Toggle between upload/download bandwidth views with pill-style switcher
+- Last 60 data points with auto-scaling Y-axis and labeled values
+- Service legend with color indicators and current bandwidth values
+- 10 distinct colors for different services (blue, green, amber, red, violet, pink, cyan, emerald, orange, indigo)
+- Gradient area fills under each service line for better visibility
+- Auto-refresh every 30 seconds with dashboard traffic data
+- Dedicated refresh button with spinning animation
+- Total bandwidth display showing aggregate upload/download speed
+- Sleek dark theme with thinner lines (1.2px) for professional appearance
+- Subtle gradients (12% opacity) and minimal grid lines
+- Y-axis labels with compact spacing for easy value reading
+- Responsive legend grid layout (1-4 columns based on screen size)
+- Service cards with hover effects and smooth transitions
+- **Group-based filtering**: Chart positioned below group tabs and filters traffic by active group
+- Dynamic filtering shows only services in the selected group tab
+- Automatic refresh maintains group context
+- **Ultra-thin lines**: Reduced to 0.25px for sleek, modern appearance matching design specifications
+
+◦ **Dashboard Customization**: Added comprehensive visibility and appearance controls
+
+- New "Customize" button with Settings icon in dashboard header
+- Modal popup interface with backdrop blur and smooth animations
+- Toggle visibility of Statistics Card, Traffic Chart, and Service Cards independently
+- **Chart Line Thickness Control**: Interactive slider to adjust traffic chart line width (0.1px - 2px)
+  - Real-time preview with current value display
+  - Color-coded slider progress bar
+  - Dynamic drop shadow scaling based on thickness
+  - Smooth transitions when changing values
+- Settings persist in localStorage across sessions
+- Eye/EyeOff icons indicate current visibility state (green/gray)
+- iOS-style toggle switches replace checkboxes for modern appearance
+- Organized layout with divider separating visibility and appearance settings
+- Fully translated (English/German) with dashboard.customize, dashboardVisibility, showStatsCard, showTrafficChart, showServiceCards, chartLineThickness, thin, thick keys
 
 • **services: enhanced service card design**
 ◦ Redesigned `ServiceCard` component with modern badge-based layout
@@ -53,6 +89,16 @@
 ◦ Re-added Search icon to imports after cleanup
 ◦ Fixed ReferenceError when rendering search bar
 
+• **traffic: fixed refresh button functionality**
+◦ Updated `fetchTrafficData` to accept `isManualRefresh` parameter
+◦ Fixed refresh button not showing animation during manual refresh
+◦ Prevented automatic interval updates from clearing refresh state
+
+• **backend: added traffic_history to API response**
+◦ Modified `/traffic/summary` endpoint to include `traffic_history` field
+◦ Limited history to last 60 data points to optimize response size
+◦ Fixed dashboard traffic chart showing no data
+
 ### Documentation
 
 • **docs: improved styling and readability**
@@ -68,8 +114,10 @@
 • **locales: added new translation keys**
 ◦ Added "documentation" key to English and German locales
 ◦ Added "viewAllReleases" key for release section button
-◦ English: "Documentation", "View All Releases"
-◦ German: "Dokumentation", "Alle Releases anzeigen"
+◦ Added "trafficChart" key for dashboard traffic overview
+◦ Added "noData" and "noActiveTraffic" keys for traffic chart empty states
+◦ English: "Documentation", "View All Releases", "Traffic Overview", "No traffic data available", "No active traffic"
+◦ German: "Dokumentation", "Alle Releases anzeigen", "Traffic-Übersicht", "Keine Traffic-Daten verfügbar", "Kein aktiver Traffic"
 
 # [1.4.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.1...v1.4.2) (2025-11-08)
 

@@ -119,6 +119,9 @@ async def get_traffic_summary():
                     "total_up": service.traffic.total_up,
                     "total_down": service.traffic.total_down,
                     "last_updated": service.traffic.last_updated,
+                    "traffic_history": (
+                        service.traffic_history[-60:] if service.traffic_history else []
+                    ),
                 }
             )
 

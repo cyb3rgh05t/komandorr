@@ -20,7 +20,16 @@
     "problem": "Problem",
     "noServices": "Noch keine Dienste konfiguriert",
     "addService": "Dienst hinzufügen",
-    "searchPlaceholder": "Dienste und Gruppen durchsuchen..."
+    "searchPlaceholder": "Dienste und Gruppen durchsuchen...",
+    "trafficChart": "Traffic-Übersicht",
+    "customize": "Anpassen",
+    "dashboardVisibility": "Dashboard-Sichtbarkeit",
+    "showStatsCard": "Statistikkarte",
+    "showTrafficChart": "Traffic-Diagramm",
+    "showServiceCards": "Dienstkarten",
+    "chartLineThickness": "Diagramm-Linienstärke",
+    "thin": "Dünn",
+    "thick": "Dick"
   },
   "service": {
     "name": "Name",
@@ -85,6 +94,8 @@
     "total_down": "Gesamt Download",
     "last_update": "Letzte Aktualisierung",
     "no_data": "Keine Traffic-Daten verfügbar. Installieren Sie den Traffic-Agent auf Ihren Servern, um die Überwachung zu starten.",
+    "noData": "Keine Traffic-Daten verfügbar",
+    "noActiveTraffic": "Kein aktiver Traffic",
     "last_refresh": "Zuletzt aktualisiert"
   },
   "vodStreams": {
