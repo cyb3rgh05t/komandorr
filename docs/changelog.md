@@ -6,6 +6,79 @@ This file mirrors the main [CHANGELOG.md](https://github.com/cyb3rgh05t/komandor
 
 ---
 
+## [1.5.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.2...v1.5.0) (2025-11-09)
+
+### Features
+
+#### Dashboard: Comprehensive UI/UX Improvements
+
+- Created dedicated `DashboardServiceCard` component for dashboard-specific service display
+- Added horizontal stats bar layout with individual stat boxes (Response Time, Last Check, Upload/Download Speed)
+- Removed Service ID display from dashboard cards for cleaner appearance
+- Integrated real-time traffic data directly into dashboard service cards
+- Stats now display with proper labels above values for consistent card sizing
+- Added conditional rendering for traffic data (only shows when available)
+
+#### Services: Enhanced Service Card Design
+
+- Redesigned `ServiceCard` component with modern badge-based layout
+- Added Service ID display with copy-to-clipboard functionality
+- Conditional icon display (only renders if service has custom icon)
+- Improved action button layout with primary "Check Now" button
+- Consistent badge styling across all service information
+
+#### About: Improved Release Section
+
+- Limited release display to 5 most recent releases for better performance
+- Added "View All Releases" button in section header (right-aligned)
+- Button only appears when more than 5 releases are available
+- Direct link to GitHub releases page for full release history
+- Added translations for "View All Releases" (English/German)
+
+#### About: Enhanced Documentation Access
+
+- Added direct link to documentation site
+- Separated "Documentation" and "API Documentation" links for clarity
+- Both links open in new tabs with proper external link icons
+
+#### UI: Improved Consistency and Polish
+
+- Added skeleton loading animations across all pages (Dashboard, Monitor, Traffic, Services)
+- Standardized content width across all pages (removed inconsistent max-width constraints)
+- All icons now use solid colors (removed opacity/fade effects)
+- Consistent badge styling throughout application
+- Progress bars now use solid theme colors
+
+#### VOD Streams: Comprehensive Timestamp Tracking System
+
+- Implemented localStorage-based activity timestamp tracking with persistence
+- Added live timer badges showing elapsed time for active downloads
+- Smart tracking logic: starts immediately for new activities (<2%), waits for 1% progress change for in-progress activities
+- Timer states: undefined (new) → null (waiting) → number (tracking with timestamp)
+- Fixed timer reset issues on page refresh with proper state management
+- Added "Tracking..." state for activities waiting to start timing
+- Real-time timer updates with live elapsed time display
+
+### Bug Fixes
+
+- **Dashboard**: Fixed missing Search icon import after cleanup
+- **Dashboard**: Resolved ReferenceError when rendering search bar
+
+### Documentation
+
+- Darkened primary navbar color for better contrast and professional appearance
+- Fixed badge rendering in documentation home page
+- Converted markdown badge syntax to proper HTML with alignment attributes
+- Added CSS improvements for center-aligned content and badge spacing
+- Better visual hierarchy and spacing throughout documentation
+
+### Internationalization
+
+- Added "documentation" key to English and German locales
+- Added "viewAllReleases" key for release section button
+
+---
+
 ## [1.4.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.3.2...v1.4.0) (2025-01-08)
 
 ### Features

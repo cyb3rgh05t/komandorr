@@ -141,10 +141,6 @@ export const fetchPlexActivities = async () => {
 
     const activities = data.activities || [];
 
-    console.log("Fetched Plex activities", {
-      count: activities.length,
-    });
-
     // Process and normalize activities
     return activities.map((activity) => ({
       uuid: activity.uuid || `id-${Math.random().toString(36).substr(2, 9)}`,

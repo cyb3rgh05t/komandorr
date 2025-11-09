@@ -2,13 +2,15 @@
 
 <div align="center">
   <img src="images/logo.png" alt="Komandorr Logo" width="200">
-  
-  **Modern Service Monitoring Dashboard**
-  
-  [![GitHub Release](https://img.shields.io/github/v/release/cyb3rgh05t/komandorr)](https://github.com/cyb3rgh05t/komandorr/releases)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/cyb3rgh05t/komandorr)](https://hub.docker.com/r/cyb3rgh05t/komandorr)
-  [![License](https://img.shields.io/github/license/cyb3rgh05t/komandorr)](https://github.com/cyb3rgh05t/komandorr/blob/main/LICENSE)
 </div>
+
+<p align="center"><strong>Modern Service Monitoring Dashboard</strong></p>
+
+<p align="center">
+  <a href="https://github.com/cyb3rgh05t/komandorr/releases"><img src="https://img.shields.io/github/v/release/cyb3rgh05t/komandorr" alt="GitHub Release"></a>
+  <a href="https://hub.docker.com/r/cyb3rgh05t/komandorr"><img src="https://img.shields.io/docker/pulls/cyb3rgh05t/komandorr" alt="Docker Pulls"></a>
+  <a href="https://github.com/cyb3rgh05t/komandorr/blob/main/LICENSE"><img src="https://img.shields.io/github/license/cyb3rgh05t/komandorr" alt="License"></a>
+</p>
 
 ---
 

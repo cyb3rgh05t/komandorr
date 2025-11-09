@@ -119,10 +119,50 @@ export default function Services() {
     setShowModal(true);
   };
 
+  const LoadingServiceCard = () => (
+    <div className="bg-theme-card border border-theme rounded-lg p-6">
+      <div className="space-y-3 animate-pulse">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2 flex-1">
+            <div className="h-5 bg-theme-hover rounded w-1/2" />
+            <div className="flex gap-2">
+              <div className="h-4 bg-theme-hover rounded w-16" />
+              <div className="h-4 bg-theme-hover rounded w-32" />
+            </div>
+          </div>
+          <div className="h-6 w-6 bg-theme-hover rounded" />
+        </div>
+        <div className="flex gap-2">
+          <div className="h-8 bg-theme-hover rounded w-20" />
+          <div className="h-8 bg-theme-hover rounded w-20" />
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
+      <div className="space-y-6">
+        {/* Stats Cards Loading */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
+            >
+              <div className="space-y-3 animate-pulse">
+                <div className="h-4 bg-theme-hover rounded w-24" />
+                <div className="h-8 bg-theme-hover rounded w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Service Cards Loading */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, i) => (
+            <LoadingServiceCard key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -189,57 +229,63 @@ export default function Services() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Server className="w-3 h-3 text-theme-primary" />
                 {t("services.total")}
               </p>
-              <p className="text-2xl font-bold text-theme-text">
+              <p className="text-2xl font-bold text-theme-text mt-1">
                 {stats.total}
               </p>
             </div>
-            <Server className="text-theme-primary" size={32} />
+            <Server className="w-8 h-8 text-theme-primary" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Activity className="w-3 h-3 text-green-500" />
                 {t("dashboard.online")}
               </p>
-              <p className="text-2xl font-bold text-green-500">
+              <p className="text-2xl font-bold text-green-500 mt-1">
                 {stats.online}
               </p>
             </div>
-            <Activity className="text-green-500" size={32} />
+            <Activity className="w-8 h-8 text-green-500" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 text-red-500" />
                 {t("dashboard.offline")}
               </p>
-              <p className="text-2xl font-bold text-red-500">{stats.offline}</p>
+              <p className="text-2xl font-bold text-red-500 mt-1">
+                {stats.offline}
+              </p>
             </div>
-            <AlertCircle className="text-red-500" size={32} />
+            <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 text-yellow-500" />
                 {t("dashboard.problem")}
               </p>
-              <p className="text-2xl font-bold text-yellow-500">
+              <p className="text-2xl font-bold text-yellow-500 mt-1">
                 {stats.problem}
               </p>
             </div>
-            <AlertCircle className="text-yellow-500" size={32} />
+            <AlertCircle className="w-8 h-8 text-yellow-500" />
           </div>
         </div>
       </div>

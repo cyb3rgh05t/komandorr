@@ -77,13 +77,30 @@ function ReleasesSection() {
 
   return (
     <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-      <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-        <Tag className="w-6 h-6 text-theme-primary" />
-        {t("releasesSection.title")}
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
+          <Tag className="w-6 h-6 text-theme-primary" />
+          {t("releasesSection.title")}
+        </h2>
+
+        {/* View All Releases Button */}
+        {releases.length > 5 && (
+          <a
+            href="https://github.com/cyb3rgh05t/komandorr/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-lg transition-all font-medium text-theme-text text-sm"
+          >
+            <span>
+              {t("releasesSection.viewAllReleases") || "View All Releases"}
+            </span>
+            <ExternalLink className="w-4 h-4 text-theme-primary" />
+          </a>
+        )}
+      </div>
 
       <div className="space-y-2">
-        {releases.map((release, index) => (
+        {releases.slice(0, 5).map((release, index) => (
           <div
             key={release.version}
             className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-theme-hover border border-theme rounded-lg hover:bg-theme-primary/10 transition-all group"

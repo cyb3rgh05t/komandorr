@@ -1,5 +1,76 @@
 # CHANGELOG.md
 
+# [1.5.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.2...v1.5.0) (2025-11-09)
+
+### Features
+
+• **dashboard: comprehensive UI/UX improvements**
+◦ Created dedicated `DashboardServiceCard` component for dashboard-specific service display
+◦ Added horizontal stats bar layout with individual stat boxes (Response Time, Last Check, Upload/Download Speed)
+◦ Removed Service ID display from dashboard cards for cleaner appearance
+◦ Integrated real-time traffic data directly into dashboard service cards
+◦ Stats now display with proper labels above values for consistent card sizing
+◦ Added conditional rendering for traffic data (only shows when available)
+
+• **services: enhanced service card design**
+◦ Redesigned `ServiceCard` component with modern badge-based layout
+◦ Added Service ID display with copy-to-clipboard functionality
+◦ Conditional icon display (only renders if service has custom icon)
+◦ Improved action button layout with primary "Check Now" button
+◦ Consistent badge styling across all service information
+
+• **about: improved release section**
+◦ Limited release display to 5 most recent releases for better performance
+◦ Added "View All Releases" button in section header (right-aligned)
+◦ Button only appears when more than 5 releases are available
+◦ Direct link to GitHub releases page for full release history
+◦ Added translations for "View All Releases" (English/German)
+
+• **about: enhanced documentation access**
+◦ Added direct link to documentation site (https://cyb3rgh05t.github.io/komandorr)
+◦ Separated "Documentation" and "API Documentation" links for clarity
+◦ Both links open in new tabs with proper external link icons
+
+• **ui: improved consistency and polish**
+◦ Added skeleton loading animations across all pages (Dashboard, Monitor, Traffic, Services)
+◦ Standardized content width across all pages (removed inconsistent max-width constraints)
+◦ All icons now use solid colors (removed opacity/fade effects)
+◦ Consistent badge styling: `px-2.5 py-1 bg-theme-hover border border-theme rounded-md`
+◦ Progress bars now use solid theme colors throughout
+
+• **vodstreams: comprehensive timestamp tracking system**
+◦ Implemented localStorage-based activity timestamp tracking with persistence
+◦ Added live timer badges showing elapsed time for active downloads
+◦ Smart tracking logic: starts immediately for new activities (<2%), waits for 1% progress change for in-progress activities
+◦ Timer states: undefined (new) → null (waiting) → number (tracking with timestamp)
+◦ Fixed timer reset issues on page refresh with proper state management
+◦ Added "Tracking..." state for activities waiting to start timing
+◦ Real-time timer updates with live elapsed time display
+
+### Bug Fixes
+
+• **dashboard: fixed missing Search icon import**
+◦ Re-added Search icon to imports after cleanup
+◦ Fixed ReferenceError when rendering search bar
+
+### Documentation
+
+• **docs: improved styling and readability**
+◦ Darkened primary navbar color from `#e97b2e` to `#c05d1a` for better contrast
+◦ Updated accent color from `#ff8c42` to `#d9681f` for more professional appearance
+◦ Fixed badge rendering in documentation home page
+◦ Converted markdown badge syntax to proper HTML with alignment attributes
+◦ Added CSS improvements for center-aligned content and badge spacing
+◦ Better visual hierarchy and spacing throughout documentation
+
+### Internationalization
+
+• **locales: added new translation keys**
+◦ Added "documentation" key to English and German locales
+◦ Added "viewAllReleases" key for release section button
+◦ English: "Documentation", "View All Releases"
+◦ German: "Dokumentation", "Alle Releases anzeigen"
+
 # [1.4.2](https://github.com/cyb3rgh05t/komandorr/compare/v1.4.1...v1.4.2) (2025-11-08)
 
 ### Bug Fixes

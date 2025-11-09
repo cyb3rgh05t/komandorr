@@ -127,14 +127,16 @@
     "serviceCreated": "Service created successfully",
     "serviceUpdated": "Service updated successfully",
     "serviceDeleted": "Service deleted successfully",
-    "serviceChecked": "Service checked successfully"
+    "serviceChecked": "Service checked successfully",
+    "servicesChecked": "All services checked successfully"
   },
   "errors": {
     "fetchServices": "Failed to fetch services",
     "createService": "Failed to create service",
     "updateService": "Failed to update service",
     "deleteService": "Failed to delete service",
-    "checkService": "Failed to check service"
+    "checkService": "Failed to check service",
+    "checkServices": "Failed to check services"
   },
   "confirmations": {
     "deleteService": "Are you sure you want to delete this service?"
@@ -237,6 +239,7 @@
     "latest": "Latest",
     "preRelease": "Pre-Release",
     "viewChangelog": "View Changelog",
+    "viewAllReleases": "View All Releases",
     "today": "Today",
     "yesterday": "Yesterday",
     "daysAgo": "{{days}} days ago",
@@ -254,6 +257,7 @@
     "unknown": "Unknown",
     "timeZone": "Time Zone",
     "gettingSupport": "Getting Support",
+    "documentation": "Documentation",
     "apiDocumentation": "API Documentation",
     "githubIssues": "GitHub Issues",
     "telegramSupport": "Telegram Support",

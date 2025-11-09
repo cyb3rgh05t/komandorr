@@ -189,6 +189,21 @@ function About() {
 
         <div className="space-y-3">
           <a
+            href="https://cyb3rgh05t.github.io/komandorr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 text-theme-primary" />
+              <span className="text-theme-text font-medium">
+                {t("about.documentation") || "Documentation"}
+              </span>
+            </div>
+            <ExternalLink className="w-4 h-4 text-theme-muted group-hover:text-theme-primary transition-colors" />
+          </a>
+
+          <a
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"

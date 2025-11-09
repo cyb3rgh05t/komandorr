@@ -6,18 +6,11 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Edit,
-  Trash2,
   Search,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
-import ServiceCard from "@/components/ServiceCard";
+import DashboardServiceCard from "@/components/DashboardServiceCard";
 import ServiceModal from "@/components/ServiceModal";
 
 const API_URL = "/api";
@@ -196,6 +189,27 @@ export default function Dashboard() {
     problem: services.filter((s) => s.status === "problem").length,
   };
 
+  const LoadingServiceCard = () => (
+    <div className="bg-theme-card border border-theme rounded-lg p-6">
+      <div className="space-y-3 animate-pulse">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2 flex-1">
+            <div className="h-5 bg-theme-hover rounded w-1/2" />
+            <div className="flex gap-2">
+              <div className="h-4 bg-theme-hover rounded w-16" />
+              <div className="h-4 bg-theme-hover rounded w-32" />
+            </div>
+          </div>
+          <div className="h-6 w-6 bg-theme-hover rounded" />
+        </div>
+        <div className="flex gap-2">
+          <div className="h-8 bg-theme-hover rounded w-20" />
+          <div className="h-8 bg-theme-hover rounded w-20" />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="px-4 py-6 space-y-6">
       {/* Header */}
@@ -294,8 +308,24 @@ export default function Dashboard() {
 
       {/* Services Grid */}
       {loading ? (
-        <div className="text-center py-12 text-theme-text-muted">
-          {t("common.loading")}
+        <div className="space-y-6">
+          {/* Stats Cards Loading */}
+          <div className="bg-theme-card border border-theme rounded-xl p-6 shadow-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="text-center space-y-2">
+                  <div className="h-9 bg-theme-hover rounded w-16 mx-auto" />
+                  <div className="h-3 bg-theme-hover rounded w-24 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Service Cards Loading */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <LoadingServiceCard key={i} />
+            ))}
+          </div>
         </div>
       ) : services.length === 0 ? (
         <div className="text-center py-12">
@@ -359,9 +389,16 @@ export default function Dashboard() {
                       </div>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupServices.map((service) =>
-                        renderServiceCard(service, trafficData)
-                      )}
+                      {groupServices.map((service) => (
+                        <DashboardServiceCard
+                          key={service.id}
+                          service={service}
+                          trafficData={trafficData}
+                          onCheck={handleCheckService}
+                          onEdit={handleEditService}
+                          onDelete={handleDeleteService}
+                        />
+                      ))}
                     </div>
                   </div>
                 )
@@ -402,9 +439,16 @@ export default function Dashboard() {
                 {/* Active Tab Content */}
                 {activeTab && grouped[activeTab] && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {grouped[activeTab].map((service) =>
-                      renderServiceCard(service, trafficData)
-                    )}
+                    {grouped[activeTab].map((service) => (
+                      <DashboardServiceCard
+                        key={service.id}
+                        service={service}
+                        trafficData={trafficData}
+                        onCheck={handleCheckService}
+                        onEdit={handleEditService}
+                        onDelete={handleDeleteService}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -424,163 +468,4 @@ export default function Dashboard() {
       )}
     </div>
   );
-
-  // Helper function to render a service card
-  function renderServiceCard(service, trafficData) {
-    // Find traffic data for this service
-    const serviceTraffic = trafficData?.services?.find(
-      (s) => s.id === service.id
-    );
-
-    const formatBandwidth = (mbps) => {
-      if (!mbps || mbps === 0) return "0 KB/s";
-      if (mbps < 1) {
-        return `${(mbps * 1024).toFixed(1)} KB/s`;
-      }
-      return `${mbps.toFixed(1)} MB/s`;
-    };
-
-    const statusConfig = {
-      online: {
-        icon: CheckCircle2,
-        color: "text-green-500",
-        bgColor: "bg-green-500/10",
-        borderColor: "border-green-500/20",
-      },
-      offline: {
-        icon: XCircle,
-        color: "text-red-500",
-        bgColor: "bg-red-500/10",
-        borderColor: "border-red-500/20",
-      },
-      problem: {
-        icon: AlertTriangle,
-        color: "text-yellow-500",
-        bgColor: "bg-yellow-500/10",
-        borderColor: "border-yellow-500/20",
-      },
-    };
-    const config = statusConfig[service.status] || statusConfig.offline;
-    const StatusIcon = config.icon;
-
-    return (
-      <div
-        key={service.id}
-        className="bg-theme-card border border-theme rounded-lg p-5 hover:bg-theme-hover transition-all duration-200 shadow-sm"
-      >
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-theme-card p-2.5 rounded-lg border border-theme">
-              {service.icon ? (
-                <img
-                  src={`http://localhost:8000${service.icon}`}
-                  alt={service.name}
-                  className="w-6 h-6 object-contain"
-                  onError={(e) => {
-                    // Fallback to status icon if image fails to load
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "block";
-                  }}
-                />
-              ) : null}
-              <StatusIcon
-                className={`${config.color}`}
-                size={24}
-                style={{
-                  display: service.icon ? "none" : "block",
-                }}
-              />
-            </div>
-            <div className="flex-1">
-              {service.description && (
-                <span className="inline-block px-2 py-0.5 mb-1.5 text-xs font-medium bg-theme-card text-theme-text-muted border border-theme rounded">
-                  {service.description}
-                </span>
-              )}
-              <h3 className="text-lg font-semibold text-theme-text">
-                {service.name}
-              </h3>
-              <span className="inline-block mt-1.5 px-2 py-0.5 text-xs font-medium bg-theme-card text-theme-text-muted border border-theme rounded">
-                {t(`service.types.${service.type}`)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => handleCheckService(service.id)}
-              className="p-2 hover:bg-theme-card rounded-lg transition-colors"
-              title={t("service.checkNow")}
-            >
-              <RefreshCw
-                className={`text-theme-text-muted hover:text-theme-primary transition-transform duration-500 ${
-                  refreshing ? "animate-spin" : ""
-                }`}
-                size={16}
-              />
-            </button>
-            <button
-              onClick={() => handleEditService(service)}
-              className="p-2 hover:bg-theme-card rounded-lg transition-colors"
-              title={t("service.edit")}
-            >
-              <Edit
-                className="text-theme-text-muted hover:text-theme-primary"
-                size={16}
-              />
-            </button>
-            <button
-              onClick={() => handleDeleteService(service.id)}
-              className="p-2 hover:bg-theme-card rounded-lg transition-colors"
-              title={t("service.delete")}
-            >
-              <Trash2
-                className="text-theme-text-muted hover:text-red-500"
-                size={16}
-              />
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-theme-text-muted">{t("service.url")}:</span>
-            <a
-              href={service.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-theme-primary hover:text-theme-primary-hover truncate max-w-xs"
-            >
-              {service.url}
-            </a>
-          </div>
-        </div>
-
-        {/* Traffic Data */}
-        {serviceTraffic &&
-          (serviceTraffic.bandwidth_up > 0 ||
-            serviceTraffic.bandwidth_down > 0) && (
-            <div className="mt-2 bg-theme-card border border-theme rounded-lg p-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-theme-text-muted">Traffic:</span>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <ArrowUp size={14} className="text-blue-500" />
-                    <span className="text-blue-500 font-mono text-xs">
-                      {formatBandwidth(serviceTraffic.bandwidth_up)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ArrowDown size={14} className="text-green-500" />
-                    <span className="text-green-500 font-mono text-xs">
-                      {formatBandwidth(serviceTraffic.bandwidth_down)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-      </div>
-    );
-  }
 }

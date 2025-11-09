@@ -23,6 +23,13 @@ class TrafficDataPoint(BaseModel):
     total_down: float  # GB
 
 
+class ResponseTimeDataPoint(BaseModel):
+    """Single response time data point for historical data"""
+
+    timestamp: datetime
+    response_time: float  # milliseconds
+
+
 class Service(BaseModel):
     """Service model representing a monitored app/website/panel"""
 
@@ -38,6 +45,7 @@ class Service(BaseModel):
     group: str | None = None
     traffic: TrafficMetrics | None = None
     traffic_history: List[TrafficDataPoint] = []
+    response_history: List[ResponseTimeDataPoint] = []
 
 
 class ServiceCreate(BaseModel):

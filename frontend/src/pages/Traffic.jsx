@@ -1,69 +1,180 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Activity, ArrowUp, ArrowDown, Server, RefreshCw } from "lucide-react";
+import {
+  Activity,
+  ArrowUp,
+  ArrowDown,
+  Server,
+  RefreshCw,
+  Loader2,
+  TrendingUp,
+  Search,
+} from "lucide-react";
 import { api } from "../services/api";
-import { formatTime } from "../utils/dateUtils";
 
-// Format datetime to local time in 24-hour format
-const formatDateTime = (dateString) => {
-  if (!dateString) return "Never";
+// Traffic chart component - Line/Area chart style for bandwidth history
+const TrafficChart = ({ data = [], type = "upload", serviceId }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-20 flex items-center justify-center text-theme-text-muted text-xs bg-[#0a0f1a] rounded border border-gray-800">
+        No traffic data yet
+      </div>
+    );
+  }
 
-  const date = new Date(dateString);
-  // Check if date is valid
-  if (isNaN(date.getTime())) return "Invalid date";
+  // Extract bandwidth values based on type
+  const values = data.map((point) =>
+    type === "upload" ? point.bandwidth_up : point.bandwidth_down
+  );
 
-  return date.toLocaleString("en-GB", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = max - min || max * 0.1 || 1;
+
+  // Create unique gradient ID
+  const gradientId = `traffic-gradient-${type}-${serviceId}-${Date.now()}`;
+
+  // Create SVG path
+  const width = 100;
+  const height = 100;
+
+  const points = values.map((value, index) => {
+    const x = (index / Math.max(values.length - 1, 1)) * width;
+    const y = (1 - (value - min) / range) * height;
+    return `${x},${y}`;
   });
+
+  const linePath = `M ${points.join(" L ")}`;
+  const areaPath = `M 0,${height} L ${points.join(
+    " L "
+  )} L ${width},${height} Z`;
+
+  // Color based on type
+  const color = type === "upload" ? "#3b82f6" : "#22c55e"; // blue for upload, green for download
+
+  return (
+    <div className="relative h-20 bg-[#0a0f1a] rounded border border-gray-800/50 overflow-hidden">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-full"
+        preserveAspectRatio="none"
+      >
+        {/* Grid lines */}
+        <line
+          x1="0"
+          y1="20"
+          x2={width}
+          y2="20"
+          stroke="rgba(255,255,255,0.02)"
+          strokeWidth="0.5"
+        />
+        <line
+          x1="0"
+          y1="40"
+          x2={width}
+          y2="40"
+          stroke="rgba(255,255,255,0.02)"
+          strokeWidth="0.5"
+        />
+        <line
+          x1="0"
+          y1="60"
+          x2={width}
+          y2="60"
+          stroke="rgba(255,255,255,0.02)"
+          strokeWidth="0.5"
+        />
+        <line
+          x1="0"
+          y1="80"
+          x2={width}
+          y2="80"
+          stroke="rgba(255,255,255,0.02)"
+          strokeWidth="0.5"
+        />
+
+        {/* Area fill with gradient */}
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.2 }} />
+            <stop offset="100%" style={{ stopColor: color, stopOpacity: 0 }} />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill={`url(#${gradientId})`} />
+
+        {/* The line itself */}
+        <path
+          d={linePath}
+          fill="none"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+
+      {/* Hover overlay for tooltip */}
+      <div className="absolute inset-0 flex">
+        {values.map((value, index) => (
+          <div
+            key={index}
+            className="flex-1 group relative"
+            title={`${value.toFixed(2)} MB/s`}
+          >
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900/95 border border-gray-700 rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
+              {value.toFixed(2)} MB/s
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
-
-// Component to format time asynchronously
-function FormattedTime({ date }) {
-  const [formatted, setFormatted] = useState("Loading...");
-
-  useEffect(() => {
-    formatTime(date).then(setFormatted);
-  }, [date]);
-
-  return <>{formatted}</>;
-}
 
 export default function Traffic() {
   const { t } = useTranslation();
-  const [trafficSummary, setTrafficSummary] = useState(null);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const fetchTrafficData = async () => {
-    try {
-      setIsRefreshing(true);
-      const data = await api.getTrafficSummary();
-      setTrafficSummary(data);
-      setLastUpdate(new Date());
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching traffic data:", error);
-      setLoading(false);
-    } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
-    }
-  };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
 
   useEffect(() => {
     fetchTrafficData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchTrafficData, 30000);
+    const interval = setInterval(fetchTrafficData, 10000);
     return () => clearInterval(interval);
   }, []);
 
+  // Update current time every second to refresh "X seconds ago" display
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const fetchTrafficData = async () => {
+    try {
+      const data = await api.getServices();
+      // Filter services that have traffic data
+      const servicesWithTraffic = data.filter((s) => s.traffic);
+      setServices(servicesWithTraffic);
+    } catch (error) {
+      console.error("Error fetching traffic data:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchTrafficData();
+  };
+
   const formatBandwidth = (mbps) => {
+    if (!mbps) return "0 KB/s";
     if (mbps < 1) {
       return `${(mbps * 1024).toFixed(2)} KB/s`;
     }
@@ -71,6 +182,7 @@ export default function Traffic() {
   };
 
   const formatTraffic = (gb) => {
+    if (!gb) return "0 MB";
     if (gb < 1) {
       return `${(gb * 1024).toFixed(2)} MB`;
     }
@@ -80,223 +192,392 @@ export default function Traffic() {
     return `${gb.toFixed(2)} GB`;
   };
 
+  const formatLastCheck = (lastCheck) => {
+    if (!lastCheck) return "Never";
+    const date = new Date(lastCheck);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000); // seconds
+
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
+
+  const LoadingServiceCard = () => (
+    <div className="bg-theme-card border border-theme rounded-lg p-6">
+      <div className="space-y-4 animate-pulse">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2 flex-1">
+            <div className="h-5 bg-theme-hover rounded w-1/3" />
+            <div className="flex gap-2">
+              <div className="h-5 bg-theme-hover rounded w-20" />
+              <div className="h-5 bg-theme-hover rounded w-32" />
+            </div>
+          </div>
+          <div className="h-6 w-20 bg-theme-hover rounded-full" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-48 bg-theme-hover/30 rounded border border-theme" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-16 bg-theme-hover/30 rounded" />
+            <div className="h-16 bg-theme-hover/30 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-theme-primary animate-spin mx-auto mb-2" />
-          <p className="text-theme-text-muted">{t("traffic.loading")}</p>
+      <div className="space-y-6">
+        {/* Stats Cards Loading */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
+            >
+              <div className="space-y-3 animate-pulse">
+                <div className="h-4 bg-theme-hover rounded w-24" />
+                <div className="h-8 bg-theme-hover rounded w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Service Cards Loading */}
+        <div className="grid grid-cols-1 gap-5">
+          <LoadingServiceCard />
+          <LoadingServiceCard />
         </div>
       </div>
     );
   }
 
+  // Filter services based on search term
+  const filteredServices = services.filter(
+    (service) =>
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calculate totals
+  const totalBandwidthUp = services.reduce(
+    (sum, s) => sum + (s.traffic?.bandwidth_up || 0),
+    0
+  );
+  const totalBandwidthDown = services.reduce(
+    (sum, s) => sum + (s.traffic?.bandwidth_down || 0),
+    0
+  );
+  const totalTrafficUp = services.reduce(
+    (sum, s) => sum + (s.traffic?.total_up || 0),
+    0
+  );
+  const totalTrafficDown = services.reduce(
+    (sum, s) => sum + (s.traffic?.total_down || 0),
+    0
+  );
+
   return (
     <div className="px-4 py-6 space-y-6">
-      {/* Refresh Button */}
-      <div className="flex justify-end">
+      {/* Header with Search & Refresh */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search services..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
+          />
+        </div>
+
         <button
-          onClick={fetchTrafficData}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50"
         >
           <RefreshCw
             size={18}
-            className={`text-theme-primary transition-transform duration-500 ${
-              isRefreshing ? "animate-spin" : ""
-            }`}
+            className={`text-theme-primary ${refreshing ? "animate-spin" : ""}`}
           />
-          <span className="text-sm">{t("service.checkNow")}</span>
+          <span>Refresh</span>
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Services */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-lg p-6">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-text-muted text-sm">
-                {t("traffic.total_services")}
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Server className="w-3 h-3 text-theme-primary" />
+                Services
               </p>
-              <p className="text-3xl font-bold text-theme-text mt-1">
-                {trafficSummary?.total_services || 0}
+              <p className="text-2xl font-bold text-theme-text mt-1">
+                {services.length}
               </p>
             </div>
-            <Server className="w-8 h-8 text-theme-primary opacity-50" />
+            <Server className="w-8 h-8 text-theme-primary" />
           </div>
         </div>
 
-        {/* Active Monitoring */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-lg p-6">
+        {/* Upload Speed */}
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-text-muted text-sm">
-                {t("traffic.active_monitoring")}
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <ArrowUp className="w-3 h-3 text-blue-500" />
+                Upload
               </p>
-              <p className="text-3xl font-bold text-theme-text mt-1">
-                {trafficSummary?.services_with_traffic || 0}
+              <p className="text-2xl font-bold text-blue-500 mt-1">
+                {formatBandwidth(totalBandwidthUp)}
               </p>
             </div>
-            <Activity className="w-8 h-8 text-green-500 opacity-50" />
+            <ArrowUp className="w-8 h-8 text-blue-500" />
           </div>
         </div>
 
-        {/* Total Bandwidth Up */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-lg p-6">
+        {/* Download Speed */}
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-text-muted text-sm flex items-center gap-1">
-                <ArrowUp className="w-4 h-4" />
-                {t("traffic.current_upload")}
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <ArrowDown className="w-3 h-3 text-green-500" />
+                Download
               </p>
-              <p className="text-3xl font-bold text-theme-text mt-1">
-                {formatBandwidth(trafficSummary?.total_bandwidth_up || 0)}
+              <p className="text-2xl font-bold text-green-500 mt-1">
+                {formatBandwidth(totalBandwidthDown)}
               </p>
             </div>
-            <ArrowUp className="w-8 h-8 text-blue-500 opacity-50" />
+            <ArrowDown className="w-8 h-8 text-green-500" />
           </div>
         </div>
 
-        {/* Total Bandwidth Down */}
-        <div className="bg-theme-bg-card border border-theme-border rounded-lg p-6">
+        {/* Total Traffic */}
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-text-muted text-sm flex items-center gap-1">
-                <ArrowDown className="w-4 h-4" />
-                {t("traffic.current_download")}
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Activity className="w-3 h-3 text-theme-primary" />
+                Total Traffic
               </p>
-              <p className="text-3xl font-bold text-theme-text mt-1">
-                {formatBandwidth(trafficSummary?.total_bandwidth_down || 0)}
+              <p className="text-2xl font-bold text-theme-primary mt-1">
+                {formatTraffic(totalTrafficUp + totalTrafficDown)}
               </p>
             </div>
-            <ArrowDown className="w-8 h-8 text-green-500 opacity-50" />
+            <Activity className="w-8 h-8 text-theme-primary" />
           </div>
         </div>
       </div>
 
-      {/* Total Traffic Stats */}
+      {/* Total Upload/Download Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-theme-bg-card border border-theme-border rounded-lg p-6">
+        <div className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
           <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
             <ArrowUp className="w-5 h-5 text-blue-500" />
-            {t("traffic.total_uploaded")}
+            Total Uploaded
           </h3>
           <p className="text-4xl font-bold text-blue-500">
-            {formatTraffic(trafficSummary?.total_traffic_up || 0)}
+            {formatTraffic(totalTrafficUp)}
           </p>
         </div>
 
-        <div className="bg-theme-bg-card border border-theme-border rounded-lg p-6">
+        <div className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
           <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
             <ArrowDown className="w-5 h-5 text-green-500" />
-            {t("traffic.total_downloaded")}
+            Total Downloaded
           </h3>
           <p className="text-4xl font-bold text-green-500">
-            {formatTraffic(trafficSummary?.total_traffic_down || 0)}
+            {formatTraffic(totalTrafficDown)}
           </p>
         </div>
       </div>
 
-      {/* Services Table */}
-      <div className="bg-theme-bg-card border border-theme-border rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-theme-border">
-          <h2 className="text-xl font-semibold text-theme-text">
-            {t("traffic.services_list")}
-          </h2>
-        </div>
+      {/* Services Grid */}
+      <div className="grid grid-cols-1 gap-4">
+        {filteredServices.length === 0 ? (
+          <div className="text-center py-12 bg-theme-card border border-theme rounded-lg">
+            <Server className="w-12 h-12 text-theme-text-muted mx-auto mb-3 opacity-50" />
+            <p className="text-theme-text-muted">
+              {searchTerm
+                ? "No services found matching your search"
+                : "No services with traffic monitoring"}
+            </p>
+          </div>
+        ) : (
+          filteredServices.map((service) => (
+            <div
+              key={service.id}
+              className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-all hover:border-theme-primary/30"
+            >
+              {/* Service Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-theme-text mb-2">
+                    {service.name}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
+                      <Server size={12} />
+                      {service.type}
+                    </span>
+                    <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
+                      <Activity size={12} />
+                      {formatLastCheck(service.traffic?.last_updated)}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-theme-bg-hover">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                  {t("traffic.service_name")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                  <div className="flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3" />
-                    {t("traffic.upload_speed")}
+              {/* Traffic Stats Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <ArrowUp className="w-3 h-3 text-blue-400" />
+                    <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">
+                      Upload Speed
+                    </p>
                   </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                  <div className="flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3" />
-                    {t("traffic.download_speed")}
+                  <p className="text-xl font-bold text-blue-500">
+                    {formatBandwidth(service.traffic?.bandwidth_up || 0)}
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <ArrowDown className="w-3 h-3 text-green-400" />
+                    <p className="text-xs text-green-400 font-semibold uppercase tracking-wider">
+                      Download Speed
+                    </p>
                   </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                  {t("traffic.total_up")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                  {t("traffic.total_down")}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                  {t("traffic.last_update")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-theme-border">
-              {trafficSummary?.services &&
-              trafficSummary.services.length > 0 ? (
-                trafficSummary.services.map((service) => (
-                  <tr
-                    key={service.id}
-                    className="hover:bg-theme-bg-hover transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-theme-text">
-                        {service.name}
+                  <p className="text-xl font-bold text-green-500">
+                    {formatBandwidth(service.traffic?.bandwidth_down || 0)}
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <ArrowUp className="w-3 h-3 text-theme-text-muted" />
+                    <p className="text-xs text-theme-text-muted font-semibold uppercase tracking-wider">
+                      Total Upload
+                    </p>
+                  </div>
+                  <p className="text-xl font-bold text-theme-text">
+                    {formatTraffic(service.traffic?.total_up || 0)}
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <ArrowDown className="w-3 h-3 text-theme-text-muted" />
+                    <p className="text-xs text-theme-text-muted font-semibold uppercase tracking-wider">
+                      Total Download
+                    </p>
+                  </div>
+                  <p className="text-xl font-bold text-theme-text">
+                    {formatTraffic(service.traffic?.total_down || 0)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Traffic Charts */}
+              {service.traffic_history &&
+                service.traffic_history.length > 0 && (
+                  <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-theme-primary/20 rounded">
+                        <TrendingUp size={14} className="text-theme-primary" />
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-blue-500 font-mono">
-                        {formatBandwidth(service.bandwidth_up)}
+                      <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
+                        Bandwidth History
+                      </span>
+                    </div>
+
+                    {/* Upload Chart */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-xs font-semibold text-blue-400 flex items-center gap-1">
+                            <ArrowUp size={10} />
+                            Upload
+                          </span>
+                        </div>
+                        {(() => {
+                          const values = service.traffic_history.map(
+                            (p) => p.bandwidth_up
+                          );
+                          if (values.length > 0) {
+                            const avg =
+                              values.reduce((a, b) => a + b, 0) / values.length;
+                            const max = Math.max(...values);
+                            return (
+                              <div className="flex gap-2">
+                                <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
+                                  Avg: {avg.toFixed(2)} MB/s
+                                </span>
+                                <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
+                                  Max: {max.toFixed(2)} MB/s
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-green-500 font-mono">
-                        {formatBandwidth(service.bandwidth_down)}
+                      <TrafficChart
+                        data={service.traffic_history}
+                        type="upload"
+                        serviceId={service.id}
+                      />
+                    </div>
+
+                    {/* Download Chart */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-semibold text-green-400 flex items-center gap-1">
+                            <ArrowDown size={10} />
+                            Download
+                          </span>
+                        </div>
+                        {(() => {
+                          const values = service.traffic_history.map(
+                            (p) => p.bandwidth_down
+                          );
+                          if (values.length > 0) {
+                            const avg =
+                              values.reduce((a, b) => a + b, 0) / values.length;
+                            const max = Math.max(...values);
+                            return (
+                              <div className="flex gap-2">
+                                <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
+                                  Avg: {avg.toFixed(2)} MB/s
+                                </span>
+                                <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
+                                  Max: {max.toFixed(2)} MB/s
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-theme-text font-mono">
-                        {formatTraffic(service.total_up)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-theme-text font-mono">
-                        {formatTraffic(service.total_down)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-theme-text-muted">
-                        {formatDateTime(service.last_updated)}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="px-6 py-8 text-center text-theme-text-muted"
-                  >
-                    {t("traffic.no_data")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      <TrafficChart
+                        data={service.traffic_history}
+                        type="download"
+                        serviceId={service.id}
+                      />
+                    </div>
+                  </div>
+                )}
+            </div>
+          ))
+        )}
       </div>
-
-      {/* Last Update Info */}
-      {lastUpdate && (
-        <div className="text-center text-sm text-theme-text-muted">
-          {t("traffic.last_refresh")}: {formatDateTime(lastUpdate)}
-        </div>
-      )}
     </div>
   );
 }

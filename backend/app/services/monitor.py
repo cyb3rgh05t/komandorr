@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Dict
-from app.models.service import Service
+from app.models.service import Service, ResponseTimeDataPoint
 from app.utils.logger import logger
 
 
@@ -66,6 +66,9 @@ class ServiceMonitor:
 
                 service.last_check = datetime.now(timezone.utc)
 
+                # Add response time to history
+                self._add_response_time(service, response_time)
+
         except httpx.TimeoutException:
             service.status = "problem"
             service.last_check = datetime.now(timezone.utc)
@@ -83,6 +86,9 @@ class ServiceMonitor:
 
         tasks = [self.check_service(service) for service in self.services.values()]
         await asyncio.gather(*tasks)
+
+        # Save after all services are checked (not on every individual check)
+        self._save_services()
         logger.info(f"Checked {len(tasks)} services")
 
     async def start_monitoring(self, interval: int = 60) -> None:
@@ -98,6 +104,18 @@ class ServiceMonitor:
         """Stop monitoring services"""
         self._running = False
         logger.info("Stopping service monitoring")
+
+    def _add_response_time(self, service: Service, response_time: float) -> None:
+        """Add a response time data point to service history"""
+        data_point = ResponseTimeDataPoint(
+            timestamp=datetime.now(timezone.utc), response_time=response_time
+        )
+
+        service.response_history.append(data_point)
+
+        # Keep last 100 points (similar to traffic_history)
+        if len(service.response_history) > 100:
+            service.response_history = service.response_history[-100:]
 
     def _ensure_storage_exists(self) -> None:
         """Ensure the storage directory and file exist"""
@@ -148,6 +166,14 @@ class ServiceMonitor:
                                     data_point["timestamp"]
                                 )
 
+                    # Convert response history timestamps back to datetime
+                    if service_data.get("response_history"):
+                        for data_point in service_data["response_history"]:
+                            if data_point.get("timestamp"):
+                                data_point["timestamp"] = datetime.fromisoformat(
+                                    data_point["timestamp"]
+                                )
+
                     service = Service(**service_data)
                     self.services[service.id] = service
             logger.info(
@@ -179,6 +205,14 @@ class ServiceMonitor:
                 # Handle traffic history timestamps
                 if service_dict.get("traffic_history"):
                     for data_point in service_dict["traffic_history"]:
+                        if data_point.get("timestamp"):
+                            data_point["timestamp"] = data_point[
+                                "timestamp"
+                            ].isoformat()
+
+                # Handle response history timestamps
+                if service_dict.get("response_history"):
+                    for data_point in service_dict["response_history"]:
                         if data_point.get("timestamp"):
                             data_point["timestamp"] = data_point[
                                 "timestamp"

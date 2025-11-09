@@ -1,8 +1,8 @@
 /* Custom styles for Komandorr documentation */
 
 :root {
-  --md-primary-fg-color: #e97b2e;
-  --md-accent-fg-color: #ff8c42;
+  --md-primary-fg-color: #c05d1a;
+  --md-accent-fg-color: #d9681f;
 }
 
 /* Logo styling */
@@ -10,6 +10,32 @@
 .md-header__button.md-logo svg {
   height: 2rem;
   width: auto;
+}
+
+/* Center aligned content improvements */
+[align="center"] {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+[align="center"] img {
+  display: inline-block;
+  margin: 1rem auto;
+}
+
+[align="center"] p {
+  margin: 0.5rem 0;
+}
+
+/* Badge spacing */
+[align="center"] a {
+  display: inline-block;
+  margin: 0.25rem;
+}
+
+[align="center"] a img {
+  margin: 0;
+  vertical-align: middle;
 }
 
 /* Code block enhancements */

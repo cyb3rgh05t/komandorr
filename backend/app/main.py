@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Timezone: {settings.TIMEZONE}")
 
     # Start monitoring in background
-    monitoring_task = asyncio.create_task(monitor.start_monitoring(interval=60))
+    monitoring_task = asyncio.create_task(monitor.start_monitoring(interval=10))
 
     yield
 
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Komandorr Dashboard API",
     description="Backend API for monitoring apps, websites, panels, and projects",
-    version="1.4.0",
+    version="1.5.0",
     lifespan=lifespan,
     swagger_ui_parameters={
         "syntaxHighlight.theme": "monokai",
@@ -401,7 +401,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "version": "1.4.0",
+        "version": "1.5.0",
         "services_count": len(monitor.get_all_services()),
     }
 
@@ -484,7 +484,7 @@ async def get_version():
 async def debug_version():
     """Debug endpoint to check version file paths and existence"""
     current_file = Path(__file__).resolve()
-    
+
     # Determine root directory
     if current_file.parts[-3] == "backend":
         root_dir = current_file.parent.parent.parent
@@ -492,11 +492,11 @@ async def debug_version():
     else:
         root_dir = current_file.parent.parent
         environment = "docker"
-    
+
     # Check all possible paths
     dist_path = root_dir / "frontend" / "dist" / "release.txt"
     public_path = root_dir / "frontend" / "public" / "release.txt"
-    
+
     debug_info = {
         "environment": environment,
         "current_file": str(current_file),
@@ -505,29 +505,33 @@ async def debug_version():
             "dist": {
                 "path": str(dist_path),
                 "exists": dist_path.exists(),
-                "content": None
+                "content": None,
             },
             "public": {
                 "path": str(public_path),
                 "exists": public_path.exists(),
-                "content": None
-            }
-        }
+                "content": None,
+            },
+        },
     }
-    
+
     # Try to read content from existing files
     if dist_path.exists():
         try:
-            debug_info["paths_checked"]["dist"]["content"] = dist_path.read_text().strip()
+            debug_info["paths_checked"]["dist"][
+                "content"
+            ] = dist_path.read_text().strip()
         except Exception as e:
             debug_info["paths_checked"]["dist"]["error"] = str(e)
-    
+
     if public_path.exists():
         try:
-            debug_info["paths_checked"]["public"]["content"] = public_path.read_text().strip()
+            debug_info["paths_checked"]["public"][
+                "content"
+            ] = public_path.read_text().strip()
         except Exception as e:
             debug_info["paths_checked"]["public"]["error"] = str(e)
-    
+
     return debug_info
 
 

@@ -6,11 +6,10 @@ import {
   RefreshCw,
   Edit,
   Trash2,
-  Copy,
-  Check,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "@/utils/dateUtils";
-import { useState } from "react";
 
 const statusConfig = {
   online: {
@@ -33,16 +32,28 @@ const statusConfig = {
   },
 };
 
-export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
+export default function DashboardServiceCard({
+  service,
+  trafficData,
+  onCheck,
+  onEdit,
+  onDelete,
+}) {
   const { t } = useTranslation();
   const config = statusConfig[service.status] || statusConfig.offline;
   const StatusIcon = config.icon;
-  const [copied, setCopied] = useState(false);
 
-  const handleCopyId = () => {
-    navigator.clipboard.writeText(service.id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Find traffic data for this service
+  const serviceTraffic = trafficData?.services?.find(
+    (s) => s.id === service.id
+  );
+
+  const formatBandwidth = (mbps) => {
+    if (!mbps || mbps === 0) return "0 KB/s";
+    if (mbps < 1) {
+      return `${(mbps * 1024).toFixed(1)} KB/s`;
+    }
+    return `${mbps.toFixed(1)} MB/s`;
   };
 
   return (
@@ -104,54 +115,61 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
         </a>
       </div>
 
-      {/* Stats Section */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-theme-text-muted">
-            {t("service.responseTime")}:
-          </span>
-          {service.response_time ? (
-            <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-primary">
+      {/* Stats Section - Horizontal Bar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Response Time */}
+        {service.response_time && (
+          <div className="flex flex-col gap-1 px-3 py-2 bg-theme-hover border border-theme rounded-md flex-1 min-w-0">
+            <span className="text-xs text-theme-text-muted whitespace-nowrap">
+              Response Time:
+            </span>
+            <span className="text-sm font-medium text-theme-primary">
               {Math.round(service.response_time)}ms
             </span>
-          ) : (
-            <span className="text-theme-text-muted">-</span>
-          )}
-        </div>
+          </div>
+        )}
 
+        {/* Last Check */}
         {service.last_check && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-theme-text-muted">
-              {t("service.lastCheck")}:
+          <div className="flex flex-col gap-1 px-3 py-2 bg-theme-hover border border-theme rounded-md flex-1 min-w-0">
+            <span className="text-xs text-theme-text-muted whitespace-nowrap">
+              Last Check:
             </span>
-            <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text">
+            <span className="text-sm font-medium text-theme-text">
               {formatDistanceToNow(service.last_check)}
             </span>
           </div>
         )}
 
-        <div className="flex items-center justify-between text-sm pt-3 border-t border-theme">
-          <span className="text-theme-text-muted text-xs">Service ID:</span>
-          <div className="flex items-center gap-2">
-            <code className="text-xs text-theme-text-muted font-mono bg-theme-hover px-2 py-1 rounded border border-theme">
-              {service.id.slice(0, 8)}...
-            </code>
-            <button
-              onClick={handleCopyId}
-              className="p-1.5 hover:bg-theme-hover rounded transition-colors border border-transparent hover:border-theme"
-              title="Copy Service ID"
-            >
-              {copied ? (
-                <Check className="text-green-500" size={14} />
-              ) : (
-                <Copy
-                  className="text-theme-text-muted hover:text-theme-primary"
-                  size={14}
-                />
-              )}
-            </button>
+        {/* Traffic Upload */}
+        {serviceTraffic && serviceTraffic.bandwidth_up > 0 && (
+          <div className="flex flex-col gap-1 px-3 py-2 bg-theme-hover border border-theme rounded-md flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <ArrowUp size={12} className="text-blue-500 flex-shrink-0" />
+              <span className="text-xs text-theme-text-muted whitespace-nowrap">
+                Upload Speed
+              </span>
+            </div>
+            <span className="text-sm font-medium text-blue-500">
+              {formatBandwidth(serviceTraffic.bandwidth_up)}
+            </span>
           </div>
-        </div>
+        )}
+
+        {/* Traffic Download */}
+        {serviceTraffic && serviceTraffic.bandwidth_down > 0 && (
+          <div className="flex flex-col gap-1 px-3 py-2 bg-theme-hover border border-theme rounded-md flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <ArrowDown size={12} className="text-green-500 flex-shrink-0" />
+              <span className="text-xs text-theme-text-muted whitespace-nowrap">
+                Download Speed
+              </span>
+            </div>
+            <span className="text-sm font-medium text-green-500">
+              {formatBandwidth(serviceTraffic.bandwidth_down)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}

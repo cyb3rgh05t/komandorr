@@ -12,6 +12,7 @@ import {
   Search,
   Server,
   Activity,
+  Clock,
 } from "lucide-react";
 import { fetchPlexActivities } from "@/services/plexService";
 import { Link } from "react-router-dom";
@@ -54,47 +55,149 @@ const ActivityBadge = ({ type }) => {
   );
 };
 
-const ProgressBar = ({ progress }) => {
+const ProgressBar = ({
+  progress,
+  activity,
+  startTime,
+  completedInfo,
+  showTimer = false,
+}) => {
   const percent = typeof progress === "number" ? Math.min(progress, 100) : 0;
+  const isCompleted = percent >= 100;
 
   return (
-    <div className="space-y-1">
-      <div className="h-2 bg-theme-hover rounded-full overflow-hidden">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1.5">
+          <Activity size={12} />
+          Progress
+        </span>
         <div
-          className="h-full bg-theme-primary rounded-full transition-all duration-300 ease-out"
+          className={`px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium flex items-center gap-1.5 ${
+            isCompleted ? "text-green-400" : "text-theme-primary"
+          }`}
+        >
+          {percent.toFixed(1)}%
+        </div>
+      </div>
+      <div className="relative h-2.5 bg-theme-hover rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-300 ease-out ${
+            isCompleted ? "bg-green-500" : "bg-theme-primary"
+          }`}
           style={{ width: `${percent}%` }}
         />
-      </div>
-      <div className="flex justify-end">
-        <span className="text-xs font-medium text-theme-muted">
-          {percent.toFixed(1)}%
-        </span>
       </div>
     </div>
   );
 };
 
-const ActivityItem = ({ activity }) => {
+const TimerBadge = ({ startTime, completedInfo, progress }) => {
+  const [, setTick] = useState(0);
+  const percent = typeof progress === "number" ? Math.min(progress, 100) : 0;
+  const isCompleted = percent >= 100;
+
+  // Update elapsed time display every second for active activities
+  useEffect(() => {
+    if ((startTime || !isCompleted) && !completedInfo && percent < 100) {
+      const timer = setInterval(() => {
+        setTick((t) => t + 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [startTime, completedInfo, percent, isCompleted]);
+
+  // Calculate elapsed time
+  const formatElapsedTime = (ms) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
+  const getElapsedTime = () => {
+    if (completedInfo) {
+      return formatElapsedTime(completedInfo.elapsedMs);
+    } else if (startTime) {
+      return formatElapsedTime(Date.now() - startTime);
+    }
+    return null;
+  };
+
+  const elapsedTime = getElapsedTime();
+
+  // Show timer badge for all activities
+  if (!elapsedTime && !isCompleted) {
+    // Activity in progress but we haven't started tracking yet
+    return (
+      <div className="px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/30">
+        <Clock size={12} />
+        Tracking...
+      </div>
+    );
+  }
+
+  if (!elapsedTime) return null;
+
+  return (
+    <div
+      className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 ${
+        isCompleted
+          ? "bg-green-500/10 text-green-400 border border-green-500/30"
+          : "bg-blue-500/10 text-blue-400 border border-blue-500/30"
+      }`}
+    >
+      <Clock size={12} />
+      {isCompleted ? "Completed in " : ""}
+      {elapsedTime}
+    </div>
+  );
+};
+const ActivityItem = ({ activity, startTime, completedInfo }) => {
   if (!activity || typeof activity !== "object") {
     return null;
   }
 
   return (
-    <div className="bg-theme-card border border-theme rounded-lg p-4 hover:border-theme-primary transition-all">
-      <div className="space-y-3">
+    <div className="bg-theme-card border border-theme rounded-lg p-6 hover:border-theme-primary/50 transition-all shadow-sm hover:shadow-md">
+      <div className="space-y-4">
+        {/* Header */}
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1 flex-1 min-w-0">
-            <h3 className="text-theme-text font-medium truncate">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-theme-text mb-2 truncate">
               {activity.subtitle || "Unknown"}
             </h3>
-            <p className="text-theme-muted text-sm truncate">
-              {activity.title || "Unknown"}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5 truncate max-w-xs">
+                <Video size={12} />
+                {activity.title || "Unknown"}
+              </span>
+            </div>
           </div>
-          <ActivityBadge type={activity.type} />
+          <div className="flex items-center gap-2">
+            <ActivityBadge type={activity.type} />
+            <TimerBadge
+              startTime={startTime}
+              completedInfo={completedInfo}
+              progress={activity.progress}
+            />
+          </div>
         </div>
 
-        <ProgressBar progress={activity.progress} />
+        {/* Progress Bar */}
+        <ProgressBar
+          progress={activity.progress}
+          activity={activity}
+          startTime={startTime}
+          completedInfo={completedInfo}
+        />
       </div>
     </div>
   );
@@ -115,40 +218,79 @@ const LoadingItem = () => (
   </div>
 );
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  startIndex,
+  endIndex,
+  totalItems,
+}) => {
   return (
-    <div className="flex justify-center items-center gap-2 mt-6">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-theme bg-theme-card text-theme-muted hover:bg-theme-hover hover:text-theme-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <ChevronLeft size={16} />
-      </button>
-
-      <div className="flex items-center gap-1">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-              currentPage === page
-                ? "bg-theme-primary text-white"
-                : "bg-theme-card text-theme-muted hover:bg-theme-primary hover:text-white border border-theme"
-            }`}
-          >
-            {page}
-          </button>
-        ))}
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+      <div className="text-sm font-medium text-theme-text-muted">
+        Showing{" "}
+        <span className="text-theme-text font-semibold">{startIndex + 1}</span>{" "}
+        to{" "}
+        <span className="text-theme-text font-semibold">
+          {Math.min(endIndex, totalItems)}
+        </span>{" "}
+        of <span className="text-theme-text font-semibold">{totalItems}</span>{" "}
+        activities
       </div>
 
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-theme bg-theme-card text-theme-muted hover:bg-theme-hover hover:text-theme-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <ChevronRight size={16} />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+          title="Previous page"
+        >
+          <ChevronLeft size={20} />
+        </button>
+
+        <div className="flex items-center gap-1.5">
+          {[...Array(totalPages)].map((_, index) => {
+            const page = index + 1;
+            // Show first page, last page, current page, and pages around current
+            if (
+              page === 1 ||
+              page === totalPages ||
+              (page >= currentPage - 1 && page <= currentPage + 1)
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => onPageChange(page)}
+                  className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                    currentPage === page
+                      ? "bg-theme-primary text-white shadow-md scale-105"
+                      : "bg-theme-hover hover:bg-theme-primary/20 border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary/50"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            } else if (page === currentPage - 2 || page === currentPage + 2) {
+              return (
+                <span key={page} className="text-theme-text-muted px-2">
+                  •••
+                </span>
+              );
+            }
+            return null;
+          })}
+        </div>
+
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+          title="Next page"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
     </div>
   );
 };
@@ -168,9 +310,134 @@ export default function VODStreams() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Track activity timestamps and completion times
+  const [activityTimestamps, setActivityTimestamps] = useState(() => {
+    const stored = localStorage.getItem("plexActivityTimestamps");
+    return stored ? JSON.parse(stored) : {};
+  });
+  const [activityProgress, setActivityProgress] = useState(() => {
+    const stored = localStorage.getItem("plexActivityProgress");
+    return stored ? JSON.parse(stored) : {};
+  });
+  const [completedActivities, setCompletedActivities] = useState(() => {
+    const stored = localStorage.getItem("plexCompletedActivities");
+    return stored ? JSON.parse(stored) : {};
+  });
+
+  // Save timestamps to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(
+      "plexActivityTimestamps",
+      JSON.stringify(activityTimestamps)
+    );
+  }, [activityTimestamps]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "plexActivityProgress",
+      JSON.stringify(activityProgress)
+    );
+  }, [activityProgress]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "plexCompletedActivities",
+      JSON.stringify(completedActivities)
+    );
+  }, [completedActivities]);
+
   const fetchActivities = async () => {
     try {
       const processedActivities = await fetchPlexActivities();
+
+      // Track timestamps for new activities
+      const now = Date.now();
+      const newTimestamps = { ...activityTimestamps };
+      const newProgress = { ...activityProgress };
+      const newCompleted = { ...completedActivities };
+      const currentActivityIds = new Set();
+
+      processedActivities.forEach((activity) => {
+        currentActivityIds.add(activity.uuid);
+        const currentProgress = activity.progress;
+        const previousProgress = newProgress[activity.uuid];
+        const existingTimestamp = newTimestamps[activity.uuid];
+
+        // Determine start time
+        if (existingTimestamp === undefined) {
+          // This is the first time we see this activity
+          if (currentProgress < 2) {
+            // Activity just started, use current time
+            newTimestamps[activity.uuid] = now;
+          } else {
+            // Activity already in progress
+            // Set timestamp to null initially, will be set after 1% progress
+            newTimestamps[activity.uuid] = null;
+          }
+        } else if (
+          existingTimestamp === null &&
+          previousProgress !== undefined &&
+          currentProgress >= previousProgress + 1
+        ) {
+          // Progress has increased by at least 1%, now we can start tracking
+          newTimestamps[activity.uuid] = now;
+        } else if (typeof existingTimestamp === "number") {
+          // Already tracking, keep the existing timestamp
+          // No need to do anything, it's already in newTimestamps from the spread
+        }
+
+        // Track progress history (do this AFTER checking for changes)
+        newProgress[activity.uuid] = currentProgress;
+
+        // If activity is complete (100%), record completion time
+        if (currentProgress >= 100 && !newCompleted[activity.uuid]) {
+          const startTime = newTimestamps[activity.uuid];
+          if (startTime) {
+            const elapsedMs = now - startTime;
+            newCompleted[activity.uuid] = {
+              completedAt: now,
+              elapsedMs: elapsedMs,
+              title: activity.title,
+              subtitle: activity.subtitle,
+            };
+          }
+        }
+      });
+
+      // Clean up old timestamps for activities that are no longer present
+      // Keep them for 1 hour in case they reappear
+      const oneHourAgo = now - 60 * 60 * 1000;
+      Object.keys(newTimestamps).forEach((uuid) => {
+        if (!currentActivityIds.has(uuid)) {
+          const timestamp = newTimestamps[uuid];
+          if (timestamp && timestamp < oneHourAgo) {
+            // Check if it was completed
+            if (!newCompleted[uuid]) {
+              // Activity disappeared without completing, might have been cancelled
+              const elapsedMs = now - timestamp;
+              newCompleted[uuid] = {
+                completedAt: now,
+                elapsedMs: elapsedMs,
+                cancelled: true,
+              };
+            }
+            delete newTimestamps[uuid];
+            delete newProgress[uuid];
+          }
+        }
+      });
+
+      // Clean up old completed activities (older than 24 hours)
+      const oneDayAgo = now - 24 * 60 * 60 * 1000;
+      Object.keys(newCompleted).forEach((uuid) => {
+        if (newCompleted[uuid].completedAt < oneDayAgo) {
+          delete newCompleted[uuid];
+        }
+      });
+
+      setActivityTimestamps(newTimestamps);
+      setActivityProgress(newProgress);
+      setCompletedActivities(newCompleted);
       setActivities(processedActivities);
       setError(null);
       setPlexConfigured(true);
@@ -236,6 +503,10 @@ export default function VODStreams() {
   const totalItems = filteredActivities?.length || 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
+  // Pagination indexes
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = currentPage * itemsPerPage;
+
   useEffect(() => {
     if (totalPages > 0 && currentPage > totalPages) {
       setCurrentPage(1);
@@ -248,10 +519,7 @@ export default function VODStreams() {
   }, [searchQuery]);
 
   const currentItems = filteredActivities
-    ? filteredActivities.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      )
+    ? filteredActivities.slice(startIndex, endIndex)
     : [];
 
   const handlePageChange = (pageNumber) => {
@@ -303,22 +571,29 @@ export default function VODStreams() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Server className="text-theme-primary" size={24} />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">Total</p>
-              <p className="text-2xl font-bold text-theme-text">{totalItems}</p>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Server className="w-3 h-3 text-theme-primary" />
+                Total
+              </p>
+              <p className="text-2xl font-bold text-theme-text mt-1">
+                {totalItems}
+              </p>
             </div>
+            <Server className="w-8 h-8 text-theme-primary" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Download className="text-green-500" size={24} />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">Online</p>
-              <p className="text-2xl font-bold text-green-500">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Download className="w-3 h-3 text-green-500" />
+                Online
+              </p>
+              <p className="text-2xl font-bold text-green-500 mt-1">
                 {
                   filteredActivities.filter(
                     (a) => a.type === "download" || a.type === "media.download"
@@ -326,16 +601,20 @@ export default function VODStreams() {
                 }
               </p>
             </div>
+            <Download className="w-8 h-8 text-green-500" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="text-yellow-500" size={24} />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-theme-text-muted">Problem</p>
-              <p className="text-2xl font-bold text-yellow-500">0</p>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 text-yellow-500" />
+                Problem
+              </p>
+              <p className="text-2xl font-bold text-yellow-500 mt-1">0</p>
             </div>
+            <AlertCircle className="w-8 h-8 text-yellow-500" />
           </div>
         </div>
       </div>
@@ -400,6 +679,8 @@ export default function VODStreams() {
               <ActivityItem
                 key={activity.uuid || `activity-${Math.random()}`}
                 activity={activity}
+                startTime={activityTimestamps[activity.uuid]}
+                completedInfo={completedActivities[activity.uuid]}
               />
             ))}
 
@@ -408,17 +689,10 @@ export default function VODStreams() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                totalItems={totalItems}
               />
-            )}
-
-            {totalPages > 1 && (
-              <div className="text-center text-sm text-theme-muted">
-                {t("vodStreams.showing", {
-                  from: (currentPage - 1) * itemsPerPage + 1,
-                  to: Math.min(currentPage * itemsPerPage, totalItems),
-                  total: totalItems,
-                })}
-              </div>
             )}
           </>
         )}

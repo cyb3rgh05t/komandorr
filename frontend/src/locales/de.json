@@ -127,14 +127,16 @@
     "serviceCreated": "Dienst erfolgreich erstellt",
     "serviceUpdated": "Dienst erfolgreich aktualisiert",
     "serviceDeleted": "Dienst erfolgreich gelöscht",
-    "serviceChecked": "Dienst erfolgreich überprüft"
+    "serviceChecked": "Dienst erfolgreich überprüft",
+    "servicesChecked": "Alle Dienste erfolgreich überprüft"
   },
   "errors": {
     "fetchServices": "Dienste konnten nicht abgerufen werden",
     "createService": "Dienst konnte nicht erstellt werden",
     "updateService": "Dienst konnte nicht aktualisiert werden",
     "deleteService": "Dienst konnte nicht gelöscht werden",
-    "checkService": "Dienst konnte nicht überprüft werden"
+    "checkService": "Dienst konnte nicht überprüft werden",
+    "checkServices": "Dienste konnten nicht überprüft werden"
   },
   "confirmations": {
     "deleteService": "Möchten Sie diesen Dienst wirklich löschen?"
@@ -237,6 +239,7 @@
     "latest": "Neueste",
     "preRelease": "Vorabversion",
     "viewChangelog": "Changelog anzeigen",
+    "viewAllReleases": "Alle Releases anzeigen",
     "today": "Heute",
     "yesterday": "Gestern",
     "daysAgo": "vor {{days}} Tagen",
@@ -254,6 +257,7 @@
     "unknown": "Unbekannt",
     "timeZone": "Zeitzone",
     "gettingSupport": "Support erhalten",
+    "documentation": "Dokumentation",
     "apiDocumentation": "API-Dokumentation",
     "githubIssues": "GitHub Issues",
     "telegramSupport": "Telegram Support",
