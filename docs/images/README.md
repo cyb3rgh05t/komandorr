@@ -6,8 +6,10 @@ This directory contains images and assets for the documentation.
 
 ```
 images/
-├── logo.png              # Komandorr logo
-├── favicon.png           # Favicon
+├── logo.svg              # Komandorr logo (SVG format)
+├── logo.png              # Komandorr logo (PNG format - legacy)
+├── favicon.svg           # Favicon (SVG format)
+├── favicon.png           # Favicon (PNG format - legacy)
 └── screenshots/          # Application screenshots
     ├── dashboard.png
     ├── vod-streams.png

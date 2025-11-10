@@ -91,7 +91,10 @@ docs/
 ├── javascripts/          # Custom JavaScript
 │   └── extra.js
 └── images/               # Images and screenshots
-    ├── logo.png
+    ├── logo.svg          # SVG logo (current)
+    ├── logo.png          # PNG logo (legacy)
+    ├── favicon.svg       # SVG favicon (current)
+    ├── favicon.png       # PNG favicon (legacy)
     └── screenshots/
 ```
 

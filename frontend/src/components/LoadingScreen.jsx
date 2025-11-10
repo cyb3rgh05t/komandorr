@@ -62,7 +62,7 @@ function LoadingScreen() {
       {/* Komandorr Logo */}
       <div className="mb-8">
         <img
-          src="/logo.png"
+          src="/logo.svg"
           alt="Komandorr Logo"
           className="h-16 w-auto object-contain"
         />

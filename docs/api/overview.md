@@ -196,13 +196,13 @@ The API version is included in responses:
 
 ```json
 {
-  "version": "1.4.0",
-  "latest_version": "1.4.0",
+  "version": "1.5.6",
+  "latest_version": "1.5.6",
   "update_available": false
 }
 ```
 
-Current API version: **v1.4.0**
+Current API version: **v1.5.6**
 
 No breaking changes are planned. Future versions will maintain backward compatibility.
 

@@ -62,7 +62,7 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="flex items-center p-4 h-20">
             <img
-              src="/logo.png"
+              src="/logo.svg"
               alt="Komandorr Logo"
               className="h-12 w-auto object-contain"
             />

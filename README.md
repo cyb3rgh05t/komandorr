@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="frontend/public/logo.png" alt="Komandorr Logo" width="400"/>
+  <img src="frontend/public/logo.svg" alt="Komandorr Logo" width="400"/>
 
 A modern WebUI dashboard for monitoring apps, websites, panels, and projects for their Online/Offline/Problem status.
 

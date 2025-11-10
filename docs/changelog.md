@@ -6,6 +6,37 @@ This file mirrors the main [CHANGELOG.md](https://github.com/cyb3rgh05t/komandor
 
 ---
 
+## [1.5.6](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.5...v1.5.6) (2025-11-10)
+
+### Features
+
+**Assets: Upgraded Logo and Favicon to SVG Format**
+
+- Replaced PNG logo and favicon files with scalable SVG versions
+- Updated all frontend components to use SVG logo (/logo.svg)
+- Updated frontend HTML to use SVG favicon with proper MIME type (image/svg+xml)
+- Updated backend API documentation favicon reference to SVG
+- Updated MkDocs configuration to use SVG assets for documentation
+- Updated main README.md to reference SVG logo
+- Updated documentation index.md to use SVG logo
+- Copied SVG assets to all necessary directories (backend/icons/, docs/images/)
+
+### Changes
+
+**Quality: Improved Visual Assets**
+
+- SVG format provides better scalability and quality at all sizes
+- Smaller file sizes compared to PNG equivalents
+- Vector graphics eliminate pixelation on high-DPI displays
+- Future-proof format compatible with all modern browsers
+- Maintained PNG versions as legacy backups
+
+**Documentation: Updated Asset References**
+
+- Updated docs/images/README.md to reflect both SVG and PNG versions
+- Updated docs/README.md structure documentation
+- All documentation now uses superior SVG format
+
 ## [1.5.5](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.1...v1.5.5) (2025-11-09)
 
 ### Features

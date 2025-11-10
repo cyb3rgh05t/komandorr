@@ -6,7 +6,7 @@
 
 ### Version
 
-Current version: **1.4.0**
+Current version: **1.5.6**
 
 [View Changelog](changelog.md){ .md-button }
 

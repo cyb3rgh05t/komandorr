@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Komandorr Dashboard API",
     description="Backend API for monitoring apps, websites, panels, and projects",
-    version="1.5.0",
+    version="1.5.6",
     lifespan=lifespan,
     swagger_ui_parameters={
         "syntaxHighlight.theme": "monokai",
@@ -93,7 +93,7 @@ async def custom_swagger_ui_html():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Komandorr Dashboard API - Documentation</title>
-    <link rel="icon" href="/icons/favicon.png" type="image/png">
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
     <style>
         body {
@@ -401,7 +401,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "version": "1.5.5",
+        "version": "1.5.6",
         "services_count": len(monitor.get_all_services()),
     }
 

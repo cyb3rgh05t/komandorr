@@ -9,8 +9,8 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
-  logo: images/logo.png
-  favicon: images/favicon.png
+  logo: images/logo.svg
+  favicon: images/favicon.svg
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"

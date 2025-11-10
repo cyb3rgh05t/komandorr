@@ -1,7 +1,7 @@
 # Komandorr
 
 <div align="center">
-  <img src="images/logo.png" alt="Komandorr Logo" width="200">
+  <img src="images/logo.svg" alt="Komandorr Logo" width="200">
 </div>
 
 <p align="center"><strong>Modern Service Monitoring Dashboard</strong></p>
