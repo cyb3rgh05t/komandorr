@@ -201,11 +201,11 @@ export default function Settings() {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Authentication Settings */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-          <Shield className="w-6 h-6 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2">
+          <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
           {t("auth.authSettings")}
         </h2>
 

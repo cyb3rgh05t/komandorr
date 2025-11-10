@@ -150,7 +150,7 @@ export default function Monitor() {
     fetchServices();
     const interval = setInterval(() => {
       fetchServices(true); // Pass true to indicate auto-refresh
-    }, 10000); // Update every 10 seconds for real-time monitoring
+    }, 5000); // Update every 5 seconds for real-time monitoring
     return () => clearInterval(interval);
   }, []);
 
@@ -176,11 +176,7 @@ export default function Monitor() {
       const data = await api.getServices();
       setServices(data);
 
-      // Set initial active tab if not set
-      if (!activeTab && data.length > 0) {
-        const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
-        setActiveTab(groups[0]);
-      }
+      // Don't manage activeTab here - let useEffect handle it
 
       // Restore scroll position after state update for auto-refresh
       if (isAutoRefresh && currentScrollY > 0) {
@@ -195,6 +191,43 @@ export default function Monitor() {
       setRefreshing(false);
     }
   };
+
+  // Manage active tab based on available groups
+  useEffect(() => {
+    if (services.length === 0) return;
+
+    const filteredServices = services.filter((service) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        service.name.toLowerCase().includes(searchLower) ||
+        service.url.toLowerCase().includes(searchLower) ||
+        service.type.toLowerCase().includes(searchLower) ||
+        (service.group && service.group.toLowerCase().includes(searchLower))
+      );
+    });
+
+    const grouped = filteredServices.reduce((acc, service) => {
+      const groupName = service.group || "Ungrouped";
+      if (!acc[groupName]) acc[groupName] = [];
+      acc[groupName].push(service);
+      return acc;
+    }, {});
+
+    const groupNames = Object.keys(grouped);
+
+    // Set initial tab if not set
+    if (!activeTab && groupNames.length > 0) {
+      setActiveTab(groupNames[0]);
+    }
+    // Only reset tab if current tab no longer exists
+    else if (
+      activeTab &&
+      !groupNames.includes(activeTab) &&
+      groupNames.length > 0
+    ) {
+      setActiveTab(groupNames[0]);
+    }
+  }, [services, searchTerm, activeTab]);
 
   const handleRefresh = async () => {
     try {
@@ -273,11 +306,6 @@ export default function Monitor() {
   // Get all unique groups for tabs
   const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
 
-  // If active tab is not set or doesn't exist in current groups, set to first group
-  if ((!activeTab || !allGroups.includes(activeTab)) && allGroups.length > 0) {
-    setActiveTab(allGroups[0]);
-  }
-
   // Pagination
   const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -339,7 +367,7 @@ export default function Monitor() {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Search Bar & Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">

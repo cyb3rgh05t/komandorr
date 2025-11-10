@@ -6,6 +6,44 @@ This file mirrors the main [CHANGELOG.md](https://github.com/cyb3rgh05t/komandor
 
 ---
 
+## [1.5.5](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.1...v1.5.5) (2025-11-09)
+
+### Features
+
+**UI: Comprehensive Mobile Responsiveness**
+
+- Optimized all pages for mobile devices with responsive layouts
+- Reduced padding and spacing on small screens (px-3 sm:px-4, py-4 sm:py-6)
+- Improved button layouts with proper flex wrapping and mobile-first sizing
+- Smaller text sizes on mobile (text-xs sm:text-sm, text-2xl sm:text-3xl)
+- Smaller icon sizes on mobile (size={16} to size={18})
+- Full-width buttons on mobile that adapt to inline on larger screens
+- Responsive search inputs with proper mobile sizing
+- Updated all main pages: Dashboard, Services, Monitor, Traffic, VOD Streams
+- Updated Settings and About pages with mobile-optimized headers
+- TopNavbar padding reduced for mobile (px-3 sm:px-6)
+- Layout properly handles mobile width constraints
+
+**UX: Improved Mobile Interactions**
+
+- Buttons now use justify-center for better mobile alignment
+- Action buttons expand to full width on mobile, inline on desktop
+- Better touch targets with appropriate padding on mobile
+- Responsive gap spacing (gap-2 sm:gap-3, gap-3 sm:gap-4)
+- Proper text truncation on small screens
+- Flexible button groups that wrap on mobile
+
+### Changed
+
+**Layout: Mobile-First Approach**
+
+- All pages now use responsive spacing utilities
+- Consistent mobile breakpoint usage across all components
+- Better utilization of screen real estate on mobile devices
+- Improved readability with appropriate font scaling
+
+---
+
 ## [1.5.1](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.0...v1.5.1) (2025-11-09)
 
 ### Features

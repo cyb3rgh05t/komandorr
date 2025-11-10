@@ -76,14 +76,14 @@ export default function Dashboard() {
     // Check for updates every 12 hours
     const versionCheckInterval = setInterval(fetchVersion, 12 * 60 * 60 * 1000);
 
-    // Fetch traffic data every 30 seconds
-    const trafficInterval = setInterval(fetchTrafficData, 30000);
+    // Fetch traffic data every 10 seconds for more responsive updates
+    const trafficInterval = setInterval(fetchTrafficData, 10000);
 
-    // Refresh services every 30 seconds for updated stats
+    // Refresh services every 10 seconds for updated stats
     // Don't reset scroll position or active tab during auto-refresh
     const servicesInterval = setInterval(() => {
       loadServices(true); // Pass true to indicate this is auto-refresh
-    }, 30000);
+    }, 10000);
 
     return () => {
       clearInterval(versionCheckInterval);
@@ -136,11 +136,7 @@ export default function Dashboard() {
       const data = await api.getServices();
       setServices(data);
 
-      // Set initial active tab if not set (only on first load)
-      if (!activeTab && data.length > 0) {
-        const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
-        setActiveTab(groups[0]);
-      }
+      // Don't manage activeTab here - let useEffect handle it
 
       // Restore scroll position after state update for auto-refresh
       if (isAutoRefresh && currentScrollY > 0) {
@@ -157,6 +153,43 @@ export default function Dashboard() {
       setRefreshing(false);
     }
   };
+
+  // Manage active tab based on available groups
+  useEffect(() => {
+    if (services.length === 0) return;
+
+    const filteredServices = services.filter((service) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        service.name.toLowerCase().includes(searchLower) ||
+        service.url.toLowerCase().includes(searchLower) ||
+        service.type.toLowerCase().includes(searchLower) ||
+        (service.group && service.group.toLowerCase().includes(searchLower))
+      );
+    });
+
+    const grouped = filteredServices.reduce((acc, service) => {
+      const groupName = service.group || "Ungrouped";
+      if (!acc[groupName]) acc[groupName] = [];
+      acc[groupName].push(service);
+      return acc;
+    }, {});
+
+    const groupNames = Object.keys(grouped);
+
+    // Set initial tab if not set
+    if (!activeTab && groupNames.length > 0) {
+      setActiveTab(groupNames[0]);
+    }
+    // Only reset tab if current tab no longer exists
+    else if (
+      activeTab &&
+      !groupNames.includes(activeTab) &&
+      groupNames.length > 0
+    ) {
+      setActiveTab(groupNames[0]);
+    }
+  }, [services, searchTerm, activeTab]);
 
   const handleRefreshAll = async () => {
     try {
@@ -268,47 +301,49 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-theme-text">
+          <h1 className="text-2xl sm:text-3xl font-bold text-theme-text">
             {t("dashboard.title")}
           </h1>
-          <p className="text-theme-text-muted mt-1">
+          <p className="text-sm sm:text-base text-theme-text-muted mt-1">
             {t("dashboard.allServices")}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowCustomizeMenu(!showCustomizeMenu)}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             title={t("dashboard.customize")}
           >
-            <Settings size={18} className="text-theme-primary" />
-            <span className="text-sm hidden sm:inline">
+            <Settings size={16} sm:size={18} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm hidden sm:inline">
               {t("dashboard.customize")}
             </span>
           </button>
           <button
             onClick={handleRefreshAll}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
-              size={18}
+              size={16}
               className={`text-theme-primary transition-transform duration-500 ${
                 refreshing ? "animate-spin" : ""
               }`}
             />
-            <span className="text-sm">{t("service.checkNow")}</span>
+            <span className="text-xs sm:text-sm">{t("service.checkNow")}</span>
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
           >
-            <Plus size={18} className="text-theme-primary" />
-            <span className="text-sm">{t("dashboard.addService")}</span>
+            <Plus size={16} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm">
+              {t("dashboard.addService")}
+            </span>
           </button>
         </div>
       </div>
@@ -635,13 +670,6 @@ export default function Dashboard() {
 
                 const groupNames = Object.keys(grouped);
                 const hasMultipleGroups = groupNames.length > 1;
-
-                // If active tab is not set or doesn't exist in current groups, set to first group
-                if (!activeTab || !groupNames.includes(activeTab)) {
-                  if (groupNames.length > 0) {
-                    setActiveTab(groupNames[0]);
-                  }
-                }
 
                 // Filter traffic data by active group
                 const filteredTrafficData = trafficData

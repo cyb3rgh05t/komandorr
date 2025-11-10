@@ -401,7 +401,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "version": "1.5.1",
+        "version": "1.5.5",
         "services_count": len(monitor.get_all_services()),
     }
 

@@ -29,7 +29,7 @@ export default function Services() {
     fetchServices();
     const interval = setInterval(() => {
       fetchServices(true); // Pass true to indicate auto-refresh
-    }, 30000);
+    }, 10000); // Update every 10 seconds for faster updates
     return () => clearInterval(interval);
   }, []);
 
@@ -45,11 +45,7 @@ export default function Services() {
       const data = await api.getServices();
       setServices(data);
 
-      // Set initial active tab if not set
-      if (!activeTab && data.length > 0) {
-        const groups = [...new Set(data.map((s) => s.group || "Ungrouped"))];
-        setActiveTab(groups[0]);
-      }
+      // Don't manage activeTab here - let useEffect handle it
 
       // Restore scroll position after state update for auto-refresh
       if (isAutoRefresh && currentScrollY > 0) {
@@ -65,6 +61,43 @@ export default function Services() {
       setRefreshing(false);
     }
   };
+
+  // Manage active tab based on available groups
+  useEffect(() => {
+    if (services.length === 0) return;
+
+    const filteredServices = services.filter((service) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        service.name.toLowerCase().includes(searchLower) ||
+        service.url.toLowerCase().includes(searchLower) ||
+        service.type.toLowerCase().includes(searchLower) ||
+        (service.group && service.group.toLowerCase().includes(searchLower))
+      );
+    });
+
+    const grouped = filteredServices.reduce((acc, service) => {
+      const groupName = service.group || "Ungrouped";
+      if (!acc[groupName]) acc[groupName] = [];
+      acc[groupName].push(service);
+      return acc;
+    }, {});
+
+    const groupNames = Object.keys(grouped);
+
+    // Set initial tab if not set
+    if (!activeTab && groupNames.length > 0) {
+      setActiveTab(groupNames[0]);
+    }
+    // Only reset tab if current tab no longer exists
+    else if (
+      activeTab &&
+      !groupNames.includes(activeTab) &&
+      groupNames.length > 0
+    ) {
+      setActiveTab(groupNames[0]);
+    }
+  }, [services, searchTerm, activeTab]);
 
   const handleRefresh = async () => {
     try {
@@ -206,11 +239,6 @@ export default function Services() {
   // Get all unique groups for tabs
   const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
 
-  // If active tab is not set or doesn't exist in current groups, set to first group
-  if ((!activeTab || !allGroups.includes(activeTab)) && allGroups.length > 0) {
-    setActiveTab(allGroups[0]);
-  }
-
   const stats = {
     total: services.length,
     online: services.filter((s) => s.status === "online").length,
@@ -219,46 +247,48 @@ export default function Services() {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Search Bar & Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
           <Search
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={20}
+            size={18}
           />
           <input
             type="text"
             placeholder="Search services..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
-              size={18}
+              size={16}
               className={`text-theme-primary transition-transform duration-500 ${
                 refreshing ? "animate-spin" : ""
               }`}
             />
-            <span className="text-sm">{t("service.checkNow")}</span>
+            <span className="text-xs sm:text-sm">{t("service.checkNow")}</span>
           </button>
           <button
             onClick={() => {
               setEditingService(null);
               setShowModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
           >
-            <Plus size={18} className="text-theme-primary" />
-            <span className="text-sm">{t("dashboard.addService")}</span>
+            <Plus size={16} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm">
+              {t("dashboard.addService")}
+            </span>
           </button>
         </div>
       </div>

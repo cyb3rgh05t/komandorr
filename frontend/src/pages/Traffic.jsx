@@ -145,7 +145,7 @@ export default function Traffic() {
     fetchTrafficData();
     const interval = setInterval(() => {
       fetchTrafficData(false, true); // Pass true for isAutoRefresh
-    }, 10000);
+    }, 5000); // Update every 5 seconds for real-time traffic monitoring
     return () => clearInterval(interval);
   }, []);
 
@@ -170,13 +170,7 @@ export default function Traffic() {
       const servicesWithTraffic = data.filter((s) => s.traffic);
       setServices(servicesWithTraffic);
 
-      // Set initial active tab if not set
-      if (!activeTab && servicesWithTraffic.length > 0) {
-        const groups = [
-          ...new Set(servicesWithTraffic.map((s) => s.group || "Ungrouped")),
-        ];
-        setActiveTab(groups[0]);
-      }
+      // Don't manage activeTab here - let useEffect handle it
 
       // Restore scroll position after state update for auto-refresh
       if (isAutoRefresh && currentScrollY > 0) {
@@ -193,6 +187,43 @@ export default function Traffic() {
       }
     }
   };
+
+  // Manage active tab based on available groups
+  useEffect(() => {
+    if (services.length === 0) return;
+
+    const filteredServices = services.filter((service) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        service.name.toLowerCase().includes(searchLower) ||
+        service.url.toLowerCase().includes(searchLower) ||
+        service.type.toLowerCase().includes(searchLower) ||
+        (service.group && service.group.toLowerCase().includes(searchLower))
+      );
+    });
+
+    const grouped = filteredServices.reduce((acc, service) => {
+      const groupName = service.group || "Ungrouped";
+      if (!acc[groupName]) acc[groupName] = [];
+      acc[groupName].push(service);
+      return acc;
+    }, {});
+
+    const groupNames = Object.keys(grouped);
+
+    // Set initial tab if not set
+    if (!activeTab && groupNames.length > 0) {
+      setActiveTab(groupNames[0]);
+    }
+    // Only reset tab if current tab no longer exists
+    else if (
+      activeTab &&
+      !groupNames.includes(activeTab) &&
+      groupNames.length > 0
+    ) {
+      setActiveTab(groupNames[0]);
+    }
+  }, [services, searchTerm, activeTab]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -295,11 +326,6 @@ export default function Traffic() {
   // Get all unique groups for tabs
   const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
 
-  // If active tab is not set or doesn't exist in current groups, set to first group
-  if ((!activeTab || !allGroups.includes(activeTab)) && allGroups.length > 0) {
-    setActiveTab(allGroups[0]);
-  }
-
   // Calculate totals
   const totalBandwidthUp = services.reduce(
     (sum, s) => sum + (s.traffic?.bandwidth_up || 0),
@@ -319,7 +345,7 @@ export default function Traffic() {
   );
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header with Search & Refresh */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
@@ -339,13 +365,13 @@ export default function Traffic() {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
         >
           <RefreshCw
-            size={18}
+            size={16}
             className={`text-theme-primary ${refreshing ? "animate-spin" : ""}`}
           />
-          <span>Refresh</span>
+          <span className="text-xs sm:text-sm">Refresh</span>
         </button>
       </div>
 

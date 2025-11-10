@@ -117,18 +117,18 @@ function About() {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* About Komandorr Section */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-            <Info className="w-6 h-6 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2">
+            <Info className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
             {t("about.title")}
           </h2>
           <button
             onClick={fetchVersion}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm w-full sm:w-auto justify-center"
           >
             <RefreshCw
               className={`w-4 h-4 text-theme-primary ${
