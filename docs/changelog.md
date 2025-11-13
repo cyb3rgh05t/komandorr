@@ -6,6 +6,54 @@ This file mirrors the main [CHANGELOG.md](https://github.com/cyb3rgh05t/komandor
 
 ---
 
+## [1.5.8](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.7...v1.5.8) (2025-11-13)
+
+### Features
+
+**UI: Clickable Stats Card Filters**
+
+- Stats cards now act as filter buttons on Dashboard, Services, and Monitor pages
+- Click Total/Online/Offline/Problem cards to filter services by status
+- Active filters show colored borders (green/red/yellow) without shadow effects
+- All three pages have consistent filtering behavior
+
+**UI: Improved Empty States**
+
+- Added contextual empty state messages when filtering shows no results
+- Different icons per state: 🟢 for no online services, ✓ for no offline/problem
+- Themed messages using theme-primary color for better visibility
+- Clear, reassuring messages like "All services are operational!"
+
+**UI: Redesigned Stats Cards**
+
+- Compact horizontal layout with labels and numbers side-by-side
+- Large SVG icons on the right side of each card
+- Uppercase labels with wider tracking for better readability
+- Fully theme-aware design that adapts to light/dark modes
+- Hover effects with shadow transitions
+
+**Documentation: Windmill Dark Theme**
+
+- Switched from MkDocs Material to mkdocs-windmill-dark theme
+- Dark theme by default with modern, clean design
+- Updated GitHub Actions workflow to use new theme
+- Better readability and hacker-aesthetic appearance
+
+### Changes
+
+**UI: Stats Cards Interaction**
+
+- Converted static stats displays to clickable filter controls
+- Reduced gap spacing for more compact layout (gap-4)
+- Removed hover scale effects in favor of cleaner interactions
+
+**Documentation: Theme Dependencies**
+
+- Replaced mkdocs-material with mkdocs-windmill-dark in requirements
+- Updated docs deployment workflow with new theme package
+
+---
+
 ## [1.5.7](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.6...v1.5.7) (2025-11-13)
 
 ### Features

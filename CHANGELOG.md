@@ -1,5 +1,45 @@
 # CHANGELOG.md
 
+# [1.5.8](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.7...v1.5.8) (2025-11-13)
+
+### Features
+
+• **ui: clickable stats card filters**
+◦ Stats cards now act as filter buttons on Dashboard, Services, and Monitor pages
+◦ Click Total/Online/Offline/Problem cards to filter services by status
+◦ Active filters show colored borders (green/red/yellow) without shadow effects
+◦ All three pages have consistent filtering behavior
+
+• **ui: improved empty states**
+◦ Added contextual empty state messages when filtering shows no results
+◦ Different icons per state: 🟢 for no online services, ✓ for no offline/problem
+◦ Themed messages using theme-primary color for better visibility
+◦ Clear, reassuring messages like "All services are operational!"
+
+• **ui: redesigned stats cards**
+◦ Compact horizontal layout with labels and numbers side-by-side
+◦ Large SVG icons on the right side of each card
+◦ Uppercase labels with wider tracking for better readability
+◦ Fully theme-aware design that adapts to light/dark modes
+◦ Hover effects with shadow transitions
+
+• **docs: windmill dark theme**
+◦ Switched from MkDocs Material to mkdocs-windmill-dark theme
+◦ Dark theme by default with modern, clean design
+◦ Updated GitHub Actions workflow to use new theme
+◦ Better readability and hacker-aesthetic appearance
+
+### Changed
+
+• **ui: stats cards are now interactive buttons**
+◦ Converted static stats displays to clickable filter controls
+◦ Reduced gap spacing for more compact layout (gap-4)
+◦ Removed hover scale effects in favor of cleaner interactions
+
+• **docs: theme dependencies**
+◦ Replaced mkdocs-material with mkdocs-windmill-dark in requirements
+◦ Updated docs deployment workflow with new theme package
+
 # [1.5.7](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.6...v1.5.7) (2025-11-13)
 
 ### Features

@@ -144,6 +144,7 @@ export default function Monitor() {
   const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -290,7 +291,7 @@ export default function Monitor() {
     );
   }
 
-  // Filter services based on search term and active tab
+  // Filter services based on search term, active tab, and status filter
   const filteredServices = services.filter((service) => {
     const matchesSearch =
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -300,7 +301,10 @@ export default function Monitor() {
     const serviceGroup = service.group || "Ungrouped";
     const matchesTab = activeTab ? serviceGroup === activeTab : true;
 
-    return matchesSearch && matchesTab;
+    const matchesStatus =
+      statusFilter === null || service.status === statusFilter;
+
+    return matchesSearch && matchesTab && matchesStatus;
   });
 
   // Get all unique groups for tabs
@@ -403,83 +407,141 @@ export default function Monitor() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Server className="w-3 h-3 text-theme-primary" />
-                {t("monitor.totalServices")}
-              </p>
-              <p className="text-2xl font-bold text-theme-text mt-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button
+          onClick={() => setStatusFilter(null)}
+          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+            statusFilter === null
+              ? "border-theme-primary"
+              : "border-theme hover:border-theme-primary/50"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-left flex-1">
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                TOTAL
+              </div>
+              <div className="text-3xl font-bold text-theme-text">
                 {stats.total}
-              </p>
+              </div>
             </div>
-            <Server className="w-8 h-8 text-theme-primary" />
+            <div className="text-theme-text-muted opacity-60">
+              <svg
+                className="w-10 h-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={1}
+              >
+                <rect x="3" y="4" width="18" height="4" rx="1" />
+                <rect x="3" y="10" width="18" height="4" rx="1" />
+                <rect x="3" y="16" width="18" height="4" rx="1" />
+              </svg>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Activity className="w-3 h-3 text-green-500" />
-                {t("dashboard.online")}
-              </p>
-              <p className="text-2xl font-bold text-green-500 mt-1">
+        </button>
+        <button
+          onClick={() => setStatusFilter("online")}
+          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+            statusFilter === "online"
+              ? "border-green-500"
+              : "border-theme hover:border-green-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-left flex-1">
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                ONLINE
+              </div>
+              <div className="text-3xl font-bold text-green-500">
                 {stats.online}
-              </p>
+              </div>
             </div>
-            <Activity className="w-8 h-8 text-green-500" />
+            <div className="text-green-500 opacity-60">
+              <svg
+                className="w-10 h-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={1}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Server className="w-3 h-3 text-red-500" />
-                {t("dashboard.offline")}
-              </p>
-              <p className="text-2xl font-bold text-red-500 mt-1">
+        </button>
+        <button
+          onClick={() => setStatusFilter("offline")}
+          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+            statusFilter === "offline"
+              ? "border-red-500"
+              : "border-theme hover:border-red-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-left flex-1">
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                OFFLINE
+              </div>
+              <div className="text-3xl font-bold text-red-500">
                 {stats.offline}
-              </p>
+              </div>
             </div>
-            <Server className="w-8 h-8 text-red-500" />
+            <div className="text-red-500 opacity-60">
+              <svg
+                className="w-10 h-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={1}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Activity className="w-3 h-3 text-yellow-500" />
-                {t("dashboard.problem")}
-              </p>
-              <p className="text-2xl font-bold text-yellow-500 mt-1">
+        </button>
+        <button
+          onClick={() => setStatusFilter("problem")}
+          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+            statusFilter === "problem"
+              ? "border-yellow-500"
+              : "border-theme hover:border-yellow-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-left flex-1">
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                PROBLEM
+              </div>
+              <div className="text-3xl font-bold text-yellow-500">
                 {stats.problem}
-              </p>
+              </div>
             </div>
-            <Activity className="w-8 h-8 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Zap className="w-3 h-3 text-blue-500" />
-                {t("monitor.avgResponse")}
-              </p>
-              <p className="text-2xl font-bold text-blue-500 mt-1">
-                {typeof stats.avgResponseTime === "number"
-                  ? `${stats.avgResponseTime}`
-                  : stats.avgResponseTime}
-              </p>
+            <div className="text-yellow-500 opacity-60">
+              <svg
+                className="w-10 h-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={1}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
             </div>
-            <Zap className="w-8 h-8 text-blue-500" />
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Group Tabs */}
@@ -523,23 +585,53 @@ export default function Monitor() {
       {/* Services List */}
       <div className="space-y-4">
         {paginatedServices.length === 0 ? (
-          <div className="text-center py-12 bg-theme-card rounded-lg border border-theme">
-            <Server size={48} className="mx-auto mb-4 text-theme-muted" />
-            <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {searchTerm ? "No matching services" : t("dashboard.noServices")}
-            </h3>
-            <p className="text-theme-muted mb-4">
-              {searchTerm
-                ? `No services found matching "${searchTerm}"`
-                : "No services have been added yet."}
-            </p>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/80 transition-colors"
-              >
-                Clear Search
-              </button>
+          <div className="text-center py-12 bg-theme-card rounded-lg border border-theme shadow-sm">
+            {statusFilter !== null ? (
+              <>
+                <div className="text-6xl mb-4">
+                  {statusFilter === "online" && "🟢"}
+                  {statusFilter === "offline" && "✓"}
+                  {statusFilter === "problem" && "✓"}
+                </div>
+                <h3 className="text-xl font-semibold text-theme-primary mb-2">
+                  {statusFilter === "online" && "No online services"}
+                  {statusFilter === "offline" && "No offline services"}
+                  {statusFilter === "problem" && "No services with problems"}
+                </h3>
+                <p className="text-theme-text-muted">
+                  {statusFilter === "online" &&
+                    "Currently no services are online"}
+                  {statusFilter === "offline" &&
+                    "All services are operational!"}
+                  {statusFilter === "problem" &&
+                    "Everything is running smoothly!"}
+                </p>
+              </>
+            ) : (
+              <>
+                <Server
+                  size={48}
+                  className="mx-auto mb-4 text-theme-text-muted"
+                />
+                <h3 className="text-lg font-semibold text-theme-text mb-2">
+                  {searchTerm
+                    ? "No matching services"
+                    : t("dashboard.noServices")}
+                </h3>
+                <p className="text-theme-text-muted mb-4">
+                  {searchTerm
+                    ? `No services found matching "${searchTerm}"`
+                    : "No services have been added yet."}
+                </p>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/80 transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                )}
+              </>
             )}
           </div>
         ) : (

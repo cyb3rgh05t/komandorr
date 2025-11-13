@@ -8,50 +8,12 @@ repo_url: https://github.com/cyb3rgh05t/komandorr
 edit_uri: edit/main/docs/
 
 theme:
-  name: material
+  name: windmill-dark
   logo: images/logo.svg
   favicon: images/favicon.svg
-  palette:
-    # Light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: deep orange
-      accent: orange
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    # Dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: deep orange
-      accent: orange
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-
-  features:
-    - navigation.instant
-    - navigation.tracking
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
-    - navigation.footer
-    - navigation.indexes
-    - toc.follow
-    - toc.integrate
-    - search.suggest
-    - search.highlight
-    - search.share
-    - content.code.copy
-    - content.code.annotate
-    - content.tabs.link
-
-  icon:
-    repo: fontawesome/brands/github
-    edit: material/pencil
-    view: material/eye
+  navigation_depth: 3
+  collapse_navigation: false
+  titles_only: false
 
 markdown_extensions:
   - abbr

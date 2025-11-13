@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [refreshing, setRefreshing] = useState(false);
   const [trafficData, setTrafficData] = useState(null);
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
@@ -547,64 +548,165 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats & Search Card */}
+      {/* Stats Cards */}
       {dashboardVisibility.stats && (
-        <div className="bg-theme-card border border-theme rounded-xl p-6 space-y-6 shadow-sm">
+        <div className="space-y-4">
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-theme-text mb-1">
-                {services.length}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button
+              onClick={() => setStatusFilter(null)}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === null
+                  ? "border-theme-primary"
+                  : "border-theme hover:border-theme-primary/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    TOTAL
+                  </div>
+                  <div className="text-3xl font-bold text-theme-text">
+                    {services.length}
+                  </div>
+                </div>
+                <div className="text-theme-text-muted opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <rect x="3" y="4" width="18" height="4" rx="1" />
+                    <rect x="3" y="10" width="18" height="4" rx="1" />
+                    <rect x="3" y="16" width="18" height="4" rx="1" />
+                  </svg>
+                </div>
               </div>
-              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-                {t("dashboard.allServices")}
+            </button>
+            <button
+              onClick={() => setStatusFilter("online")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "online"
+                  ? "border-green-500"
+                  : "border-theme hover:border-green-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    ONLINE
+                  </div>
+                  <div className="text-3xl font-bold text-green-500">
+                    {stats.online}
+                  </div>
+                </div>
+                <div className="text-green-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-500 mb-1">
-                {stats.online}
+            </button>
+            <button
+              onClick={() => setStatusFilter("offline")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "offline"
+                  ? "border-red-500"
+                  : "border-theme hover:border-red-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    OFFLINE
+                  </div>
+                  <div className="text-3xl font-bold text-red-500">
+                    {stats.offline}
+                  </div>
+                </div>
+                <div className="text-red-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                    />
+                  </svg>
+                </div>
               </div>
-              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-                {t("dashboard.online")}
+            </button>
+            <button
+              onClick={() => setStatusFilter("problem")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "problem"
+                  ? "border-yellow-500"
+                  : "border-theme hover:border-yellow-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    PROBLEM
+                  </div>
+                  <div className="text-3xl font-bold text-yellow-500">
+                    {stats.problem}
+                  </div>
+                </div>
+                <div className="text-yellow-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-red-500 mb-1">
-                {stats.offline}
-              </div>
-              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-                {t("dashboard.offline")}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-500 mb-1">
-                {stats.problem}
-              </div>
-              <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium">
-                {t("dashboard.problem")}
-              </div>
-            </div>
+            </button>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-theme"></div>
-
           {/* Search Bar */}
-          <div className="relative w-full">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder={
-                t("dashboard.searchPlaceholder") ||
-                "Search services and groups..."
-              }
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
-            />
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
+            <div className="relative w-full">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder={
+                  t("dashboard.searchPlaceholder") ||
+                  "Search services and groups..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -649,17 +751,54 @@ export default function Dashboard() {
             <>
               {/* Group services by group field */}
               {(() => {
-                // Filter services based on search term
+                // Filter services based on search term and status filter
                 const filteredServices = services.filter((service) => {
                   const searchLower = searchTerm.toLowerCase();
-                  return (
+                  const matchesSearch =
                     service.name.toLowerCase().includes(searchLower) ||
                     service.url.toLowerCase().includes(searchLower) ||
                     service.type.toLowerCase().includes(searchLower) ||
                     (service.group &&
-                      service.group.toLowerCase().includes(searchLower))
-                  );
+                      service.group.toLowerCase().includes(searchLower));
+
+                  const matchesStatus =
+                    statusFilter === null || service.status === statusFilter;
+
+                  return matchesSearch && matchesStatus;
                 });
+
+                // Show empty state if no services match the filter
+                if (filteredServices.length === 0 && statusFilter !== null) {
+                  const emptyStates = {
+                    online: {
+                      icon: "🟢",
+                      title: "No online services",
+                      message: "Currently no services are online",
+                    },
+                    offline: {
+                      icon: "✓",
+                      title: "No offline services",
+                      message: "All services are operational!",
+                    },
+                    problem: {
+                      icon: "✓",
+                      title: "No services with problems",
+                      message: "Everything is running smoothly!",
+                    },
+                  };
+
+                  const state = emptyStates[statusFilter];
+
+                  return (
+                    <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
+                      <div className="text-6xl mb-4">{state.icon}</div>
+                      <h3 className="text-xl font-semibold text-theme-primary mb-2">
+                        {state.title}
+                      </h3>
+                      <p className="text-theme-text-muted">{state.message}</p>
+                    </div>
+                  );
+                }
 
                 const grouped = filteredServices.reduce((acc, service) => {
                   const groupName = service.group || "Ungrouped";
