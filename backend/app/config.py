@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/komandorr.log"
+    LOG_ENABLE_FILE: bool = True
+    LOG_SHOW_TIMESTAMP_CONSOLE: bool = False
+    LOG_SHOW_LOCATION_FILE: bool = True
 
     # Timezone Configuration (uses TZ environment variable)
     TIMEZONE: str = "UTC"  # Fallback if TZ is not set

@@ -1,5 +1,76 @@
 # CHANGELOG.md
 
+# [1.5.7](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.6...v1.5.7) (2025-11-13)
+
+### Features
+
+• **logging: enhanced logging system with colorama**
+◦ Implemented cross-platform colored console output using colorama library
+◦ Added beautiful color-coded log levels (DEBUG=cyan, INFO=green, WARNING=yellow, ERROR=red, CRITICAL=magenta)
+◦ Colored log messages that match their severity level for better readability
+◦ Separate formatters for console (colored) and file (plain text) output
+◦ Enhanced file logging with detailed timestamps and optional module/function/line tracking
+◦ New logger.exception() method for automatic traceback logging
+◦ New logger.set_level() method for dynamic log level changes at runtime
+◦ Auto-delete log file on restart for fresh logging sessions
+
+• **configuration: extensive logging customization**
+◦ Added LOG_TO_FILE setting to enable/disable file logging (default: true)
+◦ Added LOG_SHOW_TIMESTAMP setting for console timestamps (default: false)
+◦ Added LOG_FILE_INCLUDE_LOCATION setting for module/function info in files (default: true)
+◦ Improved Settings model to include all new logging configuration options
+◦ Logger now reads from Pydantic Settings instead of raw environment variables
+◦ Updated .env.example with comprehensive logging documentation
+
+• **traffic-agent: enhanced output formatting**
+◦ Created AgentLogger class with colored output for traffic monitoring agent
+◦ Replaced all print statements with proper logging methods
+◦ Color-coded traffic statistics and error messages
+◦ Better visual separation with styled headers and separators
+
+• **documentation: comprehensive logging guides**
+◦ Created docs/configuration/logging.md with full logging documentation
+◦ Added demo_logger.py script for interactive logging demonstrations
+◦ Created LOGGER_IMPROVEMENTS.md with migration guide and examples
+◦ Created .env.logging.example with configuration templates
+◦ Documentation covers all log levels, configuration options, and best practices
+
+### Changed
+
+• **dependencies: added colorama**
+◦ Added colorama>=0.4.6 to backend/requirements.txt
+◦ Added colorama>=0.4.6 to traffic/requirements.txt
+◦ Cross-platform colored terminal support for Windows, macOS, and Linux
+
+• **logging: improved uvicorn integration**
+◦ Updated UvicornFormatter to use colorama instead of ANSI codes
+◦ Consistent color scheme between application and server logs
+◦ Better startup messages with styled output
+
+• **backend: configuration enhancements**
+◦ Settings class now includes LOG_TO_FILE, LOG_SHOW_TIMESTAMP, LOG_FILE_INCLUDE_LOCATION
+◦ Logger singleton pattern ensures consistent configuration across application
+◦ Backward compatible with existing logging code (100% compatibility)
+
+### Technical Details
+
+• **architecture: enhanced logger class**
+◦ ColoredConsoleFormatter class for terminal output with colorama
+◦ DetailedFileFormatter class for structured file logging
+◦ Singleton pattern prevents duplicate logger instances
+◦ Timezone-aware timestamps using ZoneInfo
+◦ UTF-8 encoding support for international characters
+◦ Automatic log directory creation
+◦ Graceful degradation to console-only if file logging fails
+
+• **benefits**
+◦ Easier debugging with color-coded severity levels
+◦ Professional-looking console output
+◦ Detailed file logs for troubleshooting and auditing
+◦ Highly configurable without code changes
+◦ Cross-platform consistency
+◦ Zero breaking changes - fully backward compatible
+
 # [1.5.6](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.5...v1.5.6) (2025-11-10)
 
 ### Features

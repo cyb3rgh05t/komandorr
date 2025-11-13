@@ -4,34 +4,37 @@ Run the FastAPI application with Uvicorn
 
 import uvicorn
 import logging
+from colorama import Fore, Style, init
+
+# Initialize colorama
+init(autoreset=True)
 
 
 class UvicornFormatter(logging.Formatter):
-    """Custom formatter for Uvicorn logs to match our style"""
+    """Custom formatter for Uvicorn logs with colorama colors to match our enhanced logger"""
 
     COLORS = {
-        "INFO": "\033[32m",  # Green
-        "WARNING": "\033[33m",  # Yellow
-        "ERROR": "\033[31m",  # Red
+        "INFO": Fore.GREEN,
+        "WARNING": Fore.YELLOW,
+        "ERROR": Fore.RED,
+        "CRITICAL": Fore.MAGENTA,
     }
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
 
     def format(self, record):
         levelname = record.levelname
-        if levelname in self.COLORS:
-            colored_level = (
-                f"{self.BOLD}{self.COLORS[levelname]}{levelname}{self.RESET}"
-            )
-        else:
-            colored_level = f"{self.BOLD}{levelname}{self.RESET}"
 
-        # Format message without timestamp
+        # Get color for this level
+        color = self.COLORS.get(levelname, Fore.WHITE)
+
+        # Create colored level name
+        colored_level = f"{color}{Style.BRIGHT}{levelname}{Style.RESET_ALL}"
+
+        # Format message without timestamp for consistency
         return f"{colored_level} - {record.getMessage()}"
 
 
 if __name__ == "__main__":
-    # Configure uvicorn logging
+    # Configure uvicorn logging to match our enhanced logger
     log_config = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -54,7 +57,10 @@ if __name__ == "__main__":
         },
     }
 
-    print("\033[1m\033[36mINFO\033[0m - Starting Komandorr Web UI on port 8000...")
+    # Startup message with colorama styling
+    print(
+        f"{Fore.GREEN}{Style.BRIGHT}INFO{Style.RESET_ALL} - Starting Komandorr Web UI on port 8000..."
+    )
 
     uvicorn.run(
         "app.main:app",

@@ -5,3 +5,6 @@ psutil>=5.9.0
 
 # HTTP client for API communication
 requests>=2.31.0
+
+# Colored terminal output
+colorama>=0.4.6
