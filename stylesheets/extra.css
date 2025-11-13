@@ -1,17 +1,62 @@
-/* Custom styles for Komandorr documentation */
+/* Custom styles for Komandorr documentation - Hacker Theme */
 
 :root {
-  --md-primary-fg-color: #c05d1a;
-  --md-accent-fg-color: #d9681f;
+  --md-primary-fg-color: #00ff41;
+  --md-accent-fg-color: #39ff14;
 }
 
-/* Darken navbar for better logo visibility */
+/* Dark hacker-style theme colors */
+[data-md-color-scheme="dark"] {
+  --md-default-bg-color: #0d1117;
+  --md-default-fg-color: #00ff41;
+  --md-typeset-color: #c9d1d9;
+  --md-typeset-a-color: #39ff14;
+  --md-code-bg-color: #161b22;
+  --md-code-fg-color: #00ff41;
+}
+
+/* Hacker green navbar */
 [data-md-color-scheme="dark"] .md-header {
-  background-color: #1a1a1a;
+  background-color: #000000;
+  border-bottom: 1px solid #00ff41;
 }
 
 [data-md-color-scheme="light"] .md-header {
-  background-color: #2d2d2d;
+  background-color: #0d1117;
+  border-bottom: 1px solid #00ff41;
+}
+
+/* Terminal-style font for code */
+.md-typeset code,
+.md-typeset pre {
+  font-family: "Courier New", Courier, monospace;
+  color: #00ff41;
+  background-color: #000000;
+}
+
+/* Green link effects */
+[data-md-color-scheme="dark"] a:hover {
+  color: #39ff14;
+  text-shadow: 0 0 5px #39ff14;
+}
+
+/* Terminal-style scrollbars */
+[data-md-color-scheme="dark"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+[data-md-color-scheme="dark"] ::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+[data-md-color-scheme="dark"] ::-webkit-scrollbar-thumb {
+  background: #00ff41;
+  border: 1px solid #000000;
+}
+
+[data-md-color-scheme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #39ff14;
 }
 
 /* Logo styling */
