@@ -1,39 +1,16 @@
 # Authentication API
 
-API endpoint for checking authentication status.
+API endpoints for authentication and user management.
 
-## Endpoint
+## Login
 
-### Get Auth Status
-
-```http
-GET /api/auth/status
-```
-
-Returns authentication status.
-
-## Response
+`POST /api/auth/login`
 
 ```json
 {
-  "enabled": true
+  "username": "admin",
+  "password": "password"
 }
 ```
 
-or
-
-```json
-{
-  "enabled": false
-}
-```
-
-## Usage
-
-Frontend uses this to determine whether to show login screen.
-
-## Authentication
-
-When `ENABLE_AUTH=true`, all API endpoints require Basic Authentication.
-
-See [API Overview](overview.md) for authentication details.
+Returns JWT token for subsequent requests.

@@ -40,12 +40,12 @@ async def update_traffic(traffic_data: TrafficUpdate):
     )
     service.traffic_history.append(data_point)
 
-    # Keep only last 100 data points to prevent excessive storage
+    # Keep only last 100 data points in memory
     if len(service.traffic_history) > 100:
         service.traffic_history = service.traffic_history[-100:]
 
-    # Save to disk
-    monitor._save_services()
+    # Save to database
+    monitor._save_service(service)
 
     logger.info(
         f"Updated traffic for {service.name}: "

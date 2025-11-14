@@ -1,161 +1,99 @@
 # Quick Start
 
-Get started with Komandorr in 5 minutes!
+Get Komandorr up and running in 5 minutes.
 
-## Step 1: Install & Run
+## Step 1: Install Komandorr
 
-Using Docker Compose (recommended):
+=== "Docker"
 
-```bash
-git clone https://github.com/cyb3rgh05t/komandorr.git
-cd komandorr
-docker-compose up -d
+    ```bash
+    docker run -d \
+      --name komandorr \
+      -p 3000:3000 \
+      -v $(pwd)/data:/app/data \
+      cyb3rgh05t/komandorr:latest
+    ```
+
+=== "Docker Compose"
+
+    ```bash
+    curl -o docker-compose.yml https://raw.githubusercontent.com/cyb3rgh05t/komandorr/main/docker-compose.yml
+    docker-compose up -d
+    ```
+
+## Step 2: Access the Dashboard
+
+1. Open your browser to `http://localhost:3000`
+2. Login with default credentials:
+   - Username: `admin`
+   - Password: `admin`
+
+!!! warning "Security"
+Change the default password immediately in Settings!
+
+## Step 3: Add Your First Service
+
+1. Navigate to **Services** page
+2. Click **Add Service** button
+3. Fill in the details:
+
 ```
-
-Wait for the containers to start, then open `http://localhost:3000`.
-
-## Step 2: Add Your First Service
-
-1. Click the **Services** tab in the sidebar
-2. Click the **Add Service** button (➕)
-3. Fill in the service details:
-
-```yaml
 Name: My Website
 URL: https://example.com
 Type: Website
-Group: Production (optional)
+Group: Production
 Check Interval: 60 seconds
-Description: My main website
 ```
 
-4. Click **Add Service**
+4. Click **Save**
 
-Your service will appear on the dashboard with its current status!
+## Step 4: Monitor Status
 
-## Step 3: Customize Your Dashboard
+Your service will appear on the Dashboard with real-time status:
 
-### Change Theme
+- :material-check-circle: **Green** - Service is up
+- :material-alert-circle: **Red** - Service is down
+- :material-clock-outline: **Gray** - No data yet
 
-1. Click your username in the top-right corner
-2. Select **Theme**
-3. Choose from: Dark, Plex, Jellyfin, Emby, and more
+## Step 5: View Metrics
 
-### Change Language
+Click on a service card to view:
 
-1. Click your username in the top-right corner
-2. Select **Language**
-3. Choose: English or Deutsch (German)
+- Response time history
+- Uptime percentage
+- Recent status changes
+- Detailed logs
 
-## Step 4: Configure Plex (Optional)
+## Optional: Configure Plex Integration
 
-Monitor your Plex Media Server activities:
+To monitor your Plex Media Server:
 
-1. Go to **Settings**
-2. Scroll to **Plex Server Settings**
-3. Enter your Plex server URL: `http://your-plex-server:32400`
-4. Add your [Plex token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
-5. Click **Test Connection**
-6. Click **Save Configuration**
+1. Get your Plex token from [Plex.tv](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
+2. Navigate to **Settings**
+3. Enter your Plex server URL and token
+4. Enable VOD Streams monitoring
 
-Now visit the **VOD Streams** tab to see live Plex activities!
+## Optional: Enable Traffic Monitoring
 
-## Step 5: Set Up Traffic Monitoring (Optional)
-
-Monitor bandwidth usage per service:
-
-### Install Traffic Agent
-
-On your server (where services run):
+1. Install the traffic agent on your server:
 
 ```bash
-# Download the agent
-wget https://raw.githubusercontent.com/cyb3rgh05t/komandorr/main/traffic/traffic_agent.py
-
-# Install dependencies
-pip install psutil requests
-
-# Configure the agent
-python traffic_agent.py --setup
+pip install -r traffic/requirements.txt
+python traffic/traffic_agent.py
 ```
 
-Provide:
+2. Configure the agent endpoint in Settings
+3. View traffic graphs on the Traffic page
 
-- Komandorr backend URL: `http://your-komandorr-server:8000`
-- Service ID: (copy from service card in Komandorr)
+## Next Steps
 
-### Start the Agent
-
-```bash
-# Run manually (for testing)
-python traffic_agent.py
-
-# Or install as systemd service
-sudo python traffic_agent.py --install-service
-```
-
-Traffic data will appear on your Dashboard service cards!
-
-## Common Tasks
-
-### View Service Monitoring
-
-Click the **Monitor** tab to see:
-
-- All services with status
-- Response times
-- Last check timestamps
-- Error messages (if any)
-
-### Check API Documentation
-
-Visit `http://localhost:8000/docs` to explore the API with Swagger UI.
-
-### View Application Logs
-
-```bash
-# Docker
-docker-compose logs -f backend
-
-# Manual installation
-tail -f backend/logs/app.log
-```
-
-## What's Next?
-
-Now that you have Komandorr running, explore more features:
-
-- [**Dashboard**](../features/dashboard.md): Learn about service groups and organization
-- [**VOD Streams**](../features/vod-streams.md): Deep dive into Plex integration
-- [**Traffic Monitoring**](../features/traffic.md): Advanced traffic monitoring setup
-- [**Configuration**](configuration.md): Complete configuration guide
-- [**Authentication**](../features/authentication.md): Secure your dashboard
-
-## Quick Reference
-
-### Default Ports
-
-- Frontend: `3000`
-- Backend: `8000`
-
-### Data Locations
-
-- Services: `backend/data/services.json`
-- Plex Config: `backend/data/plex_config.json`
-- Logs: `backend/logs/`
-
-### Environment Variables
-
-```bash
-ENABLE_AUTH=false          # Enable/disable authentication
-TIMEZONE=Europe/Berlin     # Your timezone
-DEBUG=false                # Debug mode
-```
-
-[Full Configuration Reference](configuration.md){ .md-button }
+- [Configure more services](../features/services.md)
+- [Set up service groups](../configuration/services.md)
+- [Customize themes](../features/themes.md)
+- [Explore the API](../api/index.md)
 
 ## Need Help?
 
-- 📖 [Full Documentation](../index.md)
-- 🐛 [Report Issues](https://github.com/cyb3rgh05t/komandorr/issues)
-- 💬 [Discussions](https://github.com/cyb3rgh05t/komandorr/discussions)
+- Check the [Troubleshooting Guide](../guides/troubleshooting.md)
+- Review [Configuration Options](../configuration/environment.md)
+- [Report an issue](https://github.com/cyb3rgh05t/komandorr/issues)

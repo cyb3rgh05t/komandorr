@@ -1,65 +1,15 @@
 # Services API
 
-API endpoints for managing services.
+API endpoints for service management and monitoring.
 
-## Endpoints
+## List Services
 
-### List Services
+`GET /api/services`
 
-```http
-GET /api/services
-```
+Returns all configured services with current status.
 
-Returns array of all services.
+## Add Service
 
-### Get Service
+`POST /api/services`
 
-```http
-GET /api/services/{id}
-```
-
-Returns specific service by ID.
-
-### Create Service
-
-```http
-POST /api/services
-Content-Type: application/json
-
-{
-  "name": "My Service",
-  "url": "https://example.com",
-  "type": "website",
-  "interval": 60
-}
-```
-
-### Update Service
-
-```http
-PUT /api/services/{id}
-Content-Type: application/json
-
-{
-  "name": "Updated Name",
-  "interval": 120
-}
-```
-
-### Delete Service
-
-```http
-DELETE /api/services/{id}
-```
-
-### Manual Check
-
-```http
-POST /api/services/{id}/check
-```
-
-Triggers immediate health check.
-
-## Response Format
-
-See [API Overview](overview.md) for response format and authentication details.
+Create a new service to monitor.

@@ -1,36 +1,56 @@
 import httpx
 import asyncio
-import json
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict
-from app.models.service import Service, ResponseTimeDataPoint
+from typing import List, Dict, TYPE_CHECKING
+from sqlalchemy import desc
+from app.models.service import (
+    Service,
+    ResponseTimeDataPoint,
+    TrafficMetrics,
+    TrafficDataPoint,
+)
+from app.database import db, ServiceDB, ResponseHistoryDB, TrafficHistoryDB
 from app.utils.logger import logger
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 
 class ServiceMonitor:
     """Service monitoring system to check online/offline status"""
 
-    def __init__(self, storage_file: str = "data/services.json"):
+    def __init__(self):
         self.services: Dict[str, Service] = {}
-        self.storage_file = Path(storage_file)
         self._monitoring_task = None
         self._running = False
-        self._ensure_storage_exists()
         self._load_services()
 
     def add_service(self, service: Service) -> None:
         """Add a service to monitor"""
         self.services[service.id] = service
         logger.info(f"Added service: {service.name} ({service.url})")
-        self._save_services()
+        self._save_service(service)
 
     def remove_service(self, service_id: str) -> None:
         """Remove a service from monitoring"""
         if service_id in self.services:
             service = self.services.pop(service_id)
             logger.info(f"Removed service: {service.name}")
-            self._save_services()
+
+            # Delete from database
+            session = db.get_session()
+            try:
+                db_service = (
+                    session.query(ServiceDB).filter(ServiceDB.id == service_id).first()
+                )
+                if db_service:
+                    session.delete(db_service)
+                    session.commit()
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Failed to delete service from database: {e}")
+            finally:
+                session.close()
 
     def get_service(self, service_id: str) -> Service | None:
         """Get a service by ID"""
@@ -87,8 +107,8 @@ class ServiceMonitor:
         tasks = [self.check_service(service) for service in self.services.values()]
         await asyncio.gather(*tasks)
 
-        # Save after all services are checked (not on every individual check)
-        self._save_services()
+        # Save after all services are checked
+        self._save_all_services()
         logger.info(f"Checked {len(tasks)} services")
 
     async def start_monitoring(self, interval: int = 60) -> None:
@@ -113,119 +133,270 @@ class ServiceMonitor:
 
         service.response_history.append(data_point)
 
-        # Keep last 100 points (similar to traffic_history)
+        # Keep last 100 points in memory
         if len(service.response_history) > 100:
             service.response_history = service.response_history[-100:]
 
-    def _ensure_storage_exists(self) -> None:
-        """Ensure the storage directory and file exist"""
-        try:
-            # Create directory if it doesn't exist
-            self.storage_file.parent.mkdir(parents=True, exist_ok=True)
-
-            # Create empty file if it doesn't exist
-            if not self.storage_file.exists():
-                with open(self.storage_file, "w", encoding="utf-8") as f:
-                    json.dump([], f)
-                logger.info(f"Created services storage file at {self.storage_file}")
-        except Exception as e:
-            logger.error(f"Failed to create storage directory/file: {e}")
-
     def _load_services(self) -> None:
-        """Load services from JSON file"""
+        """Load services from database"""
+        session = db.get_session()
         try:
-            with open(self.storage_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            db_services = session.query(ServiceDB).all()
 
-                if not data:
-                    logger.info("No services found in storage file")
-                    return
+            for db_service in db_services:
+                # Load response history (last 100 points)
+                response_history = (
+                    session.query(ResponseHistoryDB)
+                    .filter(ResponseHistoryDB.service_id == db_service.id)
+                    .order_by(desc(ResponseHistoryDB.timestamp))
+                    .limit(100)
+                    .all()
+                )
 
-                for service_data in data:
-                    # Convert string datetime back to datetime objects
-                    if service_data.get("last_check"):
-                        service_data["last_check"] = datetime.fromisoformat(
-                            service_data["last_check"]
-                        )
+                # Load traffic history (last 100 points)
+                traffic_history = (
+                    session.query(TrafficHistoryDB)
+                    .filter(TrafficHistoryDB.service_id == db_service.id)
+                    .order_by(desc(TrafficHistoryDB.timestamp))
+                    .limit(100)
+                    .all()
+                )
 
-                    # Convert traffic last_updated back to datetime
-                    if service_data.get("traffic") and service_data["traffic"].get(
-                        "last_updated"
-                    ):
-                        service_data["traffic"]["last_updated"] = (
-                            datetime.fromisoformat(
-                                service_data["traffic"]["last_updated"]
-                            )
-                        )
+                # Convert to Pydantic models
+                response_data = [
+                    ResponseTimeDataPoint(
+                        timestamp=(
+                            r.timestamp.replace(tzinfo=timezone.utc)  # type: ignore
+                            if r.timestamp
+                            else datetime.now(timezone.utc)
+                        ),
+                        response_time=float(r.response_time),  # type: ignore
+                    )
+                    for r in reversed(
+                        response_history
+                    )  # Reverse to get chronological order
+                ]
 
-                    # Convert traffic history timestamps back to datetime
-                    if service_data.get("traffic_history"):
-                        for data_point in service_data["traffic_history"]:
-                            if data_point.get("timestamp"):
-                                data_point["timestamp"] = datetime.fromisoformat(
-                                    data_point["timestamp"]
-                                )
+                traffic_data = [
+                    TrafficDataPoint(
+                        timestamp=(
+                            t.timestamp.replace(tzinfo=timezone.utc)  # type: ignore
+                            if t.timestamp
+                            else datetime.now(timezone.utc)
+                        ),
+                        bandwidth_up=float(t.bandwidth_up),  # type: ignore
+                        bandwidth_down=float(t.bandwidth_down),  # type: ignore
+                        total_up=float(t.total_up),  # type: ignore
+                        total_down=float(t.total_down),  # type: ignore
+                    )
+                    for t in reversed(
+                        traffic_history
+                    )  # Reverse to get chronological order
+                ]
 
-                    # Convert response history timestamps back to datetime
-                    if service_data.get("response_history"):
-                        for data_point in service_data["response_history"]:
-                            if data_point.get("timestamp"):
-                                data_point["timestamp"] = datetime.fromisoformat(
-                                    data_point["timestamp"]
-                                )
+                # Build traffic metrics
+                traffic_metrics = None
+                if db_service.traffic_last_updated:
+                    traffic_metrics = TrafficMetrics(
+                        bandwidth_up=float(db_service.bandwidth_up),  # type: ignore
+                        bandwidth_down=float(db_service.bandwidth_down),  # type: ignore
+                        total_up=float(db_service.total_up),  # type: ignore
+                        total_down=float(db_service.total_down),  # type: ignore
+                        last_updated=(
+                            db_service.traffic_last_updated.replace(tzinfo=timezone.utc)  # type: ignore
+                            if db_service.traffic_last_updated
+                            else None
+                        ),
+                    )
 
-                    service = Service(**service_data)
-                    self.services[service.id] = service
-            logger.info(
-                f"Loaded {len(self.services)} services from {self.storage_file}"
+                # Create Service model
+                service = Service(
+                    id=str(db_service.id),  # type: ignore
+                    name=str(db_service.name),  # type: ignore
+                    url=str(db_service.url),  # type: ignore
+                    type=str(db_service.type),  # type: ignore
+                    status=str(db_service.status),  # type: ignore
+                    last_check=(
+                        db_service.last_check.replace(tzinfo=timezone.utc)  # type: ignore
+                        if db_service.last_check
+                        else None
+                    ),
+                    response_time=float(db_service.response_time) if db_service.response_time else None,  # type: ignore
+                    description=str(db_service.description) if db_service.description else None,  # type: ignore
+                    icon=str(db_service.icon) if db_service.icon else None,  # type: ignore
+                    group=str(db_service.group) if db_service.group else None,  # type: ignore
+                    traffic=traffic_metrics,
+                    traffic_history=traffic_data,
+                    response_history=response_data,
+                )
+
+                self.services[service.id] = service
+
+            logger.info(f"Loaded {len(self.services)} services from database")
+        except Exception as e:
+            logger.error(f"Failed to load services from database: {e}")
+        finally:
+            session.close()
+
+    def _save_service(self, service: Service) -> None:
+        """Save or update a single service in the database"""
+        session = db.get_session()
+        try:
+            # Helper to convert aware datetime to naive UTC
+            def to_naive_utc(dt):
+                if dt is None:
+                    return None
+                if dt.tzinfo is not None:
+                    return dt.astimezone(timezone.utc).replace(tzinfo=None)
+                return dt
+
+            # Check if service exists
+            db_service = (
+                session.query(ServiceDB).filter(ServiceDB.id == service.id).first()
             )
+
+            if db_service:
+                # Update existing service
+                db_service.name = service.name  # type: ignore
+                db_service.url = service.url  # type: ignore
+                db_service.type = service.type  # type: ignore
+                db_service.status = service.status  # type: ignore
+                db_service.last_check = to_naive_utc(service.last_check)  # type: ignore
+                db_service.response_time = service.response_time  # type: ignore
+                db_service.description = service.description  # type: ignore
+                db_service.icon = service.icon  # type: ignore
+                db_service.group = service.group  # type: ignore
+
+                # Update traffic metrics
+                if service.traffic:
+                    db_service.bandwidth_up = service.traffic.bandwidth_up  # type: ignore
+                    db_service.bandwidth_down = service.traffic.bandwidth_down  # type: ignore
+                    db_service.total_up = service.traffic.total_up  # type: ignore
+                    db_service.total_down = service.traffic.total_down  # type: ignore
+                    db_service.traffic_last_updated = to_naive_utc(  # type: ignore
+                        service.traffic.last_updated
+                    )
+            else:
+                # Create new service
+                db_service = ServiceDB(
+                    id=service.id,
+                    name=service.name,
+                    url=service.url,
+                    type=service.type,
+                    status=service.status,
+                    last_check=to_naive_utc(service.last_check),
+                    response_time=service.response_time,
+                    description=service.description,
+                    icon=service.icon,
+                    group=service.group,
+                    bandwidth_up=(
+                        service.traffic.bandwidth_up if service.traffic else 0.0
+                    ),
+                    bandwidth_down=(
+                        service.traffic.bandwidth_down if service.traffic else 0.0
+                    ),
+                    total_up=service.traffic.total_up if service.traffic else 0.0,
+                    total_down=service.traffic.total_down if service.traffic else 0.0,
+                    traffic_last_updated=(
+                        to_naive_utc(service.traffic.last_updated)
+                        if service.traffic
+                        else None
+                    ),
+                )
+                session.add(db_service)
+
+            # Save new response history points
+            if service.response_history:
+                # Get the last stored timestamp
+                last_stored = (
+                    session.query(ResponseHistoryDB)
+                    .filter(ResponseHistoryDB.service_id == service.id)
+                    .order_by(desc(ResponseHistoryDB.timestamp))
+                    .first()
+                )
+
+                # Get timestamp value, ensure it has timezone info for comparison
+                last_timestamp = None
+                if last_stored and last_stored.timestamp:  # type: ignore
+                    last_timestamp = last_stored.timestamp.replace(tzinfo=timezone.utc)  # type: ignore
+
+                # Add only new points
+                for point in service.response_history:
+                    if not last_timestamp or point.timestamp > last_timestamp:
+                        history_entry = ResponseHistoryDB(
+                            service_id=service.id,
+                            timestamp=to_naive_utc(point.timestamp),
+                            response_time=point.response_time,
+                        )
+                        session.add(history_entry)
+
+                # Clean up old history (keep last 1000 points in DB)
+                old_entries = (
+                    session.query(ResponseHistoryDB)
+                    .filter(ResponseHistoryDB.service_id == service.id)
+                    .order_by(desc(ResponseHistoryDB.timestamp))
+                    .offset(1000)
+                    .all()
+                )
+                for entry in old_entries:
+                    session.delete(entry)
+
+            # Save new traffic history points
+            if service.traffic_history:
+                # Get the last stored timestamp
+                last_stored_traffic = (
+                    session.query(TrafficHistoryDB)
+                    .filter(TrafficHistoryDB.service_id == service.id)
+                    .order_by(desc(TrafficHistoryDB.timestamp))
+                    .first()
+                )
+
+                # Get timestamp value, ensure it has timezone info for comparison
+                last_traffic_timestamp = None
+                if last_stored_traffic and last_stored_traffic.timestamp:  # type: ignore
+                    last_traffic_timestamp = last_stored_traffic.timestamp.replace(  # type: ignore
+                        tzinfo=timezone.utc
+                    )
+
+                # Add only new points
+                for point in service.traffic_history:
+                    if (
+                        not last_traffic_timestamp
+                        or point.timestamp > last_traffic_timestamp
+                    ):
+                        traffic_entry = TrafficHistoryDB(
+                            service_id=service.id,
+                            timestamp=to_naive_utc(point.timestamp),
+                            bandwidth_up=point.bandwidth_up,
+                            bandwidth_down=point.bandwidth_down,
+                            total_up=point.total_up,
+                            total_down=point.total_down,
+                        )
+                        session.add(traffic_entry)
+
+                # Clean up old traffic history (keep last 1000 points in DB)
+                old_traffic = (
+                    session.query(TrafficHistoryDB)
+                    .filter(TrafficHistoryDB.service_id == service.id)
+                    .order_by(desc(TrafficHistoryDB.timestamp))
+                    .offset(1000)
+                    .all()
+                )
+                for entry in old_traffic:
+                    session.delete(entry)
+
+            session.commit()
+            logger.debug(f"Saved service {service.name} to database")
         except Exception as e:
-            logger.error(f"Failed to load services from {self.storage_file}: {e}")
+            session.rollback()
+            logger.error(f"Failed to save service to database: {e}")
+        finally:
+            session.close()
 
-    def _save_services(self) -> None:
-        """Save services to JSON file"""
-        try:
-            # Convert services to dict and handle datetime serialization
-            services_data = []
-            for service in self.services.values():
-                service_dict = service.model_dump()
-
-                # Convert datetime to ISO format string
-                if service_dict.get("last_check"):
-                    service_dict["last_check"] = service_dict["last_check"].isoformat()
-
-                # Handle traffic metrics datetime
-                if service_dict.get("traffic") and service_dict["traffic"].get(
-                    "last_updated"
-                ):
-                    service_dict["traffic"]["last_updated"] = service_dict["traffic"][
-                        "last_updated"
-                    ].isoformat()
-
-                # Handle traffic history timestamps
-                if service_dict.get("traffic_history"):
-                    for data_point in service_dict["traffic_history"]:
-                        if data_point.get("timestamp"):
-                            data_point["timestamp"] = data_point[
-                                "timestamp"
-                            ].isoformat()
-
-                # Handle response history timestamps
-                if service_dict.get("response_history"):
-                    for data_point in service_dict["response_history"]:
-                        if data_point.get("timestamp"):
-                            data_point["timestamp"] = data_point[
-                                "timestamp"
-                            ].isoformat()
-
-                services_data.append(service_dict)
-
-            with open(self.storage_file, "w", encoding="utf-8") as f:
-                json.dump(services_data, f, indent=2, ensure_ascii=False)
-
-            logger.debug(f"Saved {len(services_data)} services to {self.storage_file}")
-        except Exception as e:
-            logger.error(f"Failed to save services to {self.storage_file}: {e}")
+    def _save_all_services(self) -> None:
+        """Save all services to database"""
+        for service in self.services.values():
+            self._save_service(service)
 
 
 # Global monitor instance

@@ -1,44 +1,15 @@
 # Traffic API
 
-API endpoints for traffic monitoring.
+API endpoints for traffic monitoring data.
 
-## Endpoints
+## Get Current Traffic
 
-### Update Traffic Data
+`GET /api/traffic/current`
 
-```http
-POST /api/traffic/update
-Content-Type: application/json
+Returns current bandwidth usage.
 
-{
-  "service_id": "uuid",
-  "upload_mbps": 2.5,
-  "download_mbps": 5.1
-}
-```
+## Get History
 
-Used by traffic agents to report data.
+`GET /api/traffic/history`
 
-### Get Traffic Summary
-
-```http
-GET /api/traffic/summary
-```
-
-Returns traffic summary for all services.
-
-### Get Service Traffic
-
-```http
-GET /api/traffic/{service_id}
-```
-
-Returns traffic data for specific service.
-
-## Data Format
-
-Traffic values are in MB/s (megabytes per second).
-
-## Response Format
-
-See [API Overview](overview.md) for details.
+Returns historical traffic data.

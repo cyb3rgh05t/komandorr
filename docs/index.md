@@ -1,132 +1,129 @@
-# Komandorr
+# Welcome to Komandorr
 
 <div align="center">
-  <img src="images/logo.svg" alt="Komandorr Logo" width="200">
+  <img src="images/logo.svg" alt="Komandorr Logo" width="400">
+  <p><strong>Modern Service Monitoring Dashboard</strong></p>
 </div>
 
-<p align="center"><strong>Modern Service Monitoring Dashboard</strong></p>
-
-<p align="center">
-  <a href="https://github.com/cyb3rgh05t/komandorr/releases"><img src="https://img.shields.io/github/v/release/cyb3rgh05t/komandorr" alt="GitHub Release"></a>
-  <a href="https://hub.docker.com/r/cyb3rgh05t/komandorr"><img src="https://img.shields.io/docker/pulls/cyb3rgh05t/komandorr" alt="Docker Pulls"></a>
-  <a href="https://github.com/cyb3rgh05t/komandorr/blob/main/LICENSE"><img src="https://img.shields.io/github/license/cyb3rgh05t/komandorr" alt="License"></a>
-</p>
-
----
+![Komandorr Dashboard](https://raw.githubusercontent.com/cyb3rgh05t/komandorr/main/images/preview.png)
 
 ## Overview
 
-Komandorr is a modern, feature-rich service monitoring dashboard designed to keep track of your applications, websites, panels, and projects. With built-in Plex integration, traffic monitoring, and a beautiful multi-theme interface, Komandorr makes monitoring your infrastructure simple and elegant.
+Komandorr is a powerful, feature-rich service monitoring dashboard designed to keep track of your applications, websites, APIs, panels, and infrastructure. With SQLite-backed data persistence, built-in Plex integration, traffic monitoring, and 11 beautiful themes, Komandorr makes monitoring your services simple, elegant, and scalable.
+
+**Version 1.6.0** introduces SQLite database storage for improved performance and up to 1000 historical data points per service.
 
 ## Key Features
 
-### Service Monitoring
+### :material-monitor-dashboard: Real-Time Service Monitoring
 
-- **Real-time Health Checks**: Monitor HTTP/HTTPS endpoints with customizable intervals
-- **Service Groups**: Organize services into logical groups
-- **Visual Status**: Color-coded service cards with instant status visibility
-- **Service Types**: Support for websites, apps, panels, and servers
+Monitor unlimited services in real-time with customizable health checks, service grouping, and instant status visibility. Set individual check intervals from 30 seconds to 1 hour per service.
 
-### VOD Streams (Plex Integration)
+### :material-database: SQLite Database Storage
 
-- **Real-time Activity Monitoring**: Track Plex downloads, streams, and transcodes
-- **Progress Tracking**: Visual progress bars for active operations
-- **Search & Filter**: Quickly find specific activities
-- **Auto-refresh**: Live updates every 10 seconds
+Efficient database backend stores up to 1000 historical data points per service. Automatic migration from JSON, better performance, and reliable data persistence.
 
-### Traffic Monitoring
+### :material-movie-open-play: VOD Streams (Plex Integration)
 
-- **Bandwidth Tracking**: Monitor upload/download speeds per service
-- **Real-time Data**: Auto-refresh traffic statistics
-- **Dashboard Integration**: Traffic data displayed directly on service cards
-- **Remote Agent**: Monitor traffic from remote servers
+Seamlessly integrate with Plex Media Server to monitor and display your video-on-demand streams with real-time playback information.
 
-### Themes & Customization
+### :material-chart-line: Traffic & Bandwidth Monitoring
 
-- **Multiple Themes**: Dark, Plex, Jellyfin, Emby, and more
-- **Theme Switching**: Instant theme changes with smooth transitions
-- **Custom Branding**: Komandorr orange accent color throughout
+Track bandwidth usage and network traffic with beautiful visualizations, response time graphs, and comprehensive historical data.
 
-### Multi-Language Support
+### :material-palette: 11 Beautiful Themes
 
-- **English & German**: Full bilingual support
-- **Easy Switching**: Change language on-the-fly
-- **Complete Translation**: All UI elements translated
+Choose from 11 stunning themes: Dark, Plex, Jellyfin, Emby, Seerr, and 6 Marvel Infinity Stone-inspired themes.
 
-### Security
+### :material-translate: Multi-Language Support
 
-- **Optional Authentication**: Basic HTTP authentication
-- **Token-based**: Secure API access
-- **Configurable**: Enable/disable as needed
+Fully localized interface with English and German support (more languages coming soon).
+
+### :material-lock: Optional Authentication
+
+Built-in username/password protection with session management to secure your dashboard.
 
 ## Quick Start
 
-Get Komandorr up and running in minutes:
+Get started with Komandorr in minutes:
 
-```bash
-# Using Docker Compose
-git clone https://github.com/cyb3rgh05t/komandorr.git
-cd komandorr
-docker-compose up -d
-```
+=== "Git Clone"
 
-Visit `http://localhost:3000` and start monitoring!
+    ```bash
+    # Clone repository
+    git clone https://github.com/cyb3rgh05t/komandorr.git
+    cd komandorr
 
-[Installation Guide](getting-started/installation.md){ .md-button .md-button--primary }
-[Configuration](getting-started/configuration.md){ .md-button }
+    # Run setup (Windows)
+    .\setup.ps1
 
-## Architecture
+    # Start backend
+    cd backend && python run.py
 
-```mermaid
-graph TD
-    A[Frontend - React] -->|API Calls| B[Backend - FastAPI]
-    B -->|Monitors| C[Services]
-    B -->|Fetches| D[Plex Server]
-    B -->|Collects| E[Traffic Agent]
-    C -->|HTTP/HTTPS| F[Monitored Endpoints]
-    E -->|Network Stats| G[Remote Servers]
-    B -->|Stores| H[JSON Data Files]
-```
+    # Start frontend (new terminal)
+    cd frontend && npm run dev
+    ```
+
+=== "Docker"
+
+    ```bash
+    docker run -d \
+      --name komandorr \
+      -p 8000:8000 \
+      -p 3000:3000 \
+      -v $(pwd)/data:/app/backend/data \
+      cyb3rgh05t/komandorr:latest
+    ```
+
+=== "Docker Compose"
+
+    ```yaml
+    version: '3.8'
+    services:
+      komandorr:
+        image: cyb3rgh05t/komandorr:latest
+        ports:
+          - "8000:8000"  # Backend API
+          - "3000:3000"  # Frontend UI
+        volumes:
+          - ./data:/app/backend/data
+        environment:
+          - ENABLE_AUTH=false
+          - TIMEZONE=Europe/Berlin
+    ```
+
+Visit [Getting Started](getting-started/installation.md) for detailed installation instructions.
+
+## Why Komandorr?
+
+- **Easy to Use**: Simple configuration with environment variables and intuitive web interface
+- **Beautiful UI**: Modern, responsive interface built with React and Tailwind CSS, inspired by Sonarr/Radarr
+- **Flexible**: Support for various service types, custom check intervals, and service grouping
+- **Scalable**: SQLite database stores up to 1000 historical points per service
+- **Extensible**: Full REST API with OpenAPI documentation for integration
+- **Lightweight**: Minimal resource usage with efficient monitoring and automatic cleanup
+- **Customizable**: 11 themes, multi-language support, and optional authentication
+- **Self-Hosted**: Complete control over your monitoring data
 
 ## Technology Stack
 
-### Frontend
-
-- **React 18+**: Modern UI framework
-- **React Router v6**: Client-side routing
-- **Tailwind CSS**: Utility-first styling
-- **react-i18next**: Internationalization
-- **Lucide Icons**: Beautiful icon set
-
-### Backend
-
-- **FastAPI**: High-performance Python framework
-- **Pydantic v2**: Data validation
-- **httpx**: Async HTTP client
-- **uvicorn**: ASGI server
-
-## What's New in v1.5.0
-
-- **VOD Streams**: Complete Plex integration for monitoring media server activities
-- **Traffic Integration**: Dashboard service cards now display bandwidth data
-- **Timezone Fixes**: Proper timezone configuration
-- **API Documentation**: Custom dark-themed Swagger UI
-- **Search**: Real-time search filtering for VOD activities
-
-[View Full Changelog](changelog.md){ .md-button }
+- **Backend**: Python 3.10+ with FastAPI and SQLAlchemy ORM
+- **Frontend**: React 18 with Vite, TailwindCSS, and Lucide Icons
+- **Database**: SQLite 3 for lightweight, serverless data storage
+- **API**: RESTful API with automatic OpenAPI/Swagger documentation
 
 ## Community & Support
 
-- [Documentation](https://cyb3rgh05t.github.io/komandorr)
-- [Issue Tracker](https://github.com/cyb3rgh05t/komandorr/issues)
-- [Discussions](https://github.com/cyb3rgh05t/komandorr/discussions)
+- :fontawesome-brands-github: [GitHub Repository](https://github.com/cyb3rgh05t/komandorr)
+- :material-bug: [Report Issues](https://github.com/cyb3rgh05t/komandorr/issues)
+- :material-forum: [Discussions](https://github.com/cyb3rgh05t/komandorr/discussions)
 
 ## License
 
-Komandorr is released under the [MIT License](https://github.com/cyb3rgh05t/komandorr/blob/main/LICENSE).
+Komandorr is released under the MIT License. See [LICENSE](https://github.com/cyb3rgh05t/komandorr/blob/main/LICENSE) for details.
 
 ---
 
 <div align="center">
-  Made with love by <a href="https://github.com/cyb3rgh05t">cyb3rgh05t</a>
+  <em>Created with ❤️ by <a href="https://github.com/cyb3rgh05t">cyb3rgh05t</a> for the Community</em>
 </div>

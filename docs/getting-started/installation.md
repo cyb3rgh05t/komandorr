@@ -1,173 +1,107 @@
 # Installation
 
-This guide will help you install Komandorr using different methods.
+Learn how to install Komandorr using your preferred method.
 
-## Prerequisites
+## Docker Installation
 
-Before installing Komandorr, ensure you have one of the following:
+!!! tip "Recommended Method"
+Docker is the recommended installation method for most users.
 
-=== "Docker (Recommended)" - Docker Engine 20.10+ - Docker Compose 2.0+
-
-=== "Manual Installation" - Python 3.9+ - Node.js 18+ - npm or yarn
-
-## Installation Methods
-
-### Docker Compose (Recommended)
-
-The easiest way to run Komandorr is using Docker Compose:
+### Using Docker Run
 
 ```bash
-# Clone the repository
-git clone https://github.com/cyb3rgh05t/komandorr.git
-cd komandorr
+docker run -d \
+  --name komandorr \
+  -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -e PLEX_URL=http://your-plex-server:32400 \
+  -e PLEX_TOKEN=your-plex-token \
+  cyb3rgh05t/komandorr:latest
+```
 
-# Start the services
+### Using Docker Compose
+
+Create a `docker-compose.yml` file:
+
+```yaml
+version: "3.8"
+
+services:
+  komandorr:
+    image: cyb3rgh05t/komandorr:latest
+    container_name: komandorr
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PLEX_URL=http://your-plex-server:32400
+      - PLEX_TOKEN=your-plex-token
+      - CHECK_INTERVAL=60
+    restart: unless-stopped
+```
+
+Start the container:
+
+```bash
 docker-compose up -d
 ```
 
-The application will be available at:
+## Manual Installation
 
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:8000`
-- API Documentation: `http://localhost:8000/docs`
+### Backend Setup
 
-### Docker Run
-
-If you prefer using Docker without Compose:
+1. Clone the repository:
 
 ```bash
-# Pull the image
-docker pull ghcr.io/cyb3rgh05t/komandorr:latest
-
-# Run the container
-docker run -d \
-  --name komandorr \
-  -p 3000:80 \
-  -p 8000:8000 \
-  -v $(pwd)/backend/data:/app/backend/data \
-  -v $(pwd)/backend/logs:/app/backend/logs \
-  -e ENABLE_AUTH=false \
-  -e TIMEZONE=Europe/Berlin \
-  ghcr.io/cyb3rgh05t/komandorr:latest
+git clone https://github.com/cyb3rgh05t/komandorr.git
+cd komandorr
 ```
 
-### Manual Installation
-
-For development or custom setups:
-
-#### Backend Setup
+2. Install Python dependencies:
 
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On Linux/Mac:
-source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
+```
 
-# Run the backend
+3. Start the backend:
+
+```bash
 python run.py
 ```
 
-The backend API will start on `http://localhost:8000`.
+### Frontend Setup
 
-#### Frontend Setup
+1. Install Node.js dependencies:
 
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
 ```
 
-The frontend will start on `http://localhost:5173` (Vite default).
-
-For production build:
+2. Build the frontend:
 
 ```bash
 npm run build
-npm run preview
 ```
 
-## Verify Installation
-
-After installation, verify everything is working:
-
-1. **Check Frontend**: Open `http://localhost:3000` in your browser
-2. **Check Backend**: Visit `http://localhost:8000/api/health`
-3. **Check API Docs**: Navigate to `http://localhost:8000/docs`
-
-You should see:
-
-- Frontend loads with the dashboard
-- Backend health check returns `{"status": "healthy"}`
-- Swagger UI documentation displays
-
-## Post-Installation
-
-After successful installation:
-
-1. **Configure Services**: Add your first service to monitor
-2. **Set Up Plex** (optional): Configure Plex server for VOD monitoring
-3. **Configure Traffic** (optional): Set up traffic monitoring agent
-4. **Enable Authentication** (optional): Secure your dashboard
-
-[Configuration Guide](configuration.md){ .md-button .md-button--primary }
-
-## Troubleshooting
-
-### Port Already in Use
-
-If ports 3000 or 8000 are already in use, modify the `docker-compose.yml`:
-
-```yaml
-services:
-  frontend:
-    ports:
-      - "3001:80" # Change 3000 to 3001
-  backend:
-    ports:
-      - "8001:8000" # Change 8000 to 8001
-```
-
-### Permission Issues
-
-If you encounter permission issues with Docker volumes:
+3. Start the development server:
 
 ```bash
-# Create directories with proper permissions
-mkdir -p backend/data backend/logs
-chmod 755 backend/data backend/logs
+npm run dev
 ```
 
-### Python Version Issues
+## Verification
 
-Komandorr requires Python 3.9+. Check your version:
+After installation, verify Komandorr is running:
 
-```bash
-python --version
-```
-
-If needed, use a specific Python version:
-
-```bash
-python3.9 -m venv venv
-```
+1. Open your browser to `http://localhost:3000`
+2. You should see the Komandorr login screen
+3. Default credentials: `admin` / `admin` (change immediately!)
 
 ## Next Steps
 
-- [Quick Start Guide](quickstart.md)
-- [Configuration](configuration.md)
-- [Docker Setup Details](docker.md)
+- [Configure your services](configuration.md)
+- [Set up Plex integration](../configuration/plex.md)
+- [Configure environment variables](../configuration/environment.md)

@@ -1,19 +1,34 @@
-site_name: Komandorr Documentation
+site_name: Komandorr
+site_url: https://cyb3rgh05t.github.io/komandorr
 site_description: Modern service monitoring dashboard with Plex integration and traffic monitoring
 site_author: cyb3rgh05t
-site_url: https://cyb3rgh05t.github.io/komandorr
 
-repo_name: cyb3rgh05t/komandorr
 repo_url: https://github.com/cyb3rgh05t/komandorr
+repo_name: cyb3rgh05t/komandorr
 edit_uri: edit/main/docs/
 
+copyright: Created with ❤️ by <a href="https://github.com/cyb3rgh05t">cyb3rgh05t</a> for the Community
+
 theme:
-  name: windmill-dark
-  logo: images/logo.svg
-  favicon: images/favicon.svg
-  navigation_depth: 3
-  collapse_navigation: false
-  titles_only: false
+  name: material
+  palette:
+    scheme: slate
+    primary: black
+    accent: deep orange
+  custom_dir: docs/overrides
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - abbr
@@ -25,11 +40,15 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
-      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.caret
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -38,72 +57,48 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
 
 plugins:
-  - search:
-      lang: en
-      separator: '[\s\-\.]+'
-  - minify:
-      minify_html: true
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: timeago
-
-# Exclude files from build
-exclude_docs: |
-  README.md
-  images/README.md
-
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/cyb3rgh05t
-      name: GitHub Profile
-    - icon: fontawesome/brands/docker
-      link: https://github.com/cyb3rgh05t/komandorr/pkgs/container/komandorr
-      name: Docker Hub
-
-extra_css:
-  - stylesheets/extra.css
-
-extra_javascript:
-  - javascripts/extra.js
+  - search
 
 nav:
   - Home: index.md
   - Getting Started:
+      - getting-started/index.md
       - Installation: getting-started/installation.md
-      - Quick Start: getting-started/quickstart.md
       - Configuration: getting-started/configuration.md
-      - Docker Setup: getting-started/docker.md
+      - Quick Start: getting-started/quickstart.md
   - Features:
-      - Dashboard: features/dashboard.md
+      - features/index.md
       - Service Monitoring: features/services.md
-      - VOD Streams (Plex): features/vod-streams.md
+      - VOD Streams: features/vod-streams.md
       - Traffic Monitoring: features/traffic.md
       - Themes: features/themes.md
-      - Multi-Language: features/languages.md
-      - Authentication: features/authentication.md
   - Configuration:
+      - configuration/index.md
       - Environment Variables: configuration/environment.md
       - Services: configuration/services.md
-      - Plex Server: configuration/plex.md
+      - Plex Integration: configuration/plex.md
       - Traffic Agent: configuration/traffic-agent.md
   - API Reference:
-      - Overview: api/overview.md
-      - Services API: api/services.md
-      - Plex API: api/plex.md
-      - Traffic API: api/traffic.md
+      - api/index.md
       - Authentication: api/auth.md
+      - Services: api/services.md
+      - Plex: api/plex.md
+      - Traffic: api/traffic.md
   - Guides:
+      - guides/index.md
+      - Docker Deployment: guides/docker.md
       - Troubleshooting: guides/troubleshooting.md
-      - Development: guides/development.md
       - Contributing: guides/contributing.md
   - Changelog: changelog.md
-  - About: about.md
-
-copyright: Copyright &copy; 2024-2025 cyb3rgh05t

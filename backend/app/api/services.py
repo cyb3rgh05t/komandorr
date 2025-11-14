@@ -55,8 +55,8 @@ async def update_service(service_id: str, service_data: ServiceUpdate):
     # Re-check service after update
     await monitor.check_service(service)
 
-    # Save changes to disk
-    monitor._save_services()
+    # Save changes to database
+    monitor._save_service(service)
 
     logger.info(f"Updated service: {service.name}")
     return service
@@ -84,7 +84,7 @@ async def check_service(service_id: str):
         raise HTTPException(status_code=404, detail="Service not found")
 
     await monitor.check_service(service)
-    monitor._save_services()  # Save the updated status and last_check
+    monitor._save_service(service)  # Save the updated status and last_check
     logger.info(f"Manually checked service: {service.name}")
     return service
 
@@ -93,6 +93,6 @@ async def check_service(service_id: str):
 async def check_all_services():
     """Manually trigger a check for all services"""
     await monitor.check_all_services()
-    monitor._save_services()  # Save all updated statuses and last_check times
+    # check_all_services already saves to database
     logger.info("Manually checked all services")
     return monitor.get_all_services()

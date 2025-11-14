@@ -1,5 +1,54 @@
 # CHANGELOG.md
 
+# [1.6.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.8...v1.6.0) (2025-11-14)
+
+### Features
+
+• **backend: SQLite database storage**
+◦ Migrated from JSON file storage to SQLite database for better scalability
+◦ Implemented SQLAlchemy ORM with three tables: services, response_history, traffic_history
+◦ Automatic database initialization on first run
+◦ Stores up to 1000 historical data points per service (vs 100 in memory)
+◦ Single database file: `backend/data/komandorr.db`
+
+• **migration: automatic JSON to SQLite import**
+◦ Created migration script `migrate_to_sqlite.py` to import existing services
+◦ Preserves all service data including status, history, and traffic metrics
+◦ Automatically backs up original JSON file as `.json.backup`
+◦ Smooth upgrade path for existing installations
+
+• **database: efficient history management**
+◦ Keeps last 100 data points in memory for fast API responses
+◦ Stores up to 1000 points in database for long-term history
+◦ Automatic cleanup of old data points to prevent database bloat
+◦ Timezone-aware datetime handling with naive UTC storage
+
+### Changed
+
+• **storage: replaced JSON with SQLite**
+◦ Services no longer stored in `services.json` file
+◦ All service data now persisted in `komandorr.db` database
+◦ Improved query performance for historical data
+◦ Better concurrent access handling
+
+• **dependencies: added SQLAlchemy**
+◦ Added `sqlalchemy>=2.0.0` to requirements.txt
+◦ Updated documentation with SQLite information
+◦ Added database schema documentation
+
+• **docs: updated for SQLite**
+◦ README now mentions SQLite storage location
+◦ Added migration instructions for existing JSON users
+◦ Updated configuration guide with database details
+◦ Added database schema explanation
+
+### Fixed
+
+• **type checking: SQLAlchemy ORM type hints**
+◦ Added `# type: ignore` comments for SQLAlchemy ORM operations
+◦ Updated pyrightconfig.json to suppress false positive type errors
+◦ Resolved Pylance warnings about Column type assignments
+
 # [1.5.8](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.7...v1.5.8) (2025-11-13)
 
 ### Features
@@ -23,11 +72,11 @@
 ◦ Fully theme-aware design that adapts to light/dark modes
 ◦ Hover effects with shadow transitions
 
-• **docs: windmill dark theme**
-◦ Switched from MkDocs Material to mkdocs-windmill-dark theme
-◦ Dark theme by default with modern, clean design
+• **docs: bootswatch slate theme**
+◦ Switched from MkDocs Material to mkdocs-bootswatch slate theme
+◦ Dark theme with Bootstrap 4 styling
 ◦ Updated GitHub Actions workflow to use new theme
-◦ Better readability and hacker-aesthetic appearance
+◦ Modern, clean design with better readability
 
 ### Changed
 
@@ -37,7 +86,7 @@
 ◦ Removed hover scale effects in favor of cleaner interactions
 
 • **docs: theme dependencies**
-◦ Replaced mkdocs-material with mkdocs-windmill-dark in requirements
+◦ Replaced mkdocs-material with mkdocs-bootswatch in requirements
 ◦ Updated docs deployment workflow with new theme package
 
 # [1.5.7](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.6...v1.5.7) (2025-11-13)

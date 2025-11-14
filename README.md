@@ -1,61 +1,98 @@
 <div align="center">
   <img src="frontend/public/logo.svg" alt="Komandorr Logo" width="400"/>
+  
+  # Komandorr
+  
+  **A modern, feature-rich monitoring dashboard for your services and infrastructure**
+  
+  Monitor websites, APIs, apps, and services with real-time status tracking, response time graphs, and traffic analytics.
 
-A modern WebUI dashboard for monitoring apps, websites, panels, and projects for their Online/Offline/Problem status.
+<div align="center">
+
+![GitHub release](https://img.shields.io/github/v/release/cyb3rgh05t/komandorr?style=for-the-badge)
+![GitHub stars](https://img.shields.io/github/stars/cyb3rgh05t/komandorr?style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/cyb3rgh05t/komandorr?style=for-the-badge)
+![GitHub issues](https://img.shields.io/github/issues/cyb3rgh05t/komandorr?style=for-the-badge)
+![GitHub license](https://img.shields.io/github/license/cyb3rgh05t/komandorr?style=for-the-badge)
 
 </div>
+  
+  <img src="images/preview.png" alt="Komandorr Dashboard Preview" width="800"/>
+  
+  [![GitHub release](https://img.shields.io/github/v/release/cyb3rgh05t/komandorr?style=flat-square)](https://github.com/cyb3rgh05t/komandorr/releases)
+  [![License](https://img.shields.io/github/license/cyb3rgh05t/komandorr?style=flat-square)](LICENSE)
+  [![Stars](https://img.shields.io/github/stars/cyb3rgh05t/komandorr?style=social)](https://github.com/cyb3rgh05t/komandorr/stargazers)
+  [![Documentation](https://img.shields.io/badge/docs-available-orange?style=flat-square)](https://cyb3rgh05t.github.io/komandorr/)
+  
+</div>
 
-## Features
+## ✨ Features
 
-- **Backend**: Python FastAPI with service monitoring and logger system
-- **Frontend**: React with Vite, TailwindCSS, and Lucide React Icons
-- **11 Themes**: Dark, Plex, Jellyfin, Emby, Mind/Power/Reality/Soul/Space/Time Stones, Seerr
-- **Multi-Language**: English (default) and German
-- **Responsive**: Sidebar and TopNavbar layout (like Sonarr/Radarr)
-- **Real-time Monitoring**: Automatic service monitoring
+### 🎯 Core Monitoring
 
-## Project Structure
+- **Real-time Status Tracking**: Monitor websites, APIs, apps, and custom services
+- **Response Time Graphs**: Visual charts showing service performance over time
+- **Traffic Analytics**: Bandwidth monitoring for compatible services (Plex, etc.)
+- **Smart Health Checks**: Automatic detection of online/offline/problem states
+- **Grouped Services**: Organize services by category (Production, Development, Media, etc.)
 
-```
-komandorr/
-├── backend/          # Python FastAPI Backend
-│   ├── app/
-│   │   ├── api/     # API Routes
-│   │   ├── models/  # Pydantic Models
-│   │   ├── services/# Service Monitor
-│   │   ├── utils/   # Logger & Utilities
-│   │   ├── config.py
-│   │   └── main.py
-│   ├── requirements.txt
-│   └── run.py
-├── frontend/         # React Vite Frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── locales/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── utils/
-│   ├── package.json
-│   └── vite.config.js
-└── README.md
-```
+### 💾 Database & Storage
 
-## Installation & Setup
+- **SQLite Backend**: Efficient database storage with up to 1000 historical data points per service
+- **Automatic Migration**: Seamless upgrade from JSON to SQLite
+- **Data Persistence**: All service configurations and history stored reliably
+- **Timezone Support**: Configurable timezone for logs and timestamps
 
-### Automatic Setup (Recommended)
+### 🎨 Customization
 
-Run the setup script to install all dependencies:
+- **11 Beautiful Themes**: Dark, Plex, Jellyfin, Emby, Seerr, and 6 Infinity Stone themes
+- **Multi-Language**: Full support for English and German (more coming soon)
+- **Responsive Design**: Modern UI inspired by Sonarr/Radarr with sidebar navigation
+- **Custom Intervals**: Set individual check intervals per service (30s - 1 hour)
+
+### 🔐 Security
+
+- **Optional Authentication**: Built-in username/password protection
+- **Session Management**: Secure login with automatic session handling
+- **Configurable Access**: Enable/disable auth dynamically via settings or .env
+
+### 🛠️ Technology Stack
+
+- **Backend**: Python 3.10+ with FastAPI and SQLAlchemy ORM
+- **Frontend**: React 18 with Vite, TailwindCSS, and Lucide Icons
+- **Database**: SQLite 3 for lightweight, serverless storage
+- **API**: RESTful API with automatic OpenAPI documentation
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Python 3.10+** (with pip)
+- **Node.js 18+** (with npm)
+- **Git** (for cloning the repository)
+
+### Installation
+
+#### Option 1: Automatic Setup (Recommended for Windows)
 
 ```powershell
+# Clone the repository
+git clone https://github.com/cyb3rgh05t/komandorr.git
+cd komandorr
+
+# Run the setup script
 .\setup.ps1
 ```
 
-The script installs:
+The setup script automatically:
 
-- Backend: Python Virtual Environment + Dependencies
-- Frontend: Node.js Dependencies
-- Creates .env file and logs directory
+- ✅ Creates Python virtual environment
+- ✅ Installs backend dependencies
+- ✅ Installs frontend dependencies
+- ✅ Creates .env configuration file
+- ✅ Sets up logs directory
+
+#### Option 2: Manual Setup (Cross-Platform)
 
 ### Starting the Application
 
@@ -73,39 +110,161 @@ Terminal 2 - Frontend:
 .\start-frontend.ps1
 ```
 
-**Option 2: Manually**
-
-### Backend
+**Backend Setup:**
 
 ```bash
+# Create and activate virtual environment
 cd backend
 python -m venv venv
-.\venv\Scripts\activate  # Windows
+
+# Windows
+.\venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Configure environment (copy and edit .env)
 cp .env.example .env
-python run.py
 ```
 
-Backend runs on: `http://localhost:8000`
-API Docs: `http://localhost:8000/docs`
-
-### Frontend
+**Frontend Setup:**
 
 ```bash
 cd frontend
 npm install
+```
+
+### Running the Application
+
+**Terminal 1 - Backend:**
+
+```bash
+cd backend
+python run.py
+```
+
+→ Backend API: `http://localhost:8000`  
+→ API Docs: `http://localhost:8000/docs`
+
+**Terminal 2 - Frontend:**
+
+```bash
+cd frontend
 npm run dev
 ```
 
-Frontend runs on: `http://localhost:3000`
+→ Dashboard: `http://localhost:3000`
 
-## Usage
+**Or use the convenience scripts (Windows):**
 
-1. Start the backend
-2. Start the frontend
-3. Open the dashboard at `http://localhost:3000`
-4. Add services via the "Add Service" button
-5. Customize theme and language in the settings
+```powershell
+.\start-backend.ps1   # Terminal 1
+.\start-frontend.ps1  # Terminal 2
+```
+
+## 📖 Usage Guide
+
+### Adding Your First Service
+
+1. **Start both backend and frontend** (see Running the Application above)
+2. **Open the dashboard** at `http://localhost:3000`
+3. **Click "Add Service"** button in the top navigation
+4. **Fill in service details:**
+   - Name: Display name for your service
+   - URL: The endpoint to monitor (e.g., https://example.com)
+   - Type: Service category (website, api, plex, etc.)
+   - Group: Organizational category (Production, Development, etc.)
+   - Interval: How often to check (30s - 1 hour)
+   - Description: Optional notes about the service
+5. **Click Save** - monitoring starts automatically!
+
+### Managing Services
+
+- **View Details**: Click any service card to see response time graphs and history
+- **Edit Service**: Click the edit icon on a service card
+- **Delete Service**: Click the delete icon (confirmation required)
+- **Enable/Disable**: Toggle monitoring without deleting the service
+
+### Customizing Your Dashboard
+
+- **Change Theme**: Click the theme dropdown in top navigation (11 themes available)
+- **Switch Language**: Click the language dropdown (EN/DE)
+- **User Settings**: Click user icon for authentication and preferences
+- **View Traffic**: Access the Traffic page for bandwidth monitoring (Plex services)
+
+### Docker Deployment
+
+See **[Docker Documentation](https://cyb3rgh05t.github.io/komandorr/getting-started/docker/)** for container deployment instructions.
+
+## 💾 Database & Storage
+
+### SQLite Database (v1.6.0+)
+
+Komandorr uses SQLite for efficient, reliable data storage:
+
+**Location:** `backend/data/komandorr.db`
+
+**Schema:**
+
+- `services` - Service configuration and current state
+- `response_history` - Response time measurements (up to 1000 points per service)
+- `traffic_history` - Bandwidth metrics (up to 1000 points per service)
+
+**Benefits:**
+
+- ✅ Fast queries with indexed lookups
+- ✅ Stores 10x more history than JSON (1000 vs 100 points)
+- ✅ Automatic data cleanup to prevent bloat
+- ✅ Better concurrent access handling
+- ✅ Single file, easy backups
+
+### Migrating from JSON (v1.5.x)
+
+If you're upgrading from an older version with `services.json`:
+
+```bash
+cd backend
+python migrate_to_sqlite.py
+```
+
+✅ The script automatically:
+
+- Reads all services from `services.json`
+- Creates SQLite database with proper schema
+- Imports all services with history preserved
+- Backs up original JSON as `services.json.backup`
+- No data loss - safe migration!
+
+**Example service data:**
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Service Name",
+    "url": "https://example.com",
+    "type": "website",
+    "group": "Production",
+    "interval": 60,
+    "description": "Description",
+    "enabled": true,
+    "status": "online",
+    "response_time": 125.5,
+    "last_check": "2025-11-13T10:30:00.123456+00:00",
+    "traffic": null,
+    "traffic_history": [],
+    "response_history": [
+      {
+        "timestamp": "2025-11-13T10:30:00.123456+00:00",
+        "response_time": 125.5
+      }
+    ]
+  }
+]
+```
 
 ## Authentication
 
@@ -168,45 +327,78 @@ ENABLE_AUTH=false
 
 Or disable it directly in the settings (when logged in).
 
-## Themes
+## 🎨 Themes & Localization
 
-- **Dark** (Default): Dark theme with gray tones
-- **Plex**: Orange Plex theme
-- **Jellyfin**: Purple Jellyfin theme
-- **Emby**: Green Emby theme
-- **Mind Stone**: Yellow theme
-- **Power Stone**: Magenta/Purple theme
-- **Reality Stone**: Red theme
-- **Soul Stone**: Orange theme
-- **Space Stone**: Blue theme
-- **Time Stone**: Green theme
-- **Seerr**: Indigo theme
+### Available Themes
 
-## Languages
+Komandorr includes 11 beautiful themes to match your preference:
 
-- English (en) - Default
-- German (de)
+| Theme                | Color Scheme   | Inspired By            |
+| -------------------- | -------------- | ---------------------- |
+| **Dark** 🌑          | Gray tones     | Default modern dark    |
+| **Plex** 🟠          | Orange/Yellow  | Plex Media Server      |
+| **Jellyfin** 🟣      | Purple/Violet  | Jellyfin Media         |
+| **Seerr** 🔵         | Indigo/Blue    | Overseerr/Jellyseerr   |
+| **Emby** 🟢          | Green          | Emby Media Server      |
+| **Mind Stone** 💛    | Yellow         | Marvel Infinity Stones |
+| **Power Stone** 💜   | Magenta/Purple | Marvel Infinity Stones |
+| **Reality Stone** ❤️ | Red            | Marvel Infinity Stones |
+| **Soul Stone** 🧡    | Orange         | Marvel Infinity Stones |
+| **Space Stone** 💙   | Blue           | Marvel Infinity Stones |
+| **Time Stone** 💚    | Green          | Marvel Infinity Stones |
 
-## Technologies
+### Languages
 
-### Backend
+- 🇬🇧 **English** (Default)
+- 🇩🇪 **German** (Deutsch)
+- 🌍 More languages coming soon!
 
-- FastAPI
-- Uvicorn
-- Pydantic
-- HTTPX
-- Python-dotenv
+Contribute translations at [GitHub Issues](https://github.com/cyb3rgh05t/komandorr/issues)
 
-### Frontend
+## 📚 Documentation
 
-- React 18
-- Vite 5
-- TailwindCSS
-- React Router DOM
-- i18next
-- Lucide React
-- React Hot Toast
+Comprehensive documentation is available at **[cyb3rgh05t.github.io/komandorr](https://cyb3rgh05t.github.io/komandorr/)**
 
-## Lizenz
+### Quick Links
 
-MIT
+- 📖 [Getting Started Guide](https://cyb3rgh05t.github.io/komandorr/getting-started/quickstart/)
+- ⚙️ [Configuration Options](https://cyb3rgh05t.github.io/komandorr/configuration/environment/)
+- 🐳 [Docker Deployment](https://cyb3rgh05t.github.io/komandorr/getting-started/docker/)
+- 🔌 [API Reference](https://cyb3rgh05t.github.io/komandorr/api/overview/)
+- 🐛 [Troubleshooting](https://cyb3rgh05t.github.io/komandorr/guides/troubleshooting/)
+- 🤝 [Contributing Guide](https://cyb3rgh05t.github.io/komandorr/guides/contributing/)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](https://cyb3rgh05t.github.io/komandorr/guides/contributing/) for details.
+
+### Ways to Contribute
+
+- 🐛 Report bugs via [GitHub Issues](https://github.com/cyb3rgh05t/komandorr/issues)
+- 💡 Suggest features or improvements
+- 🌍 Add translations for new languages
+- 🎨 Create new themes
+- 📖 Improve documentation
+- 💻 Submit pull requests
+
+## 📝 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Inspired by service monitoring tools like Uptime Kuma and Homer
+- UI design influenced by Sonarr, Radarr, and the \*arr family
+- Built with amazing open-source technologies
+
+---
+
+<div align="center">
+
+**Created with ❤️ by [cyb3rgh05t](https://github.com/cyb3rgh05t) for the Community**
+
+If you find this project useful, please consider giving it a ⭐!
+
+[Report Bug](https://github.com/cyb3rgh05t/komandorr/issues) · [Request Feature](https://github.com/cyb3rgh05t/komandorr/issues) · [Documentation](https://cyb3rgh05t.github.io/komandorr/)
+
+</div>
