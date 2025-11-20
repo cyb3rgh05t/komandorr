@@ -42,6 +42,9 @@ jobs:
           pip install --upgrade pip
           pip install -r docs/requirements.txt
 
+      - name: Copy CHANGELOG to docs
+        run: cp CHANGELOG.md docs/changelog.md
+
       - name: Build documentation
         run: mkdocs build --strict
 
