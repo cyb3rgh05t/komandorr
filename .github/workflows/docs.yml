@@ -43,7 +43,9 @@ jobs:
           pip install -r docs/requirements.txt
 
       - name: Copy CHANGELOG to docs
-        run: cp CHANGELOG.md docs/changelog.md
+        run: |
+          rm -f docs/changelog.md
+          cp CHANGELOG.md docs/changelog.md
 
       - name: Build documentation
         run: mkdocs build --strict
