@@ -71,4 +71,6 @@
     style="width: 32px; height: 32px"
   />
 </a>
-{% endblock %}
+{% endblock %} {% block content %} {% if page and page.file.src_path ==
+"changelog.md" %} {% set edit_url = "https://github.com/" ~ config.repo_name ~
+"/edit/main/CHANGELOG.md" %} {% endif %} {{ super() }} {% endblock %}
