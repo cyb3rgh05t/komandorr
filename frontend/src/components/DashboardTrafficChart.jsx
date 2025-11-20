@@ -129,18 +129,18 @@ const DashboardTrafficChart = ({
   );
 
   return (
-    <div className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-all">
+    <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-theme-primary/10 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-theme-primary" />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-theme-primary/10 rounded-lg">
+            <TrendingUp className="w-4 h-4 text-theme-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-theme-text">
+            <h2 className="text-base font-bold text-theme-text">
               {t("dashboard.trafficChart") || "Traffic Overview"}
             </h2>
-            <p className="text-xs text-theme-text-muted">
+            <p className="text-[10px] text-theme-text-muted">
               {activeServices.length} active{" "}
               {activeServices.length === 1 ? "service" : "services"}
             </p>
@@ -148,28 +148,28 @@ const DashboardTrafficChart = ({
         </div>
 
         {/* Toggle between Upload/Download & Refresh */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <div className="flex items-center bg-theme-hover border border-theme rounded-lg p-0.5">
             <button
               onClick={() => setChartType("download")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+              className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all flex items-center gap-1 ${
                 chartType === "download"
                   ? "bg-green-500/20 text-green-400 shadow-sm"
                   : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
-              <ArrowDown size={14} />
+              <ArrowDown size={12} />
               Download
             </button>
             <button
               onClick={() => setChartType("upload")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+              className={`px-2 py-1 text-[10px] font-medium rounded-md transition-all flex items-center gap-1 ${
                 chartType === "upload"
                   ? "bg-blue-500/20 text-blue-400 shadow-sm"
                   : "text-theme-text-muted hover:text-theme-text"
               }`}
             >
-              <ArrowUp size={14} />
+              <ArrowUp size={12} />
               Upload
             </button>
           </div>
@@ -177,11 +177,11 @@ const DashboardTrafficChart = ({
             <button
               onClick={onRefresh}
               disabled={refreshing}
-              className="p-2 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-lg transition-all disabled:opacity-50"
+              className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-lg transition-all disabled:opacity-50"
               title="Refresh traffic data"
             >
               <RefreshCw
-                size={16}
+                size={14}
                 className={`text-theme-primary ${
                   refreshing ? "animate-spin" : ""
                 }`}
@@ -192,13 +192,13 @@ const DashboardTrafficChart = ({
       </div>
 
       {/* Total Bandwidth Display */}
-      <div className="mb-4 p-3 bg-theme-hover/50 border border-theme rounded-lg">
+      <div className="mb-3 p-2 bg-theme-hover border border-theme rounded-lg">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wide">
+          <span className="text-[10px] font-medium text-theme-text-muted uppercase tracking-wide">
             Total {chartType === "upload" ? "Upload" : "Download"}
           </span>
           <span
-            className={`text-xl font-bold ${
+            className={`text-lg font-bold ${
               chartType === "upload" ? "text-blue-400" : "text-green-400"
             }`}
           >
@@ -208,7 +208,7 @@ const DashboardTrafficChart = ({
       </div>
 
       {/* Chart */}
-      <div className="relative h-56 bg-[#0a0e1a] rounded-lg border border-gray-800/50 overflow-hidden mb-4 group">
+      <div className="relative h-40 bg-[#0a0e1a] rounded-lg border border-gray-800/50 overflow-hidden mb-3 group">
         {/* Y-axis labels */}
         <div className="absolute left-0 top-0 bottom-0 w-12 flex flex-col justify-between py-3 px-1.5 text-[10px] text-gray-500 font-mono pointer-events-none z-10">
           <span>{formatBandwidth(max)}</span>
@@ -291,26 +291,26 @@ const DashboardTrafficChart = ({
       </div>
 
       {/* Legend */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-semibold text-theme-text-muted uppercase tracking-wide">
+      <div className="space-y-1.5">
+        <h3 className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
           Active Services
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5">
           {servicePaths.map((service, index) => (
             <div
               key={index}
-              className="flex items-center gap-2.5 px-3 py-2 bg-theme-hover/50 hover:bg-theme-hover border border-theme hover:border-theme-primary/30 rounded-lg transition-all group"
+              className="flex items-center gap-2 px-2 py-1.5 bg-theme-hover hover:bg-theme-hover border border-theme hover:border-theme-primary/30 rounded-lg transition-all group"
             >
               <div
-                className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform"
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform"
                 style={{ backgroundColor: service.color }}
               />
               <div className="flex-1 min-w-0">
-                <div className="text-xs text-theme-text truncate font-medium mb-0.5">
+                <div className="text-[10px] text-theme-text truncate font-medium mb-0.5">
                   {service.serviceName}
                 </div>
                 <div
-                  className="text-xs font-mono font-semibold"
+                  className="text-[10px] font-mono font-semibold"
                   style={{ color: service.color }}
                 >
                   {formatBandwidth(service.currentValue)}

@@ -1,14 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/context/ThemeContext";
 import { useToast } from "@/context/ToastContext";
-import {
-  Palette,
-  Globe,
-  Shield,
-  AlertCircle,
-  Server,
-  CheckCircle,
-} from "lucide-react";
+import { Shield, AlertCircle, Server, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   testPlexConnection,
@@ -17,8 +9,7 @@ import {
 } from "@/services/plexService";
 
 export default function Settings() {
-  const { t, i18n } = useTranslation();
-  const { theme, setTheme, themes } = useTheme();
+  const { t } = useTranslation();
   const toast = useToast();
 
   // Auth state
@@ -426,76 +417,6 @@ export default function Settings() {
               <p>{t("plex.validationFailedMessage")}</p>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Language Settings */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-          <Globe className="w-6 h-6 text-theme-primary" />
-          {t("settings.language")}
-        </h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => i18n.changeLanguage("en")}
-            className={`
-              p-4 rounded-lg border-2 transition-all
-              ${
-                i18n.language === "en"
-                  ? "border-theme-primary bg-theme-primary/10"
-                  : "border-theme hover:border-theme-primary/50 bg-theme-hover"
-              }
-            `}
-          >
-            <div className="text-sm font-medium text-theme-text text-center">
-              {t("settings.languages.en")}
-            </div>
-          </button>
-          <button
-            onClick={() => i18n.changeLanguage("de")}
-            className={`
-              p-4 rounded-lg border-2 transition-all
-              ${
-                i18n.language === "de"
-                  ? "border-theme-primary bg-theme-primary/10"
-                  : "border-theme hover:border-theme-primary/50 bg-theme-hover"
-              }
-            `}
-          >
-            <div className="text-sm font-medium text-theme-text text-center">
-              {t("settings.languages.de")}
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Theme Settings */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-          <Palette className="w-6 h-6 text-theme-primary" />
-          {t("settings.theme")}
-        </h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {themes.map((themeName) => (
-            <button
-              key={themeName}
-              onClick={() => setTheme(themeName)}
-              className={`
-                p-4 rounded-lg border-2 transition-all
-                ${
-                  theme === themeName
-                    ? "border-theme-primary bg-theme-primary/10"
-                    : "border-theme hover:border-theme-primary/50 bg-theme-hover"
-                }
-              `}
-            >
-              <div className="text-sm font-medium text-theme-text text-center">
-                {t(`settings.themes.${themeName}`)}
-              </div>
-            </button>
-          ))}
         </div>
       </div>
     </div>

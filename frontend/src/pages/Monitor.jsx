@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Loader2,
   ExternalLink,
+  AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
@@ -218,15 +219,16 @@ export default function Monitor() {
 
     // Set initial tab if not set
     if (!activeTab && groupNames.length > 0) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
     // Only reset tab if current tab no longer exists
     else if (
       activeTab &&
+      activeTab !== "ALL" &&
       !groupNames.includes(activeTab) &&
       groupNames.length > 0
     ) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
   }, [services, searchTerm, activeTab]);
 
@@ -263,101 +265,6 @@ export default function Monitor() {
     </div>
   );
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Stats Cards Loading */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
-            >
-              <div className="space-y-3 animate-pulse">
-                <div className="h-4 bg-theme-hover rounded w-24" />
-                <div className="h-8 bg-theme-hover rounded w-16" />
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Service Cards Loading */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <LoadingServiceCard />
-          <LoadingServiceCard />
-          <LoadingServiceCard />
-          <LoadingServiceCard />
-        </div>
-      </div>
-    );
-  }
-
-  // Filter services based on search term, active tab, and status filter
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const serviceGroup = service.group || "Ungrouped";
-    const matchesTab = activeTab ? serviceGroup === activeTab : true;
-
-    const matchesStatus =
-      statusFilter === null || service.status === statusFilter;
-
-    return matchesSearch && matchesTab && matchesStatus;
-  });
-
-  // Get all unique groups for tabs
-  const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
-
-  // Pagination
-  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedServices = filteredServices.slice(startIndex, endIndex);
-
-  const stats = {
-    total: services.length,
-    online: services.filter((s) => s.status === "online").length,
-    offline: services.filter((s) => s.status === "offline").length,
-    problem: services.filter((s) => s.status === "problem").length,
-    avgResponseTime:
-      services.filter((s) => s.response_time).length > 0
-        ? (
-            services
-              .filter((s) => s.response_time)
-              .reduce((acc, s) => acc + s.response_time, 0) /
-            services.filter((s) => s.response_time).length
-          ).toFixed(2)
-        : "N/A",
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "online":
-        return "text-green-500";
-      case "offline":
-        return "text-red-500";
-      case "problem":
-        return "text-yellow-500";
-      default:
-        return "text-gray-500";
-    }
-  };
-
-  const getStatusBg = (status) => {
-    switch (status) {
-      case "online":
-        return "bg-green-500/10";
-      case "offline":
-        return "bg-red-500/10";
-      case "problem":
-        return "bg-yellow-500/10";
-      default:
-        return "bg-gray-500/10";
-    }
-  };
-
   const formatLastCheck = (lastCheck) => {
     if (!lastCheck) return "Never";
     const date = new Date(lastCheck);
@@ -370,502 +277,662 @@ export default function Monitor() {
     return `${Math.floor(diff / 86400)}d ago`;
   };
 
+  // Calculate stats
+  const stats = {
+    total: services.length,
+    online: services.filter((s) => s.status === "online").length,
+    offline: services.filter((s) => s.status === "offline").length,
+    problem: services.filter(
+      (s) => s.status === "online" && s.response_time > 1000
+    ).length,
+    avgResponseTime:
+      services.length > 0
+        ? Math.round(
+            services.reduce((sum, s) => sum + (s.response_time || 0), 0) /
+              services.length
+          )
+        : 0,
+  };
+
+  // Filter services based on search and status
+  const filteredServices = services.filter((service) => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      service.name.toLowerCase().includes(searchLower) ||
+      service.url.toLowerCase().includes(searchLower) ||
+      service.type.toLowerCase().includes(searchLower) ||
+      (service.group && service.group.toLowerCase().includes(searchLower));
+
+    const matchesStatus =
+      statusFilter === null ||
+      (statusFilter === "online" && service.status === "online") ||
+      (statusFilter === "offline" && service.status === "offline") ||
+      (statusFilter === "problem" &&
+        service.status === "online" &&
+        service.response_time > 1000);
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Group services
+  const groupedServices = filteredServices.reduce((acc, service) => {
+    const groupName = service.group || "Ungrouped";
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(service);
+    return acc;
+  }, {});
+
+  const allGroups = Object.keys(groupedServices);
+  const servicesInActiveGroup =
+    activeTab && activeTab !== "ALL"
+      ? groupedServices[activeTab] || []
+      : filteredServices;
+
+  // Pagination
+  const totalPages = Math.ceil(servicesInActiveGroup.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedServices = servicesInActiveGroup.slice(startIndex, endIndex);
+
+  // Helper functions for status styling
+  const getStatusBg = (status) => {
+    switch (status) {
+      case "online":
+        return "bg-green-500/10";
+      case "offline":
+        return "bg-red-500/10";
+      default:
+        return "bg-gray-500/10";
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "online":
+        return "text-green-500";
+      case "offline":
+        return "text-red-500";
+      default:
+        return "text-gray-500";
+    }
+  };
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Search Bar & Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
-          />
-        </div>
+      {loading ? (
+        <>
+          {/* Stats Cards Loading */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
+              >
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-4 bg-theme-hover rounded w-24" />
+                  <div className="h-8 bg-theme-hover rounded w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Service Cards Loading */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <LoadingServiceCard />
+            <LoadingServiceCard />
+            <LoadingServiceCard />
+            <LoadingServiceCard />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Search Bar & Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="relative w-full sm:max-w-xs">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+              />
+            </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw
-              size={16}
-              className={`text-theme-primary transition-transform duration-500 ${
-                refreshing ? "animate-spin" : ""
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  size={16}
+                  className={`text-theme-primary transition-transform duration-500 ${
+                    refreshing ? "animate-spin" : ""
+                  }`}
+                />
+
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <button
+              onClick={() => setStatusFilter(null)}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === null
+                  ? "border-theme-primary"
+                  : "border-theme hover:border-theme-primary/50"
               }`}
-            />
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    TOTAL
+                  </div>
+                  <div className="text-3xl font-bold text-theme-text">
+                    {stats.total}
+                  </div>
+                </div>
+                <div className="text-theme-text-muted opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <rect x="3" y="4" width="18" height="4" rx="1" />
+                    <rect x="3" y="10" width="18" height="4" rx="1" />
+                    <rect x="3" y="16" width="18" height="4" rx="1" />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => setStatusFilter("online")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "online"
+                  ? "border-green-500"
+                  : "border-theme hover:border-green-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    ONLINE
+                  </div>
+                  <div className="text-3xl font-bold text-green-500">
+                    {stats.online}
+                  </div>
+                </div>
+                <div className="text-green-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => setStatusFilter("offline")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "offline"
+                  ? "border-red-500"
+                  : "border-theme hover:border-red-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    OFFLINE
+                  </div>
+                  <div className="text-3xl font-bold text-red-500">
+                    {stats.offline}
+                  </div>
+                </div>
+                <div className="text-red-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => setStatusFilter("problem")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "problem"
+                  ? "border-yellow-500"
+                  : "border-theme hover:border-yellow-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    PROBLEM
+                    <div className="text-[9px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5 font-normal">
+                      Slow (&gt;1s)
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-yellow-500">
+                    {stats.problem}
+                  </div>
+                </div>
+                <div className="text-yellow-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-lg hover:border-blue-500/50">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    AVG RESPONSE
+                  </div>
+                  <div className="text-3xl font-bold text-blue-500">
+                    {stats.avgResponseTime}
+                    <span className="text-sm text-blue-400 ml-1">ms</span>
+                  </div>
+                </div>
+                <div className="text-blue-500 opacity-60">
+                  <Zap className="w-10 h-10" strokeWidth={1} />
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button
-          onClick={() => setStatusFilter(null)}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === null
-              ? "border-theme-primary"
-              : "border-theme hover:border-theme-primary/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                TOTAL
-              </div>
-              <div className="text-3xl font-bold text-theme-text">
-                {stats.total}
-              </div>
-            </div>
-            <div className="text-theme-text-muted opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <rect x="3" y="4" width="18" height="4" rx="1" />
-                <rect x="3" y="10" width="18" height="4" rx="1" />
-                <rect x="3" y="16" width="18" height="4" rx="1" />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setStatusFilter("online")}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === "online"
-              ? "border-green-500"
-              : "border-theme hover:border-green-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                ONLINE
-              </div>
-              <div className="text-3xl font-bold text-green-500">
-                {stats.online}
-              </div>
-            </div>
-            <div className="text-green-500 opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setStatusFilter("offline")}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === "offline"
-              ? "border-red-500"
-              : "border-theme hover:border-red-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                OFFLINE
-              </div>
-              <div className="text-3xl font-bold text-red-500">
-                {stats.offline}
-              </div>
-            </div>
-            <div className="text-red-500 opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setStatusFilter("problem")}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === "problem"
-              ? "border-yellow-500"
-              : "border-theme hover:border-yellow-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                PROBLEM
-              </div>
-              <div className="text-3xl font-bold text-yellow-500">
-                {stats.problem}
-              </div>
-            </div>
-            <div className="text-yellow-500 opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* Group Tabs */}
-      {allGroups.length > 1 && (
-        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {allGroups.map((groupName) => {
-              const groupServices = services.filter(
-                (s) => (s.group || "Ungrouped") === groupName
-              );
-              return (
+          {/* Group Tabs */}
+          {allGroups.length > 0 && (
+            <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+              <div className="flex gap-2 min-w-max">
                 <button
-                  key={groupName}
                   onClick={() => {
-                    setActiveTab(groupName);
-                    setCurrentPage(1); // Reset to first page when changing tabs
+                    setActiveTab("ALL");
+                    setCurrentPage(1);
                   }}
                   className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                    activeTab === groupName
-                      ? "bg-theme-primary text-white shadow-md"
+                    activeTab === "ALL"
+                      ? "bg-theme-hover text-white shadow-md"
                       : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                   }`}
                 >
-                  {groupName}
+                  ALL
                   <span
                     className={`ml-2 text-xs ${
-                      activeTab === groupName
+                      activeTab === "ALL"
                         ? "text-white/80"
                         : "text-theme-text-muted"
                     }`}
                   >
-                    ({groupServices.length})
+                    ({filteredServices.length})
                   </span>
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                {allGroups.map((groupName) => {
+                  const groupServices = groupedServices[groupName] || [];
+                  return (
+                    <button
+                      key={groupName}
+                      onClick={() => {
+                        setActiveTab(groupName);
+                        setCurrentPage(1); // Reset to first page when changing tabs
+                      }}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                        activeTab === groupName
+                          ? "bg-theme-hover text-white shadow-md"
+                          : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                      }`}
+                    >
+                      {groupName}
+                      <span
+                        className={`ml-2 text-xs ${
+                          activeTab === groupName
+                            ? "text-white/80"
+                            : "text-theme-text-muted"
+                        }`}
+                      >
+                        ({groupServices.length})
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-      {/* Services List */}
-      <div className="space-y-4">
-        {paginatedServices.length === 0 ? (
-          <div className="text-center py-12 bg-theme-card rounded-lg border border-theme shadow-sm">
-            {statusFilter !== null ? (
-              <>
-                <div className="text-6xl mb-4">
-                  {statusFilter === "online" && "🟢"}
-                  {statusFilter === "offline" && "✓"}
-                  {statusFilter === "problem" && "✓"}
-                </div>
-                <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                  {statusFilter === "online" && "No online services"}
-                  {statusFilter === "offline" && "No offline services"}
-                  {statusFilter === "problem" && "No services with problems"}
-                </h3>
-                <p className="text-theme-text-muted">
-                  {statusFilter === "online" &&
-                    "Currently no services are online"}
-                  {statusFilter === "offline" &&
-                    "All services are operational!"}
-                  {statusFilter === "problem" &&
-                    "Everything is running smoothly!"}
-                </p>
-              </>
+          {/* Services List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {paginatedServices.length === 0 ? (
+              <div className="text-center py-12 bg-theme-card rounded-lg border border-theme shadow-sm">
+                {statusFilter !== null ? (
+                  <>
+                    <div className="text-6xl mb-4">
+                      {statusFilter === "online" && "🟢"}
+                      {statusFilter === "offline" && "✓"}
+                      {statusFilter === "problem" && "✓"}
+                    </div>
+                    <h3 className="text-xl font-semibold text-theme-primary mb-2">
+                      {statusFilter === "online" && "No online services"}
+                      {statusFilter === "offline" && "No offline services"}
+                      {statusFilter === "problem" &&
+                        "No services with problems"}
+                    </h3>
+                    <p className="text-theme-text-muted">
+                      {statusFilter === "online" &&
+                        "Currently no services are online"}
+                      {statusFilter === "offline" &&
+                        "All services are operational!"}
+                      {statusFilter === "problem" &&
+                        "Everything is running smoothly!"}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Server
+                      size={48}
+                      className="mx-auto mb-4 text-theme-text-muted"
+                    />
+                    <h3 className="text-lg font-semibold text-theme-text mb-2">
+                      {searchTerm
+                        ? "No matching services"
+                        : t("dashboard.noServices")}
+                    </h3>
+                    <p className="text-theme-text-muted mb-4">
+                      {searchTerm
+                        ? `No services found matching "${searchTerm}"`
+                        : "No services have been added yet."}
+                    </p>
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/80 transition-colors"
+                      >
+                        Clear Search
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             ) : (
               <>
-                <Server
-                  size={48}
-                  className="mx-auto mb-4 text-theme-text-muted"
-                />
-                <h3 className="text-lg font-semibold text-theme-text mb-2">
-                  {searchTerm
-                    ? "No matching services"
-                    : t("dashboard.noServices")}
-                </h3>
-                <p className="text-theme-text-muted mb-4">
-                  {searchTerm
-                    ? `No services found matching "${searchTerm}"`
-                    : "No services have been added yet."}
-                </p>
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/80 transition-colors"
+                {paginatedServices.map((service) => (
+                  <div
+                    key={service.id}
+                    className="bg-theme-card border border-theme rounded-lg p-4  transition-all"
                   >
-                    Clear Search
-                  </button>
-                )}
+                    <div className="space-y-3">
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {service.icon && (
+                            <div className="w-10 h-10 rounded-lg bg-theme-hover flex items-center justify-center overflow-hidden border border-theme flex-shrink-0">
+                              <img
+                                src={service.icon}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg></div>`;
+                                }}
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-theme-text mb-2 truncate">
+                              {service.name}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
+                                <Server size={12} />
+                                {service.type}
+                              </span>
+                              <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
+                                <Clock size={12} />
+                                {formatLastCheck(service.last_check)}
+                              </span>
+                              <a
+                                href={service.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-md text-xs font-medium text-theme-text-muted hover:text-theme-primary transition-all group/link"
+                              >
+                                <span className="truncate max-w-[200px]">
+                                  {service.url.replace(/^https?:\/\//, "")}
+                                </span>
+                                <ExternalLink
+                                  size={11}
+                                  className="flex-shrink-0 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform"
+                                />
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {service.status === "online" &&
+                            service.response_time > 1000 && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 text-xs font-bold uppercase tracking-wider">
+                                <AlertTriangle size={12} />
+                                Slow
+                              </span>
+                            )}
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider ${getStatusBg(
+                              service.status
+                            )} ${getStatusColor(service.status)} border ${
+                              service.status === "online"
+                                ? "border-green-500/30"
+                                : service.status === "offline"
+                                ? "border-red-500/30"
+                                : "border-yellow-500/30"
+                            }`}
+                          >
+                            <span className="w-2 h-2 rounded-full bg-current" />
+                            {service.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Response Time Stats */}
+                      {service.response_time && (
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <TrendingUp className="w-3 h-3 text-blue-400" />
+                              <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">
+                                Current Response Time
+                              </p>
+                            </div>
+                            <p className="text-xl font-bold text-blue-500">
+                              {service.response_time.toFixed(2)} ms
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Chart Section */}
+                      <div className="bg-theme-hover border border-theme rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-1.5 bg-theme-primary/20 rounded">
+                            <TrendingUp
+                              size={14}
+                              className="text-theme-primary"
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
+                            Response Time History
+                          </span>
+                        </div>
+
+                        {/* Response Time Chart */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-green-500 font-medium flex items-center gap-1">
+                              <TrendingUp size={12} />
+                              Response Time
+                            </span>
+                            {(() => {
+                              const history = (
+                                service.response_history || []
+                              ).map((point) => point.response_time);
+                              const displayData =
+                                history.length > 0
+                                  ? history
+                                  : service.response_time
+                                  ? [service.response_time]
+                                  : [];
+
+                              if (displayData.length > 0) {
+                                const avg =
+                                  displayData.reduce((a, b) => a + b, 0) /
+                                  displayData.length;
+                                const max = Math.max(...displayData);
+                                return (
+                                  <span className="text-xs text-theme-text-muted">
+                                    Avg: {avg.toFixed(1)} ms • Max:{" "}
+                                    {max.toFixed(1)} ms
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <MiniChart
+                            serviceId={service.id}
+                            data={(() => {
+                              const history = (
+                                service.response_history || []
+                              ).map((point) => point.response_time);
+                              return history.length > 0
+                                ? history
+                                : service.response_time
+                                ? [service.response_time]
+                                : [];
+                            })()}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </>
             )}
           </div>
-        ) : (
-          <>
-            {paginatedServices.map((service) => (
-              <div
-                key={service.id}
-                className="bg-theme-card border border-theme rounded-lg p-4  transition-all"
-              >
-                <div className="space-y-3">
-                  {/* Header Row */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {service.icon && (
-                        <div className="w-10 h-10 rounded-lg bg-theme-hover flex items-center justify-center overflow-hidden border border-theme flex-shrink-0">
-                          <img
-                            src={service.icon}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                              e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg></div>`;
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-theme-text mb-2 truncate">
-                          {service.name}
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
-                            <Server size={12} />
-                            {service.type}
-                          </span>
-                          <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
-                            <Clock size={12} />
-                            {formatLastCheck(service.last_check)}
-                          </span>
-                          <a
-                            href={service.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-md text-xs font-medium text-theme-text-muted hover:text-theme-primary transition-all group/link"
-                          >
-                            <span className="truncate max-w-[200px]">
-                              {service.url.replace(/^https?:\/\//, "")}
-                            </span>
-                            <ExternalLink
-                              size={11}
-                              className="flex-shrink-0 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform"
-                            />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider ${getStatusBg(
-                          service.status
-                        )} ${getStatusColor(service.status)} border ${
-                          service.status === "online"
-                            ? "border-green-500/30"
-                            : service.status === "offline"
-                            ? "border-red-500/30"
-                            : "border-yellow-500/30"
-                        }`}
-                      >
-                        <span className="w-2 h-2 rounded-full bg-current" />
-                        {service.status}
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Response Time Stats */}
-                  {service.response_time && (
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-3">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <TrendingUp className="w-3 h-3 text-blue-400" />
-                          <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">
-                            Current Response Time
-                          </p>
-                        </div>
-                        <p className="text-xl font-bold text-blue-500">
-                          {service.response_time.toFixed(2)} ms
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Chart Section */}
-                  <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-1.5 bg-theme-primary/20 rounded">
-                        <TrendingUp size={14} className="text-theme-primary" />
-                      </div>
-                      <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
-                        Response Time History
-                      </span>
-                    </div>
-
-                    {/* Response Time Chart */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-green-500 font-medium flex items-center gap-1">
-                          <TrendingUp size={12} />
-                          Response Time
-                        </span>
-                        {(() => {
-                          const history = (service.response_history || []).map(
-                            (point) => point.response_time
-                          );
-                          const displayData =
-                            history.length > 0
-                              ? history
-                              : service.response_time
-                              ? [service.response_time]
-                              : [];
-
-                          if (displayData.length > 0) {
-                            const avg =
-                              displayData.reduce((a, b) => a + b, 0) /
-                              displayData.length;
-                            const max = Math.max(...displayData);
-                            return (
-                              <span className="text-xs text-theme-text-muted">
-                                Avg: {avg.toFixed(1)} ms • Max: {max.toFixed(1)}{" "}
-                                ms
-                              </span>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                      <MiniChart
-                        serviceId={service.id}
-                        data={(() => {
-                          const history = (service.response_history || []).map(
-                            (point) => point.response_time
-                          );
-                          return history.length > 0
-                            ? history
-                            : service.response_time
-                            ? [service.response_time]
-                            : [];
-                        })()}
-                      />
-                    </div>
-                  </div>
-                </div>
+          {/* Pagination */}
+          {servicesInActiveGroup.length > itemsPerPage && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+              <div className="text-sm font-medium text-theme-text-muted">
+                Showing{" "}
+                <span className="text-theme-text font-semibold">
+                  {startIndex + 1}
+                </span>{" "}
+                to{" "}
+                <span className="text-theme-text font-semibold">
+                  {Math.min(endIndex, servicesInActiveGroup.length)}
+                </span>{" "}
+                of{" "}
+                <span className="text-theme-text font-semibold">
+                  {servicesInActiveGroup.length}
+                </span>{" "}
+                services
               </div>
-            ))}
-          </>
-        )}
-      </div>
 
-      {/* Pagination */}
-      {filteredServices.length > itemsPerPage && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
-          <div className="text-sm font-medium text-theme-text-muted">
-            Showing{" "}
-            <span className="text-theme-text font-semibold">
-              {startIndex + 1}
-            </span>{" "}
-            to{" "}
-            <span className="text-theme-text font-semibold">
-              {Math.min(endIndex, filteredServices.length)}
-            </span>{" "}
-            of{" "}
-            <span className="text-theme-text font-semibold">
-              {filteredServices.length}
-            </span>{" "}
-            services
-          </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                  title="Previous page"
+                >
+                  <ChevronLeft size={20} />
+                </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-              title="Previous page"
-            >
-              <ChevronLeft size={20} />
-            </button>
+                <div className="flex items-center gap-1.5">
+                  {[...Array(totalPages)].map((_, index) => {
+                    const page = index + 1;
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                            currentPage === page
+                              ? "bg-theme-primary text-white shadow-md scale-105"
+                              : "bg-theme-hover hover:bg-theme-primary/20 border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary/50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="text-theme-text-muted px-2">
+                          •••
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
 
-            <div className="flex items-center gap-1.5">
-              {[...Array(totalPages)].map((_, index) => {
-                const page = index + 1;
-                // Show first page, last page, current page, and pages around current
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
-                        currentPage === page
-                          ? "bg-theme-primary text-white shadow-md scale-105"
-                          : "bg-theme-hover hover:bg-theme-primary/20 border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary/50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                } else if (
-                  page === currentPage - 2 ||
-                  page === currentPage + 2
-                ) {
-                  return (
-                    <span key={page} className="text-theme-text-muted px-2">
-                      •••
-                    </span>
-                  );
-                }
-                return null;
-              })}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                  title="Next page"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
             </div>
-
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              disabled={currentPage === totalPages}
-              className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-              title="Next page"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );

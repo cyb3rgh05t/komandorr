@@ -5,10 +5,10 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "services": "Dienste",
-    "monitor": "Monitor",
-    "traffic": "Traffic",
-    "vodStreams": "VOD Streams",
+    "services": "Server",
+    "monitor": "Response Monitor",
+    "traffic": "Traffic Monitor",
+    "vodStreams": "VOD Monitor",
     "settings": "Einstellungen",
     "about": "Über"
   },

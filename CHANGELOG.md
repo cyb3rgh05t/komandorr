@@ -1,5 +1,73 @@
 # CHANGELOG.md
 
+# [1.7.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.6.0...v1.7.0) (2025-11-20)
+
+### Features
+
+• **ui: 4-column grid layout**
+◦ Service cards now display in 4 columns on large screens (xl:grid-cols-4)
+◦ Applied to Dashboard, Services, Monitor, and Traffic pages
+◦ Improved information density and screen space utilization
+
+• **ui: compact service cards**
+◦ Reduced padding, margins, and font sizes across all service cards
+◦ ServiceCard: p-6→p-4, text-lg→text-base, optimized spacing
+◦ Traffic cards: p-6→p-4, stats padding p-3→p-2, text-xl→text-base
+◦ More services visible on screen with less scrolling
+
+• **ui: problem badges on service cards**
+◦ Added "Slow" badge to services with response_time > 1000ms
+◦ Yellow warning badge displays on Dashboard, Services, and Monitor pages
+◦ Visual indicator for performance issues alongside status badges
+
+• **monitoring: average response time card**
+◦ Added cumulative average response time stat card to Monitor page
+◦ Displays aggregated response time across all services
+◦ Blue color scheme with Zap icon, consistent with Dashboard
+
+• **navigation: clickable stats cards**
+◦ Dashboard stats cards now navigate to relevant pages on click
+◦ Upload/Download/Total Transfer → Traffic page
+◦ Avg Response/Active (5min) → Monitor page  
+◦ VOD Streams → VOD Monitor page
+◦ All cards have cursor-pointer for better UX
+
+• **i18n: updated navigation labels**
+◦ "Services" → "Servers"
+◦ "Monitor" → "Response Monitor"
+◦ "Traffic" → "Traffic Monitor"
+◦ "VOD Streams" → "VOD Monitor"
+◦ Updated in both English and German translations
+
+### Changed
+
+• **ui: download color scheme**
+◦ Changed download traffic color from indigo to green
+◦ Upload remains blue for better visual distinction
+◦ Applied across Dashboard total transfer card
+
+• **settings: removed duplicate controls**
+◦ Removed theme and language settings from Settings page
+◦ Settings now accessible only via navbar dropdowns
+◦ Cleaner settings page focused on core configuration
+
+### Fixed
+
+• **dashboard: problem card filtering**
+◦ Fixed problem filter to correctly check response_time > 1000ms
+◦ Previously only checked status === "problem"
+◦ Now properly filters services with slow response times
+
+• **traffic: tab filtering**
+◦ Added "ALL" tab to Traffic, Monitor, Services, and Dashboard
+◦ Fixed tab filtering to actually filter services by selected tab
+◦ Tab counts now accurate and filtering works as expected
+
+• **services: missing variable errors**
+◦ Fixed groupedServices undefined error in Services.jsx
+◦ Added missing servicesInActiveGroup calculation in Traffic.jsx
+◦ Resolved all console errors related to undefined variables
+
 # [1.6.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.5.8...v1.6.0) (2025-11-14)
 
 ### Features

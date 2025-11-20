@@ -88,15 +88,16 @@ export default function Services() {
 
     // Set initial tab if not set
     if (!activeTab && groupNames.length > 0) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
     // Only reset tab if current tab no longer exists
     else if (
       activeTab &&
+      activeTab !== "ALL" &&
       !groupNames.includes(activeTab) &&
       groupNames.length > 0
     ) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
   }, [services, searchTerm, activeTab]);
 
@@ -197,33 +198,6 @@ export default function Services() {
     </div>
   );
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Stats Cards Loading */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
-            >
-              <div className="space-y-3 animate-pulse">
-                <div className="h-4 bg-theme-hover rounded w-24" />
-                <div className="h-8 bg-theme-hover rounded w-16" />
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Service Cards Loading */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[...Array(6)].map((_, i) => (
-            <LoadingServiceCard key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // Filter services based on search term, active tab, and status filter
   const filteredServices = services.filter((service) => {
     const matchesSearch =
@@ -232,13 +206,22 @@ export default function Services() {
       service.type.toLowerCase().includes(searchTerm.toLowerCase());
 
     const serviceGroup = service.group || "Ungrouped";
-    const matchesTab = activeTab ? serviceGroup === activeTab : true;
+    const matchesTab =
+      activeTab && activeTab !== "ALL" ? serviceGroup === activeTab : true;
 
     const matchesStatus =
       statusFilter === null || service.status === statusFilter;
 
     return matchesSearch && matchesTab && matchesStatus;
   });
+
+  // Group services for tab counts
+  const groupedServices = services.reduce((acc, service) => {
+    const groupName = service.group || "Ungrouped";
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(service);
+    return acc;
+  }, {});
 
   // Get all unique groups for tabs
   const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
@@ -247,286 +230,338 @@ export default function Services() {
     total: services.length,
     online: services.filter((s) => s.status === "online").length,
     offline: services.filter((s) => s.status === "offline").length,
-    problem: services.filter((s) => s.status === "problem").length,
+    problem: services.filter(
+      (s) => s.status === "online" && s.response_time > 1000
+    ).length,
   };
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Search Bar & Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div className="relative w-full sm:w-auto sm:min-w-[300px]">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
-          />
-        </div>
+      {loading ? (
+        <>
+          {/* Stats Cards Loading */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
+              >
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-4 bg-theme-hover rounded w-24" />
+                  <div className="h-8 bg-theme-hover rounded w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Service Cards Loading */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => (
+              <LoadingServiceCard key={i} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Search Bar & Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="relative w-full sm:w-auto sm:min-w-[300px]">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+              />
+            </div>
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
-          >
-            <RefreshCw
-              size={16}
-              className={`text-theme-primary transition-transform duration-500 ${
-                refreshing ? "animate-spin" : ""
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+              >
+                <RefreshCw
+                  size={16}
+                  className={`text-theme-primary transition-transform duration-500 ${
+                    refreshing ? "animate-spin" : ""
+                  }`}
+                />
+                <span className="text-xs sm:text-sm">
+                  {t("service.checkNow")}
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  setEditingService(null);
+                  setShowModal(true);
+                }}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
+              >
+                <Plus size={16} className="text-theme-primary" />
+                <span className="text-xs sm:text-sm">
+                  {t("dashboard.addService")}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button
+              onClick={() => setStatusFilter(null)}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === null
+                  ? "border-theme-primary"
+                  : "border-theme hover:border-theme-primary/50"
               }`}
-            />
-            <span className="text-xs sm:text-sm">{t("service.checkNow")}</span>
-          </button>
-          <button
-            onClick={() => {
-              setEditingService(null);
-              setShowModal(true);
-            }}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
-          >
-            <Plus size={16} className="text-theme-primary" />
-            <span className="text-xs sm:text-sm">
-              {t("dashboard.addService")}
-            </span>
-          </button>
-        </div>
-      </div>
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    TOTAL
+                  </div>
+                  <div className="text-3xl font-bold text-theme-text">
+                    {stats.total}
+                  </div>
+                </div>
+                <div className="text-theme-text-muted opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <rect x="3" y="4" width="18" height="4" rx="1" />
+                    <rect x="3" y="10" width="18" height="4" rx="1" />
+                    <rect x="3" y="16" width="18" height="4" rx="1" />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => setStatusFilter("online")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "online"
+                  ? "border-green-500"
+                  : "border-theme hover:border-green-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    ONLINE
+                  </div>
+                  <div className="text-3xl font-bold text-green-500">
+                    {stats.online}
+                  </div>
+                </div>
+                <div className="text-green-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => setStatusFilter("offline")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "offline"
+                  ? "border-red-500"
+                  : "border-theme hover:border-red-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    OFFLINE
+                  </div>
+                  <div className="text-3xl font-bold text-red-500">
+                    {stats.offline}
+                  </div>
+                </div>
+                <div className="text-red-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => setStatusFilter("problem")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+                statusFilter === "problem"
+                  ? "border-yellow-500"
+                  : "border-theme hover:border-yellow-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-left flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                    PROBLEM
+                    <div className="text-[9px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5 font-normal">
+                      Slow (&gt;1s)
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-yellow-500">
+                    {stats.problem}
+                  </div>
+                </div>
+                <div className="text-yellow-500 opacity-60">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+          </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button
-          onClick={() => setStatusFilter(null)}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === null
-              ? "border-theme-primary"
-              : "border-theme hover:border-theme-primary/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                TOTAL
-              </div>
-              <div className="text-3xl font-bold text-theme-text">
-                {stats.total}
-              </div>
-            </div>
-            <div className="text-theme-text-muted opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <rect x="3" y="4" width="18" height="4" rx="1" />
-                <rect x="3" y="10" width="18" height="4" rx="1" />
-                <rect x="3" y="16" width="18" height="4" rx="1" />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setStatusFilter("online")}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === "online"
-              ? "border-green-500"
-              : "border-theme hover:border-green-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                ONLINE
-              </div>
-              <div className="text-3xl font-bold text-green-500">
-                {stats.online}
-              </div>
-            </div>
-            <div className="text-green-500 opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setStatusFilter("offline")}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === "offline"
-              ? "border-red-500"
-              : "border-theme hover:border-red-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                OFFLINE
-              </div>
-              <div className="text-3xl font-bold text-red-500">
-                {stats.offline}
-              </div>
-            </div>
-            <div className="text-red-500 opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <button
-          onClick={() => setStatusFilter("problem")}
-          className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-            statusFilter === "problem"
-              ? "border-yellow-500"
-              : "border-theme hover:border-yellow-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-left flex-1">
-              <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                PROBLEM
-              </div>
-              <div className="text-3xl font-bold text-yellow-500">
-                {stats.problem}
-              </div>
-            </div>
-            <div className="text-yellow-500 opacity-60">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={1}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* Group Tabs */}
-      {allGroups.length > 1 && (
-        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {allGroups.map((groupName) => {
-              const groupServices = services.filter(
-                (s) => (s.group || "Ungrouped") === groupName
-              );
-              return (
+          {/* Group Tabs */}
+          {allGroups.length > 0 && (
+            <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+              <div className="flex gap-2 min-w-max">
                 <button
-                  key={groupName}
-                  onClick={() => setActiveTab(groupName)}
+                  onClick={() => setActiveTab("ALL")}
                   className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                    activeTab === groupName
-                      ? "bg-theme-primary text-white shadow-md"
+                    activeTab === "ALL"
+                      ? "bg-theme-hover text-white shadow-md"
                       : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                   }`}
                 >
-                  {groupName}
+                  ALL
                   <span
                     className={`ml-2 text-xs ${
-                      activeTab === groupName
+                      activeTab === "ALL"
                         ? "text-white/80"
                         : "text-theme-text-muted"
                     }`}
                   >
-                    ({groupServices.length})
+                    ({filteredServices.length})
                   </span>
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Services List */}
-      {filteredServices.length === 0 ? (
-        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
-          {statusFilter !== null ? (
-            <>
-              <div className="text-6xl mb-4">
-                {statusFilter === "online" && "🟢"}
-                {statusFilter === "offline" && "✓"}
-                {statusFilter === "problem" && "✓"}
+                {allGroups.map((groupName) => {
+                  const groupServices = groupedServices[groupName] || [];
+                  return (
+                    <button
+                      key={groupName}
+                      onClick={() => setActiveTab(groupName)}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                        activeTab === groupName
+                          ? "bg-theme-hover text-white shadow-md"
+                          : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                      }`}
+                    >
+                      {groupName}
+                      <span
+                        className={`ml-2 text-xs ${
+                          activeTab === groupName
+                            ? "text-white/80"
+                            : "text-theme-text-muted"
+                        }`}
+                      >
+                        ({groupServices.length})
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                {statusFilter === "online" && "No online services"}
-                {statusFilter === "offline" && "No offline services"}
-                {statusFilter === "problem" && "No services with problems"}
-              </h3>
-              <p className="text-theme-text-muted">
-                {statusFilter === "online" &&
-                  "Currently no services are online"}
-                {statusFilter === "offline" && "All services are operational!"}
-                {statusFilter === "problem" &&
-                  "Everything is running smoothly!"}
-              </p>
-            </>
-          ) : (
-            <>
-              <Server
-                className="mx-auto mb-4 text-theme-text-muted"
-                size={48}
-              />
-              <p className="text-theme-text-muted text-lg mb-4">
-                {searchTerm
-                  ? t("services.noResults")
-                  : t("dashboard.noServices")}
-              </p>
-              {!searchTerm && (
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover text-white font-medium rounded-lg transition-all"
-                >
-                  {t("dashboard.addService")}
-                </button>
-              )}
-            </>
+            </div>
           )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredServices.map((service) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              onEdit={handleEditService}
-              onDelete={handleDeleteService}
-              onCheck={handleCheckService}
-            />
-          ))}
-        </div>
+
+          {/* Services List */}
+          {filteredServices.length === 0 ? (
+            <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
+              {statusFilter !== null ? (
+                <>
+                  <div className="text-6xl mb-4">
+                    {statusFilter === "online" && "🟢"}
+                    {statusFilter === "offline" && "✓"}
+                    {statusFilter === "problem" && "✓"}
+                  </div>
+                  <h3 className="text-xl font-semibold text-theme-primary mb-2">
+                    {statusFilter === "online" && "No online services"}
+                    {statusFilter === "offline" && "No offline services"}
+                    {statusFilter === "problem" && "No services with problems"}
+                  </h3>
+                  <p className="text-theme-text-muted">
+                    {statusFilter === "online" &&
+                      "Currently no services are online"}
+                    {statusFilter === "offline" &&
+                      "All services are operational!"}
+                    {statusFilter === "problem" &&
+                      "Everything is running smoothly!"}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Server
+                    className="mx-auto mb-4 text-theme-text-muted"
+                    size={48}
+                  />
+                  <p className="text-theme-text-muted text-lg mb-4">
+                    {searchTerm
+                      ? t("services.noResults")
+                      : t("dashboard.noServices")}
+                  </p>
+                  {!searchTerm && (
+                    <button
+                      onClick={() => setShowModal(true)}
+                      className="py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover text-white font-medium rounded-lg transition-all"
+                    >
+                      {t("dashboard.addService")}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+              {filteredServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  onEdit={handleEditService}
+                  onDelete={handleDeleteService}
+                  onCheck={handleCheckService}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Service Modal */}

@@ -20,17 +20,17 @@ const ActivityBadge = ({ type }) => {
   const styles = {
     download: {
       icon: Download,
-      className: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+      className: "bg-green-500/20 text-green-400 border border-green-500/30",
       label: "Downloading...",
     },
     transcode: {
       icon: Play,
-      className: "bg-purple-500/20 text-purple-400 border border-purple-500/30",
+      className: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30",
       label: "Transcoding...",
     },
     stream: {
       icon: Play,
-      className: "bg-green-500/20 text-green-400 border border-green-500/30",
+      className: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
       label: "Streaming...",
     },
     pause: {
@@ -508,7 +508,7 @@ export default function VODStreams() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -529,17 +529,70 @@ export default function VODStreams() {
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Download className="w-3 h-3 text-green-500" />
-                Online
+                Downloading
               </p>
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {
-                  filteredActivities.filter(
+                  activities.filter(
                     (a) => a.type === "download" || a.type === "media.download"
                   ).length
                 }
               </p>
             </div>
             <Download className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Pause className="w-3 h-3 text-orange-500" />
+                Paused
+              </p>
+              <p className="text-2xl font-bold text-orange-500 mt-1">
+                {activities.filter((a) => a.state === "paused").length}
+              </p>
+            </div>
+            <Pause className="w-8 h-8 text-orange-500" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Video className="w-3 h-3 text-cyan-500" />
+                Transcoding
+              </p>
+              <p className="text-2xl font-bold text-cyan-500 mt-1">
+                {
+                  activities.filter(
+                    (a) => a.transcodeSession && a.state === "playing"
+                  ).length
+                }
+              </p>
+            </div>
+            <Video className="w-8 h-8 text-cyan-500" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Play className="w-3 h-3 text-blue-500" />
+                Streaming
+              </p>
+              <p className="text-2xl font-bold text-blue-500 mt-1">
+                {
+                  activities.filter(
+                    (a) => a.state === "playing" && !a.transcodeSession
+                  ).length
+                }
+              </p>
+            </div>
+            <Play className="w-8 h-8 text-blue-500" />
           </div>
         </div>
 
@@ -565,23 +618,10 @@ export default function VODStreams() {
             <Activity className="w-8 h-8 text-purple-500" />
           </div>
         </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <AlertCircle className="w-3 h-3 text-yellow-500" />
-                Problem
-              </p>
-              <p className="text-2xl font-bold text-yellow-500 mt-1">0</p>
-            </div>
-            <AlertCircle className="w-8 h-8 text-yellow-500" />
-          </div>
-        </div>
       </div>
 
       {/* Content */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {loading ? (
           <>
             <LoadingItem />
@@ -644,20 +684,25 @@ export default function VODStreams() {
                 completedInfo={completedActivities[activity.uuid]}
               />
             ))}
-
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                startIndex={startIndex}
-                endIndex={endIndex}
-                totalItems={totalItems}
-              />
-            )}
           </>
         )}
       </div>
+
+      {/* Pagination - Full Width */}
+      {!loading &&
+        !error &&
+        plexConfigured &&
+        filteredActivities?.length > 0 &&
+        totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={totalItems}
+          />
+        )}
     </div>
   );
 }

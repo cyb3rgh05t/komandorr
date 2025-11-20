@@ -213,15 +213,16 @@ export default function Traffic() {
 
     // Set initial tab if not set
     if (!activeTab && groupNames.length > 0) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
     // Only reset tab if current tab no longer exists
     else if (
       activeTab &&
+      activeTab !== "ALL" &&
       !groupNames.includes(activeTab) &&
       groupNames.length > 0
     ) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
   }, [services, searchTerm, activeTab]);
 
@@ -261,6 +262,50 @@ export default function Traffic() {
     return `${Math.floor(diff / 86400)}d ago`;
   };
 
+  // Calculate total bandwidth across all services
+  const totalBandwidthUp = services.reduce(
+    (sum, service) => sum + (service.traffic?.bandwidth_up || 0),
+    0
+  );
+  const totalBandwidthDown = services.reduce(
+    (sum, service) => sum + (service.traffic?.bandwidth_down || 0),
+    0
+  );
+
+  // Calculate total traffic (cumulative) across all services
+  const totalTrafficUp = services.reduce(
+    (sum, service) => sum + (service.traffic?.total_up || 0),
+    0
+  );
+  const totalTrafficDown = services.reduce(
+    (sum, service) => sum + (service.traffic?.total_down || 0),
+    0
+  );
+
+  // Filter and group services
+  const filteredServices = services.filter((service) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      service.name.toLowerCase().includes(searchLower) ||
+      service.url.toLowerCase().includes(searchLower) ||
+      service.type.toLowerCase().includes(searchLower) ||
+      (service.group && service.group.toLowerCase().includes(searchLower))
+    );
+  });
+
+  const groupedServices = filteredServices.reduce((acc, service) => {
+    const groupName = service.group || "Ungrouped";
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(service);
+    return acc;
+  }, {});
+
+  const allGroups = Object.keys(groupedServices);
+  const servicesInActiveGroup =
+    activeTab && activeTab !== "ALL"
+      ? groupedServices[activeTab] || []
+      : filteredServices;
+
   const LoadingServiceCard = () => (
     <div className="bg-theme-card border border-theme rounded-lg p-6">
       <div className="space-y-4 animate-pulse">
@@ -285,399 +330,399 @@ export default function Traffic() {
     </div>
   );
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {/* Stats Cards Loading */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
-            >
-              <div className="space-y-3 animate-pulse">
-                <div className="h-4 bg-theme-hover rounded w-24" />
-                <div className="h-8 bg-theme-hover rounded w-20" />
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Service Cards Loading */}
-        <div className="grid grid-cols-1 gap-5">
-          <LoadingServiceCard />
-          <LoadingServiceCard />
-        </div>
-      </div>
-    );
-  }
-
-  // Filter services based on search term and active tab
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.url.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const serviceGroup = service.group || "Ungrouped";
-    const matchesTab = activeTab ? serviceGroup === activeTab : true;
-
-    return matchesSearch && matchesTab;
-  });
-
-  // Get all unique groups for tabs
-  const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
-
-  // Calculate totals
-  const totalBandwidthUp = services.reduce(
-    (sum, s) => sum + (s.traffic?.bandwidth_up || 0),
-    0
-  );
-  const totalBandwidthDown = services.reduce(
-    (sum, s) => sum + (s.traffic?.bandwidth_down || 0),
-    0
-  );
-  const totalTrafficUp = services.reduce(
-    (sum, s) => sum + (s.traffic?.total_up || 0),
-    0
-  );
-  const totalTrafficDown = services.reduce(
-    (sum, s) => sum + (s.traffic?.total_down || 0),
-    0
-  );
-
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Header with Search & Refresh */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
-          />
-        </div>
-
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
-        >
-          <RefreshCw
-            size={16}
-            className={`text-theme-primary ${refreshing ? "animate-spin" : ""}`}
-          />
-          <span className="text-xs sm:text-sm">Refresh</span>
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Services */}
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Server className="w-3 h-3 text-theme-primary" />
-                Services
-              </p>
-              <p className="text-2xl font-bold text-theme-text mt-1">
-                {services.length}
-              </p>
-            </div>
-            <Server className="w-8 h-8 text-theme-primary" />
+      {loading ? (
+        <>
+          {/* Stats Cards Loading */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm"
+              >
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-4 bg-theme-hover rounded w-24" />
+                  <div className="h-8 bg-theme-hover rounded w-20" />
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        {/* Upload Speed */}
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <ArrowUp className="w-3 h-3 text-blue-500" />
-                Upload
-              </p>
-              <p className="text-2xl font-bold text-blue-500 mt-1">
-                {formatBandwidth(totalBandwidthUp)}
-              </p>
-            </div>
-            <ArrowUp className="w-8 h-8 text-blue-500" />
+          {/* Service Cards Loading */}
+          <div className="grid grid-cols-1 gap-5">
+            <LoadingServiceCard />
+            <LoadingServiceCard />
           </div>
-        </div>
-
-        {/* Download Speed */}
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <ArrowDown className="w-3 h-3 text-green-500" />
-                Download
-              </p>
-              <p className="text-2xl font-bold text-green-500 mt-1">
-                {formatBandwidth(totalBandwidthDown)}
-              </p>
+        </>
+      ) : (
+        <>
+          {/* Header with Search & Refresh */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="relative w-full sm:max-w-xs">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
+              />
             </div>
-            <ArrowDown className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
 
-        {/* Total Traffic */}
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Activity className="w-3 h-3 text-theme-primary" />
-                Total Traffic
-              </p>
-              <p className="text-2xl font-bold text-theme-primary mt-1">
-                {formatTraffic(totalTrafficUp + totalTrafficDown)}
-              </p>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+            >
+              <RefreshCw
+                size={16}
+                className={`text-theme-primary ${
+                  refreshing ? "animate-spin" : ""
+                }`}
+              />
+              <span className="text-xs sm:text-sm">Refresh</span>
+            </button>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {/* Total Services */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Server className="w-3 h-3 text-theme-primary" />
+                    Services
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text mt-1">
+                    {services.length}
+                  </p>
+                </div>
+                <Server className="w-8 h-8 text-theme-primary" />
+              </div>
             </div>
-            <Activity className="w-8 h-8 text-theme-primary" />
-          </div>
-        </div>
-      </div>
 
-      {/* Group Tabs */}
-      {allGroups.length > 1 && (
-        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {allGroups.map((groupName) => {
-              const groupServices = services.filter(
-                (s) => (s.group || "Ungrouped") === groupName
-              );
-              return (
+            {/* Upload Speed */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3 text-blue-500" />
+                    Upload
+                  </p>
+                  <p className="text-2xl font-bold text-blue-500 mt-1">
+                    {formatBandwidth(totalBandwidthUp)}
+                  </p>
+                </div>
+                <ArrowUp className="w-8 h-8 text-blue-500" />
+              </div>
+            </div>
+
+            {/* Download Speed */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowDown className="w-3 h-3 text-green-500" />
+                    Download
+                  </p>
+                  <p className="text-2xl font-bold text-green-500 mt-1">
+                    {formatBandwidth(totalBandwidthDown)}
+                  </p>
+                </div>
+                <ArrowDown className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+
+            {/* Total Uploaded */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-blue-500" />
+                    Uploaded
+                  </p>
+                  <p className="text-2xl font-bold text-blue-500 mt-1">
+                    {formatTraffic(totalTrafficUp)}
+                  </p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-blue-500" />
+              </div>
+            </div>
+
+            {/* Total Downloaded */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-green-500" />
+                    Downloaded
+                  </p>
+                  <p className="text-2xl font-bold text-green-500 mt-1">
+                    {formatTraffic(totalTrafficDown)}
+                  </p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+
+            {/* Total Traffic */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-theme-primary" />
+                    Total Traffic
+                  </p>
+                  <p className="text-2xl font-bold text-theme-primary mt-1">
+                    {formatTraffic(totalTrafficUp + totalTrafficDown)}
+                  </p>
+                </div>
+                <Activity className="w-8 h-8 text-theme-primary" />
+              </div>
+            </div>
+          </div>
+
+          {/* Group Tabs */}
+          {allGroups.length > 0 && (
+            <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+              <div className="flex gap-2 min-w-max">
                 <button
-                  key={groupName}
-                  onClick={() => setActiveTab(groupName)}
+                  onClick={() => setActiveTab("ALL")}
                   className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                    activeTab === groupName
-                      ? "bg-theme-primary text-white shadow-md"
+                    activeTab === "ALL"
+                      ? "bg-theme-hover text-white shadow-md"
                       : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                   }`}
                 >
-                  {groupName}
+                  ALL
                   <span
                     className={`ml-2 text-xs ${
-                      activeTab === groupName
+                      activeTab === "ALL"
                         ? "text-white/80"
                         : "text-theme-text-muted"
                     }`}
                   >
-                    ({groupServices.length})
+                    ({filteredServices.length})
                   </span>
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Total Upload/Download Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-          <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
-            <ArrowUp className="w-5 h-5 text-blue-500" />
-            Total Uploaded
-          </h3>
-          <p className="text-4xl font-bold text-blue-500">
-            {formatTraffic(totalTrafficUp)}
-          </p>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
-          <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
-            <ArrowDown className="w-5 h-5 text-green-500" />
-            Total Downloaded
-          </h3>
-          <p className="text-4xl font-bold text-green-500">
-            {formatTraffic(totalTrafficDown)}
-          </p>
-        </div>
-      </div>
-
-      {/* Services Grid */}
-      <div className="grid grid-cols-1 gap-4">
-        {filteredServices.length === 0 ? (
-          <div className="text-center py-12 bg-theme-card border border-theme rounded-lg">
-            <Server className="w-12 h-12 text-theme-text-muted mx-auto mb-3 opacity-50" />
-            <p className="text-theme-text-muted">
-              {searchTerm
-                ? "No services found matching your search"
-                : "No services with traffic monitoring"}
-            </p>
-          </div>
-        ) : (
-          filteredServices.map((service) => (
-            <div
-              key={service.id}
-              className="bg-theme-card border border-theme rounded-lg p-6 shadow-sm hover:shadow-md transition-all hover:border-theme-primary/30"
-            >
-              {/* Service Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-theme-text mb-2">
-                    {service.name}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
-                      <Server size={12} />
-                      {service.type}
-                    </span>
-                    <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
-                      <Activity size={12} />
-                      {formatLastCheck(service.traffic?.last_updated)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Traffic Stats Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <ArrowUp className="w-3 h-3 text-blue-400" />
-                    <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">
-                      Upload Speed
-                    </p>
-                  </div>
-                  <p className="text-xl font-bold text-blue-500">
-                    {formatBandwidth(service.traffic?.bandwidth_up || 0)}
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-lg p-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <ArrowDown className="w-3 h-3 text-green-400" />
-                    <p className="text-xs text-green-400 font-semibold uppercase tracking-wider">
-                      Download Speed
-                    </p>
-                  </div>
-                  <p className="text-xl font-bold text-green-500">
-                    {formatBandwidth(service.traffic?.bandwidth_down || 0)}
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <ArrowUp className="w-3 h-3 text-theme-text-muted" />
-                    <p className="text-xs text-theme-text-muted font-semibold uppercase tracking-wider">
-                      Total Upload
-                    </p>
-                  </div>
-                  <p className="text-xl font-bold text-theme-text">
-                    {formatTraffic(service.traffic?.total_up || 0)}
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <ArrowDown className="w-3 h-3 text-theme-text-muted" />
-                    <p className="text-xs text-theme-text-muted font-semibold uppercase tracking-wider">
-                      Total Download
-                    </p>
-                  </div>
-                  <p className="text-xl font-bold text-theme-text">
-                    {formatTraffic(service.traffic?.total_down || 0)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Traffic Charts */}
-              {service.traffic_history &&
-                service.traffic_history.length > 0 && (
-                  <div className="bg-gradient-to-br from-theme-hover/40 to-theme-card/20 border border-theme rounded-lg p-4 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-theme-primary/20 rounded">
-                        <TrendingUp size={14} className="text-theme-primary" />
-                      </div>
-                      <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
-                        Bandwidth History
+                {allGroups.map((groupName) => {
+                  const groupServices = groupedServices[groupName] || [];
+                  return (
+                    <button
+                      key={groupName}
+                      onClick={() => setActiveTab(groupName)}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                        activeTab === groupName
+                          ? "bg-theme-hover text-white shadow-md"
+                          : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                      }`}
+                    >
+                      {groupName}
+                      <span
+                        className={`ml-2 text-xs ${
+                          activeTab === groupName
+                            ? "text-white/80"
+                            : "text-theme-text-muted"
+                        }`}
+                      >
+                        ({groupServices.length})
                       </span>
-                    </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-                    {/* Upload Chart */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-xs font-semibold text-blue-400 flex items-center gap-1">
-                            <ArrowUp size={10} />
-                            Upload
-                          </span>
-                        </div>
-                        {(() => {
-                          const values = service.traffic_history.map(
-                            (p) => p.bandwidth_up
-                          );
-                          if (values.length > 0) {
-                            const avg =
-                              values.reduce((a, b) => a + b, 0) / values.length;
-                            const max = Math.max(...values);
-                            return (
-                              <div className="flex gap-2">
-                                <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
-                                  Avg: {avg.toFixed(2)} MB/s
-                                </span>
-                                <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
-                                  Max: {max.toFixed(2)} MB/s
-                                </span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {servicesInActiveGroup.length === 0 ? (
+              <div className="text-center py-12 bg-theme-card border border-theme rounded-lg">
+                <Server className="w-12 h-12 text-theme-text-muted mx-auto mb-3 opacity-50" />
+                <p className="text-theme-text-muted">
+                  {searchTerm
+                    ? "No services found matching your search"
+                    : "No services with traffic monitoring"}
+                </p>
+              </div>
+            ) : (
+              servicesInActiveGroup.map((service) => (
+                <div
+                  key={service.id}
+                  className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary/30"
+                >
+                  {/* Service Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-theme-text mb-1.5">
+                        {service.name}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="px-2 py-0.5 bg-theme-hover border border-theme rounded text-xs font-medium text-theme-text-muted flex items-center gap-1">
+                          <Server size={12} />
+                          {service.type}
+                        </span>
+                        <span className="px-2 py-0.5 bg-theme-hover border border-theme rounded text-xs font-medium text-theme-text-muted flex items-center gap-1">
+                          <Activity size={12} />
+                          {formatLastCheck(service.traffic?.last_updated)}
+                        </span>
                       </div>
-                      <TrafficChart
-                        data={service.traffic_history}
-                        type="upload"
-                        serviceId={service.id}
-                      />
-                    </div>
-
-                    {/* Download Chart */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-semibold text-green-400 flex items-center gap-1">
-                            <ArrowDown size={10} />
-                            Download
-                          </span>
-                        </div>
-                        {(() => {
-                          const values = service.traffic_history.map(
-                            (p) => p.bandwidth_down
-                          );
-                          if (values.length > 0) {
-                            const avg =
-                              values.reduce((a, b) => a + b, 0) / values.length;
-                            const max = Math.max(...values);
-                            return (
-                              <div className="flex gap-2">
-                                <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
-                                  Avg: {avg.toFixed(2)} MB/s
-                                </span>
-                                <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
-                                  Max: {max.toFixed(2)} MB/s
-                                </span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                      <TrafficChart
-                        data={service.traffic_history}
-                        type="download"
-                        serviceId={service.id}
-                      />
                     </div>
                   </div>
-                )}
-            </div>
-          ))
-        )}
-      </div>
+
+                  {/* Traffic Stats Row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                    <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-2">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <ArrowUp className="w-3 h-3 text-blue-400" />
+                        <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider">
+                          Upload Speed
+                        </p>
+                      </div>
+                      <p className="text-base font-bold text-blue-500">
+                        {formatBandwidth(service.traffic?.bandwidth_up || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-lg p-2">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <ArrowDown className="w-3 h-3 text-green-400" />
+                        <p className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">
+                          Download Speed
+                        </p>
+                      </div>
+                      <p className="text-base font-bold text-green-500">
+                        {formatBandwidth(service.traffic?.bandwidth_down || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-theme-card border border-theme rounded-lg p-2">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <ArrowUp className="w-3 h-3 text-theme-text-muted" />
+                        <p className="text-[10px] text-theme-text-muted font-semibold uppercase tracking-wider">
+                          Total Upload
+                        </p>
+                      </div>
+                      <p className="text-base font-bold text-theme-text">
+                        {formatTraffic(service.traffic?.total_up || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-theme-card border border-theme rounded-lg p-2">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <ArrowDown className="w-3 h-3 text-theme-text-muted" />
+                        <p className="text-[10px] text-theme-text-muted font-semibold uppercase tracking-wider">
+                          Total Download
+                        </p>
+                      </div>
+                      <p className="text-base font-bold text-theme-text">
+                        {formatTraffic(service.traffic?.total_down || 0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Traffic Charts */}
+                  {service.traffic_history &&
+                    service.traffic_history.length > 0 && (
+                      <div className="bg-theme-hover border border-theme rounded-lg p-3 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-theme-primary/20 rounded">
+                            <TrendingUp
+                              size={14}
+                              className="text-theme-primary"
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
+                            Bandwidth History
+                          </span>
+                        </div>
+
+                        {/* Upload Chart */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-xs font-semibold text-blue-400 flex items-center gap-1">
+                                <ArrowUp size={10} />
+                                Upload
+                              </span>
+                            </div>
+                            {(() => {
+                              const values = service.traffic_history.map(
+                                (p) => p.bandwidth_up
+                              );
+                              if (values.length > 0) {
+                                const avg =
+                                  values.reduce((a, b) => a + b, 0) /
+                                  values.length;
+                                const max = Math.max(...values);
+                                return (
+                                  <div className="flex gap-2">
+                                    <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
+                                      Avg: {avg.toFixed(2)} MB/s
+                                    </span>
+                                    <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
+                                      Max: {max.toFixed(2)} MB/s
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <TrafficChart
+                            data={service.traffic_history}
+                            type="upload"
+                            serviceId={service.id}
+                          />
+                        </div>
+
+                        {/* Download Chart */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-semibold text-green-400 flex items-center gap-1">
+                                <ArrowDown size={10} />
+                                Download
+                              </span>
+                            </div>
+                            {(() => {
+                              const values = service.traffic_history.map(
+                                (p) => p.bandwidth_down
+                              );
+                              if (values.length > 0) {
+                                const avg =
+                                  values.reduce((a, b) => a + b, 0) /
+                                  values.length;
+                                const max = Math.max(...values);
+                                return (
+                                  <div className="flex gap-2">
+                                    <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
+                                      Avg: {avg.toFixed(2)} MB/s
+                                    </span>
+                                    <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
+                                      Max: {max.toFixed(2)} MB/s
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <TrafficChart
+                            data={service.traffic_history}
+                            type="download"
+                            serviceId={service.id}
+                          />
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

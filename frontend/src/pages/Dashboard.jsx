@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Plus,
@@ -10,9 +11,19 @@ import {
   Settings,
   Eye,
   EyeOff,
+  Activity,
+  Clock,
+  TrendingUp,
+  Server,
+  Zap,
+  Video,
+  Network,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
+import { fetchPlexActivities } from "@/services/plexService";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
 import DashboardTrafficChart from "@/components/DashboardTrafficChart";
 import ServiceModal from "@/components/ServiceModal";
@@ -22,6 +33,7 @@ const REPO_URL = "https://github.com/cyb3rgh05t/komandorr/releases/latest";
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const toast = useToast();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +67,7 @@ export default function Dashboard() {
     is_update_available: false,
     loading: true,
   });
+  const [plexActivities, setPlexActivities] = useState([]);
 
   // Save visibility settings to localStorage whenever they change
   useEffect(() => {
@@ -73,12 +86,16 @@ export default function Dashboard() {
     loadServices();
     fetchVersion();
     fetchTrafficData();
+    fetchPlexData();
 
     // Check for updates every 12 hours
     const versionCheckInterval = setInterval(fetchVersion, 12 * 60 * 60 * 1000);
 
     // Fetch traffic data every 10 seconds for more responsive updates
     const trafficInterval = setInterval(fetchTrafficData, 10000);
+
+    // Fetch Plex activities every 5 seconds for real-time updates
+    const plexInterval = setInterval(fetchPlexData, 5000);
 
     // Refresh services every 10 seconds for updated stats
     // Don't reset scroll position or active tab during auto-refresh
@@ -89,6 +106,7 @@ export default function Dashboard() {
     return () => {
       clearInterval(versionCheckInterval);
       clearInterval(trafficInterval);
+      clearInterval(plexInterval);
       clearInterval(servicesInterval);
     };
   }, []);
@@ -122,6 +140,16 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Error fetching traffic data:", error);
       // Don't show error to user, traffic is optional
+    }
+  };
+
+  const fetchPlexData = async () => {
+    try {
+      const activities = await fetchPlexActivities();
+      setPlexActivities(activities);
+    } catch (error) {
+      console.error("Error fetching Plex activities:", error);
+      // Don't show error to user, Plex is optional
     }
   };
 
@@ -180,15 +208,16 @@ export default function Dashboard() {
 
     // Set initial tab if not set
     if (!activeTab && groupNames.length > 0) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
     // Only reset tab if current tab no longer exists
     else if (
       activeTab &&
+      activeTab !== "ALL" &&
       !groupNames.includes(activeTab) &&
       groupNames.length > 0
     ) {
-      setActiveTab(groupNames[0]);
+      setActiveTab("ALL");
     }
   }, [services, searchTerm, activeTab]);
 
@@ -277,7 +306,28 @@ export default function Dashboard() {
   const stats = {
     online: services.filter((s) => s.status === "online").length,
     offline: services.filter((s) => s.status === "offline").length,
-    problem: services.filter((s) => s.status === "problem").length,
+    problem: services.filter(
+      (s) => s.status === "online" && s.response_time > 1000
+    ).length,
+    total: services.length,
+    avgResponseTime:
+      services.length > 0
+        ? Math.round(
+            services.reduce((sum, s) => sum + (s.response_time || 0), 0) /
+              services.length
+          )
+        : 0,
+    recentlyChecked: services.filter((s) => {
+      if (!s.last_check) return false;
+      const lastCheck = new Date(s.last_check);
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      return lastCheck > fiveMinutesAgo;
+    }).length,
+    activeStreams: plexActivities.length,
+    uploadSpeed: trafficData?.total_bandwidth_up || 0,
+    downloadSpeed: trafficData?.total_bandwidth_down || 0,
+    totalUploaded: trafficData?.total_traffic_up || 0,
+    totalDownloaded: trafficData?.total_traffic_down || 0,
   };
 
   const LoadingServiceCard = () => (
@@ -305,13 +355,21 @@ export default function Dashboard() {
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-theme-text">
-            {t("dashboard.title")}
-          </h1>
-          <p className="text-sm sm:text-base text-theme-text-muted mt-1">
-            {t("dashboard.allServices")}
-          </p>
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder={
+              t("dashboard.searchPlaceholder") ||
+              "Search services and groups..."
+            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
+          />
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
@@ -551,161 +609,227 @@ export default function Dashboard() {
       {/* Stats Cards */}
       {dashboardVisibility.stats && (
         <div className="space-y-4">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Enhanced Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-10 gap-3">
+            {/* Total Services */}
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-theme-primary/10 group ${
                 statusFilter === null
-                  ? "border-theme-primary"
+                  ? "border-theme-primary ring-2 ring-theme-primary/20"
                   : "border-theme hover:border-theme-primary/50"
               }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    TOTAL
-                  </div>
-                  <div className="text-3xl font-bold text-theme-text">
-                    {services.length}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Server className="w-5 h-5 text-theme-primary" />
+                  <div className="text-2xl font-bold text-theme-primary">
+                    {stats.total}
                   </div>
                 </div>
-                <div className="text-theme-text-muted opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <rect x="3" y="4" width="18" height="4" rx="1" />
-                    <rect x="3" y="10" width="18" height="4" rx="1" />
-                    <rect x="3" y="16" width="18" height="4" rx="1" />
-                  </svg>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Total Services
                 </div>
               </div>
             </button>
+
+            {/* Online */}
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-green-500/10 group ${
                 statusFilter === "online"
-                  ? "border-green-500"
+                  ? "border-green-500 ring-2 ring-green-500/20"
                   : "border-theme hover:border-green-500/50"
               }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    ONLINE
-                  </div>
-                  <div className="text-3xl font-bold text-green-500">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <div className="text-2xl font-bold text-green-500">
                     {stats.online}
                   </div>
                 </div>
-                <div className="text-green-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                    />
-                  </svg>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Online
                 </div>
               </div>
             </button>
+
+            {/* Offline */}
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-red-500/10 group ${
                 statusFilter === "offline"
-                  ? "border-red-500"
+                  ? "border-red-500 ring-2 ring-red-500/20"
                   : "border-theme hover:border-red-500/50"
               }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    OFFLINE
-                  </div>
-                  <div className="text-3xl font-bold text-red-500">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  <div className="text-2xl font-bold text-red-500">
                     {stats.offline}
                   </div>
                 </div>
-                <div className="text-red-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                    />
-                  </svg>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Offline
                 </div>
               </div>
             </button>
+
+            {/* Problem */}
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-yellow-500/10 group ${
                 statusFilter === "problem"
-                  ? "border-yellow-500"
+                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
                   : "border-theme hover:border-yellow-500/50"
               }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    PROBLEM
-                  </div>
-                  <div className="text-3xl font-bold text-yellow-500">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <AlertCircle className="w-5 h-5 text-yellow-500" />
+                  <div className="text-2xl font-bold text-yellow-500">
                     {stats.problem}
                   </div>
                 </div>
-                <div className="text-yellow-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Problems
+                  <div className="text-[10px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5">
+                    Slow response (&gt;1s)
+                  </div>
                 </div>
               </div>
             </button>
-          </div>
 
-          {/* Search Bar */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
-            <div className="relative w-full">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder={
-                  t("dashboard.searchPlaceholder") ||
-                  "Search services and groups..."
-                }
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
-              />
+            {/* Avg Response Time */}
+            <div
+              onClick={() => navigate("/monitor")}
+              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-blue-500/10 hover:border-blue-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Zap className="w-5 h-5 text-blue-500" />
+                  <div className="text-2xl font-bold text-blue-500">
+                    {stats.avgResponseTime}
+                    <span className="text-sm text-blue-400 ml-1">ms</span>
+                  </div>
+                </div>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Avg Response
+                </div>
+              </div>
+            </div>
+
+            {/* Active (5min) */}
+            <div
+              onClick={() => navigate("/monitor")}
+              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Activity className="w-5 h-5 text-purple-500" />
+                  <div className="text-2xl font-bold text-purple-500">
+                    {stats.recentlyChecked}
+                  </div>
+                </div>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Active (5min)
+                </div>
+              </div>
+            </div>
+
+            {/* Upload Speed */}
+            <div
+              onClick={() => navigate("/traffic")}
+              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-orange-500/10 hover:border-orange-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <ArrowUp className="w-5 h-5 text-orange-500" />
+                  <div className="text-2xl font-bold text-orange-500">
+                    {stats.uploadSpeed.toFixed(1)}
+                    <span className="text-sm text-orange-400 ml-1">MB/s</span>
+                  </div>
+                </div>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Upload Speed
+                </div>
+              </div>
+            </div>
+
+            {/* Download Speed */}
+            <div
+              onClick={() => navigate("/traffic")}
+              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <ArrowDown className="w-5 h-5 text-cyan-500" />
+                  <div className="text-2xl font-bold text-cyan-500">
+                    {stats.downloadSpeed.toFixed(1)}
+                    <span className="text-sm text-cyan-400 ml-1">MB/s</span>
+                  </div>
+                </div>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Download Speed
+                </div>
+              </div>
+            </div>
+
+            {/* Total Transfer */}
+            <div
+              onClick={() => navigate("/traffic")}
+              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Network className="w-5 h-5 text-indigo-500" />
+                  <div className="text-base font-bold">
+                    <div className="flex items-center gap-1 text-blue-500">
+                      <ArrowUp className="w-3 h-3" />
+                      <span className="text-xs">
+                        {stats.totalUploaded >= 1024
+                          ? `${(stats.totalUploaded / 1024).toFixed(2)} TB`
+                          : stats.totalUploaded >= 1
+                          ? `${stats.totalUploaded.toFixed(2)} GB`
+                          : `${(stats.totalUploaded * 1024).toFixed(2)} MB`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-green-500">
+                      <ArrowDown className="w-3 h-3" />
+                      <span className="text-xs">
+                        {stats.totalDownloaded >= 1024
+                          ? `${(stats.totalDownloaded / 1024).toFixed(2)} TB`
+                          : stats.totalDownloaded >= 1
+                          ? `${stats.totalDownloaded.toFixed(2)} GB`
+                          : `${(stats.totalDownloaded * 1024).toFixed(2)} MB`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  Total Transfer
+                </div>
+              </div>
+            </div>
+
+            {/* Active Streams */}
+            <div
+              onClick={() => navigate("/vod-streams")}
+              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-pink-500/10 hover:border-pink-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Video className="w-5 h-5 text-pink-500" />
+                  <div className="text-2xl font-bold text-pink-500">
+                    {stats.activeStreams}
+                  </div>
+                </div>
+                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
+                  VOD Streams
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -716,20 +840,9 @@ export default function Dashboard() {
         <>
           {loading ? (
             <div className="space-y-6">
-              {/* Stats Cards Loading */}
-              <div className="bg-theme-card border border-theme rounded-xl p-6 shadow-sm">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="text-center space-y-2">
-                      <div className="h-9 bg-theme-hover rounded w-16 mx-auto" />
-                      <div className="h-3 bg-theme-hover rounded w-24 mx-auto" />
-                    </div>
-                  ))}
-                </div>
-              </div>
               {/* Service Cards Loading */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3">
+                {[...Array(8)].map((_, i) => (
                   <LoadingServiceCard key={i} />
                 ))}
               </div>
@@ -762,7 +875,11 @@ export default function Dashboard() {
                       service.group.toLowerCase().includes(searchLower));
 
                   const matchesStatus =
-                    statusFilter === null || service.status === statusFilter;
+                    statusFilter === null ||
+                    service.status === statusFilter ||
+                    (statusFilter === "problem" &&
+                      service.status === "online" &&
+                      service.response_time > 1000);
 
                   return matchesSearch && matchesStatus;
                 });
@@ -855,7 +972,7 @@ export default function Dashboard() {
                                 </h2>
                               </div>
                             )}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3">
                               {groupServices.map((service) => (
                                 <DashboardServiceCard
                                   key={service.id}
@@ -880,13 +997,32 @@ export default function Dashboard() {
                     {/* Tabs */}
                     <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
                       <div className="flex gap-2 min-w-max">
+                        <button
+                          onClick={() => setActiveTab("ALL")}
+                          className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                            activeTab === "ALL"
+                              ? "bg-theme-hover text-white shadow-md"
+                              : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                          }`}
+                        >
+                          ALL
+                          <span
+                            className={`ml-2 text-xs ${
+                              activeTab === "ALL"
+                                ? "text-white/80"
+                                : "text-theme-text-muted"
+                            }`}
+                          >
+                            ({filteredServices.length})
+                          </span>
+                        </button>
                         {groupNames.map((groupName) => (
                           <button
                             key={groupName}
                             onClick={() => setActiveTab(groupName)}
                             className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                               activeTab === groupName
-                                ? "bg-theme-primary text-white shadow-md"
+                                ? "bg-theme-hover text-white shadow-md"
                                 : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                             }`}
                           >
@@ -916,20 +1052,26 @@ export default function Dashboard() {
                     )}
 
                     {/* Active Tab Content */}
-                    {activeTab && grouped[activeTab] && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {grouped[activeTab].map((service) => (
-                          <DashboardServiceCard
-                            key={service.id}
-                            service={service}
-                            trafficData={trafficData}
-                            onCheck={handleCheckService}
-                            onEdit={handleEditService}
-                            onDelete={handleDeleteService}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {activeTab &&
+                      (activeTab === "ALL"
+                        ? filteredServices
+                        : grouped[activeTab]) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3">
+                          {(activeTab === "ALL"
+                            ? filteredServices
+                            : grouped[activeTab]
+                          ).map((service) => (
+                            <DashboardServiceCard
+                              key={service.id}
+                              service={service}
+                              trafficData={trafficData}
+                              onCheck={handleCheckService}
+                              onEdit={handleEditService}
+                              onDelete={handleDeleteService}
+                            />
+                          ))}
+                        </div>
+                      )}
                   </div>
                 );
               })()}

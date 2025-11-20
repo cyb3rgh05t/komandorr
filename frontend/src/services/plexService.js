@@ -151,6 +151,8 @@ export const fetchPlexActivities = async () => {
         typeof activity.progress === "number"
           ? Math.min(activity.progress, 100)
           : 0,
+      state: activity.raw_data?.Player?.state || null,
+      transcodeSession: activity.raw_data?.TranscodeSession || null,
       raw_data: activity.raw_data || activity,
     }));
   } catch (error) {

@@ -85,7 +85,7 @@ export default function Sidebar() {
                         transition-colors duration-200
                         ${
                           active
-                            ? "bg-theme-primary text-white"
+                            ? "bg-theme-hover text-white"
                             : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
                         }
                       `}
