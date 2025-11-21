@@ -933,6 +933,9 @@ export default function Dashboard() {
                       ...trafficData,
                       services:
                         trafficData.services?.filter((service) => {
+                          // If activeTab is "ALL", show all services
+                          if (!activeTab || activeTab === "ALL") return true;
+
                           // Find the service in the filtered services list to get its group
                           const matchingService = filteredServices.find(
                             (s) => s.id === service.id
@@ -940,7 +943,7 @@ export default function Dashboard() {
                           if (!matchingService) return false;
                           const serviceGroup =
                             matchingService.group || "Ungrouped";
-                          return activeTab ? serviceGroup === activeTab : true;
+                          return serviceGroup === activeTab;
                         }) || [],
                     }
                   : null;

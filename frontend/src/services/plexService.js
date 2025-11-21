@@ -184,3 +184,79 @@ export const getPlexIdentity = async () => {
     throw error;
   }
 };
+
+/**
+ * Get Plex statistics including peak concurrent activities
+ * @returns {Promise<Object>} Plex stats
+ */
+export const getPlexStats = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stats`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch Plex stats");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch Plex stats", error);
+    throw error;
+  }
+};
+
+/**
+ * Update peak concurrent activities count
+ * @param {number} peakConcurrent - New peak concurrent count
+ * @returns {Promise<Object>} Update result
+ */
+export const updatePeakConcurrent = async (peakConcurrent) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stats/peak`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        peak_concurrent: peakConcurrent,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update peak concurrent");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to update peak concurrent", error);
+    throw error;
+  }
+};
+
+/**
+ * Reset peak concurrent activities count to 0
+ * @returns {Promise<Object>} Reset result
+ */
+export const resetPeakConcurrent = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stats/reset`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to reset peak concurrent");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to reset peak concurrent", error);
+    throw error;
+  }
+};

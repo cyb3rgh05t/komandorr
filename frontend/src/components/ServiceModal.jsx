@@ -16,7 +16,9 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
   const [showNewGroupInput, setShowNewGroupInput] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [showGroupDropdown, setShowGroupDropdown] = useState(false);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const groupDropdownRef = useRef(null);
+  const typeDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
   const [iconPreview, setIconPreview] = useState(null);
   const [iconFile, setIconFile] = useState(null);
@@ -58,6 +60,12 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
         !groupDropdownRef.current.contains(event.target)
       ) {
         setShowGroupDropdown(false);
+      }
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target)
+      ) {
+        setShowTypeDropdown(false);
       }
     }
 
@@ -193,7 +201,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
+              className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
               placeholder="My Service"
             />
           </div>
@@ -208,7 +216,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               value={formData.url}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
+              className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
               placeholder="https://example.com"
             />
           </div>
@@ -217,18 +225,51 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
             <label className="block text-sm font-medium text-theme-text mb-2">
               {t("service.type")}
             </label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
-            >
-              <option value="app">{t("service.types.app")}</option>
-              <option value="website">{t("service.types.website")}</option>
-              <option value="panel">{t("service.types.panel")}</option>
-              <option value="project">{t("service.types.project")}</option>
-              <option value="server">{t("service.types.server")}</option>
-            </select>
+            <div className="relative" ref={typeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
+              >
+                <span className="text-theme-text">
+                  {t(`service.types.${formData.type}`)}
+                </span>
+                <ChevronDown size={16} className="text-theme-text-muted" />
+              </button>
+
+              {showTypeDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowTypeDropdown(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-1 w-full rounded-lg bg-theme-card border border-theme shadow-lg z-50">
+                    <div className="p-2">
+                      {["app", "website", "panel", "project", "server"].map(
+                        (type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, type });
+                              setShowTypeDropdown(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                              formData.type === type
+                                ? "bg-theme-primary text-white"
+                                : "text-theme-text-muted hover:bg-theme-hover"
+                            }`}
+                          >
+                            <span>{t(`service.types.${type}`)}</span>
+                            {formData.type === type && <Check size={16} />}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           <div>
@@ -240,7 +281,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary resize-none"
+              className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary resize-none"
               placeholder="Optional description"
             />
           </div>
@@ -277,7 +318,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full px-4 py-6 bg-theme-bg border-2 border-dashed border-theme rounded-lg hover:bg-theme-hover transition-colors flex flex-col items-center gap-2"
+                  className="w-full px-4 py-6 bg-theme-hover border-2 border-dashed border-theme rounded-lg hover:bg-theme-hover transition-colors flex flex-col items-center gap-2"
                 >
                   <Upload className="text-theme-primary" size={24} />
                   <span className="text-sm text-theme-text">
@@ -307,7 +348,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={() => setShowGroupDropdown(!showGroupDropdown)}
-                  className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
+                  className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
                 >
                   <span
                     className={
@@ -379,7 +420,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                       (e.preventDefault(), handleCreateGroup())
                     }
                     placeholder={t("service.newGroupName")}
-                    className="flex-1 px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
+                    className="flex-1 px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
                     autoFocus
                   />
                   <button

@@ -33,6 +33,11 @@ async def lifespan(app: FastAPI):
     logger.info(f"Authentication enabled: {settings.ENABLE_AUTH}")
     logger.info(f"Timezone: {settings.TIMEZONE}")
 
+    # Migrate Plex config from JSON to database if needed
+    from app.api.plex import migrate_plex_config_if_needed
+
+    migrate_plex_config_if_needed()
+
     # Start monitoring in background
     monitoring_task = asyncio.create_task(monitor.start_monitoring(interval=10))
 

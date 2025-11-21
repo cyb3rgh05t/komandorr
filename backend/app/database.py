@@ -83,6 +83,23 @@ class TrafficHistoryDB(Base):
     service = relationship("ServiceDB", back_populates="traffic_history")
 
 
+class PlexStatsDB(Base):
+    """SQLAlchemy model for Plex Statistics and Configuration"""
+
+    __tablename__ = "plex_stats"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Configuration
+    server_url = Column(String, nullable=True)
+    server_token = Column(String, nullable=True)
+    server_name = Column(String, nullable=True)
+
+    # Statistics
+    peak_concurrent = Column(Integer, default=0)
+    last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
+
+
 class Database:
     """Database connection and session management"""
 

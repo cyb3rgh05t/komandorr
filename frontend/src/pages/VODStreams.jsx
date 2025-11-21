@@ -13,7 +13,12 @@ import {
   Server,
   Activity,
 } from "lucide-react";
-import { fetchPlexActivities } from "@/services/plexService";
+import {
+  fetchPlexActivities,
+  getPlexStats,
+  updatePeakConcurrent,
+  resetPeakConcurrent,
+} from "@/services/plexService";
 import { Link } from "react-router-dom";
 
 const ActivityBadge = ({ type }) => {
@@ -244,11 +249,34 @@ export default function VODStreams() {
     return stored ? JSON.parse(stored) : {};
   });
 
-  // Track peak concurrent activities
-  const [peakConcurrent, setPeakConcurrent] = useState(() => {
-    const stored = localStorage.getItem("plexPeakConcurrent");
-    return stored ? JSON.parse(stored) : 0;
-  });
+  // Track peak concurrent activities - load from DB
+  const [peakConcurrent, setPeakConcurrent] = useState(0);
+  const [loadingPeak, setLoadingPeak] = useState(true);
+
+  // Use a ref to track the latest peak value to avoid stale closures
+  const peakConcurrentRef = useRef(peakConcurrent);
+
+  // Update ref whenever state changes
+  useEffect(() => {
+    peakConcurrentRef.current = peakConcurrent;
+  }, [peakConcurrent]);
+
+  // Load peak concurrent from database on mount
+  useEffect(() => {
+    const loadPeakStats = async () => {
+      try {
+        const stats = await getPlexStats();
+        setPeakConcurrent(stats.peak_concurrent);
+        peakConcurrentRef.current = stats.peak_concurrent;
+      } catch (error) {
+        console.error("Error loading peak stats:", error);
+      } finally {
+        setLoadingPeak(false);
+      }
+    };
+
+    loadPeakStats();
+  }, []);
 
   // Save timestamps to localStorage whenever they change
   useEffect(() => {
@@ -271,10 +299,6 @@ export default function VODStreams() {
       JSON.stringify(completedActivities)
     );
   }, [completedActivities]);
-
-  useEffect(() => {
-    localStorage.setItem("plexPeakConcurrent", JSON.stringify(peakConcurrent));
-  }, [peakConcurrent]);
 
   const fetchActivities = async () => {
     try {
@@ -372,10 +396,19 @@ export default function VODStreams() {
       setError(null);
       setPlexConfigured(true);
 
-      // Update peak concurrent activities
+      // Update peak concurrent activities - save to database
       const currentCount = processedActivities.length;
-      if (currentCount > peakConcurrent) {
-        setPeakConcurrent(currentCount);
+      const currentPeak = peakConcurrentRef.current;
+
+      if (currentCount > currentPeak) {
+        console.log(`Updating peak: ${currentPeak} -> ${currentCount}`);
+        try {
+          const result = await updatePeakConcurrent(currentCount);
+          setPeakConcurrent(result.peak_concurrent);
+          peakConcurrentRef.current = result.peak_concurrent;
+        } catch (error) {
+          console.error("Error updating peak concurrent:", error);
+        }
       }
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -607,7 +640,15 @@ export default function VODStreams() {
                 {peakConcurrent}
               </p>
               <button
-                onClick={() => setPeakConcurrent(0)}
+                onClick={async () => {
+                  try {
+                    const result = await resetPeakConcurrent();
+                    setPeakConcurrent(result.peak_concurrent);
+                    peakConcurrentRef.current = result.peak_concurrent;
+                  } catch (error) {
+                    console.error("Error resetting peak:", error);
+                  }
+                }}
                 className="mt-2 text-xs text-theme-text-muted hover:text-purple-500 transition-colors flex items-center gap-1"
                 title="Reset peak counter"
               >

@@ -1,5 +1,84 @@
 # CHANGELOG.md
 
+# [1.8.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.7.0...v1.8.0) (2025-11-21)
+
+### Features
+
+• **ui: modern premium card design**
+◦ Complete visual redesign of DashboardServiceCard and ServiceCard components
+◦ Gradient backgrounds: from-theme-card via-theme-card to-theme-hover
+◦ Enhanced shadows with colored glows on hover (shadow-theme-primary/10)
+◦ Rounded-xl corners (12px) for modern aesthetic
+◦ Icon glow effects with scale animations on hover
+◦ Smooth 300ms transitions throughout
+
+• **ui: redesigned service cards**
+◦ Clickable card containers linking directly to service URLs
+◦ Removed URL section for cleaner layout
+◦ Action buttons (Check, Edit, Delete) moved to header, right-aligned below status badges
+◦ All buttons use consistent theming with hover effects
+◦ Stats displayed in responsive grid (4 columns with traffic, 2 columns without)
+◦ Enhanced typography: bold headings, semibold badges, uppercase labels
+
+• **ui: enhanced status badges**
+◦ Gradient backgrounds for status indicators
+◦ Shadow colors matching status (green/red/yellow with 20% opacity)
+◦ Improved text contrast with -400 color variants
+◦ Larger padding and font sizes for better readability
+
+• **ui: modern traffic chart**
+◦ Complete redesign of DashboardTrafficChart component
+◦ SVG glow filters for chart lines
+◦ Grid background pattern with 20px squares
+◦ Animated pulse indicators on active services
+◦ Card-based legend layout with gradient backgrounds
+◦ Info overlay with animated Activity icon
+◦ Enhanced color scheme with primary/glow properties
+
+• **ui: improved modal dropdowns**
+◦ ServiceModal type dropdown now uses custom styled dropdown
+◦ Matches group dropdown theme: bg-theme-card, border-theme, shadow-lg
+◦ Selected items highlighted with theme-primary background
+◦ Check icon for selected item, hover effects on options
+◦ Click outside to close functionality
+
+• **database: Plex configuration migration**
+◦ Created PlexStatsDB table with server_url, server_token, server_name, peak_concurrent fields
+◦ Migrated Plex config from JSON file to SQLite database
+◦ New API endpoints: GET /api/plex/stats, POST /api/plex/stats/peak, POST /api/plex/stats/reset
+◦ Migration script (migrate_plex_to_db.py) created for one-time data transfer
+◦ Automatic migration on server startup checks for JSON file and migrates to database
+◦ Backup created during migration process
+
+• **vod: enhanced peak concurrent tracking**
+◦ Peak concurrent counter now persists in database instead of localStorage
+◦ Uses React refs to prevent stale closure issues and decreasing values
+◦ Functional setState for accurate peak tracking
+◦ Database persistence enables multi-user sync and centralized stats
+
+### Changed
+
+• **ui: dynamic stats grid**
+◦ Response and Checked boxes take full width (2 columns) when no traffic data
+◦ Expands to 4 columns when upload/download traffic values are present
+◦ Better use of available space based on data availability
+
+• **ui: card spacing adjustments**
+◦ Increased spacing between service name and type/description badges (mb-2 → mb-3)
+◦ Better visual hierarchy in card headers
+
+### Fixed
+
+• **dashboard: traffic chart "ALL" tab filtering**
+◦ Fixed chart not displaying data on "ALL" tab
+◦ Added special case check: if activeTab === "ALL" show all services
+◦ Previously tried to match "ALL" as a group name
+
+• **docs: changelog edit link redirect**
+◦ Fixed changelog page edit link to point to root CHANGELOG.md
+◦ Previously pointed to docs/changelog.md (copy) instead of source file
+◦ Added template override in docs/overrides/main.html
+
 # [1.7.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.6.0...v1.7.0) (2025-11-20)
 
 ### Features
