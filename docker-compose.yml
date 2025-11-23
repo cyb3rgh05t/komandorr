@@ -6,6 +6,7 @@ services:
     environment:
       - "PGID=1000"
       - "PUID=1000"
+      - "TZ=Europe/Berlin"
       - "TERM=xterm"
       # Server Configuration
       - "HOST=0.0.0.0"
@@ -25,15 +26,26 @@ services:
       - "ENABLE_AUTH=false"
       - "AUTH_USERNAME=admin"
       - "AUTH_PASSWORD=admin"
-    image: "ghcr.io/cyb3rgh05t/komandorr:latest"
+    image: "ghcr.io/cyb3rgh05t/komandorr:dev"
     restart: "unless-stopped"
     ports:
-      - "8000:8000"
+      - "8010:8000"
     networks:
       - "proxy"
     volumes:
       - "/opt/appdata/komandorr/data:/app/data:rw"
       - "/opt/appdata/komandorr/logs:/app/logs:rw"
+    labels:
+      - "dockupdater.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.komandorr-rtr.entrypoints=https"
+      - "traefik.http.routers.komandorr-rtr.rule=Host(`komandorr.${DOMAIN}`)"
+      - "traefik.http.routers.komandorr-rtr.tls=true"
+      - "traefik.http.routers.komandorr-rtr.tls.certresolver=dns-cloudflare"
+      - "traefik.http.routers.komandorr-rtr.middlewares=chain-authelia@file"
+      - "traefik.http.routers.komandorr-rtr.service=komandorr-svc"
+      - "traefik.http.services.komandorr-svc.loadbalancer.server.port=8000"
 networks:
   proxy:
     driver: bridge
