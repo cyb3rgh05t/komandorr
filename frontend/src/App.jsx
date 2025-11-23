@@ -25,10 +25,11 @@ function App() {
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    // Check if we're on the invite redemption page
+    // Check if we're on the invite redemption page or invites manager
     const isInvitePage =
       window.location.pathname.startsWith("/invite/") ||
-      window.location.pathname === "/redeem";
+      window.location.pathname === "/redeem" ||
+      window.location.pathname === "/invites";
 
     // Skip auth check for invite pages
     if (isInvitePage) {
