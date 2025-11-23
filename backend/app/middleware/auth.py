@@ -1,8 +1,33 @@
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import base64
 from app.config import settings
 from app.utils.logger import logger
+
+security = HTTPBasic()
+
+
+def require_auth(credentials: HTTPBasicCredentials = Depends(security)) -> str:
+    """
+    Dependency function for route-level authentication
+    Returns the username if authentication is successful
+    """
+    if not settings.ENABLE_AUTH:
+        return "admin"  # Return default username when auth is disabled
+
+    if (
+        credentials.username == settings.AUTH_USERNAME
+        and credentials.password == settings.AUTH_PASSWORD
+    ):
+        return credentials.username
+
+    logger.warning(f"Invalid credentials for user: {credentials.username}")
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        headers={"WWW-Authenticate": "Basic"},
+        detail="Invalid username or password",
+    )
 
 
 async def basic_auth_middleware(request: Request, call_next):

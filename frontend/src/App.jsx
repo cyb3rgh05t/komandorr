@@ -10,6 +10,9 @@ import Traffic from "./pages/Traffic";
 import VODStreams from "./pages/VODStreams";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
+import InviteRedemption from "./pages/InviteRedemption";
+import InviteRedeem from "./pages/InviteRedeem";
+import InvitesManager from "./components/InvitesManager";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -22,6 +25,19 @@ function App() {
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
+    // Check if we're on the invite redemption page
+    const isInvitePage =
+      window.location.pathname.startsWith("/invite/") ||
+      window.location.pathname === "/redeem";
+
+    // Skip auth check for invite pages
+    if (isInvitePage) {
+      setIsLoading(false);
+      setAppReady(true);
+      setIsAuthenticated(true); // Bypass auth for invite pages
+      return;
+    }
+
     // Ensure loading screen shows for at least 1 second for smooth UX
     const minLoadingTime = setTimeout(() => {
       setAppReady(true);
@@ -106,17 +122,30 @@ function App() {
     <ThemeProvider>
       <ToastProvider>
         <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/monitor" element={<Monitor />} />
-              <Route path="/traffic" element={<Traffic />} />
-              <Route path="/vod-streams" element={<VODStreams />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/about" element={<About />} />
-            </Routes>
-          </Layout>
+          <Routes>
+            {/* Public invite redemption pages (no layout) */}
+            <Route path="/invite/:code" element={<InviteRedemption />} />
+            <Route path="/redeem" element={<InviteRedeem />} />
+
+            {/* Protected routes with layout */}
+            <Route
+              path="*"
+              element={
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/services" element={<Services />} />
+                    <Route path="/monitor" element={<Monitor />} />
+                    <Route path="/traffic" element={<Traffic />} />
+                    <Route path="/vod-streams" element={<VODStreams />} />
+                    <Route path="/invites" element={<InvitesManager />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/about" element={<About />} />
+                  </Routes>
+                </Layout>
+              }
+            />
+          </Routes>
         </BrowserRouter>
       </ToastProvider>
     </ThemeProvider>

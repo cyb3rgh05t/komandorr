@@ -16,5 +16,21 @@
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true
-  }
+  },
+  "cSpell.words": [
+    "autoflush",
+    "colorama",
+    "dotenv",
+    "fastapi",
+    "httpx",
+    "komandorr",
+    "myplex",
+    "plexapi",
+    "pydantic",
+    "sessionmaker",
+    "sqlalchemy",
+    "tzdata",
+    "uvicorn",
+    "Wizarr"
+  ]
 }

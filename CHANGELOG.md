@@ -1,5 +1,88 @@
 # CHANGELOG.md
 
+# [2.0.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.8.0...v2.0.0) (2025-11-23)
+
+### 🎉 Major Release - VOD Invites System
+
+**New Features**
+
+• **invites: Complete VOD invite management system**
+◦ New InvitesManager component with full CRUD operations
+◦ Create invite codes with customizable settings (usage limits, expiration, permissions)
+◦ Copy invite links with one-click feedback toast notifications
+◦ Real-time invite statistics: total invites, active invites, total users, active users
+◦ Permission control: allow_sync, allow_camera_upload, allow_channels toggles
+◦ iOS-style toggle switches for permission settings in create modal
+◦ Library selection support (all libraries or specific ones)
+◦ 24-hour time format for all timestamps
+◦ Permission badges display on invite cards (shows "None" when no permissions set)
+
+• **invites: Backend API endpoints**
+◦ POST /api/invites/ - Create new invite with validation
+◦ GET /api/invites/ - List all invites with users
+◦ GET /api/invites/{invite_id} - Get single invite details
+◦ PUT /api/invites/{invite_id} - Update invite settings
+◦ DELETE /api/invites/{invite_id} - Delete invite
+◦ POST /api/invites/redeem - Redeem invite code and create Plex user
+◦ POST /api/invites/validate - Validate invite code before redemption
+◦ GET /api/invites/stats - Get aggregate invite statistics
+◦ Plex server name integration from PlexStatsDB
+
+• **invites: Database schema**
+◦ New `invites` table with code, expiration, usage limits, permissions
+◦ New `plex_users` table for tracking invited users
+◦ Foreign key relationships between invites and users
+◦ Automatic invite code generation (8-character alphanumeric)
+◦ Soft delete support with is_active flag
+
+• **ui: Unified stats card styling**
+◦ Traffic page style applied to Dashboard and Invites pages
+◦ Consistent layout: small icon + label on left, large icon on right
+◦ Left-aligned values for better readability
+◦ Rounded-lg borders with shadow-sm hover effects
+◦ Theme-consistent colors and spacing
+
+• **plex: Server name display**
+◦ Fetch Plex server name from /api/plex/stats endpoint
+◦ Display real server name (e.g., "StreamNet VOD") on invite cards
+◦ Fallback to "Plex Server" if name not available
+◦ Automatic server name fetching on component mount
+
+• **navigation: VOD Invites menu item**
+◦ New sidebar navigation entry: "VOD Invites"
+◦ Accessible at /invites route
+◦ Film icon for visual consistency
+
+**Technical Improvements**
+
+• **backend: Enhanced Pydantic models**
+◦ Invite, InviteCreate, InviteUpdate, InviteWithUsers models
+◦ PlexUser model for user tracking
+◦ RedeemInviteRequest and ValidateInviteResponse models
+◦ Proper serialization with model_dump() support
+
+• **frontend: Component architecture**
+◦ Reusable toast notifications via ToastContext
+◦ API service abstraction for invite endpoints
+◦ Real-time data fetching and state management
+◦ Internationalization ready with i18next integration
+
+• **security: Invite validation**
+◦ Expiration checking (date-based)
+◦ Usage limit enforcement
+◦ Active status validation
+◦ Duplicate email prevention
+
+**Bug Fixes**
+
+• Fixed Pydantic model serialization excluding plex_server field
+• Fixed console logging showing undefined plex_server values
+• Fixed stats card alignment issues across different pages
+• Fixed permission badges not showing when no permissions selected
+• Fixed JSX syntax errors from duplicate code blocks
+
+---
+
 # [1.8.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.7.0...v1.8.0) (2025-11-21)
 
 ### Features

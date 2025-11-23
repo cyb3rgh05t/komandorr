@@ -35,6 +35,9 @@ class PlexStats(BaseModel):
     server_url: Optional[str] = None
     server_name: Optional[str] = None
     token_configured: bool = False
+    total_users: int = 0
+    total_movies: int = 0
+    total_tv_shows: int = 0
 
 
 class UpdatePeakRequest(BaseModel):
@@ -53,6 +56,9 @@ def load_plex_config() -> Optional[dict]:
                     "url": stats.server_url,  # type: ignore
                     "token": stats.server_token,  # type: ignore
                     "server_name": stats.server_name,  # type: ignore
+                    "total_users": stats.total_users or 0,  # type: ignore
+                    "total_movies": stats.total_movies or 0,  # type: ignore
+                    "total_tv_shows": stats.total_tv_shows or 0,  # type: ignore
                 }
             else:
                 logger.debug("No Plex config found in database")
@@ -63,7 +69,13 @@ def load_plex_config() -> Optional[dict]:
     return None
 
 
-def save_plex_config(config: dict, server_name: Optional[str] = None) -> bool:
+def save_plex_config(
+    config: dict,
+    server_name: Optional[str] = None,
+    total_users: int = 0,
+    total_movies: int = 0,
+    total_tv_shows: int = 0,
+) -> bool:
     """Save Plex configuration to database"""
     try:
         session = db.get_session()
@@ -76,6 +88,9 @@ def save_plex_config(config: dict, server_name: Optional[str] = None) -> bool:
                     server_token=config["token"],
                     server_name=server_name,
                     peak_concurrent=0,
+                    total_users=total_users,
+                    total_movies=total_movies,
+                    total_tv_shows=total_tv_shows,
                 )
                 session.add(stats)
             else:
@@ -83,9 +98,14 @@ def save_plex_config(config: dict, server_name: Optional[str] = None) -> bool:
                 stats.server_token = config["token"]  # type: ignore
                 if server_name:
                     stats.server_name = server_name  # type: ignore
+                stats.total_users = total_users  # type: ignore
+                stats.total_movies = total_movies  # type: ignore
+                stats.total_tv_shows = total_tv_shows  # type: ignore
 
             session.commit()
-            logger.info(f"Plex configuration saved to database")
+            logger.info(
+                f"Plex configuration saved to database (Users: {total_users}, Movies: {total_movies}, TV Shows: {total_tv_shows})"
+            )
             return True
         finally:
             session.close()
@@ -146,12 +166,101 @@ def migrate_plex_config_if_needed() -> None:
         logger.error(f"Error during Plex config migration: {e}")
 
 
+async def fetch_plex_statistics(url: str, token: str) -> tuple[int, int, int]:
+    """
+    Fetch Plex server statistics
+    Returns: (total_users, total_movies, total_tv_shows)
+    """
+    total_users = 0
+    total_movies = 0
+    total_tv_shows = 0
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {"X-Plex-Token": token, "Accept": "application/json"}
+
+            # Fetch users count
+            try:
+                users_response = await client.get(f"{url}/accounts", headers=headers)
+                if users_response.status_code == 200:
+                    users_data = users_response.json()
+                    total_users = len(
+                        users_data.get("MediaContainer", {}).get("Account", [])
+                    )
+            except Exception as e:
+                logger.warning(f"Could not fetch user count: {e}")
+
+            # Fetch library sections to count movies and TV shows
+            try:
+                sections_response = await client.get(
+                    f"{url}/library/sections", headers=headers
+                )
+                if sections_response.status_code == 200:
+                    sections_data = sections_response.json()
+                    sections = sections_data.get("MediaContainer", {}).get(
+                        "Directory", []
+                    )
+
+                    for section in sections:
+                        section_key = section.get("key")
+                        section_type = section.get("type")
+
+                        if section_type == "movie":
+                            # Get movie count for this library
+                            try:
+                                movies_response = await client.get(
+                                    f"{url}/library/sections/{section_key}/all",
+                                    headers=headers,
+                                    params={
+                                        "X-Plex-Container-Start": 0,
+                                        "X-Plex-Container-Size": 0,
+                                    },
+                                )
+                                if movies_response.status_code == 200:
+                                    movies_data = movies_response.json()
+                                    total_movies += movies_data.get(
+                                        "MediaContainer", {}
+                                    ).get("totalSize", 0)
+                            except Exception as e:
+                                logger.warning(
+                                    f"Could not fetch movie count for section {section_key}: {e}"
+                                )
+
+                        elif section_type == "show":
+                            # Get TV show count for this library
+                            try:
+                                shows_response = await client.get(
+                                    f"{url}/library/sections/{section_key}/all",
+                                    headers=headers,
+                                    params={
+                                        "X-Plex-Container-Start": 0,
+                                        "X-Plex-Container-Size": 0,
+                                    },
+                                )
+                                if shows_response.status_code == 200:
+                                    shows_data = shows_response.json()
+                                    total_tv_shows += shows_data.get(
+                                        "MediaContainer", {}
+                                    ).get("totalSize", 0)
+                            except Exception as e:
+                                logger.warning(
+                                    f"Could not fetch TV show count for section {section_key}: {e}"
+                                )
+            except Exception as e:
+                logger.warning(f"Could not fetch library sections: {e}")
+
+    except Exception as e:
+        logger.error(f"Error fetching Plex statistics: {e}")
+
+    return total_users, total_movies, total_tv_shows
+
+
 async def validate_plex_connection(
     url: str, token: str
-) -> tuple[bool, Optional[str], Optional[str]]:
+) -> tuple[bool, Optional[str], Optional[str], int, int, int]:
     """
     Validate Plex server connection
-    Returns: (is_valid, error_message, server_name)
+    Returns: (is_valid, error_message, server_name, total_users, total_movies, total_tv_shows)
     """
     try:
         # Clean up URL - remove trailing slash
@@ -161,31 +270,126 @@ async def validate_plex_connection(
         async with httpx.AsyncClient(timeout=10.0) as client:
             headers = {"X-Plex-Token": token, "Accept": "application/json"}
 
-            response = await client.get(f"{url}/identity", headers=headers)
+            response = await client.get(f"{url}/", headers=headers)
 
             if response.status_code == 200:
                 data = response.json()
                 server_name = data.get("MediaContainer", {}).get(
-                    "friendlyName", "Unknown"
+                    "friendlyName", "Plex Server"
                 )
                 logger.info(f"Successfully connected to Plex server: {server_name}")
-                return True, None, server_name
+
+                # Fetch statistics
+                total_users, total_movies, total_tv_shows = await fetch_plex_statistics(
+                    url, token
+                )
+
+                return (
+                    True,
+                    None,
+                    server_name,
+                    total_users,
+                    total_movies,
+                    total_tv_shows,
+                )
             elif response.status_code == 401:
-                return False, "Invalid Plex token", None
+                return False, "Invalid Plex token", None, 0, 0, 0
             else:
                 return (
                     False,
                     f"Server returned status code: {response.status_code}",
                     None,
+                    0,
+                    0,
+                    0,
                 )
 
     except httpx.TimeoutException:
-        return False, "Connection timeout - server not reachable", None
+        return False, "Connection timeout - server not reachable", None, 0, 0, 0
     except httpx.ConnectError:
-        return False, "Could not connect to server - check URL", None
+        return False, "Could not connect to server - check URL", None, 0, 0, 0
     except Exception as e:
         logger.error(f"Error validating Plex connection: {e}")
-        return False, str(e), None
+        return False, str(e), None, 0, 0, 0
+
+
+@router.get("/users/count")
+async def get_plex_users_count():
+    """Get count of Plex server shared users via plex.tv API"""
+    try:
+        config = load_plex_config()
+        if not config or not config.get("url") or not config.get("token"):
+            return {"count": 0}
+
+        url = config["url"].rstrip("/")
+        token = config["token"]
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # First, get the server's machine identifier
+            try:
+                identity_response = await client.get(
+                    f"{url}/identity",
+                    headers={"X-Plex-Token": token, "Accept": "application/json"},
+                )
+
+                logger.info(
+                    f"Identity response status: {identity_response.status_code}"
+                )
+
+                if identity_response.status_code == 200:
+                    identity_data = identity_response.json()
+                    machine_identifier = identity_data.get("MediaContainer", {}).get(
+                        "machineIdentifier"
+                    )
+
+                    if not machine_identifier:
+                        logger.warning("Could not get Plex server machine identifier")
+                        return {"count": 0}
+
+                    logger.info(f"Plex server machine identifier: {machine_identifier}")
+
+                    # Now use plex.tv API to get shared servers
+                    shared_url = f"https://plex.tv/api/servers/{machine_identifier}/shared_servers"
+                    logger.info(f"Calling plex.tv API: {shared_url}")
+
+                    shared_response = await client.get(
+                        shared_url,
+                        params={"X-Plex-Token": token},
+                    )
+
+                    logger.info(
+                        f"Shared servers response status: {shared_response.status_code}"
+                    )
+
+                    if shared_response.status_code == 200:
+                        # Parse XML response
+                        import xml.etree.ElementTree as ET
+
+                        try:
+                            root = ET.fromstring(shared_response.text)
+
+                            # Count SharedServer elements
+                            shared_servers = root.findall("SharedServer")
+                            user_count = len(shared_servers)
+
+                            logger.info(f"Plex shared users count: {user_count}")
+                            return {"count": user_count}
+
+                        except Exception as xml_error:
+                            logger.error(f"Failed to parse XML response: {xml_error}")
+                            return {"count": 0}
+                    else:
+                        logger.warning(
+                            f"plex.tv shared_servers returned status {shared_response.status_code}: {shared_response.text}"
+                        )
+
+            except Exception as e:
+                logger.error(f"Failed to fetch Plex shared users: {e}")
+
+            return {"count": 0}
+    except Exception as e:
+        logger.error(f"Error fetching Plex users count: {e}")
+        return {"count": 0}
 
 
 @router.get("/config")
@@ -197,8 +401,18 @@ async def get_plex_config():
             "url": config.get("url", ""),
             "token": config.get("token", ""),
             "server_name": config.get("server_name", ""),
+            "total_users": config.get("total_users", 0),
+            "total_movies": config.get("total_movies", 0),
+            "total_tv_shows": config.get("total_tv_shows", 0),
         }
-    return {"url": "", "token": "", "server_name": ""}
+    return {
+        "url": "",
+        "token": "",
+        "server_name": "",
+        "total_users": 0,
+        "total_movies": 0,
+        "total_tv_shows": 0,
+    }
 
 
 @router.post("/config")
@@ -206,8 +420,8 @@ async def save_plex_configuration(config: PlexConfig):
     """Save Plex configuration"""
     try:
         # Validate the configuration first
-        is_valid, error_msg, server_name = await validate_plex_connection(
-            config.url.rstrip("/"), config.token
+        is_valid, error_msg, server_name, total_users, total_movies, total_tv_shows = (
+            await validate_plex_connection(config.url.rstrip("/"), config.token)
         )
 
         if not is_valid:
@@ -221,12 +435,17 @@ async def save_plex_configuration(config: PlexConfig):
             "token": config.token,
         }
 
-        if save_plex_config(config_data, server_name):
+        if save_plex_config(
+            config_data, server_name, total_users, total_movies, total_tv_shows
+        ):
             logger.info("Plex configuration saved successfully to database")
             return {
                 "status": "success",
                 "message": "Configuration saved",
                 "server_name": server_name,
+                "total_users": total_users,
+                "total_movies": total_movies,
+                "total_tv_shows": total_tv_shows,
             }
         else:
             raise HTTPException(
@@ -242,15 +461,24 @@ async def save_plex_configuration(config: PlexConfig):
 
 @router.post("/validate", response_model=PlexValidateResponse)
 async def validate_plex(request: PlexValidateRequest):
-    """Validate Plex server connection"""
-    is_valid, error_msg, server_name = await validate_plex_connection(
-        request.url, request.token
+    """Validate Plex server connection and save server name and statistics"""
+    is_valid, error_msg, server_name, total_users, total_movies, total_tv_shows = (
+        await validate_plex_connection(request.url, request.token)
     )
 
     if is_valid:
+        # Save the server name and statistics to database when validation succeeds
+        config_data = {
+            "url": request.url.rstrip("/"),
+            "token": request.token,
+        }
+        save_plex_config(
+            config_data, server_name, total_users, total_movies, total_tv_shows
+        )
+
         return PlexValidateResponse(
             valid=True,
-            message=f"Successfully connected to {server_name}",
+            message=f"Successfully connected to {server_name} ({total_users} users, {total_movies} movies, {total_tv_shows} TV shows)",
             server_name=server_name,
         )
     else:
@@ -451,6 +679,9 @@ async def get_plex_stats():
                 server_url=stats.server_url,  # type: ignore
                 server_name=stats.server_name,  # type: ignore
                 token_configured=bool(stats.server_url and stats.server_token),  # type: ignore
+                total_users=stats.total_users or 0,  # type: ignore
+                total_movies=stats.total_movies or 0,  # type: ignore
+                total_tv_shows=stats.total_tv_shows or 0,  # type: ignore
             )
         finally:
             session.close()
@@ -527,4 +758,90 @@ async def reset_peak_concurrent():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error resetting peak concurrent: {str(e)}",
+        )
+
+
+@router.get("/media/recent")
+async def get_recent_media():
+    """Get recent media items with posters from Plex server"""
+    try:
+        config = load_plex_config()
+        if not config:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Plex server not configured",
+            )
+
+        url = config["url"]
+        token = config["token"]
+
+        async with httpx.AsyncClient() as client:
+            headers = {"X-Plex-Token": token, "Accept": "application/json"}
+
+            # Get library sections first
+            sections_response = await client.get(
+                f"{url}/library/sections", headers=headers
+            )
+
+            if sections_response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to fetch library sections",
+                )
+
+            sections_data = sections_response.json()
+            sections = sections_data.get("MediaContainer", {}).get("Directory", [])
+
+            media_items = []
+
+            # Get recently added items from both movie and TV sections
+            for section in sections:
+                section_key = section.get("key")
+                section_type = section.get("type")
+
+                # Process both movie and show sections
+                if section_type in ["movie", "show"]:
+                    try:
+                        # Get recently added items
+                        recent_response = await client.get(
+                            f"{url}/library/sections/{section_key}/recentlyAdded",
+                            headers=headers,
+                            params={"X-Plex-Container-Size": 30},
+                        )
+
+                        if recent_response.status_code == 200:
+                            recent_data = recent_response.json()
+                            metadata = recent_data.get("MediaContainer", {}).get(
+                                "Metadata", []
+                            )
+
+                            for item in metadata:
+                                poster = item.get("thumb")
+                                if poster:
+                                    # Convert Plex path to full URL
+                                    poster_url = f"{url}{poster}?X-Plex-Token={token}"
+                                    media_items.append(
+                                        {
+                                            "title": item.get("title", "Unknown"),
+                                            "type": section_type,
+                                            "year": item.get("year"),
+                                            "poster": poster_url,
+                                            "rating": item.get("rating"),
+                                        }
+                                    )
+                    except Exception as e:
+                        logger.warning(
+                            f"Could not fetch movies from section {section_key}: {e}"
+                        )
+                        continue
+
+            return {"media": media_items[:30]}  # Return max 30 items
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching recent media: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching recent media: {str(e)}",
         )
