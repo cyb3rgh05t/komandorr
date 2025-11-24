@@ -1465,8 +1465,139 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
-<h1 id="170-2025-11-20"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.6.0...v1.7.0">1.7.0</a> (2025-11-20)<a class="headerlink" href="#170-2025-11-20" title="Permanent link">&para;</a></h1>
+<h1 id="200-2025-11-23"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.8.0...v2.0.0">2.0.0</a> (2025-11-23)<a class="headerlink" href="#200-2025-11-23" title="Permanent link">&para;</a></h1>
+<h3 id="major-release-vod-invites-system">🎉 Major Release - VOD Invites System<a class="headerlink" href="#major-release-vod-invites-system" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>invites: Complete VOD invite management system</strong>
+◦ New InvitesManager component with full CRUD operations
+◦ Create invite codes with customizable settings (usage limits, expiration, permissions)
+◦ Copy invite links with one-click feedback toast notifications
+◦ Real-time invite statistics: total invites, active invites, total users, active users
+◦ Permission control: allow_sync, allow_camera_upload, allow_channels toggles
+◦ iOS-style toggle switches for permission settings in create modal
+◦ Library selection support (all libraries or specific ones)
+◦ 24-hour time format for all timestamps
+◦ Permission badges display on invite cards (shows "None" when no permissions set)</p>
+<p>• <strong>invites: Backend API endpoints</strong>
+◦ POST /api/invites/ - Create new invite with validation
+◦ GET /api/invites/ - List all invites with users
+◦ GET /api/invites/{invite_id} - Get single invite details
+◦ PUT /api/invites/{invite_id} - Update invite settings
+◦ DELETE /api/invites/{invite_id} - Delete invite
+◦ POST /api/invites/redeem - Redeem invite code and create Plex user
+◦ POST /api/invites/validate - Validate invite code before redemption
+◦ GET /api/invites/stats - Get aggregate invite statistics
+◦ Plex server name integration from PlexStatsDB</p>
+<p>• <strong>invites: Database schema</strong>
+◦ New <code>invites</code> table with code, expiration, usage limits, permissions
+◦ New <code>plex_users</code> table for tracking invited users
+◦ Foreign key relationships between invites and users
+◦ Automatic invite code generation (8-character alphanumeric)
+◦ Soft delete support with is_active flag</p>
+<p>• <strong>ui: Unified stats card styling</strong>
+◦ Traffic page style applied to Dashboard and Invites pages
+◦ Consistent layout: small icon + label on left, large icon on right
+◦ Left-aligned values for better readability
+◦ Rounded-lg borders with shadow-sm hover effects
+◦ Theme-consistent colors and spacing</p>
+<p>• <strong>plex: Server name display</strong>
+◦ Fetch Plex server name from /api/plex/stats endpoint
+◦ Display real server name (e.g., "StreamNet VOD") on invite cards
+◦ Fallback to "Plex Server" if name not available
+◦ Automatic server name fetching on component mount</p>
+<p>• <strong>navigation: VOD Invites menu item</strong>
+◦ New sidebar navigation entry: "VOD Invites"
+◦ Accessible at /invites route
+◦ Film icon for visual consistency</p>
+<p><strong>Technical Improvements</strong></p>
+<p>• <strong>backend: Enhanced Pydantic models</strong>
+◦ Invite, InviteCreate, InviteUpdate, InviteWithUsers models
+◦ PlexUser model for user tracking
+◦ RedeemInviteRequest and ValidateInviteResponse models
+◦ Proper serialization with model_dump() support</p>
+<p>• <strong>frontend: Component architecture</strong>
+◦ Reusable toast notifications via ToastContext
+◦ API service abstraction for invite endpoints
+◦ Real-time data fetching and state management
+◦ Internationalization ready with i18next integration</p>
+<p>• <strong>security: Invite validation</strong>
+◦ Expiration checking (date-based)
+◦ Usage limit enforcement
+◦ Active status validation
+◦ Duplicate email prevention</p>
+<p><strong>Bug Fixes</strong></p>
+<p>• Fixed Pydantic model serialization excluding plex_server field
+• Fixed console logging showing undefined plex_server values
+• Fixed stats card alignment issues across different pages
+• Fixed permission badges not showing when no permissions selected
+• Fixed JSX syntax errors from duplicate code blocks</p>
+<hr />
+<h1 id="180-2025-11-21"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.7.0...v1.8.0">1.8.0</a> (2025-11-21)<a class="headerlink" href="#180-2025-11-21" title="Permanent link">&para;</a></h1>
 <h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
+<p>• <strong>ui: modern premium card design</strong>
+◦ Complete visual redesign of DashboardServiceCard and ServiceCard components
+◦ Gradient backgrounds: from-theme-card via-theme-card to-theme-hover
+◦ Enhanced shadows with colored glows on hover (shadow-theme-primary/10)
+◦ Rounded-xl corners (12px) for modern aesthetic
+◦ Icon glow effects with scale animations on hover
+◦ Smooth 300ms transitions throughout</p>
+<p>• <strong>ui: redesigned service cards</strong>
+◦ Clickable card containers linking directly to service URLs
+◦ Removed URL section for cleaner layout
+◦ Action buttons (Check, Edit, Delete) moved to header, right-aligned below status badges
+◦ All buttons use consistent theming with hover effects
+◦ Stats displayed in responsive grid (4 columns with traffic, 2 columns without)
+◦ Enhanced typography: bold headings, semibold badges, uppercase labels</p>
+<p>• <strong>ui: enhanced status badges</strong>
+◦ Gradient backgrounds for status indicators
+◦ Shadow colors matching status (green/red/yellow with 20% opacity)
+◦ Improved text contrast with -400 color variants
+◦ Larger padding and font sizes for better readability</p>
+<p>• <strong>ui: modern traffic chart</strong>
+◦ Complete redesign of DashboardTrafficChart component
+◦ SVG glow filters for chart lines
+◦ Grid background pattern with 20px squares
+◦ Animated pulse indicators on active services
+◦ Card-based legend layout with gradient backgrounds
+◦ Info overlay with animated Activity icon
+◦ Enhanced color scheme with primary/glow properties</p>
+<p>• <strong>ui: improved modal dropdowns</strong>
+◦ ServiceModal type dropdown now uses custom styled dropdown
+◦ Matches group dropdown theme: bg-theme-card, border-theme, shadow-lg
+◦ Selected items highlighted with theme-primary background
+◦ Check icon for selected item, hover effects on options
+◦ Click outside to close functionality</p>
+<p>• <strong>database: Plex configuration migration</strong>
+◦ Created PlexStatsDB table with server_url, server_token, server_name, peak_concurrent fields
+◦ Migrated Plex config from JSON file to SQLite database
+◦ New API endpoints: GET /api/plex/stats, POST /api/plex/stats/peak, POST /api/plex/stats/reset
+◦ Migration script (migrate_plex_to_db.py) created for one-time data transfer
+◦ Automatic migration on server startup checks for JSON file and migrates to database
+◦ Backup created during migration process</p>
+<p>• <strong>vod: enhanced peak concurrent tracking</strong>
+◦ Peak concurrent counter now persists in database instead of localStorage
+◦ Uses React refs to prevent stale closure issues and decreasing values
+◦ Functional setState for accurate peak tracking
+◦ Database persistence enables multi-user sync and centralized stats</p>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<p>• <strong>ui: dynamic stats grid</strong>
+◦ Response and Checked boxes take full width (2 columns) when no traffic data
+◦ Expands to 4 columns when upload/download traffic values are present
+◦ Better use of available space based on data availability</p>
+<p>• <strong>ui: card spacing adjustments</strong>
+◦ Increased spacing between service name and type/description badges (mb-2 → mb-3)
+◦ Better visual hierarchy in card headers</p>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<p>• <strong>dashboard: traffic chart "ALL" tab filtering</strong>
+◦ Fixed chart not displaying data on "ALL" tab
+◦ Added special case check: if activeTab === "ALL" show all services
+◦ Previously tried to match "ALL" as a group name</p>
+<p>• <strong>docs: changelog edit link redirect</strong>
+◦ Fixed changelog page edit link to point to root CHANGELOG.md
+◦ Previously pointed to docs/changelog.md (copy) instead of source file
+◦ Added template override in docs/overrides/main.html</p>
+<h1 id="170-2025-11-20"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.6.0...v1.7.0">1.7.0</a> (2025-11-20)<a class="headerlink" href="#170-2025-11-20" title="Permanent link">&para;</a></h1>
+<h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: 4-column grid layout</strong>
 ◦ Service cards now display in 4 columns on large screens (xl:grid-cols-4)
 ◦ Applied to Dashboard, Services, Monitor, and Traffic pages
@@ -1496,7 +1627,7 @@
 ◦ "Traffic" → "Traffic Monitor"
 ◦ "VOD Streams" → "VOD Monitor"
 ◦ Updated in both English and German translations</p>
-<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: download color scheme</strong>
 ◦ Changed download traffic color from indigo to green
 ◦ Upload remains blue for better visual distinction
@@ -1505,7 +1636,7 @@
 ◦ Removed theme and language settings from Settings page
 ◦ Settings now accessible only via navbar dropdowns
 ◦ Cleaner settings page focused on core configuration</p>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: problem card filtering</strong>
 ◦ Fixed problem filter to correctly check response_time &gt; 1000ms
 ◦ Previously only checked status === "problem"
@@ -1519,7 +1650,7 @@
 ◦ Added missing servicesInActiveGroup calculation in Traffic.jsx
 ◦ Resolved all console errors related to undefined variables</p>
 <h1 id="160-2025-11-14"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.5.8...v1.6.0">1.6.0</a> (2025-11-14)<a class="headerlink" href="#160-2025-11-14" title="Permanent link">&para;</a></h1>
-<h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">&para;</a></h3>
+<h3 id="features_2">Features<a class="headerlink" href="#features_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>backend: SQLite database storage</strong>
 ◦ Migrated from JSON file storage to SQLite database for better scalability
 ◦ Implemented SQLAlchemy ORM with three tables: services, response_history, traffic_history
@@ -1536,7 +1667,7 @@
 ◦ Stores up to 1000 points in database for long-term history
 ◦ Automatic cleanup of old data points to prevent database bloat
 ◦ Timezone-aware datetime handling with naive UTC storage</p>
-<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>storage: replaced JSON with SQLite</strong>
 ◦ Services no longer stored in <code>services.json</code> file
 ◦ All service data now persisted in <code>komandorr.db</code> database
@@ -1551,13 +1682,13 @@
 ◦ Added migration instructions for existing JSON users
 ◦ Updated configuration guide with database details
 ◦ Added database schema explanation</p>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>type checking: SQLAlchemy ORM type hints</strong>
 ◦ Added <code># type: ignore</code> comments for SQLAlchemy ORM operations
 ◦ Updated pyrightconfig.json to suppress false positive type errors
 ◦ Resolved Pylance warnings about Column type assignments</p>
 <h1 id="158-2025-11-13"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.5.7...v1.5.8">1.5.8</a> (2025-11-13)<a class="headerlink" href="#158-2025-11-13" title="Permanent link">&para;</a></h1>
-<h3 id="features_2">Features<a class="headerlink" href="#features_2" title="Permanent link">&para;</a></h3>
+<h3 id="features_3">Features<a class="headerlink" href="#features_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: clickable stats card filters</strong>
 ◦ Stats cards now act as filter buttons on Dashboard, Services, and Monitor pages
 ◦ Click Total/Online/Offline/Problem cards to filter services by status
@@ -1579,7 +1710,7 @@
 ◦ Dark theme with Bootstrap 4 styling
 ◦ Updated GitHub Actions workflow to use new theme
 ◦ Modern, clean design with better readability</p>
-<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: stats cards are now interactive buttons</strong>
 ◦ Converted static stats displays to clickable filter controls
 ◦ Reduced gap spacing for more compact layout (gap-4)
@@ -1588,7 +1719,7 @@
 ◦ Replaced mkdocs-material with mkdocs-bootswatch in requirements
 ◦ Updated docs deployment workflow with new theme package</p>
 <h1 id="157-2025-11-13"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.5.6...v1.5.7">1.5.7</a> (2025-11-13)<a class="headerlink" href="#157-2025-11-13" title="Permanent link">&para;</a></h1>
-<h3 id="features_3">Features<a class="headerlink" href="#features_3" title="Permanent link">&para;</a></h3>
+<h3 id="features_4">Features<a class="headerlink" href="#features_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>logging: enhanced logging system with colorama</strong>
 ◦ Implemented cross-platform colored console output using colorama library
 ◦ Added beautiful color-coded log levels (DEBUG=cyan, INFO=green, WARNING=yellow, ERROR=red, CRITICAL=magenta)
@@ -1616,7 +1747,7 @@
 ◦ Created LOGGER_IMPROVEMENTS.md with migration guide and examples
 ◦ Created .env.logging.example with configuration templates
 ◦ Documentation covers all log levels, configuration options, and best practices</p>
-<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>dependencies: added colorama</strong>
 ◦ Added colorama&gt;=0.4.6 to backend/requirements.txt
 ◦ Added colorama&gt;=0.4.6 to traffic/requirements.txt
@@ -1646,7 +1777,7 @@
 ◦ Cross-platform consistency
 ◦ Zero breaking changes - fully backward compatible</p>
 <h1 id="156-2025-11-10"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.5.5...v1.5.6">1.5.6</a> (2025-11-10)<a class="headerlink" href="#156-2025-11-10" title="Permanent link">&para;</a></h1>
-<h3 id="features_4">Features<a class="headerlink" href="#features_4" title="Permanent link">&para;</a></h3>
+<h3 id="features_5">Features<a class="headerlink" href="#features_5" title="Permanent link">&para;</a></h3>
 <p>• <strong>assets: upgraded logo and favicon to SVG format</strong>
 ◦ Replaced PNG logo and favicon files with scalable SVG versions
 ◦ Updated all frontend components to use SVG logo (/logo.svg)
@@ -1656,7 +1787,7 @@
 ◦ Updated main README.md to reference SVG logo
 ◦ Updated documentation index.md to use SVG logo
 ◦ Copied SVG assets to all necessary directories (backend/icons/, docs/images/)</p>
-<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
 <p>• <strong>quality: improved visual assets</strong>
 ◦ SVG format provides better scalability and quality at all sizes
 ◦ Smaller file sizes compared to PNG equivalents
@@ -1668,7 +1799,7 @@
 ◦ Updated docs/README.md structure documentation
 ◦ All documentation now uses superior SVG format</p>
 <h1 id="155-2025-11-09"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.5.1...v1.5.5">1.5.5</a> (2025-11-09)<a class="headerlink" href="#155-2025-11-09" title="Permanent link">&para;</a></h1>
-<h3 id="features_5">Features<a class="headerlink" href="#features_5" title="Permanent link">&para;</a></h3>
+<h3 id="features_6">Features<a class="headerlink" href="#features_6" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: comprehensive mobile responsiveness</strong>
 ◦ Optimized all pages for mobile devices with responsive layouts
 ◦ Reduced padding and spacing on small screens (px-3 sm:px-4, py-4 sm:py-6)
@@ -1688,14 +1819,14 @@
 ◦ Responsive gap spacing (gap-2 sm:gap-3, gap-3 sm:gap-4)
 ◦ Proper text truncation on small screens
 ◦ Flexible button groups that wrap on mobile</p>
-<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
 <p>• <strong>layout: mobile-first approach</strong>
 ◦ All pages now use responsive spacing utilities
 ◦ Consistent mobile breakpoint usage across all components
 ◦ Better utilization of screen real estate on mobile devices
 ◦ Improved readability with appropriate font scaling</p>
 <h1 id="151-2025-11-09"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.5.0...v1.5.1">1.5.1</a> (2025-11-09)<a class="headerlink" href="#151-2025-11-09" title="Permanent link">&para;</a></h1>
-<h3 id="features_6">Features<a class="headerlink" href="#features_6" title="Permanent link">&para;</a></h3>
+<h3 id="features_7">Features<a class="headerlink" href="#features_7" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: group-based filtering across all pages</strong>
 ◦ Added group tabs to Monitor page with service filtering by selected group
 ◦ Added group tabs to Traffic page with service filtering by selected group
@@ -1714,13 +1845,13 @@
 ◦ Services maintains active group tab selection during background refresh
 ◦ All pages update seamlessly without disrupting user's current view or context
 ◦ Loading states only shown on initial load, not during auto-refresh</p>
-<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
 <p>• <strong>navigation: improved user experience</strong>
 ◦ All pages now support consistent group-based filtering
 ◦ Auto-refresh intervals maintained: Dashboard/Services (30s), Monitor/Traffic (10s)
 ◦ Scroll position and tab context preserved across all pages</p>
 <h1 id="150-2025-11-09"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.2...v1.5.0">1.5.0</a> (2025-11-09)<a class="headerlink" href="#150-2025-11-09" title="Permanent link">&para;</a></h1>
-<h3 id="features_7">Features<a class="headerlink" href="#features_7" title="Permanent link">&para;</a></h3>
+<h3 id="features_8">Features<a class="headerlink" href="#features_8" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: comprehensive UI/UX improvements</strong>
 ◦ Created dedicated <code>DashboardServiceCard</code> component for dashboard-specific service display
 ◦ Added horizontal stats bar layout with individual stat boxes (Response Time, Last Check, Upload/Download Speed)
@@ -1835,7 +1966,7 @@
 ◦ Improved <code>formatDistanceToNow()</code> with validation and edge case handling
 ◦ Added null/undefined checks and invalid date handling
 ◦ Timestamps now consistent across all timezones in Docker deployments</p>
-<h3 id="features_8">Features<a class="headerlink" href="#features_8" title="Permanent link">&para;</a></h3>
+<h3 id="features_9">Features<a class="headerlink" href="#features_9" title="Permanent link">&para;</a></h3>
 <p>• <strong>debug: version troubleshooting endpoint</strong>
 ◦ Added <code>/api/version/debug</code> endpoint for diagnosing version detection issues
 ◦ Shows environment type (docker/local), file paths, existence, and content
@@ -1858,7 +1989,7 @@
 ◦ Added "Never" fallback when no traffic data has been received
 ◦ Created <code>formatDateTime()</code> helper function for consistent datetime formatting across Traffic page</p>
 <h1 id="140-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.3.2...v1.4.0">1.4.0</a> (2025-11-08)<a class="headerlink" href="#140-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="features_9">Features<a class="headerlink" href="#features_9" title="Permanent link">&para;</a></h3>
+<h3 id="features_10">Features<a class="headerlink" href="#features_10" title="Permanent link">&para;</a></h3>
 <p>• <strong>vod streams: plex integration</strong>
 ◦ Added new "VOD Streams" sidebar tab for monitoring Plex Media Server activities
 ◦ Implemented Plex server configuration in Settings page with URL and token input
@@ -1898,7 +2029,7 @@
 ◦ Loading spinner during validation process
 ◦ Help text for finding Plex token
 ◦ Theme-compatible button styling (smaller size, proper colors)</p>
-<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>timezone: configuration bug</strong>
 ◦ Fixed timezone always showing UTC in About page
 ◦ Removed conflicting <code>@property timezone</code> that was checking for TZ environment variable
@@ -1912,7 +2043,7 @@
 ◦ Changed buttons from flex-1 (full width) to fixed width with px-6 padding
 ◦ Reduced button height (py-2 instead of py-3) and font size (text-sm)
 ◦ Smaller icons (16px instead of 20px, h-4 w-4 spinner)</p>
-<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
+<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
 <p>• <strong>dateUtils: improved timezone fetching</strong>
 ◦ Added caching mechanism to prevent multiple simultaneous timezone fetches
 ◦ Console logging of loaded timezone for debugging
@@ -1931,16 +2062,16 @@
 ◦ Added pydantic-settings package for proper configuration management
 ◦ Required for Pydantic v2 BaseSettings functionality</p>
 <h1 id="132-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.3.1...v1.3.2">1.3.2</a> (2025-11-06)<a class="headerlink" href="#132-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="features_10">Features<a class="headerlink" href="#features_10" title="Permanent link">&para;</a></h3>
+<h3 id="features_11">Features<a class="headerlink" href="#features_11" title="Permanent link">&para;</a></h3>
 <p>• <strong>service types: added server type</strong>
 ◦ Added "Server" as a new service type option in Add/Edit Service modal
 ◦ Server type available for traffic monitoring without health checks
 ◦ Added translations for server type in English and German</p>
-<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
+<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
 <p>• Updated service type dropdown to include server option
 • Enhanced service type flexibility for different monitoring scenarios</p>
 <h1 id="131-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.3.0...v1.3.1">1.3.1</a> (2025-11-06)<a class="headerlink" href="#131-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="features_11">Features<a class="headerlink" href="#features_11" title="Permanent link">&para;</a></h3>
+<h3 id="features_12">Features<a class="headerlink" href="#features_12" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: logo integration</strong>
 ◦ Added Komandorr logo to sidebar, loading screen, and README
 ◦ Integrated favicon.png for browser tabs
@@ -1969,19 +2100,19 @@
 ◦ Color scheme: DEBUG (Cyan), INFO (Green), WARNING (Yellow), ERROR (Red), CRITICAL (Magenta)
 ◦ Created custom UvicornFormatter to match application logging style
 ◦ Unified all uvicorn logs (startup, requests, errors) with consistent formatting</p>
-<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
+<h3 id="changed_10">Changed<a class="headerlink" href="#changed_10" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: header removal</strong>
 ◦ Removed header section from Traffic page for cleaner layout
 ◦ Traffic page now directly displays summary cards</p>
 <p>• <strong>translations: updated labels</strong>
 ◦ Updated German translation: "Jetzt prüfen" → "Aktualisieren"
 ◦ Updated English translation: "Check Now" → "Refresh"</p>
-<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: width consistency</strong>
 ◦ Fixed inconsistent page widths between Dashboard and other pages
 ◦ Standardized container padding across all page components</p>
 <h1 id="130-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.2.2...v1.3.0">1.3.0</a> (2025-11-06)<a class="headerlink" href="#130-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="features_12">Features<a class="headerlink" href="#features_12" title="Permanent link">&para;</a></h3>
+<h3 id="features_13">Features<a class="headerlink" href="#features_13" title="Permanent link">&para;</a></h3>
 <p>• <strong>ui: improved service card styling</strong>
 ◦ Redesigned service cards with cleaner, more cohesive theme-based appearance
 ◦ Removed gradient-style colored backgrounds and borders
@@ -1994,7 +2125,7 @@
 ◦ Fixed theme variable inconsistencies between <code>:root</code> and <code>[data-theme="dark"]</code>
 ◦ Unified background gradient application across default and dark themes
 ◦ Improved theme variable definitions for better cross-theme compatibility</p>
-<h3 id="changed_10">Changed<a class="headerlink" href="#changed_10" title="Permanent link">&para;</a></h3>
+<h3 id="changed_11">Changed<a class="headerlink" href="#changed_11" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: service grouping improvements</strong>
 ◦ Enhanced service grouping with tabbed interface for multiple groups
 ◦ Single group displays in simple grid layout without tabs
@@ -2017,7 +2148,7 @@
 ◦ Added recommended directory structure examples
 ◦ Included common installation paths and best practices</p>
 <h1 id="121-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.2.0...v1.2.1">1.2.1</a> (2025-11-06)<a class="headerlink" href="#121-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="changed_11">Changed<a class="headerlink" href="#changed_11" title="Permanent link">&para;</a></h3>
+<h3 id="changed_12">Changed<a class="headerlink" href="#changed_12" title="Permanent link">&para;</a></h3>
 <p>• <strong>settings: default theme and language</strong>
 ◦ Default theme changed from Dark to Plex
 ◦ Default language set to English
@@ -2026,7 +2157,7 @@
 ◦ Improved version reading from release.txt
 ◦ Fixed path resolution for both Docker and local development environments
 ◦ Better version comparison and update detection</p>
-<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
 <p>• <strong>auth: fix authentication bypass issues</strong>
 ◦ Fixed login screen appearing briefly when authentication is disabled
 ◦ Frontend now checks auth status before showing login screen
@@ -2041,7 +2172,7 @@
 ◦ Backend now reads TZ environment variable directly
 ◦ Fixed UTC display issue in About page</p>
 <h1 id="120-2025-11-05"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.1.1...v1.2.0">1.2.0</a> (2025-11-05)<a class="headerlink" href="#120-2025-11-05" title="Permanent link">&para;</a></h1>
-<h3 id="features_13">Features<a class="headerlink" href="#features_13" title="Permanent link">&para;</a></h3>
+<h3 id="features_14">Features<a class="headerlink" href="#features_14" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: complete traffic monitoring system</strong>
 ◦ New Traffic page in sidebar with real-time bandwidth monitoring
 ◦ Traffic summary cards showing active services and current bandwidth usage
@@ -2057,11 +2188,11 @@
 <h3 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: version check improvements</strong> (<a href="https://github.com/cyb3rgh05t/komandorr/commit/">commit</a>)</p>
 <h2 id="110-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.0.0...v1.1.0">1.1.0</a> (2024-XX-XX)<a class="headerlink" href="#110-2024-xx-xx" title="Permanent link">&para;</a></h2>
-<h3 id="features_14">Features<a class="headerlink" href="#features_14" title="Permanent link">&para;</a></h3>
+<h3 id="features_15">Features<a class="headerlink" href="#features_15" title="Permanent link">&para;</a></h3>
 <p>• <strong>releases: add version check functionality</strong> (<a href="https://github.com/cyb3rgh05t/komandorr/commit/">commit</a>)
 ◦ Release and version check functionality</p>
 <h1 id="100-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/releases/tag/v1.0.0">1.0.0</a> (2024-XX-XX)<a class="headerlink" href="#100-2024-xx-xx" title="Permanent link">&para;</a></h1>
-<h3 id="features_15">Features<a class="headerlink" href="#features_15" title="Permanent link">&para;</a></h3>
+<h3 id="features_16">Features<a class="headerlink" href="#features_16" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: initial release</strong>
 ◦ Dashboard with service overview
 ◦ Service management (add, edit, delete services)
