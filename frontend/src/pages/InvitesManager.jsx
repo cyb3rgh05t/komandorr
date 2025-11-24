@@ -22,6 +22,11 @@ const InvitesManager = () => {
   const [stats, setStats] = useState(null);
   const [plexUsersCount, setPlexUsersCount] = useState(0);
   const [plexServerName, setPlexServerName] = useState("Plex Server");
+  const [plexLiveStats, setPlexLiveStats] = useState({
+    total_movies: 0,
+    total_tv_shows: 0,
+    total_episodes: 0,
+  });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
@@ -52,6 +57,24 @@ const InvitesManager = () => {
     fetchPlexConfig();
     fetchPlexUsersCount();
     fetchPlexServerName();
+    fetchPlexLiveStats();
+
+    // Auto-refresh Plex stats every 60 seconds
+    const statsInterval = setInterval(() => {
+      fetchPlexLiveStats();
+    }, 60000);
+
+    // Auto-refresh invites, stats, and Plex users every 10 seconds
+    const invitesInterval = setInterval(() => {
+      fetchInvites();
+      fetchStats();
+      fetchPlexUsersCount();
+    }, 10000);
+
+    return () => {
+      clearInterval(statsInterval);
+      clearInterval(invitesInterval);
+    };
   }, []);
 
   // Close dropdowns when clicking outside
@@ -86,7 +109,7 @@ const InvitesManager = () => {
       setInvites(data);
     } catch (error) {
       console.error("Error fetching invites:", error);
-      toast.error("Error loading invites");
+      toast.error(t("invites.errorLoading"));
     } finally {
       setLoading(false);
     }
@@ -136,6 +159,22 @@ const InvitesManager = () => {
     }
   };
 
+  const fetchPlexLiveStats = async () => {
+    try {
+      const data = await api.get("/plex/stats/live");
+      setPlexLiveStats({
+        total_movies: data.total_movies || 0,
+        total_tv_shows: data.total_tv_shows || 0,
+        total_episodes: data.total_episodes || 0,
+      });
+      if (data.server_name) {
+        setPlexServerName(data.server_name);
+      }
+    } catch (error) {
+      console.error("Error fetching live Plex stats:", error);
+    }
+  };
+
   const handleCreateInvite = async (e) => {
     e.preventDefault();
 
@@ -170,15 +209,15 @@ const InvitesManager = () => {
 
       fetchInvites();
       fetchStats();
-      toast.success("Invite created successfully!");
+      toast.success(t("invites.inviteCreated"));
     } catch (error) {
       console.error("Error creating invite:", error);
-      toast.error("Error creating invite");
+      toast.error(t("invites.errorCreating"));
     }
   };
 
   const handleDeleteInvite = async (inviteId) => {
-    if (!window.confirm("Are you sure you want to delete this invite?")) {
+    if (!window.confirm(t("invites.confirmDelete"))) {
       return;
     }
 
@@ -186,10 +225,11 @@ const InvitesManager = () => {
       await api.delete(`/invites/${inviteId}`);
       fetchInvites();
       fetchStats();
-      toast.success("Invite deleted successfully!");
+      fetchPlexLiveStats(); // Force refresh Plex stats
+      toast.success(t("invites.inviteDeleted"));
     } catch (error) {
       console.error("Error deleting invite:", error);
-      toast.error("Error deleting invite");
+      toast.error(t("invites.errorDeleting"));
     }
   };
 
@@ -198,21 +238,33 @@ const InvitesManager = () => {
     navigator.clipboard.writeText(inviteUrl);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
-    toast.success("Invite link copied to clipboard!");
+    toast.success(t("invites.linkCopied"));
   };
 
   const getInviteStatus = (invite) => {
     if (!invite.is_active)
-      return { text: "Disabled", color: "bg-gray-500/20 text-gray-400" };
+      return {
+        text: t("invites.status.disabled"),
+        color: "bg-gray-500/20 text-gray-400",
+      };
     if (invite.is_expired)
-      return { text: "Expired", color: "bg-red-500/20 text-red-400" };
+      return {
+        text: t("invites.status.expired"),
+        color: "bg-red-500/20 text-red-400",
+      };
     if (invite.is_exhausted)
-      return { text: "Used Up", color: "bg-orange-500/20 text-orange-400" };
-    return { text: "Active", color: "bg-green-500/20 text-green-400" };
+      return {
+        text: t("invites.status.usedUp"),
+        color: "bg-orange-500/20 text-orange-400",
+      };
+    return {
+      text: t("invites.status.active"),
+      color: "bg-green-500/20 text-green-400",
+    };
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "Never";
+    if (!dateString) return t("invites.fields.never");
     return new Date(dateString).toLocaleString(undefined, {
       year: "numeric",
       month: "short",
@@ -256,7 +308,7 @@ const InvitesManager = () => {
               fetchPlexUsersCount(),
             ]);
             setRefreshing(false);
-            toast.success("Refreshed successfully!");
+            toast.success(t("invites.refreshed"));
           }}
           className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           disabled={refreshing}
@@ -265,26 +317,28 @@ const InvitesManager = () => {
             size={16}
             className={`text-theme-primary ${refreshing ? "animate-spin" : ""}`}
           />
-          <span className="text-xs sm:text-sm">Refresh</span>
+          <span className="text-xs sm:text-sm">{t("invites.refresh")}</span>
         </button>
         <button
           onClick={() => setShowCreateModal(true)}
           className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
         >
           <Plus size={16} className="text-theme-primary" />
-          <span className="text-xs sm:text-sm">Create Invite</span>
+          <span className="text-xs sm:text-sm">
+            {t("invites.createInvite")}
+          </span>
         </button>
       </div>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Mail className="w-3 h-3 text-blue-500" />
-                  Total Invites
+                  {t("invites.stats.totalInvites")}
                 </p>
                 <p className="text-2xl font-bold text-blue-500 mt-1">
                   {stats.total_invites || 0}
@@ -299,7 +353,7 @@ const InvitesManager = () => {
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Check className="w-3 h-3 text-green-500" />
-                  Active Invites
+                  {t("invites.stats.activeInvites")}
                 </p>
                 <p className="text-2xl font-bold text-green-500 mt-1">
                   {stats.active_invites || 0}
@@ -326,7 +380,7 @@ const InvitesManager = () => {
                       d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                     />
                   </svg>
-                  Total Redemptions
+                  {t("invites.stats.totalRedemptions")}
                 </p>
                 <p className="text-2xl font-bold text-purple-500 mt-1">
                   {stats.total_redemptions || 0}
@@ -365,7 +419,7 @@ const InvitesManager = () => {
                       d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                     />
                   </svg>
-                  Plex Users
+                  {t("invites.stats.plexUsers")}
                 </p>
                 <p className="text-2xl font-bold text-theme-primary mt-1">
                   {plexUsersCount}
@@ -382,6 +436,75 @@ const InvitesManager = () => {
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Film className="w-3 h-3 text-amber-500" />
+                  {t("invites.stats.movies")}
+                </p>
+                <p className="text-2xl font-bold text-amber-500 mt-1">
+                  {plexLiveStats.total_movies}
+                </p>
+              </div>
+              <Film className="w-8 h-8 text-amber-500" />
+            </div>
+          </div>
+
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Tv className="w-3 h-3 text-indigo-500" />
+                  {t("invites.stats.tvShows")}
+                </p>
+                <p className="text-2xl font-bold text-indigo-500 mt-1">
+                  {plexLiveStats.total_tv_shows}
+                </p>
+              </div>
+              <Tv className="w-8 h-8 text-indigo-500" />
+            </div>
+          </div>
+
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <svg
+                    className="w-3 h-3 text-rose-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                    />
+                  </svg>
+                  {t("invites.stats.episodes")}
+                </p>
+                <p className="text-2xl font-bold text-rose-500 mt-1">
+                  {plexLiveStats.total_episodes}
+                </p>
+              </div>
+              <svg
+                className="w-8 h-8 text-rose-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
                 />
               </svg>
             </div>
@@ -426,28 +549,34 @@ const InvitesManager = () => {
               {/* Info */}
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-theme-muted">Created:</span>
+                  <span className="text-theme-muted">
+                    {t("invites.fields.created")}:
+                  </span>
                   <div className="text-right">
                     <div className="text-theme-text font-medium">
                       {formatDate(invite.created_at)}
                     </div>
                     {invite.created_by && (
                       <div className="text-xs text-theme-muted">
-                        by {invite.created_by}
+                        {t("invites.fields.by")} {invite.created_by}
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-theme-muted">Expires:</span>
+                  <span className="text-theme-muted">
+                    {t("invites.fields.expires")}:
+                  </span>
                   <span className="text-theme-text font-medium">
                     {formatDate(invite.expires_at)}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-theme-muted">Usage:</span>
+                  <span className="text-theme-muted">
+                    {t("invites.fields.usage")}:
+                  </span>
                   <span className="text-theme-text font-medium">
                     <span className="text-theme-primary">
                       {invite.used_count}
@@ -457,17 +586,21 @@ const InvitesManager = () => {
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-theme-muted">Server:</span>
+                  <span className="text-theme-muted">
+                    {t("invites.fields.server")}:
+                  </span>
                   <span className="text-theme-text font-medium">
                     {plexServerName}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-theme-muted">Libraries:</span>
+                  <span className="text-theme-muted">
+                    {t("invites.fields.libraries")}:
+                  </span>
                   <span className="text-theme-text font-medium">
                     {invite.libraries === "all"
-                      ? "All Libraries"
+                      ? t("invites.fields.allLibraries")
                       : invite.libraries}
                   </span>
                 </div>
@@ -475,29 +608,29 @@ const InvitesManager = () => {
                 {/* Permissions - Always show */}
                 <div className="pt-2 border-t border-theme">
                   <div className="text-xs text-theme-muted mb-2">
-                    Permissions:
+                    {t("invites.fields.permissions")}:
                   </div>
                   {!invite.allow_sync &&
                   !invite.allow_channels &&
                   !invite.plex_home ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-500/20 text-gray-400 border border-gray-500/30">
-                      None
+                      {t("invites.fields.none")}
                     </span>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
                       {invite.allow_sync && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">
-                          Sync
+                          {t("invites.permissions.sync")}
                         </span>
                       )}
                       {invite.allow_channels && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">
-                          Live TV
+                          {t("invites.permissions.liveTV")}
                         </span>
                       )}
                       {invite.plex_home && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
-                          Home
+                          {t("invites.permissions.home")}
                         </span>
                       )}
                     </div>
@@ -507,7 +640,7 @@ const InvitesManager = () => {
                 {invite.users && invite.users.length > 0 && (
                   <div className="pt-2 border-t border-theme">
                     <div className="text-xs text-theme-muted mb-2">
-                      Redeemed by:
+                      {t("invites.fields.redeemedBy")}:
                     </div>
                     {invite.users.map((user) => (
                       <div
@@ -535,12 +668,12 @@ const InvitesManager = () => {
                   {copiedCode === invite.code ? (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>Copied!</span>
+                      <span>{t("invites.buttons.copied")}</span>
                     </>
                   ) : (
                     <>
                       <Clipboard className="w-4 h-4" />
-                      <span>Copy Link</span>
+                      <span>{t("invites.buttons.copyLink")}</span>
                     </>
                   )}
                 </button>
@@ -549,19 +682,28 @@ const InvitesManager = () => {
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-theme-hover hover:bg-red-500/20 border border-theme hover:border-red-500/50 text-theme-text hover:text-red-500 rounded-lg transition-all text-sm font-medium shadow-sm"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>Delete</span>
+                  <span>{t("invites.buttons.delete")}</span>
                 </button>
               </div>
             </div>
           );
         })}
         {invites.length === 0 && (
-          <div className="col-span-full text-center py-12 text-theme-muted">
-            <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-lg">No invites yet</p>
-            <p className="text-sm mt-1">
-              Create your first invite to get started!
+          <div className="col-span-full bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+            <Mail size={48} className="mx-auto mb-4 text-theme-text-muted" />
+            <h3 className="text-lg font-semibold text-theme-text mb-2">
+              {t("invites.empty.title")}
+            </h3>
+            <p className="text-theme-text-muted mb-6">
+              {t("invites.empty.description")}
             </p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            >
+              <Plus size={20} className="text-theme-primary" />
+              <span>{t("invites.createInvite")}</span>
+            </button>
           </div>
         )}
       </div>
@@ -573,7 +715,7 @@ const InvitesManager = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-theme">
               <h2 className="text-xl font-semibold text-theme-text">
-                Create New Invite
+                {t("invites.createNew")}
               </h2>
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -589,7 +731,7 @@ const InvitesManager = () => {
               {/* Usage Limit */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-theme-text">
-                  Usage Limit
+                  {t("invites.form.usageLimit")}
                 </label>
                 <div className="relative custom-dropdown">
                   <button
@@ -598,8 +740,8 @@ const InvitesManager = () => {
                     className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
                   >
                     <span>
-                      {createForm.usage_limit || "Unlimited"}
-                      {createForm.usage_limit && " uses"}
+                      {createForm.usage_limit || t("invites.form.unlimited")}
+                      {createForm.usage_limit && ` ${t("invites.form.uses")}`}
                     </span>
                     <svg
                       className={`w-5 h-5 transition-transform ${
@@ -636,8 +778,8 @@ const InvitesManager = () => {
                               : "hover:bg-theme-hover text-theme-text"
                           }`}
                         >
-                          {value || "Unlimited"}
-                          {value && " uses"}
+                          {value || t("invites.form.unlimited")}
+                          {value && ` ${t("invites.form.uses")}`}
                         </div>
                       ))}
                     </div>
@@ -648,7 +790,7 @@ const InvitesManager = () => {
               {/* Expiry */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-theme-text">
-                  Expires In
+                  {t("invites.form.expiresIn")}
                 </label>
                 <div className="relative custom-dropdown">
                   <button
@@ -657,8 +799,9 @@ const InvitesManager = () => {
                     className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
                   >
                     <span>
-                      {createForm.expires_in_days || "Never"}
-                      {createForm.expires_in_days && " days"}
+                      {createForm.expires_in_days || t("invites.fields.never")}
+                      {createForm.expires_in_days &&
+                        ` ${t("invites.form.days")}`}
                     </span>
                     <svg
                       className={`w-5 h-5 transition-transform ${
@@ -696,8 +839,8 @@ const InvitesManager = () => {
                                 : "hover:bg-theme-hover text-theme-text"
                             }`}
                           >
-                            {value || "Never"}
-                            {value && " days"}
+                            {value || t("invites.fields.never")}
+                            {value && ` ${t("invites.form.days")}`}
                           </div>
                         )
                       )}
@@ -709,16 +852,16 @@ const InvitesManager = () => {
               {/* Permissions */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-theme-text">
-                  Permissions
+                  {t("invites.form.permissionsTitle")}
                 </label>
 
                 <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
                     <div className="text-sm font-medium text-theme-text">
-                      Allow Sync
+                      {t("invites.form.allowSync")}
                     </div>
                     <div className="text-xs text-theme-muted">
-                      Enable media syncing for offline playback
+                      {t("invites.form.allowSyncDesc")}
                     </div>
                   </div>
                   <button
@@ -729,8 +872,8 @@ const InvitesManager = () => {
                         allow_sync: !createForm.allow_sync,
                       })
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
-                      createForm.allow_sync ? "bg-theme-primary" : "bg-gray-600"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                      createForm.allow_sync ? "bg-green-500" : "bg-gray-600"
                     }`}
                   >
                     <span
@@ -746,10 +889,10 @@ const InvitesManager = () => {
                 <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
                     <div className="text-sm font-medium text-theme-text">
-                      Allow Live TV & DVR
+                      {t("invites.form.allowLiveTV")}
                     </div>
                     <div className="text-xs text-theme-muted">
-                      Grant access to Live TV and DVR features
+                      {t("invites.form.allowLiveTVDesc")}
                     </div>
                   </div>
                   <button
@@ -760,10 +903,8 @@ const InvitesManager = () => {
                         allow_channels: !createForm.allow_channels,
                       })
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
-                      createForm.allow_channels
-                        ? "bg-theme-primary"
-                        : "bg-gray-600"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                      createForm.allow_channels ? "bg-green-500" : "bg-gray-600"
                     }`}
                   >
                     <span
@@ -779,10 +920,10 @@ const InvitesManager = () => {
                 <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
                     <div className="text-sm font-medium text-theme-text">
-                      Plex Home User
+                      {t("invites.form.plexHome")}
                     </div>
                     <div className="text-xs text-theme-muted">
-                      Add user to your Plex Home for managed access
+                      {t("invites.form.plexHomeDesc")}
                     </div>
                   </div>
                   <button
@@ -793,8 +934,8 @@ const InvitesManager = () => {
                         plex_home: !createForm.plex_home,
                       })
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
-                      createForm.plex_home ? "bg-theme-primary" : "bg-gray-600"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                      createForm.plex_home ? "bg-green-500" : "bg-gray-600"
                     }`}
                   >
                     <span
@@ -807,179 +948,149 @@ const InvitesManager = () => {
               </div>
 
               {/* Library Selection */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="block text-sm font-medium text-theme-text">
-                  Library Access
+                  {t("invites.form.libraryAccess")}
                 </label>
-                <div className="relative custom-dropdown">
+
+                {/* All Libraries Option */}
+                <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-theme-text">
+                      {t("invites.form.allLibrariesTitle")}
+                    </div>
+                    <div className="text-xs text-theme-muted">
+                      {t("invites.form.allLibrariesDesc")}
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setLibraryDropdownOpen(!libraryDropdownOpen)}
-                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
+                    onClick={() => {
+                      setCreateForm({
+                        ...createForm,
+                        libraries: [],
+                      });
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                      createForm.libraries.length === 0
+                        ? "bg-green-500"
+                        : "bg-gray-600"
+                    }`}
                   >
-                    <span>
-                      {createForm.libraries.length === 0
-                        ? "All Libraries"
-                        : `${createForm.libraries.length} Selected`}
-                    </span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${
-                        libraryDropdownOpen ? "rotate-180" : ""
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        createForm.libraries.length === 0
+                          ? "translate-x-6"
+                          : "translate-x-1"
                       }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                    />
                   </button>
+                </label>
 
-                  {libraryDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-2 bg-theme-card border border-theme rounded-lg shadow-lg overflow-hidden max-h-96">
-                      {/* All Libraries Option */}
-                      <div className="border-b border-theme">
-                        <div
-                          onClick={() => {
-                            setCreateForm({
-                              ...createForm,
-                              libraries: [],
-                            });
-                          }}
-                          className={`px-4 py-3 cursor-pointer transition-colors ${
-                            createForm.libraries.length === 0
-                              ? "bg-theme-primary/20"
-                              : "hover:bg-theme-hover"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span
-                                className={`text-sm font-medium ${
-                                  createForm.libraries.length === 0
+                {/* Individual Libraries Grid */}
+                {plexLibraries.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider px-1">
+                      {t("invites.form.selectSpecific")}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto p-1">
+                      {plexLibraries.map((library) => {
+                        const isSelected = createForm.libraries.includes(
+                          library.id.toString()
+                        );
+                        const LibraryIcon =
+                          library.type === "movie"
+                            ? Film
+                            : library.type === "show"
+                            ? Tv
+                            : Music;
+
+                        return (
+                          <label
+                            key={library.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                              isSelected
+                                ? "bg-theme-primary/10"
+                                : "bg-theme-hover hover:bg-theme-primary/5"
+                            }`}
+                          >
+                            <div
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                library.type === "movie"
+                                  ? "bg-blue-500/20 border border-blue-500/30"
+                                  : library.type === "show"
+                                  ? "bg-purple-500/20 border border-purple-500/30"
+                                  : "bg-pink-500/20 border border-pink-500/30"
+                              }`}
+                            >
+                              <LibraryIcon
+                                className={`w-5 h-5 ${
+                                  library.type === "movie"
+                                    ? "text-blue-400"
+                                    : library.type === "show"
+                                    ? "text-purple-400"
+                                    : "text-pink-400"
+                                }`}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className={`text-sm font-medium truncate ${
+                                  isSelected
                                     ? "text-theme-primary"
                                     : "text-theme-text"
                                 }`}
                               >
-                                All Libraries
-                              </span>
-                              <p className="text-xs text-theme-text-muted mt-0.5">
-                                Grant access to all current and future libraries
-                              </p>
-                            </div>
-                            {createForm.libraries.length === 0 && (
-                              <Check className="w-5 h-5 text-theme-primary" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Individual Libraries */}
-                      {plexLibraries.length > 0 && (
-                        <div className="max-h-60 overflow-y-auto">
-                          <div className="px-4 py-2 bg-theme-hover border-b border-theme">
-                            <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider">
-                              Select Specific Libraries
-                            </p>
-                          </div>
-                          {plexLibraries.map((library) => {
-                            const isSelected = createForm.libraries.includes(
-                              library.id.toString()
-                            );
-                            const LibraryIcon =
-                              library.type === "movie"
-                                ? Film
-                                : library.type === "show"
-                                ? Tv
-                                : Music;
-
-                            return (
-                              <div
-                                key={library.id}
-                                onClick={() => {
-                                  const libId = library.id.toString();
-                                  const newLibraries = isSelected
-                                    ? createForm.libraries.filter(
-                                        (id) => id !== libId
-                                      )
-                                    : [...createForm.libraries, libId];
-
-                                  setCreateForm({
-                                    ...createForm,
-                                    libraries:
-                                      newLibraries.length > 0
-                                        ? newLibraries
-                                        : [],
-                                  });
-                                }}
-                                className={`px-4 py-3 cursor-pointer transition-colors border-b border-theme/50 last:border-b-0 ${
-                                  isSelected
-                                    ? "bg-theme-primary/10 hover:bg-theme-primary/20"
-                                    : "hover:bg-theme-hover"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                        library.type === "movie"
-                                          ? "bg-blue-500/20 border border-blue-500/30"
-                                          : library.type === "show"
-                                          ? "bg-purple-500/20 border border-purple-500/30"
-                                          : "bg-pink-500/20 border border-pink-500/30"
-                                      }`}
-                                    >
-                                      <LibraryIcon
-                                        className={`w-4 h-4 ${
-                                          library.type === "movie"
-                                            ? "text-blue-400"
-                                            : library.type === "show"
-                                            ? "text-purple-400"
-                                            : "text-pink-400"
-                                        }`}
-                                      />
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span
-                                        className={`text-sm font-medium ${
-                                          isSelected
-                                            ? "text-theme-primary"
-                                            : "text-theme-text"
-                                        }`}
-                                      >
-                                        {library.name}
-                                      </span>
-                                      <span className="text-xs text-theme-text-muted capitalize">
-                                        {library.type}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  {isSelected && (
-                                    <Check className="w-5 h-5 text-theme-primary" />
-                                  )}
-                                </div>
+                                {library.name}
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                              <div className="text-xs text-theme-text-muted capitalize">
+                                {t(`invites.libraryTypes.${library.type}`)}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const libId = library.id.toString();
+                                const newLibraries = isSelected
+                                  ? createForm.libraries.filter(
+                                      (id) => id !== libId
+                                    )
+                                  : [...createForm.libraries, libId];
 
-                      {/* No Libraries Found */}
-                      {plexLibraries.length === 0 && (
-                        <div className="px-4 py-8 text-center text-theme-text-muted">
-                          <p className="text-sm">No libraries found</p>
-                          <p className="text-xs mt-1">
-                            Make sure Plex server is configured correctly
-                          </p>
-                        </div>
-                      )}
+                                setCreateForm({
+                                  ...createForm,
+                                  libraries:
+                                    newLibraries.length > 0 ? newLibraries : [],
+                                });
+                              }}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-theme-bg flex-shrink-0 ${
+                                isSelected ? "bg-green-500" : "bg-gray-600"
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  isSelected ? "translate-x-6" : "translate-x-1"
+                                }`}
+                              />
+                            </button>
+                          </label>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* No Libraries Found */}
+                {plexLibraries.length === 0 && (
+                  <div className="p-6 text-center bg-theme-hover rounded-lg border border-theme">
+                    <p className="text-sm text-theme-text-muted">
+                      {t("invites.form.noLibraries")}
+                    </p>
+                    <p className="text-xs text-theme-text-muted mt-1">
+                      {t("invites.form.noLibrariesDesc")}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -989,13 +1100,13 @@ const InvitesManager = () => {
                   onClick={() => setShowCreateModal(false)}
                   className="flex-1 px-6 py-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all font-semibold text-theme-text"
                 >
-                  Cancel
+                  {t("invites.buttons.cancel")}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3  hover:bg-theme-primary-hover text-white rounded-lg transition-all font-semibold"
+                  className="flex-1 px-6 py-3 items-center justify-center gap-2 sm:px-4 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
-                  Create Invite
+                  {t("invites.buttons.create")}
                 </button>
               </div>
             </form>

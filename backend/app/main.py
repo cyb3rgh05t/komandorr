@@ -22,6 +22,7 @@ from app.api.traffic import router as traffic_router
 from app.api.plex import router as plex_router
 from app.api.invites import router as invites_router
 from app.api.oauth import router as oauth_router
+from app.api.settings import router as settings_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Komandorr Dashboard Backend")
     logger.info(f"Debug mode: {settings.DEBUG}")
     logger.info(f"Authentication enabled: {settings.ENABLE_AUTH}")
-    logger.info(f"Timezone: {settings.TIMEZONE}")
+    logger.info(f"Timezone: {settings.TZ}")
 
     # Migrate Plex config from JSON to database if needed
     from app.api.plex import migrate_plex_config_if_needed
@@ -89,6 +90,7 @@ app.include_router(traffic_router)
 app.include_router(plex_router)
 app.include_router(invites_router)
 app.include_router(oauth_router)
+app.include_router(settings_router)
 
 
 @app.get("/docs", include_in_schema=False)
@@ -548,12 +550,18 @@ async def debug_version():
 async def get_config():
     """Get application configuration"""
     return {
-        "timezone": settings.TIMEZONE,
+        "timezone": settings.TZ,
     }
 
 
+from app.middleware.auth import require_auth
+from fastapi import Depends
+
+
 @app.post("/api/upload-icon")
-async def upload_icon(file: UploadFile = File(...)):
+async def upload_icon(
+    file: UploadFile = File(...), username: str = Depends(require_auth)
+):
     """Upload a service icon"""
     # Validate file type
     allowed_types = [

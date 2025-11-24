@@ -1,5 +1,105 @@
 # CHANGELOG.md
 
+# [2.1.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.0.0...v2.1.0) (2025-11-24)
+
+### ⚙️ Configuration Management
+
+**New Features**
+
+• **config: Unified configuration system**
+◦ Simplified configuration to two-tier system (environment variables + config.json)
+◦ Removed .env file complexity - only HOST, PORT, DEBUG, CORS_ORIGINS needed
+◦ All application settings (auth, logging, timezone, API tokens, Plex) managed via config.json
+◦ Settings UI provides unified interface for runtime configuration changes
+◦ Created comprehensive CONFIGURATION.md documentation
+◦ Priority order: config.json > environment variables > hardcoded defaults
+
+• **config: Settings API with Plex integration**
+◦ Added /api/settings endpoint with GET/POST operations
+◦ Pydantic models for LoggingSettings, GeneralSettings, APISettings, PlexSettings
+◦ Moved Plex configuration from database to config.json (server_url, server_token, server_name)
+◦ Database now only stores peak_concurrent statistic
+◦ Live statistics (movies/shows/users) fetched directly from Plex API
+◦ Migration function handles automatic DB → config.json transition
+
+• **config: Enhanced Settings UI**
+◦ Unified Settings page with single "Save Settings" button
+◦ Sections for Auth, Plex, Logging, General, and API configuration
+◦ Added GitHub token and TMDB API key fields for invite redemption flow
+◦ Plex validation button to test server connection
+◦ All settings load from /api/settings endpoint
+◦ Removed separate Plex save - integrated into main settings save
+
+**Bug Fixes**
+
+• **plex: Fixed OAuth redemption flow**
+◦ Updated invite_plex_user_oauth to use settings instead of database
+◦ Fixed 'PlexStatsDB' object has no attribute 'server_url' errors
+◦ Removed all database field references (server_url, server_token, server_name)
+◦ Invites endpoints now use settings.PLEX_SERVER_NAME instead of database query
+◦ get_plex_stats endpoint loads config from config.json and fetches live stats
+
+• **docker: Cleaned up environment variables**
+◦ Removed application settings from docker-compose.yml (LOG_LEVEL, CORS_ORIGINS, etc.)
+◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
+◦ CORS moved back to environment variables (deployment-level security setting)
+◦ Simplified .env.example to server parameters only with migration comments
+
+### 🎨 UI/UX Improvements
+
+**New Features**
+
+• **monitor: Clickable service cards**
+◦ Service cards now link directly to service URLs
+◦ Removed separate URL badge - entire card is clickable
+◦ Added hover effects: border highlights to theme-primary color
+◦ Service name changes color on hover for visual feedback
+◦ Maintained target="\_blank" for security
+
+• **dashboard/services/traffic: Consistent hover effects**
+◦ Applied clickable card pattern across all pages
+◦ DashboardServiceCard, ServiceCard, and Traffic cards now clickable
+◦ Unified hover styling: border-theme-primary + shadow-lg
+◦ Action buttons preventDefault to avoid navigation conflicts
+◦ Consistent user experience across the application
+
+### 🔒 Authentication & Security Improvements
+
+**Bug Fixes**
+
+• **auth: fixed Basic Auth popup with ENABLE_AUTH=false**
+◦ Added `HTTPBasic(auto_error=False)` to prevent automatic authentication challenge
+◦ Changed credentials parameter to `Optional[HTTPBasicCredentials]` in require_auth dependency
+◦ Fixed browser Basic Auth popup appearing on `/api/invites/plex/config` endpoint
+◦ Authentication now properly skips when ENABLE_AUTH=false without triggering login prompts
+◦ Added proper credential validation check when auth is enabled
+
+• **ui: authentication settings always visible**
+◦ Removed conditional rendering of auth settings based on ENABLE_AUTH state
+◦ Auth toggle and credentials form now always visible in Settings page
+◦ Allows dual-layer security: Authelia/Traefik + optional Komandorr Basic Auth
+◦ Dynamic warning message adapts based on auth enabled/disabled state
+◦ Users can enable additional security layer on top of external authentication
+
+**Documentation**
+
+• **authelia: reference configuration**
+◦ Created complete Authelia configuration file (authelia-config.yml)
+◦ Proper access control rule ordering (specific domains before wildcards)
+◦ API endpoint bypass rules for /api/_ paths
+◦ Public invite page bypass rules for /invite/_, /invites, /redeem
+◦ NTP time synchronization configuration
+◦ Complete session, regulation, storage, and notifier settings
+
+• **traefik: docker-compose labels**
+◦ Updated docker-compose.yml with Traefik routing configuration
+◦ Three-router setup: API (priority 100), public invites (priority 90), main app (priority 10)
+◦ API routes bypass Authelia for frontend functionality
+◦ Public invite redemption pages accessible without authentication
+◦ Main application protected by Authelia middleware
+
+---
+
 # [2.0.0](https://github.com/cyb3rgh05t/komandorr/compare/v1.8.0...v2.0.0) (2025-11-23)
 
 ### 🎉 Major Release - VOD Invites System

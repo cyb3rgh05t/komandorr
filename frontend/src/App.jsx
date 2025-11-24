@@ -12,7 +12,7 @@ import Settings from "./pages/Settings";
 import About from "./pages/About";
 import InviteRedemption from "./pages/InviteRedemption";
 import InviteRedeem from "./pages/InviteRedeem";
-import InvitesManager from "./components/InvitesManager";
+import InvitesManager from "./pages/InvitesManager";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -86,16 +86,16 @@ function App() {
     return () => clearTimeout(minLoadingTime);
   }, []);
 
-  // Only hide loading screen when both auth check is done AND minimum time has passed
+  // Only hide loading screen when auth check is done AND minimum time has passed
   useEffect(() => {
-    if (appReady && (isAuthenticated || !authEnabled)) {
+    if (appReady) {
       // Small delay to ensure smooth transition
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [appReady, isAuthenticated, authEnabled]);
+  }, [appReady]);
 
   const handleLoginSuccess = (credentials) => {
     setAuthCredentials(credentials);

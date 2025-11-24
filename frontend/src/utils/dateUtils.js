@@ -18,7 +18,12 @@ async function getTimezone() {
 
   fetchingTimezone = (async () => {
     try {
-      const response = await fetch("/api/config");
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch("/api/config", {
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+      });
       const data = await response.json();
       cachedTimezone = data.timezone || "UTC";
       console.log(`Timezone loaded from backend: ${cachedTimezone}`);

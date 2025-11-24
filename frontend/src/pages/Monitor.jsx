@@ -22,6 +22,7 @@ const MiniChart = ({ data = [], serviceId }) => {
   if (!data || data.length === 0) {
     return (
       <div className="h-20 flex items-center justify-center text-theme-text-muted text-xs bg-[#0a0f1a] rounded border border-gray-800">
+        {/* Note: t() not available in this component scope, using hardcoded fallback */}
         No data yet - waiting for measurements
       </div>
     );
@@ -394,7 +395,7 @@ export default function Monitor() {
               />
               <input
                 type="text"
-                placeholder="Search services..."
+                placeholder={t("monitor.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
@@ -414,7 +415,7 @@ export default function Monitor() {
                   }`}
                 />
 
-                <span>Refresh</span>
+                <span>{t("monitor.refresh")}</span>
               </button>
             </div>
           </div>
@@ -432,7 +433,7 @@ export default function Monitor() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    TOTAL
+                    {t("monitor.stats.total")}
                   </div>
                   <div className="text-3xl font-bold text-theme-text">
                     {stats.total}
@@ -464,7 +465,7 @@ export default function Monitor() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    ONLINE
+                    {t("monitor.stats.online")}
                   </div>
                   <div className="text-3xl font-bold text-green-500">
                     {stats.online}
@@ -498,7 +499,7 @@ export default function Monitor() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    OFFLINE
+                    {t("monitor.stats.offline")}
                   </div>
                   <div className="text-3xl font-bold text-red-500">
                     {stats.offline}
@@ -532,9 +533,9 @@ export default function Monitor() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    PROBLEM
+                    {t("monitor.stats.problem")}
                     <div className="text-[9px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5 font-normal">
-                      Slow (&gt;1s)
+                      {t("monitor.stats.slowLabel")}
                     </div>
                   </div>
                   <div className="text-3xl font-bold text-yellow-500">
@@ -562,11 +563,13 @@ export default function Monitor() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    AVG RESPONSE
+                    {t("monitor.stats.avgResponse")}
                   </div>
                   <div className="text-3xl font-bold text-blue-500">
                     {stats.avgResponseTime}
-                    <span className="text-sm text-blue-400 ml-1">ms</span>
+                    <span className="text-sm text-blue-400 ml-1">
+                      {t("monitor.stats.ms")}
+                    </span>
                   </div>
                 </div>
                 <div className="text-blue-500 opacity-60">
@@ -591,7 +594,7 @@ export default function Monitor() {
                       : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                   }`}
                 >
-                  ALL
+                  {t("monitor.tabs.all")}
                   <span
                     className={`ml-2 text-xs ${
                       activeTab === "ALL"
@@ -637,7 +640,7 @@ export default function Monitor() {
           {/* Services List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {paginatedServices.length === 0 ? (
-              <div className="text-center py-12 bg-theme-card rounded-lg border border-theme shadow-sm">
+              <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
                 {statusFilter !== null ? (
                   <>
                     <div className="text-6xl mb-4">
@@ -646,18 +649,20 @@ export default function Monitor() {
                       {statusFilter === "problem" && "✓"}
                     </div>
                     <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                      {statusFilter === "online" && "No online services"}
-                      {statusFilter === "offline" && "No offline services"}
+                      {statusFilter === "online" &&
+                        t("monitor.emptyStates.noOnline.title")}
+                      {statusFilter === "offline" &&
+                        t("monitor.emptyStates.noOffline.title")}
                       {statusFilter === "problem" &&
-                        "No services with problems"}
+                        t("monitor.emptyStates.noProblem.title")}
                     </h3>
                     <p className="text-theme-text-muted">
                       {statusFilter === "online" &&
-                        "Currently no services are online"}
+                        t("monitor.emptyStates.noOnline.description")}
                       {statusFilter === "offline" &&
-                        "All services are operational!"}
+                        t("monitor.emptyStates.noOffline.description")}
                       {statusFilter === "problem" &&
-                        "Everything is running smoothly!"}
+                        t("monitor.emptyStates.noProblem.description")}
                     </p>
                   </>
                 ) : (
@@ -668,20 +673,22 @@ export default function Monitor() {
                     />
                     <h3 className="text-lg font-semibold text-theme-text mb-2">
                       {searchTerm
-                        ? "No matching services"
-                        : t("dashboard.noServices")}
+                        ? t("monitor.emptyStates.noMatching.title")
+                        : t("monitor.emptyStates.noServices.title")}
                     </h3>
                     <p className="text-theme-text-muted mb-4">
                       {searchTerm
-                        ? `No services found matching "${searchTerm}"`
-                        : "No services have been added yet."}
+                        ? t("monitor.emptyStates.noMatching.description", {
+                            searchTerm,
+                          })
+                        : t("monitor.emptyStates.noServices.description")}
                     </p>
                     {searchTerm && (
                       <button
                         onClick={() => setSearchTerm("")}
                         className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/80 transition-colors"
                       >
-                        Clear Search
+                        {t("monitor.emptyStates.clearSearch")}
                       </button>
                     )}
                   </>
@@ -690,16 +697,19 @@ export default function Monitor() {
             ) : (
               <>
                 {paginatedServices.map((service) => (
-                  <div
+                  <a
                     key={service.id}
-                    className="bg-theme-card border border-theme rounded-lg p-4  transition-all"
+                    href={service.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-theme-card border border-theme rounded-lg p-4 transition-all hover:border-theme-primary hover:shadow-lg group"
                   >
                     <div className="space-y-3">
                       {/* Header Row */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {service.icon && (
-                            <div className="w-10 h-10 rounded-lg bg-theme-hover flex items-center justify-center overflow-hidden border border-theme flex-shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-theme-hover flex items-center justify-center overflow-hidden border border-theme flex-shrink-0 group-hover:border-theme-primary/50 transition-colors">
                               <img
                                 src={service.icon}
                                 alt=""
@@ -712,32 +722,24 @@ export default function Monitor() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-theme-text mb-2 truncate">
+                            <h3 className="text-lg font-semibold text-theme-text mb-2 truncate group-hover:text-theme-primary transition-colors">
                               {service.name}
                             </h3>
                             <div className="flex flex-wrap items-center gap-2">
+                              {service.description && (
+                                <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted">
+                                  {service.description}
+                                </span>
+                              )}
                               <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
                                 <Server size={12} />
-                                {service.type}
+                                {service.type.charAt(0).toUpperCase() +
+                                  service.type.slice(1)}
                               </span>
                               <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium text-theme-text-muted flex items-center gap-1.5">
                                 <Clock size={12} />
                                 {formatLastCheck(service.last_check)}
                               </span>
-                              <a
-                                href={service.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-md text-xs font-medium text-theme-text-muted hover:text-theme-primary transition-all group/link"
-                              >
-                                <span className="truncate max-w-[200px]">
-                                  {service.url.replace(/^https?:\/\//, "")}
-                                </span>
-                                <ExternalLink
-                                  size={11}
-                                  className="flex-shrink-0 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform"
-                                />
-                              </a>
                             </div>
                           </div>
                         </div>
@@ -746,7 +748,7 @@ export default function Monitor() {
                             service.response_time > 1000 && (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 text-xs font-bold uppercase tracking-wider">
                                 <AlertTriangle size={12} />
-                                Slow
+                                {t("monitor.service.slow")}
                               </span>
                             )}
                           <span
@@ -773,18 +775,19 @@ export default function Monitor() {
                             <div className="flex items-center gap-1.5 mb-1">
                               <TrendingUp className="w-3 h-3 text-blue-400" />
                               <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">
-                                Current Response Time
+                                {t("monitor.service.currentResponseTime")}
                               </p>
                             </div>
                             <p className="text-xl font-bold text-blue-500">
-                              {service.response_time.toFixed(2)} ms
+                              {service.response_time.toFixed(2)}{" "}
+                              {t("monitor.stats.ms")}
                             </p>
                           </div>
                         </div>
                       )}
 
                       {/* Chart Section */}
-                      <div className="bg-theme-hover border border-theme rounded-lg p-4 space-y-3">
+                      <div className="bg-theme-card border border-theme rounded-lg p-4 space-y-3">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="p-1.5 bg-theme-primary/20 rounded">
                             <TrendingUp
@@ -793,7 +796,7 @@ export default function Monitor() {
                             />
                           </div>
                           <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
-                            Response Time History
+                            {t("monitor.service.responseTimeHistory")}
                           </span>
                         </div>
 
@@ -802,7 +805,7 @@ export default function Monitor() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs text-green-500 font-medium flex items-center gap-1">
                               <TrendingUp size={12} />
-                              Response Time
+                              {t("monitor.service.responseTime")}
                             </span>
                             {(() => {
                               const history = (
@@ -822,8 +825,10 @@ export default function Monitor() {
                                 const max = Math.max(...displayData);
                                 return (
                                   <span className="text-xs text-theme-text-muted">
-                                    Avg: {avg.toFixed(1)} ms • Max:{" "}
-                                    {max.toFixed(1)} ms
+                                    {t("monitor.service.avg")}: {avg.toFixed(1)}{" "}
+                                    {t("monitor.stats.ms")} •{" "}
+                                    {t("monitor.service.max")}: {max.toFixed(1)}{" "}
+                                    {t("monitor.stats.ms")}
                                   </span>
                                 );
                               }
@@ -846,7 +851,7 @@ export default function Monitor() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </a>
                 ))}
               </>
             )}
@@ -856,19 +861,19 @@ export default function Monitor() {
           {servicesInActiveGroup.length > itemsPerPage && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
               <div className="text-sm font-medium text-theme-text-muted">
-                Showing{" "}
+                {t("monitor.pagination.showing")}{" "}
                 <span className="text-theme-text font-semibold">
                   {startIndex + 1}
                 </span>{" "}
-                to{" "}
+                {t("monitor.pagination.to")}{" "}
                 <span className="text-theme-text font-semibold">
                   {Math.min(endIndex, servicesInActiveGroup.length)}
                 </span>{" "}
-                of{" "}
+                {t("monitor.pagination.of")}{" "}
                 <span className="text-theme-text font-semibold">
                   {servicesInActiveGroup.length}
                 </span>{" "}
-                services
+                {t("monitor.pagination.services")}
               </div>
 
               <div className="flex items-center gap-2">
@@ -878,7 +883,7 @@ export default function Monitor() {
                   }
                   disabled={currentPage === 1}
                   className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-                  title="Previous page"
+                  title={t("monitor.pagination.previous")}
                 >
                   <ChevronLeft size={20} />
                 </button>
@@ -925,7 +930,7 @@ export default function Monitor() {
                   }
                   disabled={currentPage === totalPages}
                   className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-                  title="Next page"
+                  title={t("monitor.pagination.next")}
                 >
                   <ChevronRight size={20} />
                 </button>

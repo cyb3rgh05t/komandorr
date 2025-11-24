@@ -52,8 +52,6 @@ class Invite(BaseModel):
 
     class Config:
         from_attributes = True
-        # Ensure plex_server is always included in JSON output
-        fields = {"plex_server": {"exclude": False}}
 
 
 class PlexUser(BaseModel):

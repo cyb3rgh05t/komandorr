@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 import base64
-import os
+import json
 from pathlib import Path
 
 from app.config import settings
@@ -21,30 +21,24 @@ class CredentialUpdate(BaseModel):
     new_password: str
 
 
-def update_env_file(key: str, value: str):
-    """Update or add a key-value pair in .env file"""
-    env_path = Path(__file__).parent.parent.parent / ".env"
+def load_config_json():
+    """Load configuration from config.json file"""
+    config_path = Path(__file__).parent.parent.parent / "data" / "config.json"
+    if config_path.exists():
+        try:
+            with open(config_path, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"auth": {"enabled": False, "username": "admin", "password": "admin"}}
 
-    # Read existing content
-    lines = []
-    if env_path.exists():
-        with open(env_path, "r") as f:
-            lines = f.readlines()
 
-    # Update or add the key
-    key_found = False
-    for i, line in enumerate(lines):
-        if line.strip().startswith(f"{key}="):
-            lines[i] = f"{key}={value}\n"
-            key_found = True
-            break
-
-    if not key_found:
-        lines.append(f"{key}={value}\n")
-
-    # Write back
-    with open(env_path, "w") as f:
-        f.writelines(lines)
+def save_config_json(config_data):
+    """Save configuration to config.json file"""
+    config_path = Path(__file__).parent.parent.parent / "data" / "config.json"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(config_path, "w") as f:
+        json.dump(config_data, f, indent=2)
 
 
 @router.get("/status")
@@ -66,10 +60,12 @@ async def toggle_auth(toggle: AuthToggle, authorization: Optional[str] = Header(
         except Exception:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Update .env file
-    update_env_file("ENABLE_AUTH", str(toggle.enabled).lower())
+    # Update config.json
+    config = load_config_json()
+    config["auth"]["enabled"] = toggle.enabled
+    save_config_json(config)
 
-    # Update settings (note: requires app restart for full effect)
+    # Update settings in memory
     settings.ENABLE_AUTH = toggle.enabled
 
     logger.info(f"Authentication {'enabled' if toggle.enabled else 'disabled'}")
@@ -82,35 +78,36 @@ async def update_credentials(
     credentials: CredentialUpdate, authorization: Optional[str] = Header(None)
 ):
     """Update authentication credentials"""
-    if not settings.ENABLE_AUTH:
-        raise HTTPException(status_code=400, detail="Authentication is not enabled")
-
-    # Verify current credentials
-    if authorization:
-        try:
-            current_creds = base64.b64decode(authorization.split(" ")[1]).decode(
-                "utf-8"
-            )
-            current_user, current_pass = current_creds.split(":", 1)
-
-            # Verify current password matches
-            if (
-                current_user != settings.AUTH_USERNAME
-                or current_pass != credentials.current_password
-            ):
-                raise HTTPException(
-                    status_code=401, detail="Invalid current credentials"
+    # If auth is enabled, verify current credentials
+    if settings.ENABLE_AUTH:
+        if authorization:
+            try:
+                current_creds = base64.b64decode(authorization.split(" ")[1]).decode(
+                    "utf-8"
                 )
-        except Exception:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-    else:
-        raise HTTPException(status_code=401, detail="Authentication required")
+                current_user, current_pass = current_creds.split(":", 1)
 
-    # Update .env file with new credentials
-    update_env_file("AUTH_USERNAME", credentials.username)
-    update_env_file("AUTH_PASSWORD", credentials.new_password)
+                # Verify current password matches
+                if (
+                    current_user != settings.AUTH_USERNAME
+                    or current_pass != credentials.current_password
+                ):
+                    raise HTTPException(
+                        status_code=401, detail="Invalid current credentials"
+                    )
+            except Exception:
+                raise HTTPException(status_code=401, detail="Invalid credentials")
+        else:
+            raise HTTPException(status_code=401, detail="Authentication required")
+    # If auth is disabled, allow credential updates without verification (for initial setup)
 
-    # Update settings
+    # Update config.json with new credentials
+    config = load_config_json()
+    config["auth"]["username"] = credentials.username
+    config["auth"]["password"] = credentials.new_password
+    save_config_json(config)
+
+    # Update settings in memory
     settings.AUTH_USERNAME = credentials.username
     settings.AUTH_PASSWORD = credentials.new_password
 

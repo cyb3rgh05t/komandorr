@@ -47,7 +47,11 @@ function LoginScreen({ onLoginSuccess }) {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="mb-6">
-            <h1 className="text-5xl font-bold text-theme-primary">Komandorr</h1>
+            <img
+              src="/logo.svg"
+              alt="Komandorr"
+              className="h-16 w-auto mx-auto object-contain"
+            />
           </div>
           <p className="text-theme-text-muted">{t("auth.signInToContinue")}</p>
         </div>
@@ -80,7 +84,7 @@ function LoginScreen({ onLoginSuccess }) {
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-3 bg-theme-bg border border-theme rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary text-theme-text font-medium placeholder-theme-text-muted transition-all"
+                  className="block w-full pl-10 pr-4 py-3 bg-theme-hover border border-theme rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary text-theme-text font-medium placeholder-theme-text-muted transition-all"
                   placeholder={t("auth.enterUsername")}
                   required
                   autoComplete="username"
@@ -106,7 +110,7 @@ function LoginScreen({ onLoginSuccess }) {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-12 py-3 bg-theme-bg border border-theme rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary text-theme-text font-medium placeholder-theme-text-muted transition-all"
+                  className="block w-full pl-10 pr-12 py-3 bg-theme-hover border border-theme rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary text-theme-text font-medium placeholder-theme-text-muted transition-all"
                   placeholder={t("auth.enterPassword")}
                   required
                   autoComplete="current-password"
@@ -129,7 +133,7 @@ function LoginScreen({ onLoginSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-white font-medium rounded-lg transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 flex items-center justify-center gap-2 sm:px-4 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             >
               {loading ? (
                 <>

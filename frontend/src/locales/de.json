@@ -9,6 +9,7 @@
     "monitor": "Response Monitor",
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",
+    "invites": "Plex-Einladungen",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -29,7 +30,37 @@
     "showServiceCards": "Dienstkarten",
     "chartLineThickness": "Diagramm-Linienstärke",
     "thin": "Dünn",
-    "thick": "Dick"
+    "thick": "Dick",
+    "close": "Schließen",
+    "stats": {
+      "totalServices": "Dienste gesamt",
+      "online": "Online",
+      "offline": "Offline",
+      "problems": "Probleme",
+      "slowResponse": "Langsame Antwort (>1s)",
+      "avgResponse": "Durchschn. Antwort",
+      "active5min": "Aktiv (5Min)",
+      "uploadSpeed": "Upload-Geschw.",
+      "downloadSpeed": "Download-Geschw.",
+      "totalTransfer": "Gesamt-Transfer",
+      "vodStreams": "VOD-Streams"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "Keine Online-Dienste",
+        "message": "Derzeit sind keine Dienste online"
+      },
+      "noOffline": {
+        "title": "Keine Offline-Dienste",
+        "message": "Alle Dienste sind betriebsbereit!"
+      },
+      "noProblems": {
+        "title": "Keine Dienste mit Problemen",
+        "message": "Alles läuft reibungslos!"
+      }
+    },
+    "groupUngrouped": "Ungruppiert",
+    "all": "ALLE"
   },
   "service": {
     "name": "Name",
@@ -49,12 +80,25 @@
     "createGroup": "Neue Gruppe erstellen",
     "newGroupName": "Gruppenname eingeben",
     "types": {
-      "app": "App",
-      "website": "Webseite",
+      "http": "HTTP",
+      "https": "HTTPS",
+      "tcp": "TCP",
+      "ping": "Ping",
+      "dns": "DNS",
+      "api": "API",
+      "websocket": "WebSocket",
+      "database": "Datenbank",
       "panel": "Panel",
-      "project": "Projekt",
-      "server": "Server"
-    }
+      "custom": "Benutzerdefiniert"
+    },
+    "stats": {
+      "slow": "Langsam",
+      "response": "Antwort",
+      "checked": "Geprüft",
+      "upload": "Upload",
+      "download": "Download"
+    },
+    "checkNowButton": "Jetzt prüfen"
   },
   "form": {
     "addService": "Dienst hinzufügen",
@@ -66,15 +110,31 @@
   },
   "services": {
     "title": "Dienste",
-    "description": "Verwalten Sie alle Ihre überwachten Dienste",
+    "description": "Verwalten Sie alle überwachten Dienste",
     "total": "Dienste gesamt",
-    "noResults": "Keine Dienste gefunden, die Ihrer Suche entsprechen"
-  },
-  "monitor": {
-    "title": "Echtzeit-Monitor",
-    "description": "Live-Überwachungs-Dashboard",
-    "totalServices": "Gesamt",
-    "avgResponse": "Ø Antwortzeit"
+    "noResults": "Keine Dienste gefunden, die Ihrer Suche entsprechen",
+    "stats": {
+      "total": "GESAMT",
+      "online": "ONLINE",
+      "offline": "OFFLINE",
+      "problem": "PROBLEM",
+      "slowResponse": "Langsam (>1s)"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "Keine Online-Dienste",
+        "message": "Derzeit sind keine Dienste online"
+      },
+      "noOffline": {
+        "title": "Keine Offline-Dienste",
+        "message": "Alle Dienste sind betriebsbereit!"
+      },
+      "noProblems": {
+        "title": "Keine Dienste mit Problemen",
+        "message": "Alles läuft reibungslos!"
+      }
+    },
+    "all": "ALLE"
   },
   "traffic": {
     "title": "Netzwerk-Traffic",
@@ -96,24 +156,107 @@
     "no_data": "Keine Traffic-Daten verfügbar. Installieren Sie den Traffic-Agent auf Ihren Servern, um die Überwachung zu starten.",
     "noData": "Keine Traffic-Daten verfügbar",
     "noActiveTraffic": "Kein aktiver Traffic",
-    "last_refresh": "Zuletzt aktualisiert"
+    "last_refresh": "Zuletzt aktualisiert",
+    "realtimeMonitoring": "Echtzeit-Bandbreitenüberwachung",
+    "service": "aktiver Dienst",
+    "services": "Dienste",
+    "activeServices": "aktive Dienste",
+    "download": "Download",
+    "upload": "Upload",
+    "totalUpload": "Gesamt Upload",
+    "totalDownload": "Gesamt Download",
+    "refreshData": "Daten aktualisieren",
+    "lastDataPoints": "Letzte 20 Datenpunkte",
+    "activeServicesLabel": "Aktive Dienste",
+    "page": {
+      "searchPlaceholder": "Dienste durchsuchen...",
+      "refresh": "Aktualisieren",
+      "refreshSuccess": "Traffic-Daten erfolgreich aktualisiert!",
+      "noTrafficData": "Noch keine Traffic-Daten",
+      "stats": {
+        "services": "Dienste",
+        "upload": "Upload",
+        "download": "Download",
+        "uploaded": "Hochgeladen",
+        "downloaded": "Heruntergeladen",
+        "totalTraffic": "Gesamt-Traffic",
+        "uploadSpeed": "Upload-Geschw.",
+        "downloadSpeed": "Download-Geschw.",
+        "totalUpload": "Gesamt Upload",
+        "totalDownload": "Gesamt Download",
+        "avg": "Durchschn.",
+        "max": "Max"
+      },
+      "tabs": {
+        "all": "ALLE"
+      },
+      "emptyStates": {
+        "noServices": "Keine Dienste mit Traffic-Überwachung",
+        "noMatching": "Keine Dienste gefunden, die Ihrer Suche entsprechen"
+      },
+      "charts": {
+        "bandwidthHistory": "Bandbreitenverlauf",
+        "upload": "Upload",
+        "download": "Download"
+      },
+      "time": {
+        "never": "Niemals",
+        "seconds": "vor {{count}}s",
+        "minutes": "vor {{count}}m",
+        "hours": "vor {{count}}h",
+        "days": "vor {{count}}d"
+      }
+    }
   },
   "vodStreams": {
     "title": "Sync-Aktivitäten",
-    "description": "Überwachen Sie Ihre Plex Download- und Sync-Aktivitäten",
-    "searchPlaceholder": "VOD Streams durchsuchen...",
+    "description": "Überwachen Sie Ihre Plex-Download- und Sync-Aktivitäten",
+    "searchPlaceholder": "Aktivitäten durchsuchen...",
     "addStream": "Stream hinzufügen",
     "addFirstStream": "Ersten Stream hinzufügen",
-    "noStreams": "Noch keine VOD Streams",
-    "noStreamsDescription": "Beginnen Sie, indem Sie Ihren ersten VOD Stream hinzufügen",
-    "noResults": "Keine Streams gefunden, die Ihrer Suche entsprechen",
+    "noStreams": "Keine VOD-Streams",
+    "noStreamsDescription": "Beginnen Sie, indem Sie Ihren ersten VOD-Stream hinzufügen",
+    "noResults": "Keine Streams gefunden",
     "active": "Aktiv",
-    "refreshing": "Wird aktualisiert...",
+    "refreshing": "Aktualisieren...",
     "autoRefresh": "Auto-Aktualisierung in {{seconds}}s",
-    "loadError": "Plex-Aktivitäten konnten nicht geladen werden",
+    "loadError": "Fehler beim Laden der Plex-Aktivitäten",
     "noActivities": "Keine aktiven Downloads",
     "noActivitiesDescription": "Es gibt derzeit keine aktiven Downloads oder Sync-Aktivitäten",
-    "showing": "Zeige {{from}} bis {{to}} von {{total}} Aktivitäten"
+    "showing": "Zeige {{from}} bis {{to}} von {{total}} Aktivitäten",
+    "live": "LIVE",
+    "stats": {
+      "total": "Gesamt",
+      "downloading": "Download läuft",
+      "paused": "Pausiert",
+      "transcoding": "Transkodierung",
+      "streaming": "Streaming",
+      "peakConcurrent": "Höchste Gleichzeitigkeit",
+      "resetPeak": "Peak zurücksetzen"
+    },
+    "badges": {
+      "downloading": "Download läuft...",
+      "transcoding": "Transkodierung...",
+      "streaming": "Streaming...",
+      "paused": "Pausiert"
+    },
+    "progress": "Fortschritt",
+    "plexNotConfigured": {
+      "title": "Plex-Server nicht konfiguriert",
+      "description": "Konfigurieren Sie Ihren Plex-Server in den Einstellungen, um Sync-Aktivitäten zu überwachen.",
+      "goToSettings": "Zu den Einstellungen"
+    },
+    "noMatching": "Keine passenden Aktivitäten",
+    "noMatchingDescription": "Keine Aktivitäten gefunden für",
+    "clearSearch": "Suche löschen",
+    "pagination": {
+      "showing": "Zeige",
+      "to": "bis",
+      "of": "von",
+      "activities": "Aktivitäten",
+      "previous": "Vorherige Seite",
+      "next": "Nächste Seite"
+    }
   },
   "plex": {
     "serverSettings": "PlexSync Server-Einstellungen",
@@ -156,6 +299,23 @@
     "title": "Einstellungen",
     "theme": "Theme",
     "language": "Sprache",
+    "loggingSettings": "Protokollierungseinstellungen",
+    "logLevel": "Protokollebene",
+    "logLevelHelp": "Legen Sie die minimale Protokollebene für die Anwendung fest",
+    "enableFileLogging": "Dateiprotokollierung aktivieren",
+    "enableFileLoggingHelp": "Protokolle zusätzlich zur Konsolenausgabe in Datei speichern",
+    "generalSettings": "Allgemeine Einstellungen",
+    "timezone": "Zeitzone",
+    "timezoneHelp": "Legen Sie die Zeitzone für Zeitstempel in der Anwendung fest",
+    "apiConfiguration": "API-Konfiguration",
+    "githubToken": "GitHub Token",
+    "githubTokenHelp": "Optional: Persönlicher Zugriffstoken für höhere GitHub API-Ratenlimits",
+    "tmdbApiKey": "TMDB API-Schlüssel",
+    "tmdbApiKeyHelp": "API-Schlüssel für The Movie Database (wird für Einladungseinlösungs-Hintergründe verwendet)",
+    "saveSettings": "Einstellungen speichern",
+    "saving": "Speichere...",
+    "settingsSaved": "Einstellungen erfolgreich gespeichert",
+    "saveError": "Fehler beim Speichern der Einstellungen",
     "themes": {
       "dark": "Dunkel",
       "plex": "Plex",
@@ -279,5 +439,152 @@
     "webuiDevelopedWith": "WebUI entwickelt mit",
     "by": "von",
     "forTheCommunity": "für die Community"
+  },
+  "invites": {
+    "title": "Plex-Einladungen",
+    "refresh": "Aktualisieren",
+    "refreshed": "Erfolgreich aktualisiert!",
+    "createInvite": "Einladung erstellen",
+    "createNew": "Neue Einladung erstellen",
+    "inviteCreated": "Einladung erfolgreich erstellt!",
+    "inviteDeleted": "Einladung erfolgreich gelöscht!",
+    "linkCopied": "Einladungslink in Zwischenablage kopiert!",
+    "errorLoading": "Fehler beim Laden der Einladungen",
+    "errorCreating": "Fehler beim Erstellen der Einladung",
+    "errorDeleting": "Fehler beim Löschen der Einladung",
+    "confirmDelete": "Möchten Sie diese Einladung wirklich löschen?",
+    "stats": {
+      "totalInvites": "Einladungen gesamt",
+      "activeInvites": "Aktive Einladungen",
+      "totalRedemptions": "Einlösungen gesamt",
+      "plexUsers": "Plex-Benutzer",
+      "movies": "Filme",
+      "tvShows": "TV-Serien",
+      "episodes": "Episoden"
+    },
+    "status": {
+      "disabled": "Deaktiviert",
+      "expired": "Abgelaufen",
+      "usedUp": "Aufgebraucht",
+      "active": "Aktiv"
+    },
+    "fields": {
+      "created": "Erstellt",
+      "by": "von",
+      "expires": "Läuft ab",
+      "never": "Niemals",
+      "usage": "Nutzung",
+      "server": "Server",
+      "libraries": "Bibliotheken",
+      "allLibraries": "Alle Bibliotheken",
+      "permissions": "Berechtigungen",
+      "none": "Keine",
+      "redeemedBy": "Eingelöst von"
+    },
+    "permissions": {
+      "sync": "Sync",
+      "liveTV": "Live-TV",
+      "home": "Home"
+    },
+    "buttons": {
+      "copyLink": "Link kopieren",
+      "copied": "Kopiert!",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "create": "Einladung erstellen"
+    },
+    "form": {
+      "usageLimit": "Nutzungslimit",
+      "unlimited": "Unbegrenzt",
+      "uses": "Nutzungen",
+      "expiresIn": "Läuft ab in",
+      "days": "Tage",
+      "permissionsTitle": "Berechtigungen",
+      "allowSync": "Sync erlauben",
+      "allowSyncDesc": "Synchronisierung für Offline-Wiedergabe aktivieren",
+      "allowLiveTV": "Live-TV & DVR erlauben",
+      "allowLiveTVDesc": "Zugriff auf Live-TV und DVR-Funktionen gewähren",
+      "plexHome": "Plex Home-Benutzer",
+      "plexHomeDesc": "Benutzer zu Ihrem Plex Home für verwalteten Zugriff hinzufügen",
+      "libraryAccess": "Bibliothekszugriff",
+      "allLibrariesTitle": "Alle Bibliotheken",
+      "allLibrariesDesc": "Zugriff auf alle aktuellen und zukünftigen Bibliotheken gewähren",
+      "selectSpecific": "Oder wählen Sie bestimmte Bibliotheken aus",
+      "noLibraries": "Keine Bibliotheken gefunden",
+      "noLibrariesDesc": "Stellen Sie sicher, dass der Plex-Server korrekt konfiguriert ist"
+    },
+    "empty": {
+      "title": "Noch keine Einladungen",
+      "description": "Erstellen Sie Ihre erste Einladung, um loszulegen!"
+    },
+    "libraryTypes": {
+      "movie": "Film",
+      "show": "Serie",
+      "music": "Musik"
+    }
+  },
+  "monitor": {
+    "title": "Antwortmonitor",
+    "searchPlaceholder": "Services durchsuchen...",
+    "refresh": "Aktualisieren",
+    "stats": {
+      "total": "GESAMT",
+      "online": "ONLINE",
+      "offline": "OFFLINE",
+      "problem": "PROBLEM",
+      "slowLabel": "Langsam (>1s)",
+      "avgResponse": "Durchschn. Antwort",
+      "ms": "ms"
+    },
+    "tabs": {
+      "all": "ALLE"
+    },
+    "service": {
+      "lastCheck": {
+        "never": "Niemals",
+        "seconds": "vor {{count}}s",
+        "minutes": "vor {{count}}m",
+        "hours": "vor {{count}}h",
+        "days": "vor {{count}}d"
+      },
+      "slow": "Langsam",
+      "currentResponseTime": "Aktuelle Antwortzeit",
+      "responseTimeHistory": "Antwortzeitverlauf",
+      "responseTime": "Antwortzeit",
+      "avg": "Durchschn.",
+      "max": "Max",
+      "noDataYet": "Noch keine Daten - warte auf Messungen"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "Keine Online-Dienste",
+        "description": "Derzeit sind keine Dienste online"
+      },
+      "noOffline": {
+        "title": "Keine Offline-Dienste",
+        "description": "Alle Dienste sind betriebsbereit!"
+      },
+      "noProblem": {
+        "title": "Keine Dienste mit Problemen",
+        "description": "Alles läuft reibungslos!"
+      },
+      "noServices": {
+        "title": "Keine Dienste gefunden",
+        "description": "Es wurden noch keine Dienste hinzugefügt."
+      },
+      "noMatching": {
+        "title": "Keine passenden Dienste",
+        "description": "Keine Dienste gefunden, die \"{{searchTerm}}\" entsprechen"
+      },
+      "clearSearch": "Suche löschen"
+    },
+    "pagination": {
+      "showing": "Zeige",
+      "to": "bis",
+      "of": "von",
+      "services": "Dienste",
+      "previous": "Vorherige Seite",
+      "next": "Nächste Seite"
+    }
   }
 }

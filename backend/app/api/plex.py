@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, HttpUrl
 import httpx
 import json
@@ -45,25 +46,21 @@ class UpdatePeakRequest(BaseModel):
 
 
 def load_plex_config() -> Optional[dict]:
-    """Load Plex configuration from database"""
+    """Load Plex configuration from config.json (via settings)"""
     try:
-        session = db.get_session()
-        try:
-            stats = session.query(PlexStatsDB).first()
-            if stats and stats.server_url and stats.server_token:  # type: ignore
-                logger.debug(f"Loaded Plex config from database: {stats.server_url}")  # type: ignore
-                return {
-                    "url": stats.server_url,  # type: ignore
-                    "token": stats.server_token,  # type: ignore
-                    "server_name": stats.server_name,  # type: ignore
-                    "total_users": stats.total_users or 0,  # type: ignore
-                    "total_movies": stats.total_movies or 0,  # type: ignore
-                    "total_tv_shows": stats.total_tv_shows or 0,  # type: ignore
-                }
-            else:
-                logger.debug("No Plex config found in database")
-        finally:
-            session.close()
+        from app.config import settings
+
+        if settings.PLEX_SERVER_URL and settings.PLEX_SERVER_TOKEN:
+            logger.debug(
+                f"Loaded Plex config from config.json: {settings.PLEX_SERVER_URL}"
+            )
+            return {
+                "url": settings.PLEX_SERVER_URL,
+                "token": settings.PLEX_SERVER_TOKEN,
+                "server_name": settings.PLEX_SERVER_NAME,
+            }
+        else:
+            logger.debug("No Plex config found in config.json")
     except Exception as e:
         logger.error(f"Error loading Plex config: {e}")
     return None
@@ -72,98 +69,87 @@ def load_plex_config() -> Optional[dict]:
 def save_plex_config(
     config: dict,
     server_name: Optional[str] = None,
-    total_users: int = 0,
-    total_movies: int = 0,
-    total_tv_shows: int = 0,
 ) -> bool:
-    """Save Plex configuration to database"""
+    """Save Plex configuration to config.json"""
     try:
-        session = db.get_session()
-        try:
-            stats = session.query(PlexStatsDB).first()
+        from pathlib import Path
+        import json
 
-            if not stats:
-                stats = PlexStatsDB(
-                    server_url=config["url"],
-                    server_token=config["token"],
-                    server_name=server_name,
-                    peak_concurrent=0,
-                    total_users=total_users,
-                    total_movies=total_movies,
-                    total_tv_shows=total_tv_shows,
-                )
-                session.add(stats)
-            else:
-                stats.server_url = config["url"]  # type: ignore
-                stats.server_token = config["token"]  # type: ignore
-                if server_name:
-                    stats.server_name = server_name  # type: ignore
-                stats.total_users = total_users  # type: ignore
-                stats.total_movies = total_movies  # type: ignore
-                stats.total_tv_shows = total_tv_shows  # type: ignore
+        config_path = Path(__file__).parent.parent.parent / "data" / "config.json"
 
-            session.commit()
-            logger.info(
-                f"Plex configuration saved to database (Users: {total_users}, Movies: {total_movies}, TV Shows: {total_tv_shows})"
-            )
-            return True
-        finally:
-            session.close()
+        # Load existing config
+        config_data = {}
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                config_data = json.load(f)
+
+        # Update plex section
+        config_data["plex"] = {
+            "server_url": config["url"],
+            "server_token": config["token"],
+            "server_name": server_name or "Plex Server",
+        }
+
+        # Save back to file
+        with open(config_path, "w") as f:
+            json.dump(config_data, f, indent=2)
+
+        # Update runtime settings
+        from app.config import settings
+
+        settings.PLEX_SERVER_URL = config["url"]
+        settings.PLEX_SERVER_TOKEN = config["token"]
+        settings.PLEX_SERVER_NAME = server_name or "Plex Server"
+
+        logger.info(f"Plex configuration saved to config.json")
+        return True
     except Exception as e:
         logger.error(f"Error saving Plex config: {e}")
         return False
 
 
 def migrate_plex_config_if_needed() -> None:
-    """Migrate Plex config from JSON to database on startup if needed"""
-    CONFIG_FILE = Path("data/plex_config.json")
-
+    """Migrate Plex config from database to config.json if needed"""
     try:
-        # Check if database already has Plex config
+        from app.config import settings
+
+        # Check if config.json already has Plex config
+        if settings.PLEX_SERVER_URL and settings.PLEX_SERVER_TOKEN:
+            logger.debug("Plex config already exists in config.json")
+            return
+
+        # Check if database has old config
         session = db.get_session()
         try:
             stats = session.query(PlexStatsDB).first()
-            has_db_config = stats and stats.server_url and stats.server_token  # type: ignore
+            has_db_config = stats and hasattr(stats, "server_url") and stats.server_url and hasattr(stats, "server_token") and stats.server_token  # type: ignore
+
+            if not has_db_config:
+                logger.debug("No Plex config found in database to migrate")
+                return
+
+            # Migrate to config.json
+            logger.info("Migrating Plex config from database to config.json...")
+
+            config = {
+                "url": stats.server_url,  # type: ignore
+                "token": stats.server_token,  # type: ignore
+            }
+            server_name = getattr(stats, "server_name", "Plex Server")  # type: ignore
+
+            if save_plex_config(config, server_name):
+                logger.info("Plex config migration completed successfully")
+            else:
+                logger.error("Failed to migrate Plex config")
+
         finally:
             session.close()
 
-        # If database already has config, skip migration
-        if has_db_config:
-            logger.debug("Plex config already exists in database")
-            return
-
-        # Check if JSON file exists
-        if not CONFIG_FILE.exists():
-            logger.debug("No Plex config JSON file found to migrate")
-            return
-
-        # Read JSON file
-        with open(CONFIG_FILE, "r") as f:
-            json_config = json.load(f)
-
-        if not json_config.get("url") or not json_config.get("token"):
-            logger.debug("Plex config JSON file is empty or incomplete")
-            return
-
-        # Migrate to database
-        logger.info("Migrating Plex config from JSON to database...")
-        success = save_plex_config(
-            {"url": json_config["url"], "token": json_config["token"]},
-            server_name=json_config.get("server_name"),
-        )
-
-        if success:
-            # Create backup of JSON file
-            backup_file = CONFIG_FILE.with_suffix(".json.backup")
-            shutil.copy2(CONFIG_FILE, backup_file)
-            logger.info(
-                f"Plex config migrated successfully. Backup created at {backup_file}"
-            )
-        else:
-            logger.error("Failed to migrate Plex config to database")
-
     except Exception as e:
         logger.error(f"Error during Plex config migration: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
 
 
 async def fetch_plex_statistics(url: str, token: str) -> tuple[int, int, int]:
@@ -248,11 +234,59 @@ async def fetch_plex_statistics(url: str, token: str) -> tuple[int, int, int]:
                                 )
             except Exception as e:
                 logger.warning(f"Could not fetch library sections: {e}")
-
     except Exception as e:
         logger.error(f"Error fetching Plex statistics: {e}")
 
     return total_users, total_movies, total_tv_shows
+
+
+async def fetch_plex_episode_count(url: str, token: str) -> int:
+    """
+    Fetch total episode count from Plex server
+    Returns: total_episodes
+    """
+    total_episodes = 0
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {"X-Plex-Token": token, "Accept": "application/json"}
+
+            # Fetch library sections
+            sections_response = await client.get(
+                f"{url}/library/sections", headers=headers
+            )
+            if sections_response.status_code == 200:
+                sections_data = sections_response.json()
+                sections = sections_data.get("MediaContainer", {}).get("Directory", [])
+
+                for section in sections:
+                    section_key = section.get("key")
+                    section_type = section.get("type")
+
+                    if section_type == "show":
+                        # Get episode count for this TV library
+                        try:
+                            episodes_response = await client.get(
+                                f"{url}/library/sections/{section_key}/allLeaves",
+                                headers=headers,
+                                params={
+                                    "X-Plex-Container-Start": 0,
+                                    "X-Plex-Container-Size": 0,
+                                },
+                            )
+                            if episodes_response.status_code == 200:
+                                episodes_data = episodes_response.json()
+                                total_episodes += episodes_data.get(
+                                    "MediaContainer", {}
+                                ).get("totalSize", 0)
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not fetch episode count for section {section_key}: {e}"
+                            )
+    except Exception as e:
+        logger.warning(f"Could not fetch episode counts: {e}")
+
+    return total_episodes
 
 
 async def validate_plex_connection(
@@ -435,10 +469,8 @@ async def save_plex_configuration(config: PlexConfig):
             "token": config.token,
         }
 
-        if save_plex_config(
-            config_data, server_name, total_users, total_movies, total_tv_shows
-        ):
-            logger.info("Plex configuration saved successfully to database")
+        if save_plex_config(config_data, server_name):
+            logger.info("Plex configuration saved successfully to config.json")
             return {
                 "status": "success",
                 "message": "Configuration saved",
@@ -467,14 +499,12 @@ async def validate_plex(request: PlexValidateRequest):
     )
 
     if is_valid:
-        # Save the server name and statistics to database when validation succeeds
+        # Save the server name to config.json when validation succeeds
         config_data = {
             "url": request.url.rstrip("/"),
             "token": request.token,
         }
-        save_plex_config(
-            config_data, server_name, total_users, total_movies, total_tv_shows
-        )
+        save_plex_config(config_data, server_name)
 
         return PlexValidateResponse(
             valid=True,
@@ -661,6 +691,9 @@ async def get_plex_activities():
 async def get_plex_stats():
     """Get Plex statistics including peak concurrent activities"""
     try:
+        # Load config from config.json
+        plex_config = load_plex_config()
+
         session = db.get_session()
         try:
             # Get the first (and only) stats record
@@ -673,15 +706,36 @@ async def get_plex_stats():
                 session.commit()
                 session.refresh(stats)
 
+            # Fetch live statistics from Plex
+            total_users = 0
+            total_movies = 0
+            total_tv_shows = 0
+
+            if plex_config and plex_config.get("url") and plex_config.get("token"):
+                try:
+                    total_users, total_movies, total_tv_shows = (
+                        await fetch_plex_statistics(
+                            plex_config["url"], plex_config["token"]
+                        )
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to fetch live Plex stats: {e}")
+
             return PlexStats(
                 peak_concurrent=stats.peak_concurrent,  # type: ignore
                 last_updated=stats.last_updated.isoformat() if stats.last_updated else None,  # type: ignore
-                server_url=stats.server_url,  # type: ignore
-                server_name=stats.server_name,  # type: ignore
-                token_configured=bool(stats.server_url and stats.server_token),  # type: ignore
-                total_users=stats.total_users or 0,  # type: ignore
-                total_movies=stats.total_movies or 0,  # type: ignore
-                total_tv_shows=stats.total_tv_shows or 0,  # type: ignore
+                server_url=plex_config.get("url", "") if plex_config else "",
+                server_name=(
+                    plex_config.get("server_name", "Plex Server")
+                    if plex_config
+                    else "Plex Server"
+                ),
+                token_configured=bool(
+                    plex_config and plex_config.get("url") and plex_config.get("token")
+                ),
+                total_users=total_users,
+                total_movies=total_movies,
+                total_tv_shows=total_tv_shows,
             )
         finally:
             session.close()
@@ -691,6 +745,50 @@ async def get_plex_stats():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving Plex statistics: {str(e)}",
         )
+
+
+@router.get("/stats/live")
+async def get_live_plex_stats():
+    """Get live Plex statistics by fetching directly from Plex server"""
+    try:
+        config = load_plex_config()
+        if not config:
+            return {
+                "total_users": 0,
+                "total_movies": 0,
+                "total_tv_shows": 0,
+                "total_episodes": 0,
+                "server_name": "Plex Server",
+                "error": "Plex not configured",
+            }
+
+        total_users, total_movies, total_tv_shows = await fetch_plex_statistics(
+            config["url"], config["token"]
+        )
+
+        # Fetch episode count
+        total_episodes = await fetch_plex_episode_count(config["url"], config["token"])
+
+        # Get server name
+        server_name = config.get("server_name", "Plex Server")
+
+        return {
+            "total_users": total_users,
+            "total_movies": total_movies,
+            "total_tv_shows": total_tv_shows,
+            "total_episodes": total_episodes,
+            "server_name": server_name,
+        }
+    except Exception as e:
+        logger.error(f"Error getting live Plex stats: {e}")
+        return {
+            "total_users": 0,
+            "total_movies": 0,
+            "total_tv_shows": 0,
+            "total_episodes": 0,
+            "server_name": "Plex Server",
+            "error": str(e),
+        }
 
 
 @router.post("/stats/peak")
@@ -844,4 +942,53 @@ async def get_recent_media():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching recent media: {str(e)}",
+        )
+
+
+@router.get("/proxy/image")
+async def proxy_plex_image(url: str):
+    """
+    Proxy Plex images to avoid SSL certificate issues when accessing via HTTPS domain.
+    Fetches the image from Plex server and returns it through the backend.
+    """
+    try:
+        # Get Plex config to verify SSL settings
+        session = db.get_session()
+        try:
+            config = session.query(PlexStatsDB).first()
+            if not config:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Plex server not configured",
+                )
+        finally:
+            session.close()
+
+        # Fetch image from Plex server with SSL verification disabled
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+
+            # Determine content type from response headers
+            content_type = response.headers.get("content-type", "image/jpeg")
+
+            # Return image as streaming response
+            return StreamingResponse(
+                iter([response.content]),
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                },
+            )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Error fetching Plex image: {e}")
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Error fetching image from Plex: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"Error proxying Plex image: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error proxying image: {str(e)}",
         )

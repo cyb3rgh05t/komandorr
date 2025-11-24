@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../context/ToastContext";
 import {
   Video,
   Download,
@@ -21,27 +22,27 @@ import {
 } from "@/services/plexService";
 import { Link } from "react-router-dom";
 
-const ActivityBadge = ({ type }) => {
+const ActivityBadge = ({ type, t }) => {
   const styles = {
     download: {
       icon: Download,
       className: "bg-green-500/20 text-green-400 border border-green-500/30",
-      label: "Downloading...",
+      label: t("vodStreams.badges.downloading"),
     },
     transcode: {
       icon: Play,
       className: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30",
-      label: "Transcoding...",
+      label: t("vodStreams.badges.transcoding"),
     },
     stream: {
       icon: Play,
       className: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
-      label: "Streaming...",
+      label: t("vodStreams.badges.streaming"),
     },
     pause: {
       icon: Pause,
       className: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
-      label: "Paused",
+      label: t("vodStreams.badges.paused"),
     },
   };
 
@@ -59,7 +60,7 @@ const ActivityBadge = ({ type }) => {
   );
 };
 
-const ProgressBar = ({ progress, activity, startTime, completedInfo }) => {
+const ProgressBar = ({ progress, activity, startTime, completedInfo, t }) => {
   const percent = typeof progress === "number" ? Math.min(progress, 100) : 0;
   const isCompleted = percent >= 100;
 
@@ -68,7 +69,7 @@ const ProgressBar = ({ progress, activity, startTime, completedInfo }) => {
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1.5">
           <Activity size={12} />
-          Progress
+          {t("vodStreams.progress")}
         </span>
         <div
           className={`px-2.5 py-1 bg-theme-hover border border-theme rounded-md text-xs font-medium flex items-center gap-1.5 ${
@@ -90,7 +91,7 @@ const ProgressBar = ({ progress, activity, startTime, completedInfo }) => {
   );
 };
 
-const ActivityItem = ({ activity, startTime, completedInfo }) => {
+const ActivityItem = ({ activity, startTime, completedInfo, t }) => {
   if (!activity || typeof activity !== "object") {
     return null;
   }
@@ -112,7 +113,7 @@ const ActivityItem = ({ activity, startTime, completedInfo }) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <ActivityBadge type={activity.type} />
+            <ActivityBadge type={activity.type} t={t} />
           </div>
         </div>
 
@@ -122,6 +123,7 @@ const ActivityItem = ({ activity, startTime, completedInfo }) => {
           activity={activity}
           startTime={startTime}
           completedInfo={completedInfo}
+          t={t}
         />
       </div>
     </div>
@@ -150,18 +152,20 @@ const Pagination = ({
   startIndex,
   endIndex,
   totalItems,
+  t,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
       <div className="text-sm font-medium text-theme-text-muted">
-        Showing{" "}
+        {t("vodStreams.pagination.showing")}{" "}
         <span className="text-theme-text font-semibold">{startIndex + 1}</span>{" "}
-        to{" "}
+        {t("vodStreams.pagination.to")}{" "}
         <span className="text-theme-text font-semibold">
           {Math.min(endIndex, totalItems)}
         </span>{" "}
-        of <span className="text-theme-text font-semibold">{totalItems}</span>{" "}
-        activities
+        {t("vodStreams.pagination.of")}{" "}
+        <span className="text-theme-text font-semibold">{totalItems}</span>{" "}
+        {t("vodStreams.pagination.activities")}
       </div>
 
       <div className="flex items-center gap-2">
@@ -169,7 +173,7 @@ const Pagination = ({
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
           className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-          title="Previous page"
+          title={t("vodStreams.pagination.previous")}
         >
           <ChevronLeft size={20} />
         </button>
@@ -211,7 +215,7 @@ const Pagination = ({
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
           className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-          title="Next page"
+          title={t("vodStreams.pagination.next")}
         >
           <ChevronRight size={20} />
         </button>
@@ -222,6 +226,7 @@ const Pagination = ({
 
 export default function VODStreams() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -425,13 +430,16 @@ export default function VODStreams() {
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (isManual = false) => {
     if (isRefreshing) return;
 
     setIsRefreshing(true);
     await fetchActivities();
     setIsRefreshing(false);
     setLastRefreshTime(Date.now());
+    if (isManual) {
+      toast.success("Refreshed successfully!");
+    }
   };
 
   useEffect(() => {
@@ -439,7 +447,7 @@ export default function VODStreams() {
     setLastRefreshTime(Date.now());
 
     refreshInterval.current = setInterval(() => {
-      handleRefresh();
+      handleRefresh(false); // Auto-refresh, no toast
     }, REFRESH_INTERVAL);
 
     return () => {
@@ -507,7 +515,7 @@ export default function VODStreams() {
           />
           <input
             type="text"
-            placeholder="Search activities..."
+            placeholder={t("vodStreams.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-sm bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
@@ -521,11 +529,11 @@ export default function VODStreams() {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </span>
             <span className="text-xs sm:text-sm font-medium text-theme-text">
-              LIVE
+              {t("vodStreams.live")}
             </span>
           </div>
           <button
-            onClick={handleRefresh}
+            onClick={() => handleRefresh(true)}
             disabled={isRefreshing}
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
@@ -547,7 +555,7 @@ export default function VODStreams() {
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Server className="w-3 h-3 text-theme-primary" />
-                Total
+                {t("vodStreams.stats.total")}
               </p>
               <p className="text-2xl font-bold text-theme-text mt-1">
                 {totalItems}
@@ -562,7 +570,7 @@ export default function VODStreams() {
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Download className="w-3 h-3 text-green-500" />
-                Downloading
+                {t("vodStreams.stats.downloading")}
               </p>
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {
@@ -581,7 +589,7 @@ export default function VODStreams() {
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Pause className="w-3 h-3 text-orange-500" />
-                Paused
+                {t("vodStreams.stats.paused")}
               </p>
               <p className="text-2xl font-bold text-orange-500 mt-1">
                 {activities.filter((a) => a.state === "paused").length}
@@ -596,7 +604,7 @@ export default function VODStreams() {
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Video className="w-3 h-3 text-cyan-500" />
-                Transcoding
+                {t("vodStreams.stats.transcoding")}
               </p>
               <p className="text-2xl font-bold text-cyan-500 mt-1">
                 {
@@ -615,7 +623,7 @@ export default function VODStreams() {
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Play className="w-3 h-3 text-blue-500" />
-                Streaming
+                {t("vodStreams.stats.streaming")}
               </p>
               <p className="text-2xl font-bold text-blue-500 mt-1">
                 {
@@ -634,7 +642,7 @@ export default function VODStreams() {
             <div className="flex-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                 <Activity className="w-3 h-3 text-purple-500" />
-                Peak Concurrent
+                {t("vodStreams.stats.peakConcurrent")}
               </p>
               <p className="text-2xl font-bold text-purple-500 mt-1">
                 {peakConcurrent}
@@ -650,10 +658,10 @@ export default function VODStreams() {
                   }
                 }}
                 className="mt-2 text-xs text-theme-text-muted hover:text-purple-500 transition-colors flex items-center gap-1"
-                title="Reset peak counter"
+                title={t("vodStreams.stats.resetPeak")}
               >
                 <RefreshCw size={10} />
-                Reset Peak
+                {t("vodStreams.stats.resetPeak")}
               </button>
             </div>
             <Activity className="w-8 h-8 text-purple-500" />
@@ -673,18 +681,17 @@ export default function VODStreams() {
           <div className="bg-theme-card border border-theme rounded-lg p-8 text-center">
             <Server size={48} className="mx-auto mb-4 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text mb-2">
-              Plex Server Not Configured
+              {t("vodStreams.plexNotConfigured.title")}
             </h3>
             <p className="text-theme-muted mb-6">
-              Configure your Plex server in Settings to start monitoring sync
-              activities.
+              {t("vodStreams.plexNotConfigured.description")}
             </p>
             <Link
               to="/settings"
               className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
             >
               <Server size={20} />
-              Go to Settings
+              {t("vodStreams.plexNotConfigured.goToSettings")}
             </Link>
           </div>
         ) : error ? (
@@ -694,16 +701,19 @@ export default function VODStreams() {
             <p className="text-theme-muted text-sm mt-2">{error}</p>
           </div>
         ) : !filteredActivities?.length ? (
-          <div className="text-center py-12 bg-theme-card rounded-lg border border-theme">
-            <Download size={48} className="mx-auto mb-4 text-theme-muted" />
+          <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+            <Download
+              size={48}
+              className="mx-auto mb-4 text-theme-text-muted"
+            />
             <h3 className="text-lg font-semibold text-theme-text mb-2">
               {searchQuery
-                ? "No matching activities"
+                ? t("vodStreams.noMatching")
                 : t("vodStreams.noActivities")}
             </h3>
-            <p className="text-theme-muted mb-4">
+            <p className="text-theme-text-muted mb-6">
               {searchQuery
-                ? `No activities found matching "${searchQuery}"`
+                ? `${t("vodStreams.noMatchingDescription")} "${searchQuery}"`
                 : t("vodStreams.noActivitiesDescription")}
             </p>
             {searchQuery && (
@@ -711,7 +721,7 @@ export default function VODStreams() {
                 onClick={() => setSearchQuery("")}
                 className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
               >
-                Clear Search
+                {t("vodStreams.clearSearch")}
               </button>
             )}
           </div>
@@ -723,6 +733,7 @@ export default function VODStreams() {
                 activity={activity}
                 startTime={activityTimestamps[activity.uuid]}
                 completedInfo={completedActivities[activity.uuid]}
+                t={t}
               />
             ))}
           </>
@@ -742,6 +753,7 @@ export default function VODStreams() {
             startIndex={startIndex}
             endIndex={endIndex}
             totalItems={totalItems}
+            t={t}
           />
         )}
     </div>

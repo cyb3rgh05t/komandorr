@@ -9,6 +9,7 @@
     "monitor": "Response Monitor",
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",
+    "invites": "Plex Invites",
     "settings": "Settings",
     "about": "About"
   },
@@ -29,7 +30,37 @@
     "showServiceCards": "Service Cards",
     "chartLineThickness": "Chart Line Thickness",
     "thin": "Thin",
-    "thick": "Thick"
+    "thick": "Thick",
+    "close": "Close",
+    "stats": {
+      "totalServices": "Total Services",
+      "online": "Online",
+      "offline": "Offline",
+      "problems": "Problems",
+      "slowResponse": "Slow response (>1s)",
+      "avgResponse": "Avg Response",
+      "active5min": "Active (5min)",
+      "uploadSpeed": "Upload Speed",
+      "downloadSpeed": "Download Speed",
+      "totalTransfer": "Total Transfer",
+      "vodStreams": "VOD Streams"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "No online services",
+        "message": "Currently no services are online"
+      },
+      "noOffline": {
+        "title": "No offline services",
+        "message": "All services are operational!"
+      },
+      "noProblems": {
+        "title": "No services with problems",
+        "message": "Everything is running smoothly!"
+      }
+    },
+    "groupUngrouped": "Ungrouped",
+    "all": "ALL"
   },
   "service": {
     "name": "Name",
@@ -49,12 +80,25 @@
     "createGroup": "Create New Group",
     "newGroupName": "Enter group name",
     "types": {
-      "app": "App",
-      "website": "Website",
+      "http": "HTTP",
+      "https": "HTTPS",
+      "tcp": "TCP",
+      "ping": "Ping",
+      "dns": "DNS",
+      "api": "API",
+      "websocket": "WebSocket",
+      "database": "Database",
       "panel": "Panel",
-      "project": "Project",
-      "server": "Server"
-    }
+      "custom": "Custom"
+    },
+    "stats": {
+      "slow": "Slow",
+      "response": "Response",
+      "checked": "Checked",
+      "upload": "Upload",
+      "download": "Download"
+    },
+    "checkNowButton": "Check Now"
   },
   "form": {
     "addService": "Add Service",
@@ -68,7 +112,29 @@
     "title": "Services",
     "description": "Manage all your monitored services",
     "total": "Total Services",
-    "noResults": "No services found matching your search"
+    "noResults": "No services found matching your search",
+    "stats": {
+      "total": "TOTAL",
+      "online": "ONLINE",
+      "offline": "OFFLINE",
+      "problem": "PROBLEM",
+      "slowResponse": "Slow (>1s)"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "No online services",
+        "message": "Currently no services are online"
+      },
+      "noOffline": {
+        "title": "No offline services",
+        "message": "All services are operational!"
+      },
+      "noProblems": {
+        "title": "No services with problems",
+        "message": "Everything is running smoothly!"
+      }
+    },
+    "all": "ALL"
   },
   "monitor": {
     "title": "Real-time Monitor",
@@ -96,12 +162,62 @@
     "no_data": "No traffic data available. Deploy the traffic agent on your servers to start monitoring.",
     "noData": "No traffic data available",
     "noActiveTraffic": "No active traffic",
-    "last_refresh": "Last refreshed"
+    "last_refresh": "Last refreshed",
+    "realtimeMonitoring": "Real-time bandwidth monitoring",
+    "service": "active service",
+    "services": "services",
+    "activeServices": "active services",
+    "download": "Download",
+    "upload": "Upload",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "refreshData": "Refresh Data",
+    "lastDataPoints": "Last 20 data points",
+    "activeServicesLabel": "Active Services",
+    "page": {
+      "searchPlaceholder": "Search services...",
+      "refresh": "Refresh",
+      "refreshSuccess": "Traffic data refreshed successfully!",
+      "noTrafficData": "No traffic data yet",
+      "stats": {
+        "services": "Services",
+        "upload": "Upload",
+        "download": "Download",
+        "uploaded": "Uploaded",
+        "downloaded": "Downloaded",
+        "totalTraffic": "Total Traffic",
+        "uploadSpeed": "Upload Speed",
+        "downloadSpeed": "Download Speed",
+        "totalUpload": "Total Upload",
+        "totalDownload": "Total Download",
+        "avg": "Avg",
+        "max": "Max"
+      },
+      "tabs": {
+        "all": "ALL"
+      },
+      "emptyStates": {
+        "noServices": "No services with traffic monitoring",
+        "noMatching": "No services found matching your search"
+      },
+      "charts": {
+        "bandwidthHistory": "Bandwidth History",
+        "upload": "Upload",
+        "download": "Download"
+      },
+      "time": {
+        "never": "Never",
+        "seconds": "{{count}}s ago",
+        "minutes": "{{count}}m ago",
+        "hours": "{{count}}h ago",
+        "days": "{{count}}d ago"
+      }
+    }
   },
   "vodStreams": {
     "title": "Sync Activities",
     "description": "Monitor your Plex download and sync activities",
-    "searchPlaceholder": "Search VOD streams...",
+    "searchPlaceholder": "Search activities...",
     "addStream": "Add Stream",
     "addFirstStream": "Add Your First Stream",
     "noStreams": "No VOD Streams Yet",
@@ -113,7 +229,40 @@
     "loadError": "Failed to load Plex activities",
     "noActivities": "No Active Downloads",
     "noActivitiesDescription": "There are no active downloads or sync activities at this time",
-    "showing": "Showing {{from}} to {{to}} of {{total}} activities"
+    "showing": "Showing {{from}} to {{to}} of {{total}} activities",
+    "live": "LIVE",
+    "stats": {
+      "total": "Total",
+      "downloading": "Downloading",
+      "paused": "Paused",
+      "transcoding": "Transcoding",
+      "streaming": "Streaming",
+      "peakConcurrent": "Peak Concurrent",
+      "resetPeak": "Reset Peak"
+    },
+    "badges": {
+      "downloading": "Downloading...",
+      "transcoding": "Transcoding...",
+      "streaming": "Streaming...",
+      "paused": "Paused"
+    },
+    "progress": "Progress",
+    "plexNotConfigured": {
+      "title": "Plex Server Not Configured",
+      "description": "Configure your Plex server in Settings to start monitoring sync activities.",
+      "goToSettings": "Go to Settings"
+    },
+    "noMatching": "No matching activities",
+    "noMatchingDescription": "No activities found matching",
+    "clearSearch": "Clear Search",
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "activities": "activities",
+      "previous": "Previous page",
+      "next": "Next page"
+    }
   },
   "plex": {
     "serverSettings": "PlexSync Server Settings",
@@ -156,6 +305,23 @@
     "title": "Settings",
     "theme": "Theme",
     "language": "Language",
+    "loggingSettings": "Logging Settings",
+    "logLevel": "Log Level",
+    "logLevelHelp": "Set the minimum logging level for the application",
+    "enableFileLogging": "Enable File Logging",
+    "enableFileLoggingHelp": "Save logs to file in addition to console output",
+    "generalSettings": "General Settings",
+    "timezone": "Timezone",
+    "timezoneHelp": "Set the timezone for timestamps in the application",
+    "apiConfiguration": "API Configuration",
+    "githubToken": "GitHub Token",
+    "githubTokenHelp": "Optional: Personal access token for higher GitHub API rate limits",
+    "tmdbApiKey": "TMDB API Key",
+    "tmdbApiKeyHelp": "API key for The Movie Database (used for invite redemption backgrounds)",
+    "saveSettings": "Save Settings",
+    "saving": "Saving...",
+    "settingsSaved": "Settings saved successfully",
+    "saveError": "Failed to save settings",
     "themes": {
       "dark": "Dark",
       "plex": "Plex",
@@ -279,5 +445,152 @@
     "webuiDevelopedWith": "WebUI developed with",
     "by": "by",
     "forTheCommunity": "for the community"
+  },
+  "invites": {
+    "title": "Plex Invites",
+    "refresh": "Refresh",
+    "refreshed": "Refreshed successfully!",
+    "createInvite": "Create Invite",
+    "createNew": "Create New Invite",
+    "inviteCreated": "Invite created successfully!",
+    "inviteDeleted": "Invite deleted successfully!",
+    "linkCopied": "Invite link copied to clipboard!",
+    "errorLoading": "Error loading invites",
+    "errorCreating": "Error creating invite",
+    "errorDeleting": "Error deleting invite",
+    "confirmDelete": "Are you sure you want to delete this invite?",
+    "stats": {
+      "totalInvites": "Total Invites",
+      "activeInvites": "Active Invites",
+      "totalRedemptions": "Total Redemptions",
+      "plexUsers": "Plex Users",
+      "movies": "Movies",
+      "tvShows": "TV Shows",
+      "episodes": "Episodes"
+    },
+    "status": {
+      "disabled": "Disabled",
+      "expired": "Expired",
+      "usedUp": "Used Up",
+      "active": "Active"
+    },
+    "fields": {
+      "created": "Created",
+      "by": "by",
+      "expires": "Expires",
+      "never": "Never",
+      "usage": "Usage",
+      "server": "Server",
+      "libraries": "Libraries",
+      "allLibraries": "All Libraries",
+      "permissions": "Permissions",
+      "none": "None",
+      "redeemedBy": "Redeemed by"
+    },
+    "permissions": {
+      "sync": "Sync",
+      "liveTV": "Live TV",
+      "home": "Home"
+    },
+    "buttons": {
+      "copyLink": "Copy Link",
+      "copied": "Copied!",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "create": "Create Invite"
+    },
+    "form": {
+      "usageLimit": "Usage Limit",
+      "unlimited": "Unlimited",
+      "uses": "uses",
+      "expiresIn": "Expires In",
+      "days": "days",
+      "permissionsTitle": "Permissions",
+      "allowSync": "Allow Sync",
+      "allowSyncDesc": "Enable media syncing for offline playback",
+      "allowLiveTV": "Allow Live TV & DVR",
+      "allowLiveTVDesc": "Grant access to Live TV and DVR features",
+      "plexHome": "Plex Home User",
+      "plexHomeDesc": "Add user to your Plex Home for managed access",
+      "libraryAccess": "Library Access",
+      "allLibrariesTitle": "All Libraries",
+      "allLibrariesDesc": "Grant access to all current and future libraries",
+      "selectSpecific": "Or select specific libraries",
+      "noLibraries": "No libraries found",
+      "noLibrariesDesc": "Make sure Plex server is configured correctly"
+    },
+    "empty": {
+      "title": "No invites yet",
+      "description": "Create your first invite to get started!"
+    },
+    "libraryTypes": {
+      "movie": "movie",
+      "show": "show",
+      "music": "music"
+    }
+  },
+  "monitor": {
+    "title": "Response Monitor",
+    "searchPlaceholder": "Search services...",
+    "refresh": "Refresh",
+    "stats": {
+      "total": "TOTAL",
+      "online": "ONLINE",
+      "offline": "OFFLINE",
+      "problem": "PROBLEM",
+      "slowLabel": "Slow (>1s)",
+      "avgResponse": "AVG RESPONSE",
+      "ms": "ms"
+    },
+    "tabs": {
+      "all": "ALL"
+    },
+    "service": {
+      "lastCheck": {
+        "never": "Never",
+        "seconds": "{{count}}s ago",
+        "minutes": "{{count}}m ago",
+        "hours": "{{count}}h ago",
+        "days": "{{count}}d ago"
+      },
+      "slow": "Slow",
+      "currentResponseTime": "Current Response Time",
+      "responseTimeHistory": "Response Time History",
+      "responseTime": "Response Time",
+      "avg": "Avg",
+      "max": "Max",
+      "noDataYet": "No data yet - waiting for measurements"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "No online services",
+        "description": "Currently no services are online"
+      },
+      "noOffline": {
+        "title": "No offline services",
+        "description": "All services are operational!"
+      },
+      "noProblem": {
+        "title": "No services with problems",
+        "description": "Everything is running smoothly!"
+      },
+      "noServices": {
+        "title": "No services found",
+        "description": "No services have been added yet."
+      },
+      "noMatching": {
+        "title": "No matching services",
+        "description": "No services found matching \"{{searchTerm}}\""
+      },
+      "clearSearch": "Clear Search"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "services": "services",
+      "previous": "Previous page",
+      "next": "Next page"
+    }
   }
 }
