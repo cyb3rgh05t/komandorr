@@ -367,7 +367,9 @@ const InviteRedemption = () => {
                       title={item.title}
                     >
                       <img
-                        src={item.poster}
+                        src={`/api/plex/proxy/image?url=${encodeURIComponent(
+                          item.poster
+                        )}`}
                         alt={item.title}
                         className="w-full h-full object-cover"
                       />

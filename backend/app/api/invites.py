@@ -489,14 +489,14 @@ async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
             user_count = len(users)
 
             # Remove users from Plex server if they exist
-            if user_count > 0 and plex_stats and plex_stats.plex_token:
+            if user_count > 0 and plex_stats and plex_stats.server_token:
                 removed_count = 0
                 failed_removals = []
 
                 for user in users:
                     if user.email:
                         success, error = await remove_plex_user(
-                            token=plex_stats.plex_token, email=str(user.email)
+                            token=plex_stats.server_token, email=str(user.email)
                         )
                         if success:
                             removed_count += 1
@@ -519,6 +519,7 @@ async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
             # Delete users from database
             if user_count > 0:
                 session.query(PlexUserDB).filter_by(invite_id=invite_id).delete()
+                session.flush()  # Ensure users are deleted before deleting invite
                 logger.info(
                     f"Deleted {user_count} users from database for invite {code}"
                 )
@@ -533,13 +534,16 @@ async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
                 "message": "Invite deleted and users removed from Plex",
             }
 
+        except Exception as e:
+            session.rollback()
+            raise
         finally:
             session.close()
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting invite: {e}", exc_info=True)
+        logger.exception(f"Error deleting invite: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting invite: {str(e)}",

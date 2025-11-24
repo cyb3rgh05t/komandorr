@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, HttpUrl
 import httpx
 import json
@@ -844,4 +845,53 @@ async def get_recent_media():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching recent media: {str(e)}",
+        )
+
+
+@router.get("/proxy/image")
+async def proxy_plex_image(url: str):
+    """
+    Proxy Plex images to avoid SSL certificate issues when accessing via HTTPS domain.
+    Fetches the image from Plex server and returns it through the backend.
+    """
+    try:
+        # Get Plex config to verify SSL settings
+        session = db.get_session()
+        try:
+            config = session.query(PlexStatsDB).first()
+            if not config:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Plex server not configured",
+                )
+        finally:
+            session.close()
+
+        # Fetch image from Plex server with SSL verification disabled
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+
+            # Determine content type from response headers
+            content_type = response.headers.get("content-type", "image/jpeg")
+
+            # Return image as streaming response
+            return StreamingResponse(
+                iter([response.content]),
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                },
+            )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Error fetching Plex image: {e}")
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Error fetching image from Plex: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"Error proxying Plex image: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error proxying image: {str(e)}",
         )
