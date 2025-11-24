@@ -236,6 +236,7 @@ export default function VODStreams() {
   const REFRESH_INTERVAL = 5000; // 5 seconds for real-time VOD stream monitoring
   const [plexConfigured, setPlexConfigured] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -463,8 +464,27 @@ export default function VODStreams() {
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
 
-  // Filter activities based on search query
+  // Filter activities based on search query and active filter
   const filteredActivities = activities.filter((activity) => {
+    // Apply type filter
+    if (
+      activeFilter === "downloading" &&
+      !(activity.type === "download" || activity.type === "media.download")
+    )
+      return false;
+    if (activeFilter === "paused" && activity.state !== "paused") return false;
+    if (
+      activeFilter === "transcoding" &&
+      !(activity.transcodeSession && activity.state === "playing")
+    )
+      return false;
+    if (
+      activeFilter === "streaming" &&
+      !(activity.state === "playing" && !activity.transcodeSession)
+    )
+      return false;
+
+    // Apply search query
     if (!searchQuery) return true;
 
     const query = searchQuery.toLowerCase();
@@ -490,10 +510,10 @@ export default function VODStreams() {
     }
   }, [totalPages, currentPage]);
 
-  // Reset to page 1 when search query changes
+  // Reset to page 1 when search query or filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, activeFilter]);
 
   const currentItems = filteredActivities
     ? filteredActivities.slice(startIndex, endIndex)
@@ -549,8 +569,11 @@ export default function VODStreams() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div
+          onClick={() => setActiveFilter("all")}
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/50"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -558,14 +581,17 @@ export default function VODStreams() {
                 {t("vodStreams.stats.total")}
               </p>
               <p className="text-2xl font-bold text-theme-text mt-1">
-                {totalItems}
+                {activities.length}
               </p>
             </div>
             <Server className="w-8 h-8 text-theme-primary" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("downloading")}
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-green-500/50"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -584,7 +610,10 @@ export default function VODStreams() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("paused")}
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-orange-500/50"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -599,7 +628,10 @@ export default function VODStreams() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("transcoding")}
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-cyan-500/50"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -618,7 +650,10 @@ export default function VODStreams() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("streaming")}
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-blue-500/50"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -669,6 +704,125 @@ export default function VODStreams() {
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "all"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.all")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "all"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              ({activities.length})
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("downloading")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "downloading"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.downloading")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "downloading"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                activities.filter(
+                  (a) => a.type === "download" || a.type === "media.download"
+                ).length
+              }
+              )
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("paused")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "paused"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.paused")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "paused"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              ({activities.filter((a) => a.state === "paused").length})
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("transcoding")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "transcoding"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.transcoding")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "transcoding"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                activities.filter(
+                  (a) => a.transcodeSession && a.state === "playing"
+                ).length
+              }
+              )
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("streaming")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "streaming"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.streaming")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "streaming"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                activities.filter(
+                  (a) => a.state === "playing" && !a.transcodeSession
+                ).length
+              }
+              )
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {loading ? (
@@ -678,7 +832,7 @@ export default function VODStreams() {
             <LoadingItem />
           </>
         ) : !plexConfigured ? (
-          <div className="bg-theme-card border border-theme rounded-lg p-8 text-center">
+          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-lg p-8 text-center">
             <Server size={48} className="mx-auto mb-4 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text mb-2">
               {t("vodStreams.plexNotConfigured.title")}
@@ -695,13 +849,13 @@ export default function VODStreams() {
             </Link>
           </div>
         ) : error ? (
-          <div className="bg-theme-card border border-red-500/30 rounded-lg p-6 text-center">
+          <div className="lg:col-span-2 bg-theme-card border border-red-500/30 rounded-lg p-6 text-center">
             <AlertCircle size={24} className="text-red-400 mx-auto mb-3" />
             <p className="text-red-400">{t("vodStreams.loadError")}</p>
             <p className="text-theme-muted text-sm mt-2">{error}</p>
           </div>
         ) : !filteredActivities?.length ? (
-          <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
             <Download
               size={48}
               className="mx-auto mb-4 text-theme-text-muted"

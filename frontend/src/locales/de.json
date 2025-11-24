@@ -225,6 +225,13 @@
     "noActivitiesDescription": "Es gibt derzeit keine aktiven Downloads oder Sync-Aktivitäten",
     "showing": "Zeige {{from}} bis {{to}} von {{total}} Aktivitäten",
     "live": "LIVE",
+    "filter": {
+      "all": "Alle",
+      "downloading": "Wird heruntergeladen",
+      "paused": "Pausiert",
+      "transcoding": "Wird transkodiert",
+      "streaming": "Wird gestreamt"
+    },
     "stats": {
       "total": "Gesamt",
       "downloading": "Download läuft",
@@ -457,10 +464,20 @@
       "totalInvites": "Einladungen gesamt",
       "activeInvites": "Aktive Einladungen",
       "totalRedemptions": "Einlösungen gesamt",
+      "usedUp": "Aufgebraucht",
+      "expired": "Abgelaufen",
       "plexUsers": "Plex-Benutzer",
       "movies": "Filme",
       "tvShows": "TV-Serien",
       "episodes": "Episoden"
+    },
+    "filter": {
+      "label": "Filter",
+      "all": "Alle",
+      "active": "Aktiv",
+      "expired": "Abgelaufen",
+      "usedUp": "Aufgebraucht",
+      "disabled": "Deaktiviert"
     },
     "status": {
       "disabled": "Deaktiviert",
@@ -494,6 +511,10 @@
       "create": "Einladung erstellen"
     },
     "form": {
+      "customCode": "Benutzerdefinierter Einladungscode",
+      "optional": "optional",
+      "customCodePlaceholder": "z.B. WILLKOMMEN2024 oder leer lassen für auto-generiert",
+      "customCodeDesc": "Min. 4 Zeichen. Buchstaben, Zahlen, Bindestriche und Unterstriche erlaubt. Leer lassen für automatische Generierung.",
       "usageLimit": "Nutzungslimit",
       "unlimited": "Unbegrenzt",
       "uses": "Nutzungen",

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import func
 import secrets
 import string
 import httpx
@@ -188,10 +189,31 @@ async def create_invite(
     try:
         session = db.get_session()
         try:
-            # Generate unique code
-            code = generate_invite_code()
-            while session.query(InviteDB).filter_by(code=code).first():
+            # Use custom code if provided, otherwise generate one
+            if invite_data.custom_code:
+                code = invite_data.custom_code.strip().upper()
+                # Validate custom code
+                if len(code) < 4:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Custom code must be at least 4 characters long",
+                    )
+                if not code.replace("-", "").replace("_", "").isalnum():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Custom code can only contain letters, numbers, hyphens, and underscores",
+                    )
+                # Check if code already exists
+                if session.query(InviteDB).filter_by(code=code).first():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="This invite code already exists",
+                    )
+            else:
+                # Generate unique code
                 code = generate_invite_code()
+                while session.query(InviteDB).filter_by(code=code).first():
+                    code = generate_invite_code()
 
             # Calculate expiration
             expires_at = None
@@ -327,9 +349,29 @@ async def get_invite_stats(username: str = Depends(require_auth)):
             total_users = session.query(PlexUserDB).count()
             active_users = session.query(PlexUserDB).filter_by(is_active=True).count()
 
+            # Calculate used up invites (where used_count >= usage_limit and usage_limit is not null)
+            used_up_invites = (
+                session.query(InviteDB)
+                .filter(
+                    InviteDB.usage_limit.isnot(None),
+                    InviteDB.used_count >= InviteDB.usage_limit,
+                )
+                .count()
+            )
+
+            # Calculate total redemptions (sum of all used_count)
+            total_redemptions = (
+                session.query(InviteDB)
+                .with_entities(func.sum(InviteDB.used_count))
+                .scalar()
+                or 0
+            )
+
             return InviteStatsResponse(
                 total_invites=total_invites,
                 active_invites=active_invites,
+                used_up_invites=used_up_invites,
+                total_redemptions=total_redemptions,
                 total_users=total_users,
                 active_users=active_users,
             )

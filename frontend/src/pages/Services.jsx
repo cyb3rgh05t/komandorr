@@ -312,11 +312,7 @@ export default function Services() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-                statusFilter === null
-                  ? "border-theme-primary"
-                  : "border-theme hover:border-theme-primary/50"
-              }`}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
@@ -344,7 +340,7 @@ export default function Services() {
             </button>
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md ${
                 statusFilter === "online"
                   ? "border-green-500"
                   : "border-theme hover:border-green-500/50"
@@ -412,7 +408,7 @@ export default function Services() {
             </button>
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md ${
                 statusFilter === "problem"
                   ? "border-yellow-500"
                   : "border-theme hover:border-yellow-500/50"

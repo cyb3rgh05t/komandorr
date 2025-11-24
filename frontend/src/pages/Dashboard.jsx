@@ -619,11 +619,7 @@ export default function Dashboard() {
             {/* Total Services */}
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-theme-primary/10 group ${
-                statusFilter === null
-                  ? "border-theme-primary ring-2 ring-theme-primary/20"
-                  : "border-theme hover:border-theme-primary/50"
-              }`}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/50"
             >
               <div className="flex items-center justify-between">
                 <div className="text-left">

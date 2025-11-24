@@ -424,11 +424,7 @@ export default function Monitor() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-                statusFilter === null
-                  ? "border-theme-primary"
-                  : "border-theme hover:border-theme-primary/50"
-              }`}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
@@ -456,7 +452,7 @@ export default function Monitor() {
             </button>
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md ${
                 statusFilter === "online"
                   ? "border-green-500"
                   : "border-theme hover:border-green-500/50"
@@ -524,7 +520,7 @@ export default function Monitor() {
             </button>
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md ${
                 statusFilter === "problem"
                   ? "border-yellow-500"
                   : "border-theme hover:border-yellow-500/50"
@@ -559,7 +555,7 @@ export default function Monitor() {
                 </div>
               </div>
             </button>
-            <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-lg hover:border-blue-500/50">
+            <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-blue-500/50">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
@@ -637,10 +633,10 @@ export default function Monitor() {
             </div>
           )}
 
-          {/* Services List */}
+          {/* Service Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {paginatedServices.length === 0 ? (
-              <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+              <div className="lg:col-span-4 bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
                 {statusFilter !== null ? (
                   <>
                     <div className="text-6xl mb-4">
