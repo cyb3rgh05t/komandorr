@@ -1,12 +1,21 @@
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/context/ToastContext";
-import { Shield, AlertCircle, Server, CheckCircle } from "lucide-react";
+import {
+  Shield,
+  AlertCircle,
+  Server,
+  CheckCircle,
+  Settings as SettingsIcon,
+  Globe,
+  Key,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   testPlexConnection,
   getPlexConfig,
   savePlexConfig,
 } from "@/services/plexService";
+import { api } from "@/services/api";
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -23,26 +32,41 @@ export default function Settings() {
   // Plex state
   const [plexUrl, setPlexUrl] = useState("");
   const [plexToken, setPlexToken] = useState("");
+  const [plexServerName, setPlexServerName] = useState("Plex Server");
   const [validating, setValidating] = useState(false);
   const [plexValid, setPlexValid] = useState(null);
+
+  // General settings state
+  const [logLevel, setLogLevel] = useState("INFO");
+  const [logEnableFile, setLogEnableFile] = useState(true);
+  const [timezone, setTimezone] = useState("UTC");
+  const [githubToken, setGithubToken] = useState("");
+  const [tmdbApiKey, setTmdbApiKey] = useState("");
+  const [settingsLoading, setSettingsLoading] = useState(false);
 
   useEffect(() => {
     // Check auth status
     fetchAuthStatus();
-    // Load Plex configuration
-    loadPlexConfig();
+    // Load general settings (includes Plex)
+    loadSettings();
   }, []);
 
-  const loadPlexConfig = async () => {
+  const loadSettings = async () => {
     try {
-      const data = await getPlexConfig();
-      setPlexUrl(data.url || "");
-      setPlexToken(data.token || "");
-      if (data.url && data.token) {
+      const data = await api.get("/settings");
+      setLogLevel(data.logging.level);
+      setLogEnableFile(data.logging.enable_file);
+      setTimezone(data.general.timezone);
+      setGithubToken(data.api.github_token);
+      setTmdbApiKey(data.api.tmdb_api_key);
+      setPlexUrl(data.plex.server_url);
+      setPlexToken(data.plex.server_token);
+      setPlexServerName(data.plex.server_name);
+      if (data.plex.server_url && data.plex.server_token) {
         setPlexValid(true);
       }
     } catch (error) {
-      console.error("Failed to load Plex config:", error);
+      console.error("Failed to load settings:", error);
     }
   };
 
@@ -160,6 +184,10 @@ export default function Settings() {
 
       if (result.valid) {
         setPlexValid(true);
+        // Update server name from validation result
+        if (result.server_name) {
+          setPlexServerName(result.server_name);
+        }
         toast.success(t("plex.validationSuccess"));
       } else {
         setPlexValid(false);
@@ -174,26 +202,33 @@ export default function Settings() {
     }
   };
 
-  const handleSavePlexConfig = async () => {
-    if (!plexUrl || !plexToken) {
-      toast.error(t("plex.fillAllFields"));
-      return;
-    }
-
-    if (plexValid !== true) {
-      toast.error(t("plex.validateFirst"));
-      return;
-    }
-
-    setLoading(true);
+  const handleSaveSettings = async () => {
+    setSettingsLoading(true);
     try {
-      await savePlexConfig(plexUrl, plexToken);
-      toast.success(t("plex.configSaved"));
+      await api.post("/settings", {
+        logging: {
+          level: logLevel,
+          enable_file: logEnableFile,
+        },
+        general: {
+          timezone: timezone,
+        },
+        api: {
+          github_token: githubToken,
+          tmdb_api_key: tmdbApiKey,
+        },
+        plex: {
+          server_url: plexUrl,
+          server_token: plexToken,
+          server_name: plexServerName,
+        },
+      });
+      toast.success(t("settings.settingsSaved"));
     } catch (error) {
-      console.error("Failed to save Plex config:", error);
-      toast.error(error.message || t("plex.configError"));
+      console.error("Failed to save settings:", error);
+      toast.error(t("settings.saveError"));
     } finally {
-      setLoading(false);
+      setSettingsLoading(false);
     }
   };
 
@@ -221,7 +256,7 @@ export default function Settings() {
               onClick={handleToggleAuth}
               disabled={loading}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                authEnabled ? "bg-theme-primary" : "bg-gray-600"
+                authEnabled ? "bg-green-500" : "bg-gray-600"
               } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <span
@@ -242,78 +277,80 @@ export default function Settings() {
         </div>
 
         {/* Change Credentials Form */}
-        <form
-          onSubmit={handleUpdateCredentials}
-          className="space-y-4 pt-4 border-t border-theme"
-        >
-          <h3 className="font-medium text-theme-text text-lg">
-            {t("auth.changeCredentials")}
-          </h3>
-
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              {t("auth.username")}
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-              placeholder={t("auth.enterUsername")}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              {t("auth.currentPassword")}
-            </label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-              placeholder={t("auth.enterPassword")}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              {t("auth.newPassword")}
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-              placeholder={t("auth.enterPassword")}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              {t("auth.confirmPassword")}
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-              placeholder={t("auth.enterPassword")}
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed"
+        {authEnabled && (
+          <form
+            onSubmit={handleUpdateCredentials}
+            className="space-y-4 pt-4 border-t border-theme"
           >
-            {loading ? t("auth.updating") : t("auth.updateCredentials")}
-          </button>
-        </form>
+            <h3 className="font-medium text-theme-text text-lg">
+              {t("auth.changeCredentials")}
+            </h3>
+
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                {t("auth.username")}
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+                placeholder={t("auth.enterUsername")}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                {t("auth.currentPassword")}
+              </label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+                placeholder={t("auth.enterPassword")}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                {t("auth.newPassword")}
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+                placeholder={t("auth.enterPassword")}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                {t("auth.confirmPassword")}
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+                placeholder={t("auth.enterPassword")}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed"
+            >
+              {loading ? t("auth.updating") : t("auth.updateCredentials")}
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Plex Server Settings */}
@@ -404,14 +441,6 @@ export default function Settings() {
                 t("plex.validate")
               )}
             </button>
-
-            <button
-              onClick={handleSavePlexConfig}
-              disabled={loading || plexValid !== true}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? t("plex.saving") : t("plex.save")}
-            </button>
           </div>
 
           {plexValid === false && (
@@ -421,6 +450,153 @@ export default function Settings() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Logging Settings */}
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2">
+          <SettingsIcon className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
+          {t("settings.loggingSettings")}
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("settings.logLevel")}
+            </label>
+            <select
+              value={logLevel}
+              onChange={(e) => setLogLevel(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+            >
+              <option value="DEBUG">DEBUG</option>
+              <option value="INFO">INFO</option>
+              <option value="WARNING">WARNING</option>
+              <option value="ERROR">ERROR</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+            <p className="mt-2 text-xs text-theme-muted">
+              {t("settings.logLevelHelp")}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+            <div>
+              <h3 className="font-medium text-theme-text mb-1">
+                {t("settings.enableFileLogging")}
+              </h3>
+              <p className="text-sm text-theme-muted">
+                {t("settings.enableFileLoggingHelp")}
+              </p>
+            </div>
+            <button
+              onClick={() => setLogEnableFile(!logEnableFile)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                logEnableFile ? "bg-green-500" : "bg-gray-600"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  logEnableFile ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* General Settings */}
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2">
+          <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
+          {t("settings.generalSettings")}
+        </h2>
+
+        <div>
+          <label className="block text-sm font-medium text-theme-text mb-2">
+            {t("settings.timezone")}
+          </label>
+          <select
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+          >
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">America/New_York (EST/EDT)</option>
+            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+            <option value="America/Denver">America/Denver (MST/MDT)</option>
+            <option value="America/Los_Angeles">
+              America/Los_Angeles (PST/PDT)
+            </option>
+            <option value="Europe/London">Europe/London (GMT/BST)</option>
+            <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+            <option value="Europe/Berlin">Europe/Berlin (CET/CEST)</option>
+            <option value="Europe/Amsterdam">
+              Europe/Amsterdam (CET/CEST)
+            </option>
+            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+            <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
+            <option value="Australia/Sydney">
+              Australia/Sydney (AEST/AEDT)
+            </option>
+          </select>
+          <p className="mt-2 text-xs text-theme-muted">
+            {t("settings.timezoneHelp")}
+          </p>
+        </div>
+      </div>
+
+      {/* API Configuration */}
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2">
+          <Key className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
+          {t("settings.apiConfiguration")}
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("settings.githubToken")}
+            </label>
+            <input
+              type="password"
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            />
+            <p className="mt-2 text-xs text-theme-muted">
+              {t("settings.githubTokenHelp")}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("settings.tmdbApiKey")}
+            </label>
+            <input
+              type="password"
+              value={tmdbApiKey}
+              onChange={(e) => setTmdbApiKey(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            />
+            <p className="mt-2 text-xs text-theme-muted">
+              {t("settings.tmdbApiKeyHelp")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Settings Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSaveSettings}
+          disabled={settingsLoading}
+          className="py-3 px-6 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed"
+        >
+          {settingsLoading ? t("settings.saving") : t("settings.saveSettings")}
+        </button>
       </div>
     </div>
   );

@@ -299,25 +299,15 @@ async def invite_plex_user_oauth(
         return False, "PlexAPI library not installed. Install with: pip install plexapi"
 
     try:
-        # Get Plex server config from database
-        from app.database import PlexStatsDB, db
+        # Get Plex server config from settings
+        from app.config import settings
 
-        session = db.get_session()
-        try:
-            plex_config = session.query(PlexStatsDB).first()
+        if not settings.PLEX_SERVER_URL or not settings.PLEX_SERVER_TOKEN:
+            return False, "Plex server not configured"
 
-            if (
-                not plex_config
-                or not plex_config.server_url
-                or not plex_config.server_token
-            ):
-                return False, "Plex server not configured"
-
-            # Connect as admin
-            admin_account = MyPlexAccount(token=plex_config.server_token)
-            plex_server = PlexServer(plex_config.server_url, plex_config.server_token)
-        finally:
-            session.close()
+        # Connect as admin
+        admin_account = MyPlexAccount(token=settings.PLEX_SERVER_TOKEN)
+        plex_server = PlexServer(settings.PLEX_SERVER_URL, settings.PLEX_SERVER_TOKEN)
 
         # Get libraries to share
         all_sections = plex_server.library.sections()

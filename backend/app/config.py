@@ -32,10 +32,18 @@ class Settings(BaseSettings):
     LOG_SHOW_LOCATION_FILE: bool = True
 
     # Timezone Configuration
-    TZ: str = "UTC"  # Fallback if TZ is not set
+    TZ: str = "UTC"
 
     # GitHub Configuration (optional - for higher API rate limits)
     GITHUB_TOKEN: str = ""
+
+    # TMDB Configuration (for invite redemption backgrounds)
+    TMDB_API_KEY: str = ""
+
+    # Plex Configuration
+    PLEX_SERVER_URL: str = ""
+    PLEX_SERVER_TOKEN: str = ""
+    PLEX_SERVER_NAME: str = "Plex Server"
 
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
@@ -54,9 +62,28 @@ class Settings(BaseSettings):
             self.ENABLE_AUTH = auth_config.get("enabled", self.ENABLE_AUTH)
             self.AUTH_USERNAME = auth_config.get("username", self.AUTH_USERNAME)
             self.AUTH_PASSWORD = auth_config.get("password", self.AUTH_PASSWORD)
-        if "cors" in config_data:
-            cors_config = config_data["cors"]
-            self.CORS_ORIGINS = cors_config.get("origins", self.CORS_ORIGINS)
+        if "logging" in config_data:
+            logging_config = config_data["logging"]
+            self.LOG_LEVEL = logging_config.get("level", self.LOG_LEVEL)
+            self.LOG_ENABLE_FILE = logging_config.get(
+                "enable_file", self.LOG_ENABLE_FILE
+            )
+        if "general" in config_data:
+            general_config = config_data["general"]
+            self.TZ = general_config.get("timezone", self.TZ)
+        if "api" in config_data:
+            api_config = config_data["api"]
+            self.GITHUB_TOKEN = api_config.get("github_token", self.GITHUB_TOKEN)
+            self.TMDB_API_KEY = api_config.get("tmdb_api_key", self.TMDB_API_KEY)
+        if "plex" in config_data:
+            plex_config = config_data["plex"]
+            self.PLEX_SERVER_URL = plex_config.get("server_url", self.PLEX_SERVER_URL)
+            self.PLEX_SERVER_TOKEN = plex_config.get(
+                "server_token", self.PLEX_SERVER_TOKEN
+            )
+            self.PLEX_SERVER_NAME = plex_config.get(
+                "server_name", self.PLEX_SERVER_NAME
+            )
 
     @property
     def cors_origins_list(self) -> List[str]:
@@ -64,8 +91,9 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
     class Config:
-        env_file = ".env"
         case_sensitive = True
+        # No env_file - only use environment variables from docker-compose/runtime
+        # All application settings come from config.json
 
 
 settings = Settings()

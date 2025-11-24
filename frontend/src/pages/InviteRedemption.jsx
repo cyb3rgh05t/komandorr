@@ -33,6 +33,7 @@ const InviteRedemption = () => {
   const [serverStats, setServerStats] = useState(null);
   const [plexMedia, setPlexMedia] = useState([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [tmdbApiKey, setTmdbApiKey] = useState("");
   const pollIntervalRef = React.useRef(null);
 
   useEffect(() => {
@@ -41,8 +42,14 @@ const InviteRedemption = () => {
       fetchServerStats();
       fetchPlexMedia();
     }
-    fetchBackgrounds();
+    fetchTmdbApiKey();
   }, [code]);
+
+  useEffect(() => {
+    if (tmdbApiKey) {
+      fetchBackgrounds();
+    }
+  }, [tmdbApiKey]);
 
   useEffect(() => {
     if (backgroundImages.length > 0) {
@@ -131,10 +138,27 @@ const InviteRedemption = () => {
     }
   }, [pinData, authInProgress, plexAuthWindow, isRedeeming]);
 
+  const fetchTmdbApiKey = async () => {
+    try {
+      const response = await api.get("/invites/tmdb/api-key");
+      setTmdbApiKey(response.api_key || "");
+    } catch (error) {
+      console.error("Error fetching TMDB API key:", error);
+      // Fallback to empty string if not configured
+      setTmdbApiKey("");
+    }
+  };
+
   const fetchBackgrounds = async () => {
+    // Only fetch if TMDB API key is available
+    if (!tmdbApiKey) {
+      console.log("TMDB API key not configured, skipping background fetch");
+      return;
+    }
+
     try {
       const response = await fetch(
-        "https://api.themoviedb.org/3/trending/movie/week?api_key=e7d2628727fa893ec3692d18f8a4aec2"
+        `https://api.themoviedb.org/3/trending/movie/week?api_key=${tmdbApiKey}`
       );
       const data = await response.json();
       const images = data.results

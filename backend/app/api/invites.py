@@ -18,6 +18,7 @@ from app.models.invite import (
 from app.database import db, InviteDB, PlexUserDB, PlexStatsDB
 from app.utils.logger import logger
 from app.middleware.auth import require_auth
+from app.config import settings
 from app.utils.plex_invite import (
     check_plexapi_available,
     get_plex_libraries,
@@ -27,6 +28,20 @@ from app.utils.plex_invite import (
 )
 
 router = APIRouter(prefix="/api/invites", tags=["invites"])
+
+
+def get_plex_config_from_settings():
+    """Get Plex configuration from settings (config.json)"""
+    from app.config import settings
+
+    if not settings.PLEX_SERVER_URL or not settings.PLEX_SERVER_TOKEN:
+        return None
+
+    return {
+        "url": settings.PLEX_SERVER_URL,
+        "token": settings.PLEX_SERVER_TOKEN,
+        "server_name": settings.PLEX_SERVER_NAME or "Plex Server",
+    }
 
 
 def generate_invite_code(length: int = 8) -> str:
@@ -204,11 +219,10 @@ async def create_invite(
 
             logger.info(f"Created invite {code} by {username}")
 
-            # Get Plex server name
-            plex_server = "Plex Server"
-            plex_stats = session.query(PlexStatsDB).first()
-            if plex_stats and plex_stats.server_name:
-                plex_server = str(plex_stats.server_name)
+            # Get Plex server name from config
+            from app.config import settings
+
+            plex_server = settings.PLEX_SERVER_NAME or "Plex Server"
 
             return db_invite_to_pydantic(db_invite, plex_server=plex_server)
 
@@ -231,45 +245,10 @@ async def list_invites(
     try:
         session = db.get_session()
         try:
-            # Get Plex server name once for all invites
-            plex_server = "Plex Server"
-            plex_stats = session.query(PlexStatsDB).first()
-            logger.info(
-                f"Fetching Plex server name - plex_stats exists: {plex_stats is not None}"
-            )
-            if plex_stats:
-                logger.info(
-                    f"Plex stats - server_name: {plex_stats.server_name}, server_url: {plex_stats.server_url}"
-                )
-            if plex_stats and plex_stats.server_name:
-                plex_server = str(plex_stats.server_name)
-                logger.info(f"Using existing server name: {plex_server}")
-            elif plex_stats and plex_stats.server_url and plex_stats.server_token:
-                # If server_name not set, try to fetch it from Plex API
-                try:
-                    with httpx.Client(timeout=5.0) as client:
-                        headers = {
-                            "X-Plex-Token": str(plex_stats.server_token),
-                            "Accept": "application/json",
-                        }
-                        response = client.get(
-                            f"{plex_stats.server_url.rstrip('/')}/", headers=headers
-                        )
-                        if response.status_code == 200:
-                            data = response.json()
-                            plex_server = data.get("MediaContainer", {}).get(
-                                "friendlyName", "Plex Server"
-                            )
-                            logger.info(
-                                f"Fetched server name from Plex API: {plex_server}"
-                            )
-                            # Save it for future use
-                            plex_stats.server_name = plex_server
-                            session.commit()
-                except Exception as e:
-                    logger.debug(f"Could not fetch server name from Plex API: {e}")
-
-            logger.info(f"Final plex_server value: {plex_server}")
+            # Get Plex server name from settings
+            plex_config = get_plex_config_from_settings()
+            plex_server = plex_config["server_name"] if plex_config else "Plex Server"
+            logger.info(f"Using Plex server name: {plex_server}")
 
             query = session.query(InviteDB)
 
@@ -298,41 +277,36 @@ async def list_invites(
 async def get_plex_config(username: str = Depends(require_auth)):
     """Get Plex server configuration and available libraries"""
     try:
-        with db.get_session() as session:
-            plex_stats = session.query(PlexStatsDB).first()
+        plex_config = get_plex_config_from_settings()
 
-            if (
-                not plex_stats
-                or not plex_stats.server_url
-                or not plex_stats.server_token
-            ):
-                return {
-                    "servers": [],
-                    "libraries": [],
-                    "error": "Plex server not configured",
-                }
+        if not plex_config:
+            return {
+                "servers": [],
+                "libraries": [],
+                "error": "Plex server not configured",
+            }
 
-            # For now, return single server (can be extended for multiple servers later)
-            servers = [
-                {
-                    "id": "default",
-                    "name": plex_stats.server_name or "Plex Server",
-                    "url": plex_stats.server_url,
-                }
-            ]
+        # For now, return single server (can be extended for multiple servers later)
+        servers = [
+            {
+                "id": "default",
+                "name": plex_config["server_name"],
+                "url": plex_config["url"],
+            }
+        ]
 
-            # Fetch libraries
-            libraries = []
-            try:
-                if check_plexapi_available():
-                    libraries = await get_plex_libraries(
-                        str(plex_stats.server_url),  # type: ignore
-                        str(plex_stats.server_token),  # type: ignore
-                    )
-            except Exception as lib_error:
-                logger.warning(f"Could not fetch libraries: {lib_error}")
+        # Fetch libraries
+        libraries = []
+        try:
+            if check_plexapi_available():
+                libraries = await get_plex_libraries(
+                    plex_config["url"],
+                    plex_config["token"],
+                )
+        except Exception as lib_error:
+            logger.warning(f"Could not fetch libraries: {lib_error}")
 
-            return {"servers": servers, "libraries": libraries}
+        return {"servers": servers, "libraries": libraries}
 
     except Exception as e:
         logger.error(f"Error fetching Plex config: {e}", exc_info=True)
@@ -384,11 +358,9 @@ async def get_invite(invite_id: int, username: str = Depends(require_auth)):
                     status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found"
                 )
 
-            # Get Plex server name
-            plex_server = "Plex Server"
-            plex_stats = session.query(PlexStatsDB).first()
-            if plex_stats and plex_stats.server_name:
-                plex_server = str(plex_stats.server_name)
+            # Get Plex server name from settings
+            plex_config = get_plex_config_from_settings()
+            plex_server = plex_config["server_name"] if plex_config else "Plex Server"
 
             return db_invite_to_pydantic(
                 db_invite, include_users=True, plex_server=plex_server
@@ -445,11 +417,9 @@ async def update_invite(
 
             logger.info(f"Updated invite {db_invite.code} by {username}")
 
-            # Get Plex server name
-            plex_server = "Plex Server"
-            plex_stats = session.query(PlexStatsDB).first()
-            if plex_stats and plex_stats.server_name:
-                plex_server = str(plex_stats.server_name)
+            # Get Plex server name from settings
+            plex_config = get_plex_config_from_settings()
+            plex_server = plex_config["server_name"] if plex_config else "Plex Server"
 
             return db_invite_to_pydantic(db_invite, plex_server=plex_server)
 
@@ -481,22 +451,22 @@ async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
 
             code = db_invite.code
 
-            # Get Plex config to unshare users
-            plex_stats = session.query(PlexStatsDB).first()
+            # Get Plex config
+            plex_config = get_plex_config_from_settings()
 
             # Get associated users before deletion
             users = session.query(PlexUserDB).filter_by(invite_id=invite_id).all()
             user_count = len(users)
 
             # Remove users from Plex server if they exist
-            if user_count > 0 and plex_stats and plex_stats.server_token:
+            if user_count > 0 and plex_config:
                 removed_count = 0
                 failed_removals = []
 
                 for user in users:
                     if user.email:
                         success, error = await remove_plex_user(
-                            token=plex_stats.server_token, email=str(user.email)
+                            token=plex_config["token"], email=str(user.email)
                         )
                         if success:
                             removed_count += 1
@@ -596,31 +566,9 @@ async def validate_invite(code: str):
                 )
 
             # Get Plex server name from config
-            plex_stats = session.query(PlexStatsDB).first()
-            server_name = "Plex Server"
-
-            if plex_stats and plex_stats.server_name:
-                server_name = str(plex_stats.server_name)
-            elif plex_stats and plex_stats.server_url and plex_stats.server_token:
-                # Try to fetch from Plex API if not in database
-                try:
-                    import httpx
-
-                    async with httpx.AsyncClient(timeout=5.0) as client:
-                        response = await client.get(
-                            f"{plex_stats.server_url}/",
-                            headers={"X-Plex-Token": str(plex_stats.server_token)},
-                        )
-                        if response.status_code == 200:
-                            data = response.json()
-                            server_name = data.get("MediaContainer", {}).get(
-                                "friendlyName", "Plex Server"
-                            )
-                            # Update database with fetched name
-                            plex_stats.server_name = server_name  # type: ignore
-                            session.commit()
-                except Exception as e:
-                    logger.warning(f"Could not fetch Plex server name: {e}")
+            # Get Plex server name from settings
+            plex_config = get_plex_config_from_settings()
+            server_name = plex_config["server_name"] if plex_config else "Plex Server"
 
             return ValidateInviteResponse(
                 valid=True,
@@ -687,22 +635,13 @@ async def redeem_invite(request: RedeemInviteRequest):
                     detail="This email has already been invited",
                 )
 
-            # Get Plex config
-            plex_stats = session.query(PlexStatsDB).first()
-            if (
-                not plex_stats
-                or not plex_stats.server_url
-                or not plex_stats.server_token
-            ):
+            # Get Plex config from settings
+            plex_config = get_plex_config_from_settings()
+            if not plex_config:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Plex server not configured",
                 )
-
-            plex_config = {
-                "url": plex_stats.server_url,
-                "token": plex_stats.server_token,
-            }
 
             # Invite user to Plex
             success, error = await invite_plex_user(
@@ -797,3 +736,9 @@ async def list_plex_users(username: str = Depends(require_auth)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error listing plex users: {str(e)}",
         )
+
+
+@router.get("/tmdb/api-key")
+async def get_tmdb_api_key():
+    """Get TMDB API key for invite redemption backgrounds (public endpoint)"""
+    return {"api_key": settings.TMDB_API_KEY or ""}

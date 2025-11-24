@@ -84,22 +84,14 @@ class TrafficHistoryDB(Base):
 
 
 class PlexStatsDB(Base):
-    """SQLAlchemy model for Plex Statistics and Configuration"""
+    """SQLAlchemy model for Plex Statistics (peak tracking only)"""
 
     __tablename__ = "plex_stats"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Configuration
-    server_url = Column(String, nullable=True)
-    server_token = Column(String, nullable=True)
-    server_name = Column(String, nullable=True)
-
-    # Statistics
+    # Statistics - only peak_concurrent is actually stored/tracked
     peak_concurrent = Column(Integer, default=0)
-    total_users = Column(Integer, default=0)
-    total_movies = Column(Integer, default=0)
-    total_tv_shows = Column(Integer, default=0)
     last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
 
 
