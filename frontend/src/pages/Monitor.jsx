@@ -697,16 +697,19 @@ export default function Monitor() {
             ) : (
               <>
                 {paginatedServices.map((service) => (
-                  <div
+                  <a
                     key={service.id}
-                    className="bg-theme-card border border-theme rounded-lg p-4  transition-all"
+                    href={service.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-theme-card border border-theme rounded-lg p-4 transition-all hover:border-theme-primary hover:shadow-lg group"
                   >
                     <div className="space-y-3">
                       {/* Header Row */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {service.icon && (
-                            <div className="w-10 h-10 rounded-lg bg-theme-hover flex items-center justify-center overflow-hidden border border-theme flex-shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-theme-hover flex items-center justify-center overflow-hidden border border-theme flex-shrink-0 group-hover:border-theme-primary/50 transition-colors">
                               <img
                                 src={service.icon}
                                 alt=""
@@ -719,7 +722,7 @@ export default function Monitor() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-theme-text mb-2 truncate">
+                            <h3 className="text-lg font-semibold text-theme-text mb-2 truncate group-hover:text-theme-primary transition-colors">
                               {service.name}
                             </h3>
                             <div className="flex flex-wrap items-center gap-2">
@@ -737,20 +740,6 @@ export default function Monitor() {
                                 <Clock size={12} />
                                 {formatLastCheck(service.last_check)}
                               </span>
-                              <a
-                                href={service.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-md text-xs font-medium text-theme-text-muted hover:text-theme-primary transition-all group/link"
-                              >
-                                <span className="truncate max-w-[200px]">
-                                  {service.url.replace(/^https?:\/\//, "")}
-                                </span>
-                                <ExternalLink
-                                  size={11}
-                                  className="flex-shrink-0 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform"
-                                />
-                              </a>
                             </div>
                           </div>
                         </div>
@@ -862,7 +851,7 @@ export default function Monitor() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </a>
                 ))}
               </>
             )}

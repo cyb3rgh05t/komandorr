@@ -564,14 +564,17 @@ export default function Traffic() {
               </div>
             ) : (
               servicesInActiveGroup.map((service) => (
-                <div
+                <a
                   key={service.id}
-                  className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary/30"
+                  href={service.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-theme-card border border-theme rounded-lg p-4 hover:border-theme-primary hover:shadow-lg transition-all group"
                 >
                   {/* Service Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-theme-text mb-1.5">
+                      <h3 className="text-base font-semibold text-theme-text mb-1.5 group-hover:text-theme-primary transition-colors">
                         {service.name}
                       </h3>
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -742,7 +745,7 @@ export default function Traffic() {
                         </div>
                       </div>
                     )}
-                </div>
+                </a>
               ))
             )}
           </div>

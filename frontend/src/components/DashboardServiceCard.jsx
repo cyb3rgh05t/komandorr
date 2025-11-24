@@ -66,7 +66,7 @@ export default function DashboardServiceCard({
       href={service.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block bg-theme-card hover border border-theme rounded-xl p-4 hover:border-theme-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-theme-primary/10 cursor-pointer"
+      className="group block bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary hover:shadow-lg transition-all"
     >
       {/* Header Section */}
       <div className="flex items-start justify-between mb-4">

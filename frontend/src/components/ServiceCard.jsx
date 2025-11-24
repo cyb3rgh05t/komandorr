@@ -49,7 +49,12 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
   };
 
   return (
-    <div className="group bg-theme-card  border border-theme rounded-xl p-4 hover:border-theme-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-theme-primary/10">
+    <a
+      href={service.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary hover:shadow-lg transition-all"
+    >
       {/* Header Section */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -186,7 +191,11 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
       {/* Action Buttons */}
       <div className="flex items-center gap-1.5 pt-3 border-t border-theme/50">
         <button
-          onClick={() => onCheck(service.id)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCheck(service.id);
+          }}
           className="flex-1 px-2 py-1.5 bg-theme-hover hover:from-theme-primary/30 hover:to-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-lg transition-all duration-200 text-[10px] font-semibold text-theme-primary hover:text-theme-primary-hover flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md group"
           title={t("service.checkNow")}
         >
@@ -197,7 +206,11 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
           {t("service.checkNow")}
         </button>
         <button
-          onClick={() => onEdit(service)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdit(service);
+          }}
           className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-lg transition-all duration-200 border border-theme hover:border-theme-primary/50 shadow-sm hover:shadow-md hover:shadow-theme-primary/10 group"
           title={t("service.edit")}
         >
@@ -207,7 +220,11 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
           />
         </button>
         <button
-          onClick={() => onDelete(service.id)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(service.id);
+          }}
           className="p-1.5 bg-theme-hover hover:bg-red-500/10 rounded-lg transition-all duration-200 border border-theme hover:border-red-500/50 shadow-sm hover:shadow-md hover:shadow-red-500/20 group"
           title={t("service.delete")}
         >
@@ -217,6 +234,6 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
           />
         </button>
       </div>
-    </div>
+    </a>
   );
 }
