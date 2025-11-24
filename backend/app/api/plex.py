@@ -249,11 +249,59 @@ async def fetch_plex_statistics(url: str, token: str) -> tuple[int, int, int]:
                                 )
             except Exception as e:
                 logger.warning(f"Could not fetch library sections: {e}")
-
     except Exception as e:
         logger.error(f"Error fetching Plex statistics: {e}")
 
     return total_users, total_movies, total_tv_shows
+
+
+async def fetch_plex_episode_count(url: str, token: str) -> int:
+    """
+    Fetch total episode count from Plex server
+    Returns: total_episodes
+    """
+    total_episodes = 0
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {"X-Plex-Token": token, "Accept": "application/json"}
+
+            # Fetch library sections
+            sections_response = await client.get(
+                f"{url}/library/sections", headers=headers
+            )
+            if sections_response.status_code == 200:
+                sections_data = sections_response.json()
+                sections = sections_data.get("MediaContainer", {}).get("Directory", [])
+
+                for section in sections:
+                    section_key = section.get("key")
+                    section_type = section.get("type")
+
+                    if section_type == "show":
+                        # Get episode count for this TV library
+                        try:
+                            episodes_response = await client.get(
+                                f"{url}/library/sections/{section_key}/allLeaves",
+                                headers=headers,
+                                params={
+                                    "X-Plex-Container-Start": 0,
+                                    "X-Plex-Container-Size": 0,
+                                },
+                            )
+                            if episodes_response.status_code == 200:
+                                episodes_data = episodes_response.json()
+                                total_episodes += episodes_data.get(
+                                    "MediaContainer", {}
+                                ).get("totalSize", 0)
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not fetch episode count for section {section_key}: {e}"
+                            )
+    except Exception as e:
+        logger.warning(f"Could not fetch episode counts: {e}")
+
+    return total_episodes
 
 
 async def validate_plex_connection(
@@ -692,6 +740,50 @@ async def get_plex_stats():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving Plex statistics: {str(e)}",
         )
+
+
+@router.get("/stats/live")
+async def get_live_plex_stats():
+    """Get live Plex statistics by fetching directly from Plex server"""
+    try:
+        config = load_plex_config()
+        if not config:
+            return {
+                "total_users": 0,
+                "total_movies": 0,
+                "total_tv_shows": 0,
+                "total_episodes": 0,
+                "server_name": "Plex Server",
+                "error": "Plex not configured",
+            }
+
+        total_users, total_movies, total_tv_shows = await fetch_plex_statistics(
+            config["url"], config["token"]
+        )
+
+        # Fetch episode count
+        total_episodes = await fetch_plex_episode_count(config["url"], config["token"])
+
+        # Get server name
+        server_name = config.get("server_name", "Plex Server")
+
+        return {
+            "total_users": total_users,
+            "total_movies": total_movies,
+            "total_tv_shows": total_tv_shows,
+            "total_episodes": total_episodes,
+            "server_name": server_name,
+        }
+    except Exception as e:
+        logger.error(f"Error getting live Plex stats: {e}")
+        return {
+            "total_users": 0,
+            "total_movies": 0,
+            "total_tv_shows": 0,
+            "total_episodes": 0,
+            "server_name": "Plex Server",
+            "error": str(e),
+        }
 
 
 @router.post("/stats/peak")

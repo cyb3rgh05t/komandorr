@@ -108,7 +108,9 @@ export default function DashboardServiceCard({
             {service.status === "online" && service.response_time > 1000 && (
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-br from-yellow-500/20 to-yellow-500/10 text-yellow-400 border border-yellow-500/30 shadow-md shadow-yellow-500/20">
                 <AlertTriangle size={14} />
-                <span className="text-xs font-semibold">Slow</span>
+                <span className="text-xs font-semibold">
+                  {t("service.stats.slow")}
+                </span>
               </div>
             )}
             <div
@@ -187,7 +189,7 @@ export default function DashboardServiceCard({
             <div className="flex items-center gap-1.5">
               <Zap size={12} className="text-theme-primary" />
               <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
-                Response
+                {t("service.stats.response")}
               </span>
             </div>
             <span className="text-sm font-bold text-theme-primary">
@@ -202,7 +204,7 @@ export default function DashboardServiceCard({
             <div className="flex items-center gap-1.5">
               <Clock size={12} className="text-theme-text-muted" />
               <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
-                Checked
+                {t("service.stats.checked")}
               </span>
             </div>
             <span className="text-sm font-bold text-theme-text">
@@ -217,7 +219,7 @@ export default function DashboardServiceCard({
             <div className="flex items-center gap-1.5">
               <ArrowUp size={12} className="text-blue-400" />
               <span className="text-[10px] font-semibold text-blue-400/80 uppercase tracking-wide">
-                Upload
+                {t("service.stats.upload")}
               </span>
             </div>
             <span className="text-sm font-bold text-blue-400">
@@ -232,7 +234,7 @@ export default function DashboardServiceCard({
             <div className="flex items-center gap-1.5">
               <ArrowDown size={12} className="text-green-400" />
               <span className="text-[10px] font-semibold text-green-400/80 uppercase tracking-wide">
-                Download
+                {t("service.stats.download")}
               </span>
             </div>
             <span className="text-sm font-bold text-green-400">

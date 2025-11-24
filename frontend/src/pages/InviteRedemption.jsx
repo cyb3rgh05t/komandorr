@@ -26,12 +26,14 @@ const InviteRedemption = () => {
 
   // OAuth flow state
   const [authInProgress, setAuthInProgress] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
   const [plexAuthWindow, setPlexAuthWindow] = useState(null);
   const [pinData, setPinData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [serverStats, setServerStats] = useState(null);
   const [plexMedia, setPlexMedia] = useState([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const pollIntervalRef = React.useRef(null);
 
   useEffect(() => {
     if (code) {
@@ -63,15 +65,17 @@ const InviteRedemption = () => {
 
   // Poll for PIN authorization
   useEffect(() => {
-    if (pinData && authInProgress) {
+    if (pinData && authInProgress && !isRedeeming) {
       const pollInterval = setInterval(async () => {
         try {
           const response = await api.get(
             `/oauth/plex/check/${pinData.pin_id}?state=${pinData.state}`
           );
 
-          if (response.authorized) {
+          if (response.authorized && !isRedeeming) {
+            // Clear interval IMMEDIATELY to prevent double polling
             clearInterval(pollInterval);
+            pollIntervalRef.current = null;
             setAuthInProgress(false);
 
             // Close auth window if still open
@@ -92,18 +96,25 @@ const InviteRedemption = () => {
           } else if (response.expired) {
             // PIN expired - stop polling
             clearInterval(pollInterval);
+            pollIntervalRef.current = null;
           }
         } catch (err) {
           console.error("Poll error:", err);
           // Stop polling on errors to prevent spam
           clearInterval(pollInterval);
+          pollIntervalRef.current = null;
           setAuthInProgress(false);
         }
       }, 2000); // Poll every 2 seconds
 
+      pollIntervalRef.current = pollInterval;
+
       // Cleanup interval after 5 minutes
       const timeout = setTimeout(() => {
-        clearInterval(pollInterval);
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
         setAuthInProgress(false);
         toast.error(
           "Authentifizierung abgelaufen. Bitte versuchen Sie es erneut."
@@ -111,11 +122,14 @@ const InviteRedemption = () => {
       }, 300000);
 
       return () => {
-        clearInterval(pollInterval);
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
         clearTimeout(timeout);
       };
     }
-  }, [pinData, authInProgress]);
+  }, [pinData, authInProgress, plexAuthWindow, isRedeeming]);
 
   const fetchBackgrounds = async () => {
     try {
@@ -137,7 +151,7 @@ const InviteRedemption = () => {
 
   const fetchServerStats = async () => {
     try {
-      const response = await api.get("/plex/stats");
+      const response = await api.get("/plex/stats/live");
       setServerStats(response);
     } catch (error) {
       console.error("Error fetching server stats:", error);
@@ -229,7 +243,15 @@ const InviteRedemption = () => {
   };
 
   const redeemWithOAuth = async (authData) => {
+    // Guard against double redemption
+    if (isRedeeming) {
+      console.log("Redemption already in progress, skipping...");
+      return;
+    }
+
     try {
+      setIsRedeeming(true);
+
       const response = await api.post("/oauth/plex/redeem", {
         invite_code: code.toUpperCase(),
         auth_token: authData.auth_token,
@@ -253,6 +275,8 @@ const InviteRedemption = () => {
       } else {
         toast.error(err.message || "Fehler beim Einlösen der Einladung.");
       }
+    } finally {
+      setIsRedeeming(false);
     }
   };
 
@@ -330,7 +354,7 @@ const InviteRedemption = () => {
 
             {/* Stats Grid */}
             {serverStats && (
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="grid grid-cols-4 gap-3 mb-4">
                 <div className="bg-slate-700/60 rounded-lg p-3 border border-slate-600/30 text-center">
                   <div className="text-2xl font-bold text-amber-400">
                     {serverStats.total_movies || 0}
@@ -345,8 +369,15 @@ const InviteRedemption = () => {
                 </div>
                 <div className="bg-slate-700/60 rounded-lg p-3 border border-slate-600/30 text-center">
                   <div className="text-2xl font-bold text-amber-400">
+                    {serverStats.total_episodes || 0}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Episoden</div>
+                </div>
+                <div className="bg-slate-700/60 rounded-lg p-3 border border-slate-600/30 text-center">
+                  <div className="text-2xl font-bold text-amber-400">
                     {(serverStats.total_movies || 0) +
-                      (serverStats.total_tv_shows || 0)}
+                      (serverStats.total_tv_shows || 0) +
+                      (serverStats.total_episodes || 0)}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">Insgesamt</div>
                 </div>
@@ -939,14 +970,19 @@ const InviteRedemption = () => {
 
                 <button
                   onClick={handlePlexLogin}
-                  disabled={authInProgress}
+                  disabled={authInProgress || isRedeeming}
                   className={`w-full px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
-                    authInProgress
+                    authInProgress || isRedeeming
                       ? "bg-gray-600 cursor-not-allowed"
                       : "bg-[#e5a00d] hover:bg-[#cc8f0c]"
                   } text-white flex items-center justify-center gap-2`}
                 >
-                  {authInProgress ? (
+                  {isRedeeming ? (
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      <span>Einladung wird eingelöst...</span>
+                    </>
+                  ) : authInProgress ? (
                     <>
                       <Loader className="w-5 h-5 animate-spin" />
                       <span>Warte auf Autorisierung...</span>

@@ -78,7 +78,7 @@ export default function Services() {
     });
 
     const grouped = filteredServices.reduce((acc, service) => {
-      const groupName = service.group || "Ungrouped";
+      const groupName = service.group || t("dashboard.groupUngrouped");
       if (!acc[groupName]) acc[groupName] = [];
       acc[groupName].push(service);
       return acc;
@@ -213,15 +213,17 @@ export default function Services() {
   });
 
   // Group services for tab counts
-  const groupedServices = services.reduce((acc, service) => {
-    const groupName = service.group || "Ungrouped";
+  const groupedServices = filteredServices.reduce((acc, service) => {
+    const groupName = service.group || t("dashboard.groupUngrouped");
     if (!acc[groupName]) acc[groupName] = [];
     acc[groupName].push(service);
     return acc;
   }, {});
 
   // Get all unique groups for tabs
-  const allGroups = [...new Set(services.map((s) => s.group || "Ungrouped"))];
+  const allGroups = [
+    ...new Set(services.map((s) => s.group || t("dashboard.groupUngrouped"))),
+  ];
 
   const stats = {
     total: services.length,
@@ -319,7 +321,7 @@ export default function Services() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    TOTAL
+                    {t("services.stats.total")}
                   </div>
                   <div className="text-3xl font-bold text-theme-text">
                     {stats.total}
@@ -351,7 +353,7 @@ export default function Services() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    ONLINE
+                    {t("services.stats.online")}
                   </div>
                   <div className="text-3xl font-bold text-green-500">
                     {stats.online}
@@ -385,7 +387,7 @@ export default function Services() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    OFFLINE
+                    {t("services.stats.offline")}
                   </div>
                   <div className="text-3xl font-bold text-red-500">
                     {stats.offline}
@@ -419,9 +421,9 @@ export default function Services() {
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
-                    PROBLEM
+                    {t("services.stats.problem")}
                     <div className="text-[9px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5 font-normal">
-                      Slow (&gt;1s)
+                      {t("services.stats.slowResponse")}
                     </div>
                   </div>
                   <div className="text-3xl font-bold text-yellow-500">
@@ -459,7 +461,7 @@ export default function Services() {
                       : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                   }`}
                 >
-                  ALL
+                  {t("services.all")}
                   <span
                     className={`ml-2 text-xs ${
                       activeTab === "ALL"
@@ -501,7 +503,7 @@ export default function Services() {
 
           {/* Services List */}
           {filteredServices.length === 0 ? (
-            <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
+            <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
               {statusFilter !== null ? (
                 <>
                   <div className="text-6xl mb-4">
@@ -510,17 +512,20 @@ export default function Services() {
                     {statusFilter === "problem" && "✓"}
                   </div>
                   <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                    {statusFilter === "online" && "No online services"}
-                    {statusFilter === "offline" && "No offline services"}
-                    {statusFilter === "problem" && "No services with problems"}
+                    {statusFilter === "online" &&
+                      t("services.emptyStates.noOnline.title")}
+                    {statusFilter === "offline" &&
+                      t("services.emptyStates.noOffline.title")}
+                    {statusFilter === "problem" &&
+                      t("services.emptyStates.noProblems.title")}
                   </h3>
                   <p className="text-theme-text-muted">
                     {statusFilter === "online" &&
-                      "Currently no services are online"}
+                      t("services.emptyStates.noOnline.message")}
                     {statusFilter === "offline" &&
-                      "All services are operational!"}
+                      t("services.emptyStates.noOffline.message")}
                     {statusFilter === "problem" &&
-                      "Everything is running smoothly!"}
+                      t("services.emptyStates.noProblems.message")}
                   </p>
                 </>
               ) : (
@@ -529,17 +534,23 @@ export default function Services() {
                     className="mx-auto mb-4 text-theme-text-muted"
                     size={48}
                   />
-                  <p className="text-theme-text-muted text-lg mb-4">
+                  <h3 className="text-lg font-semibold text-theme-text mb-2">
                     {searchTerm
                       ? t("services.noResults")
                       : t("dashboard.noServices")}
+                  </h3>
+                  <p className="text-theme-text-muted mb-6">
+                    {searchTerm
+                      ? "Try adjusting your search criteria"
+                      : "Get started by adding your first service to monitor"}
                   </p>
                   {!searchTerm && (
                     <button
                       onClick={() => setShowModal(true)}
-                      className="py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover text-white font-medium rounded-lg transition-all"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                     >
-                      {t("dashboard.addService")}
+                      <Plus size={20} className="text-theme-primary" />
+                      <span>{t("dashboard.addService")}</span>
                     </button>
                   )}
                 </>

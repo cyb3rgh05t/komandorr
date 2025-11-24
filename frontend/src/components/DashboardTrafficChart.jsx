@@ -49,7 +49,7 @@ const DashboardTrafficChart = ({
                 {t("dashboard.trafficChart") || "Traffic Overview"}
               </h2>
               <p className="text-xs text-theme-text-muted">
-                Real-time bandwidth monitoring
+                {t("traffic.realtimeMonitoring")}
               </p>
             </div>
           </div>
@@ -85,7 +85,7 @@ const DashboardTrafficChart = ({
                 {t("dashboard.trafficChart") || "Traffic Overview"}
               </h2>
               <p className="text-xs text-theme-text-muted">
-                Real-time bandwidth monitoring
+                {t("traffic.realtimeMonitoring")}
               </p>
             </div>
           </div>
@@ -175,8 +175,12 @@ const DashboardTrafficChart = ({
             </h2>
             <div className="text-xs text-theme-text-muted flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-              {activeServices.length} active{" "}
-              {activeServices.length === 1 ? "service" : "services"}
+              {activeServices.length}{" "}
+              {t(
+                activeServices.length === 1
+                  ? "traffic.service"
+                  : "traffic.activeServices"
+              )}
             </div>
           </div>
         </div>
@@ -193,7 +197,7 @@ const DashboardTrafficChart = ({
               }`}
             >
               <ArrowDown size={14} />
-              Download
+              {t("traffic.download")}
             </button>
             <button
               onClick={() => setChartType("upload")}
@@ -204,7 +208,7 @@ const DashboardTrafficChart = ({
               }`}
             >
               <ArrowUp size={14} />
-              Upload
+              {t("traffic.upload")}
             </button>
           </div>
           {onRefresh && (
@@ -212,7 +216,7 @@ const DashboardTrafficChart = ({
               onClick={onRefresh}
               disabled={refreshing}
               className="p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md group"
-              title="Refresh traffic data"
+              title={t("traffic.refreshData")}
             >
               <RefreshCw
                 size={16}
@@ -239,7 +243,9 @@ const DashboardTrafficChart = ({
               </div>
             )}
             <span className="text-xs font-semibold text-theme-text-muted uppercase tracking-wide">
-              Total {chartType === "upload" ? "Upload" : "Download"}
+              {chartType === "upload"
+                ? t("traffic.totalUpload")
+                : t("traffic.totalDownload")}
             </span>
           </div>
           <div className="flex items-baseline gap-1">
@@ -366,7 +372,7 @@ const DashboardTrafficChart = ({
         <div className="absolute top-3 right-3 flex items-center gap-2 bg-gray-900/70 backdrop-blur-md border border-gray-700/50 rounded-lg px-3 py-1.5 shadow-lg">
           <Activity className="w-3 h-3 text-theme-primary animate-pulse" />
           <div className="text-[10px] text-gray-300 font-medium">
-            Last 60 data points
+            {t("traffic.lastDataPoints")}
           </div>
         </div>
       </div>
@@ -376,11 +382,13 @@ const DashboardTrafficChart = ({
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-theme-text uppercase tracking-wide flex items-center gap-2">
             <Activity className="w-4 h-4 text-theme-primary" />
-            Active Services
+            {t("traffic.activeServicesLabel")}
           </h3>
           <span className="text-xs text-theme-text-muted font-medium">
             {servicePaths.length}{" "}
-            {servicePaths.length === 1 ? "service" : "services"}
+            {t(
+              servicePaths.length === 1 ? "traffic.service" : "traffic.services"
+            )}
           </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">

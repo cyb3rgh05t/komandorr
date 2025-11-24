@@ -12,7 +12,7 @@ import Settings from "./pages/Settings";
 import About from "./pages/About";
 import InviteRedemption from "./pages/InviteRedemption";
 import InviteRedeem from "./pages/InviteRedeem";
-import InvitesManager from "./components/InvitesManager";
+import InvitesManager from "./pages/InvitesManager";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../context/ToastContext";
 import {
   Activity,
   ArrowUp,
@@ -13,11 +14,11 @@ import {
 import { api } from "../services/api";
 
 // Traffic chart component - Line/Area chart style for bandwidth history
-const TrafficChart = ({ data = [], type = "upload", serviceId }) => {
+const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
   if (!data || data.length === 0) {
     return (
       <div className="h-20 flex items-center justify-center text-theme-text-muted text-xs bg-[#0a0f1a] rounded border border-gray-800">
-        No traffic data yet
+        {t("traffic.page.noTrafficData")}
       </div>
     );
   }
@@ -134,6 +135,7 @@ const TrafficChart = ({ data = [], type = "upload", serviceId }) => {
 
 export default function Traffic() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -229,6 +231,7 @@ export default function Traffic() {
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchTrafficData(true);
+    toast.success(t("traffic.page.refreshSuccess"));
   };
 
   const formatBandwidth = (mbps) => {
@@ -365,7 +368,7 @@ export default function Traffic() {
               />
               <input
                 type="text"
-                placeholder="Search services..."
+                placeholder={t("traffic.page.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
@@ -383,7 +386,9 @@ export default function Traffic() {
                   refreshing ? "animate-spin" : ""
                 }`}
               />
-              <span className="text-xs sm:text-sm">Refresh</span>
+              <span className="text-xs sm:text-sm">
+                {t("traffic.page.refresh")}
+              </span>
             </button>
           </div>
 
@@ -395,7 +400,7 @@ export default function Traffic() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Server className="w-3 h-3 text-theme-primary" />
-                    Services
+                    {t("traffic.page.stats.services")}
                   </p>
                   <p className="text-2xl font-bold text-theme-text mt-1">
                     {services.length}
@@ -411,7 +416,7 @@ export default function Traffic() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <ArrowUp className="w-3 h-3 text-blue-500" />
-                    Upload
+                    {t("traffic.page.stats.upload")}
                   </p>
                   <p className="text-2xl font-bold text-blue-500 mt-1">
                     {formatBandwidth(totalBandwidthUp)}
@@ -427,7 +432,7 @@ export default function Traffic() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <ArrowDown className="w-3 h-3 text-green-500" />
-                    Download
+                    {t("traffic.page.stats.download")}
                   </p>
                   <p className="text-2xl font-bold text-green-500 mt-1">
                     {formatBandwidth(totalBandwidthDown)}
@@ -443,7 +448,7 @@ export default function Traffic() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <TrendingUp className="w-3 h-3 text-blue-500" />
-                    Uploaded
+                    {t("traffic.page.stats.uploaded")}
                   </p>
                   <p className="text-2xl font-bold text-blue-500 mt-1">
                     {formatTraffic(totalTrafficUp)}
@@ -459,7 +464,7 @@ export default function Traffic() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <TrendingUp className="w-3 h-3 text-green-500" />
-                    Downloaded
+                    {t("traffic.page.stats.downloaded")}
                   </p>
                   <p className="text-2xl font-bold text-green-500 mt-1">
                     {formatTraffic(totalTrafficDown)}
@@ -475,7 +480,7 @@ export default function Traffic() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Activity className="w-3 h-3 text-theme-primary" />
-                    Total Traffic
+                    {t("traffic.page.stats.totalTraffic")}
                   </p>
                   <p className="text-2xl font-bold text-theme-primary mt-1">
                     {formatTraffic(totalTrafficUp + totalTrafficDown)}
@@ -498,7 +503,7 @@ export default function Traffic() {
                       : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                   }`}
                 >
-                  ALL
+                  {t("traffic.page.tabs.all")}
                   <span
                     className={`ml-2 text-xs ${
                       activeTab === "ALL"
@@ -541,12 +546,20 @@ export default function Traffic() {
           {/* Services Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {servicesInActiveGroup.length === 0 ? (
-              <div className="text-center py-12 bg-theme-card border border-theme rounded-lg">
-                <Server className="w-12 h-12 text-theme-text-muted mx-auto mb-3 opacity-50" />
+              <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+                <Server
+                  size={48}
+                  className="mx-auto mb-4 text-theme-text-muted"
+                />
+                <h3 className="text-lg font-semibold text-theme-text mb-2">
+                  {searchTerm
+                    ? t("traffic.page.emptyStates.noMatching")
+                    : t("traffic.page.emptyStates.noServices")}
+                </h3>
                 <p className="text-theme-text-muted">
                   {searchTerm
-                    ? "No services found matching your search"
-                    : "No services with traffic monitoring"}
+                    ? "Try adjusting your search criteria"
+                    : "Deploy the traffic agent on your servers to start monitoring"}
                 </p>
               </div>
             ) : (
@@ -562,9 +575,15 @@ export default function Traffic() {
                         {service.name}
                       </h3>
                       <div className="flex flex-wrap items-center gap-1.5">
+                        {service.description && (
+                          <span className="px-2 py-0.5 bg-theme-hover border border-theme rounded text-xs font-medium text-theme-text-muted">
+                            {service.description}
+                          </span>
+                        )}
                         <span className="px-2 py-0.5 bg-theme-hover border border-theme rounded text-xs font-medium text-theme-text-muted flex items-center gap-1">
                           <Server size={12} />
-                          {service.type}
+                          {service.type.charAt(0).toUpperCase() +
+                            service.type.slice(1)}
                         </span>
                         <span className="px-2 py-0.5 bg-theme-hover border border-theme rounded text-xs font-medium text-theme-text-muted flex items-center gap-1">
                           <Activity size={12} />
@@ -580,7 +599,7 @@ export default function Traffic() {
                       <div className="flex items-center gap-1 mb-0.5">
                         <ArrowUp className="w-3 h-3 text-blue-400" />
                         <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider">
-                          Upload Speed
+                          {t("traffic.page.stats.uploadSpeed")}
                         </p>
                       </div>
                       <p className="text-base font-bold text-blue-500">
@@ -591,7 +610,7 @@ export default function Traffic() {
                       <div className="flex items-center gap-1 mb-0.5">
                         <ArrowDown className="w-3 h-3 text-green-400" />
                         <p className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">
-                          Download Speed
+                          {t("traffic.page.stats.downloadSpeed")}
                         </p>
                       </div>
                       <p className="text-base font-bold text-green-500">
@@ -602,7 +621,7 @@ export default function Traffic() {
                       <div className="flex items-center gap-1 mb-0.5">
                         <ArrowUp className="w-3 h-3 text-theme-text-muted" />
                         <p className="text-[10px] text-theme-text-muted font-semibold uppercase tracking-wider">
-                          Total Upload
+                          {t("traffic.page.stats.totalUpload")}
                         </p>
                       </div>
                       <p className="text-base font-bold text-theme-text">
@@ -613,7 +632,7 @@ export default function Traffic() {
                       <div className="flex items-center gap-1 mb-0.5">
                         <ArrowDown className="w-3 h-3 text-theme-text-muted" />
                         <p className="text-[10px] text-theme-text-muted font-semibold uppercase tracking-wider">
-                          Total Download
+                          {t("traffic.page.stats.totalDownload")}
                         </p>
                       </div>
                       <p className="text-base font-bold text-theme-text">
@@ -625,7 +644,7 @@ export default function Traffic() {
                   {/* Traffic Charts */}
                   {service.traffic_history &&
                     service.traffic_history.length > 0 && (
-                      <div className="bg-theme-hover border border-theme rounded-lg p-3 space-y-3">
+                      <div className="bg-theme-card border border-theme rounded-lg p-3 space-y-3">
                         <div className="flex items-center gap-2">
                           <div className="p-1.5 bg-theme-primary/20 rounded">
                             <TrendingUp
@@ -634,7 +653,7 @@ export default function Traffic() {
                             />
                           </div>
                           <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
-                            Bandwidth History
+                            {t("traffic.page.charts.bandwidthHistory")}
                           </span>
                         </div>
 
@@ -644,7 +663,7 @@ export default function Traffic() {
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-xs font-semibold text-blue-400 flex items-center gap-1">
                                 <ArrowUp size={10} />
-                                Upload
+                                {t("traffic.page.charts.upload")}
                               </span>
                             </div>
                             {(() => {
@@ -659,10 +678,12 @@ export default function Traffic() {
                                 return (
                                   <div className="flex gap-2">
                                     <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
-                                      Avg: {avg.toFixed(2)} MB/s
+                                      {t("traffic.page.stats.avg")}:{" "}
+                                      {avg.toFixed(2)} MB/s
                                     </span>
                                     <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded text-xs font-medium text-blue-400">
-                                      Max: {max.toFixed(2)} MB/s
+                                      {t("traffic.page.stats.max")}:{" "}
+                                      {max.toFixed(2)} MB/s
                                     </span>
                                   </div>
                                 );
@@ -674,6 +695,7 @@ export default function Traffic() {
                             data={service.traffic_history}
                             type="upload"
                             serviceId={service.id}
+                            t={t}
                           />
                         </div>
 
@@ -683,7 +705,7 @@ export default function Traffic() {
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-xs font-semibold text-green-400 flex items-center gap-1">
                                 <ArrowDown size={10} />
-                                Download
+                                {t("traffic.page.charts.download")}
                               </span>
                             </div>
                             {(() => {
@@ -698,10 +720,12 @@ export default function Traffic() {
                                 return (
                                   <div className="flex gap-2">
                                     <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
-                                      Avg: {avg.toFixed(2)} MB/s
+                                      {t("traffic.page.stats.avg")}:{" "}
+                                      {avg.toFixed(2)} MB/s
                                     </span>
                                     <span className="px-2 py-1 bg-green-500/10 border border-green-500/20 rounded text-xs font-medium text-green-400">
-                                      Max: {max.toFixed(2)} MB/s
+                                      {t("traffic.page.stats.max")}:{" "}
+                                      {max.toFixed(2)} MB/s
                                     </span>
                                   </div>
                                 );
@@ -713,6 +737,7 @@ export default function Traffic() {
                             data={service.traffic_history}
                             type="download"
                             serviceId={service.id}
+                            t={t}
                           />
                         </div>
                       </div>

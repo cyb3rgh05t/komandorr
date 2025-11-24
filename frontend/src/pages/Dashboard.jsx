@@ -203,7 +203,7 @@ export default function Dashboard() {
     });
 
     const grouped = filteredServices.reduce((acc, service) => {
-      const groupName = service.group || "Ungrouped";
+      const groupName = service.group || t("dashboard.groupUngrouped");
       if (!acc[groupName]) acc[groupName] = [];
       acc[groupName].push(service);
       return acc;
@@ -604,7 +604,7 @@ export default function Dashboard() {
                 onClick={() => setShowCustomizeMenu(false)}
                 className="px-4 py-2 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all"
               >
-                Close
+                {t("dashboard.close")}
               </button>
             </div>
           </div>
@@ -629,7 +629,7 @@ export default function Dashboard() {
                 <div className="text-left">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Server className="w-3 h-3 text-theme-primary" />
-                    Total Services
+                    {t("dashboard.stats.totalServices")}
                   </p>
                   <p className="text-2xl font-bold text-theme-primary mt-1 text-left">
                     {stats.total}
@@ -652,7 +652,7 @@ export default function Dashboard() {
                 <div className="text-left">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <CheckCircle className="w-3 h-3 text-green-500" />
-                    Online
+                    {t("dashboard.stats.online")}
                   </p>
                   <p className="text-2xl font-bold text-green-500 mt-1 text-left">
                     {stats.online}
@@ -675,7 +675,7 @@ export default function Dashboard() {
                 <div className="text-left">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <AlertCircle className="w-3 h-3 text-red-500" />
-                    Offline
+                    {t("dashboard.stats.offline")}
                   </p>
                   <p className="text-2xl font-bold text-red-500 mt-1 text-left">
                     {stats.offline}
@@ -698,13 +698,13 @@ export default function Dashboard() {
                 <div className="text-left">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <AlertCircle className="w-3 h-3 text-yellow-500" />
-                    Problems
+                    {t("dashboard.stats.problems")}
                   </p>
                   <p className="text-2xl font-bold text-yellow-500 mt-1 text-left">
                     {stats.problem}
                   </p>
                   <div className="text-[10px] text-theme-text-muted/70 mt-0.5 text-left">
-                    Slow response (&gt;1s)
+                    {t("dashboard.stats.slowResponse")}
                   </div>
                 </div>
                 <AlertCircle className="w-8 h-8 text-yellow-500" />
@@ -720,7 +720,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Zap className="w-3 h-3 text-blue-500" />
-                    Avg Response
+                    {t("dashboard.stats.avgResponse")}
                   </p>
                   <p className="text-2xl font-bold text-blue-500 mt-1">
                     {stats.avgResponseTime}
@@ -740,7 +740,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Activity className="w-3 h-3 text-purple-500" />
-                    Active (5min)
+                    {t("dashboard.stats.active5min")}
                   </p>
                   <p className="text-2xl font-bold text-purple-500 mt-1">
                     {stats.recentlyChecked}
@@ -759,7 +759,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <ArrowUp className="w-3 h-3 text-orange-500" />
-                    Upload Speed
+                    {t("dashboard.stats.uploadSpeed")}
                   </p>
                   <p className="text-2xl font-bold text-orange-500 mt-1">
                     {stats.uploadSpeed.toFixed(1)}
@@ -779,7 +779,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <ArrowDown className="w-3 h-3 text-cyan-500" />
-                    Download Speed
+                    {t("dashboard.stats.downloadSpeed")}
                   </p>
                   <p className="text-2xl font-bold text-cyan-500 mt-1">
                     {stats.downloadSpeed.toFixed(1)}
@@ -799,7 +799,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Network className="w-3 h-3 text-indigo-500" />
-                    Total Transfer
+                    {t("dashboard.stats.totalTransfer")}
                   </p>
                   <div className="mt-1">
                     <div className="flex items-center gap-1 text-blue-500">
@@ -837,7 +837,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Video className="w-3 h-3 text-pink-500" />
-                    VOD Streams
+                    {t("dashboard.stats.vodStreams")}
                   </p>
                   <p className="text-2xl font-bold text-pink-500 mt-1">
                     {stats.activeStreams}
@@ -863,9 +863,16 @@ export default function Dashboard() {
               </div>
             </div>
           ) : services.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-theme-text-muted mb-4">
+            <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+              <Server
+                size={48}
+                className="mx-auto mb-4 text-theme-text-muted"
+              />
+              <h3 className="text-lg font-semibold text-theme-text mb-2">
                 {t("dashboard.noServices")}
+              </h3>
+              <p className="text-theme-text-muted mb-6">
+                Get started by adding your first service to monitor
               </p>
               <button
                 onClick={() => setShowModal(true)}
@@ -904,18 +911,18 @@ export default function Dashboard() {
                   const emptyStates = {
                     online: {
                       icon: "🟢",
-                      title: "No online services",
-                      message: "Currently no services are online",
+                      title: t("dashboard.emptyStates.noOnline.title"),
+                      message: t("dashboard.emptyStates.noOnline.message"),
                     },
                     offline: {
                       icon: "✓",
-                      title: "No offline services",
-                      message: "All services are operational!",
+                      title: t("dashboard.emptyStates.noOffline.title"),
+                      message: t("dashboard.emptyStates.noOffline.message"),
                     },
                     problem: {
                       icon: "✓",
-                      title: "No services with problems",
-                      message: "Everything is running smoothly!",
+                      title: t("dashboard.emptyStates.noProblems.title"),
+                      message: t("dashboard.emptyStates.noProblems.message"),
                     },
                   };
 
@@ -933,7 +940,8 @@ export default function Dashboard() {
                 }
 
                 const grouped = filteredServices.reduce((acc, service) => {
-                  const groupName = service.group || "Ungrouped";
+                  const groupName =
+                    service.group || t("dashboard.groupUngrouped");
                   if (!acc[groupName]) acc[groupName] = [];
                   acc[groupName].push(service);
                   return acc;
@@ -957,7 +965,8 @@ export default function Dashboard() {
                           );
                           if (!matchingService) return false;
                           const serviceGroup =
-                            matchingService.group || "Ungrouped";
+                            matchingService.group ||
+                            t("dashboard.groupUngrouped");
                           return serviceGroup === activeTab;
                         }) || [],
                     }
@@ -980,7 +989,7 @@ export default function Dashboard() {
                       {Object.entries(grouped).map(
                         ([groupName, groupServices]) => (
                           <div key={groupName} className="space-y-4">
-                            {groupName !== "Ungrouped" && (
+                            {groupName !== t("dashboard.groupUngrouped") && (
                               <div className="bg-theme-card border border-theme rounded-lg p-4">
                                 <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
                                   <span>{groupName}</span>
@@ -1023,7 +1032,7 @@ export default function Dashboard() {
                               : "bg-theme-accent text-theme-text hover:bg-theme-hover"
                           }`}
                         >
-                          ALL
+                          {t("dashboard.all")}
                           <span
                             className={`ml-2 text-xs ${
                               activeTab === "ALL"
