@@ -23,7 +23,12 @@ function VersionBadge() {
   const checkVersion = async () => {
     try {
       // Try to fetch version from API first
-      const response = await fetch(`${API_URL}/version`);
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch(`${API_URL}/version`, {
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+      });
       const data = await response.json();
 
       if (data.local) {

@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Komandorr Dashboard Backend")
     logger.info(f"Debug mode: {settings.DEBUG}")
     logger.info(f"Authentication enabled: {settings.ENABLE_AUTH}")
-    logger.info(f"Timezone: {settings.TIMEZONE}")
+    logger.info(f"Timezone: {settings.TZ}")
 
     # Migrate Plex config from JSON to database if needed
     from app.api.plex import migrate_plex_config_if_needed
@@ -548,7 +548,7 @@ async def debug_version():
 async def get_config():
     """Get application configuration"""
     return {
-        "timezone": settings.TIMEZONE,
+        "timezone": settings.TZ,
     }
 
 

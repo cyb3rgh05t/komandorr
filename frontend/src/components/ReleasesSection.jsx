@@ -24,7 +24,12 @@ function ReleasesSection() {
   const fetchReleases = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/releases`);
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch(`${API_URL}/releases`, {
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+      });
       const data = await response.json();
 
       if (data.success) {

@@ -15,10 +15,12 @@ export const testPlexConnection = async (plexUrl, plexToken) => {
   try {
     console.log("Testing Plex connection...", { url: plexUrl });
 
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/validate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
       body: JSON.stringify({
         url: plexUrl,
@@ -67,10 +69,12 @@ export const testPlexConnection = async (plexUrl, plexToken) => {
  */
 export const getPlexConfig = async () => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/config`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
     });
 
@@ -93,10 +97,12 @@ export const getPlexConfig = async () => {
  */
 export const savePlexConfig = async (plexUrl, plexToken) => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/config`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
       body: JSON.stringify({
         url: plexUrl,
@@ -122,10 +128,12 @@ export const savePlexConfig = async (plexUrl, plexToken) => {
  */
 export const fetchPlexActivities = async () => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch("/api/downloads", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
     });
 
@@ -167,10 +175,12 @@ export const fetchPlexActivities = async () => {
  */
 export const getPlexIdentity = async () => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/identity`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
     });
 
@@ -191,10 +201,12 @@ export const getPlexIdentity = async () => {
  */
 export const getPlexStats = async () => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/stats`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
     });
 
@@ -216,10 +228,12 @@ export const getPlexStats = async () => {
  */
 export const updatePeakConcurrent = async (peakConcurrent) => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/stats/peak`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
       body: JSON.stringify({
         peak_concurrent: peakConcurrent,
@@ -243,10 +257,12 @@ export const updatePeakConcurrent = async (peakConcurrent) => {
  */
 export const resetPeakConcurrent = async () => {
   try {
+    const credentials = sessionStorage.getItem("auth_credentials");
     const response = await fetch(`${API_BASE_URL}/stats/reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(credentials && { Authorization: `Basic ${credentials}` }),
       },
     });
 

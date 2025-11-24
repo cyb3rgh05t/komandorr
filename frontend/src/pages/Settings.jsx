@@ -81,7 +81,13 @@ export default function Settings() {
           data.enabled ? t("auth.authEnabled") : t("auth.authDisabled")
         );
 
-        // Don't redirect when enabling auth, only when credentials change
+        // If enabling auth, clear session and reload to show login screen
+        if (data.enabled) {
+          sessionStorage.removeItem("auth_credentials");
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
       } else {
         toast.error(t("auth.updateError"));
       }
@@ -225,92 +231,89 @@ export default function Settings() {
               />
             </button>
           </div>
-          {authEnabled && (
-            <div className="flex items-start gap-2 text-sm text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <p>
-                Disabling authentication will allow unrestricted access to your
-                dashboard.
-              </p>
-            </div>
-          )}
+          <div className="flex items-start gap-2 text-sm text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <p>
+              {authEnabled
+                ? "Disabling authentication will allow unrestricted access to your dashboard."
+                : "Enable this for an additional security layer on top of Authelia/Traefik."}
+            </p>
+          </div>
         </div>
 
         {/* Change Credentials Form */}
-        {authEnabled && (
-          <form
-            onSubmit={handleUpdateCredentials}
-            className="space-y-4 pt-4 border-t border-theme"
+        <form
+          onSubmit={handleUpdateCredentials}
+          className="space-y-4 pt-4 border-t border-theme"
+        >
+          <h3 className="font-medium text-theme-text text-lg">
+            {t("auth.changeCredentials")}
+          </h3>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("auth.username")}
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              placeholder={t("auth.enterUsername")}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("auth.currentPassword")}
+            </label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              placeholder={t("auth.enterPassword")}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("auth.newPassword")}
+            </label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              placeholder={t("auth.enterPassword")}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {t("auth.confirmPassword")}
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              placeholder={t("auth.enterPassword")}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed"
           >
-            <h3 className="font-medium text-theme-text text-lg">
-              {t("auth.changeCredentials")}
-            </h3>
-
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                {t("auth.username")}
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-                placeholder={t("auth.enterUsername")}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                {t("auth.currentPassword")}
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-                placeholder={t("auth.enterPassword")}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                {t("auth.newPassword")}
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-                placeholder={t("auth.enterPassword")}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                {t("auth.confirmPassword")}
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
-                placeholder={t("auth.enterPassword")}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-theme-primary hover:bg-theme-primary-hover disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed"
-            >
-              {loading ? t("auth.updating") : t("auth.updateCredentials")}
-            </button>
-          </form>
-        )}
+            {loading ? t("auth.updating") : t("auth.updateCredentials")}
+          </button>
+        </form>
       </div>
 
       {/* Plex Server Settings */}

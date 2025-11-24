@@ -113,7 +113,12 @@ export default function Dashboard() {
 
   const fetchVersion = async () => {
     try {
-      const response = await fetch(`${API_URL}/version`);
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch(`${API_URL}/version`, {
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+      });
       const data = await response.json();
 
       setVersion({

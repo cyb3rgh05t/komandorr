@@ -18,14 +18,8 @@ services:
       - "LOG_ENABLE_FILE=true"
       - "LOG_SHOW_TIMESTAMP_CONSOLE=false"
       - "LOG_SHOW_LOCATION_FILE=false"
-      # Timezone
-      - "TIMEZONE=Europe/Berlin"
       # CORS Configuration
       - "CORS_ORIGINS=http://localhost,http://localhost:8000"
-      # Authentication
-      - "ENABLE_AUTH=false"
-      - "AUTH_USERNAME=admin"
-      - "AUTH_PASSWORD=admin"
     image: "ghcr.io/cyb3rgh05t/komandorr:dev"
     restart: "unless-stopped"
     ports:

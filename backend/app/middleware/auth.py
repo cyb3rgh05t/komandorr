@@ -22,7 +22,6 @@ def require_auth(
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": "Basic"},
             detail="Authentication required",
         )
 
@@ -35,7 +34,6 @@ def require_auth(
     logger.warning(f"Invalid credentials for user: {credentials.username}")
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        headers={"WWW-Authenticate": "Basic"},
         detail="Invalid username or password",
     )
 
@@ -58,7 +56,6 @@ async def basic_auth_middleware(request: Request, call_next):
         logger.warning(f"Unauthorized access attempt to {request.url.path}")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": "Basic"},
             content={"detail": "Authentication required"},
         )
 
@@ -74,15 +71,13 @@ async def basic_auth_middleware(request: Request, call_next):
             return response
         else:
             logger.warning(f"Invalid credentials for user: {username}")
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                headers={"WWW-Authenticate": "Basic"},
-                detail="Invalid username or password",
+                content={"detail": "Invalid username or password"},
             )
     except Exception as e:
         logger.error(f"Authentication error: {e}")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": "Basic"},
             content={"detail": "Authentication failed"},
         )

@@ -41,7 +41,12 @@ function About() {
   const fetchVersion = async () => {
     setRefreshing(true);
     try {
-      const response = await fetch(`${API_URL}/version`);
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch(`${API_URL}/version`, {
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+      });
       const data = await response.json();
 
       setVersion({
@@ -65,7 +70,12 @@ function About() {
 
   const fetchConfig = async () => {
     try {
-      const response = await fetch(`${API_URL}/config`);
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch(`${API_URL}/config`, {
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+      });
       const data = await response.json();
       setTimezone(data.timezone);
     } catch (error) {

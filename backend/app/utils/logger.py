@@ -153,7 +153,7 @@ class Logger:
             enable_file_logging = settings.LOG_ENABLE_FILE
             show_timestamp = settings.LOG_SHOW_TIMESTAMP_CONSOLE
             include_location = settings.LOG_SHOW_LOCATION_FILE
-            timezone_str = settings.TIMEZONE
+            timezone_str = settings.TZ
         except ImportError:
             # Fallback to environment variables if settings not available
             log_level = os.getenv("LOG_LEVEL", "INFO").upper()
