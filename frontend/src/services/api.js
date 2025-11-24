@@ -23,7 +23,33 @@ class APIClient {
           sessionStorage.removeItem("auth_credentials");
           window.location.reload();
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+        // Try to get error details from response
+        let errorDetail = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+
+          // Handle FastAPI validation errors (422)
+          if (response.status === 422 && errorData.detail) {
+            if (Array.isArray(errorData.detail)) {
+              // Validation error array
+              errorDetail = errorData.detail.map((err) => err.msg).join(", ");
+            } else if (typeof errorData.detail === "string") {
+              errorDetail = errorData.detail;
+            } else {
+              errorDetail = JSON.stringify(errorData.detail);
+            }
+          } else {
+            errorDetail = errorData.detail || errorData.message || errorDetail;
+          }
+        } catch (e) {
+          // If parsing fails, use status text
+        }
+
+        const error = new Error(errorDetail);
+        error.status = response.status;
+        error.response = { data: { detail: errorDetail } };
+        throw error;
       }
 
       // Handle 204 No Content
@@ -102,6 +128,31 @@ class APIClient {
   // Health
   async getHealth() {
     return this.request("/health");
+  }
+
+  // Generic HTTP methods for flexibility
+  async get(endpoint, options = {}) {
+    return this.request(endpoint, { ...options, method: "GET" });
+  }
+
+  async post(endpoint, data, options = {}) {
+    return this.request(endpoint, {
+      ...options,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async put(endpoint, data, options = {}) {
+    return this.request(endpoint, {
+      ...options,
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async delete(endpoint, options = {}) {
+    return this.request(endpoint, { ...options, method: "DELETE" });
   }
 }
 

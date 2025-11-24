@@ -97,7 +97,75 @@ class PlexStatsDB(Base):
 
     # Statistics
     peak_concurrent = Column(Integer, default=0)
+    total_users = Column(Integer, default=0)
+    total_movies = Column(Integer, default=0)
+    total_tv_shows = Column(Integer, default=0)
     last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
+
+
+class InviteDB(Base):
+    """SQLAlchemy model for Plex Invitations"""
+
+    __tablename__ = "invites"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String, unique=True, nullable=False, index=True)
+
+    # Invite settings
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    created_by = Column(String, nullable=True)  # Admin username who created it
+    expires_at = Column(DateTime, nullable=True)  # When the invite expires
+
+    # Usage settings
+    usage_limit = Column(
+        Integer, nullable=True
+    )  # Max times it can be used (null = unlimited)
+    used_count = Column(Integer, default=0)  # Times it has been used
+
+    # Plex settings
+    allow_sync = Column(Boolean, default=False)  # Allow downloads/sync
+    allow_camera_upload = Column(Boolean, default=False)  # Allow camera uploads
+    allow_channels = Column(Boolean, default=False)  # Allow Live TV/channels
+    plex_home = Column(Boolean, default=False)  # Invite to Plex Home vs Friend
+
+    # Library access (comma-separated library IDs or "all")
+    libraries = Column(String, default="all")  # "all" or "1,2,3"
+
+    # Status
+    is_active = Column(Boolean, default=True)
+
+    # Relationship to users who redeemed this invite
+    users = relationship("PlexUserDB", back_populates="invite")
+
+
+class PlexUserDB(Base):
+    """SQLAlchemy model for Plex Users created via invites"""
+
+    __tablename__ = "plex_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    username = Column(String, nullable=True)
+    plex_id = Column(String, nullable=True)  # Plex user ID
+
+    # Invite relationship
+    invite_id = Column(Integer, ForeignKey("invites.id"), nullable=False)
+    invite = relationship("InviteDB", back_populates="users")
+
+    # Timestamps
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    last_seen = Column(DateTime, nullable=True)
+
+    # Status
+    is_active = Column(Boolean, default=True)
 
 
 class Database:
@@ -127,6 +195,48 @@ class Database:
         """Create all tables if they don't exist"""
         Base.metadata.create_all(bind=self.engine)
         logger.info(f"Database initialized at {self.db_path}")
+
+        # Run migrations for existing databases
+        self._migrate_database()
+
+    def _migrate_database(self):
+        """Apply database migrations for schema updates"""
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(str(self.db_path))
+            cursor = conn.cursor()
+
+            # Check if new columns exist in plex_stats table
+            cursor.execute("PRAGMA table_info(plex_stats)")
+            columns = [row[1] for row in cursor.fetchall()]
+
+            # Add total_users column if it doesn't exist
+            if "total_users" not in columns:
+                logger.info("Adding total_users column to plex_stats table")
+                cursor.execute(
+                    "ALTER TABLE plex_stats ADD COLUMN total_users INTEGER DEFAULT 0"
+                )
+
+            # Add total_movies column if it doesn't exist
+            if "total_movies" not in columns:
+                logger.info("Adding total_movies column to plex_stats table")
+                cursor.execute(
+                    "ALTER TABLE plex_stats ADD COLUMN total_movies INTEGER DEFAULT 0"
+                )
+
+            # Add total_tv_shows column if it doesn't exist
+            if "total_tv_shows" not in columns:
+                logger.info("Adding total_tv_shows column to plex_stats table")
+                cursor.execute(
+                    "ALTER TABLE plex_stats ADD COLUMN total_tv_shows INTEGER DEFAULT 0"
+                )
+
+            conn.commit()
+            conn.close()
+            logger.info("Database migration completed successfully")
+        except Exception as e:
+            logger.error(f"Error during database migration: {e}")
 
     def get_session(self):
         """Get a new database session"""

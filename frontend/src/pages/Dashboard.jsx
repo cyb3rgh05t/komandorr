@@ -614,181 +614,192 @@ export default function Dashboard() {
             {/* Total Services */}
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-theme-primary/10 group ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-theme-primary/10 group ${
                 statusFilter === null
                   ? "border-theme-primary ring-2 ring-theme-primary/20"
                   : "border-theme hover:border-theme-primary/50"
               }`}
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <Server className="w-5 h-5 text-theme-primary" />
-                  <div className="text-2xl font-bold text-theme-primary">
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Server className="w-3 h-3 text-theme-primary" />
+                    Total Services
+                  </p>
+                  <p className="text-2xl font-bold text-theme-primary mt-1 text-left">
                     {stats.total}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Total Services
-                </div>
+                <Server className="w-8 h-8 text-theme-primary" />
               </div>
             </button>
 
             {/* Online */}
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-green-500/10 group ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 group ${
                 statusFilter === "online"
                   ? "border-green-500 ring-2 ring-green-500/20"
                   : "border-theme hover:border-green-500/50"
               }`}
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <div className="text-2xl font-bold text-green-500">
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                    Online
+                  </p>
+                  <p className="text-2xl font-bold text-green-500 mt-1 text-left">
                     {stats.online}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Online
-                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
             </button>
 
             {/* Offline */}
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-red-500/10 group ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 group ${
                 statusFilter === "offline"
                   ? "border-red-500 ring-2 ring-red-500/20"
                   : "border-theme hover:border-red-500/50"
               }`}
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                  <div className="text-2xl font-bold text-red-500">
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-red-500" />
+                    Offline
+                  </p>
+                  <p className="text-2xl font-bold text-red-500 mt-1 text-left">
                     {stats.offline}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Offline
-                </div>
+                <AlertCircle className="w-8 h-8 text-red-500" />
               </div>
             </button>
 
             {/* Problem */}
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-xl p-4 transition-all hover:shadow-lg hover:bg-yellow-500/10 group ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 group ${
                 statusFilter === "problem"
                   ? "border-yellow-500 ring-2 ring-yellow-500/20"
                   : "border-theme hover:border-yellow-500/50"
               }`}
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <AlertCircle className="w-5 h-5 text-yellow-500" />
-                  <div className="text-2xl font-bold text-yellow-500">
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    Problems
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-500 mt-1 text-left">
                     {stats.problem}
-                  </div>
-                </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Problems
-                  <div className="text-[10px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5">
+                  </p>
+                  <div className="text-[10px] text-theme-text-muted/70 mt-0.5 text-left">
                     Slow response (&gt;1s)
                   </div>
                 </div>
+                <AlertCircle className="w-8 h-8 text-yellow-500" />
               </div>
             </button>
 
             {/* Avg Response Time */}
             <div
               onClick={() => navigate("/monitor")}
-              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-blue-500/10 hover:border-blue-500/50 transition-all group cursor-pointer"
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <Zap className="w-5 h-5 text-blue-500" />
-                  <div className="text-2xl font-bold text-blue-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-blue-500" />
+                    Avg Response
+                  </p>
+                  <p className="text-2xl font-bold text-blue-500 mt-1">
                     {stats.avgResponseTime}
                     <span className="text-sm text-blue-400 ml-1">ms</span>
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Avg Response
-                </div>
+                <Zap className="w-8 h-8 text-blue-500" />
               </div>
             </div>
 
             {/* Active (5min) */}
             <div
               onClick={() => navigate("/monitor")}
-              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group cursor-pointer"
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <Activity className="w-5 h-5 text-purple-500" />
-                  <div className="text-2xl font-bold text-purple-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-purple-500" />
+                    Active (5min)
+                  </p>
+                  <p className="text-2xl font-bold text-purple-500 mt-1">
                     {stats.recentlyChecked}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Active (5min)
-                </div>
+                <Activity className="w-8 h-8 text-purple-500" />
               </div>
             </div>
 
             {/* Upload Speed */}
             <div
               onClick={() => navigate("/traffic")}
-              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-orange-500/10 hover:border-orange-500/50 transition-all group cursor-pointer"
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <ArrowUp className="w-5 h-5 text-orange-500" />
-                  <div className="text-2xl font-bold text-orange-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3 text-orange-500" />
+                    Upload Speed
+                  </p>
+                  <p className="text-2xl font-bold text-orange-500 mt-1">
                     {stats.uploadSpeed.toFixed(1)}
                     <span className="text-sm text-orange-400 ml-1">MB/s</span>
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Upload Speed
-                </div>
+                <ArrowUp className="w-8 h-8 text-orange-500" />
               </div>
             </div>
 
             {/* Download Speed */}
             <div
               onClick={() => navigate("/traffic")}
-              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group cursor-pointer"
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <ArrowDown className="w-5 h-5 text-cyan-500" />
-                  <div className="text-2xl font-bold text-cyan-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowDown className="w-3 h-3 text-cyan-500" />
+                    Download Speed
+                  </p>
+                  <p className="text-2xl font-bold text-cyan-500 mt-1">
                     {stats.downloadSpeed.toFixed(1)}
                     <span className="text-sm text-cyan-400 ml-1">MB/s</span>
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Download Speed
-                </div>
+                <ArrowDown className="w-8 h-8 text-cyan-500" />
               </div>
             </div>
 
             {/* Total Transfer */}
             <div
               onClick={() => navigate("/traffic")}
-              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all group cursor-pointer"
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <Network className="w-5 h-5 text-indigo-500" />
-                  <div className="text-base font-bold">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Network className="w-3 h-3 text-indigo-500" />
+                    Total Transfer
+                  </p>
+                  <div className="mt-1">
                     <div className="flex items-center gap-1 text-blue-500">
                       <ArrowUp className="w-3 h-3" />
-                      <span className="text-xs">
+                      <span className="text-xs font-semibold">
                         {stats.totalUploaded >= 1024
                           ? `${(stats.totalUploaded / 1024).toFixed(2)} TB`
                           : stats.totalUploaded >= 1
@@ -798,7 +809,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-1 text-green-500">
                       <ArrowDown className="w-3 h-3" />
-                      <span className="text-xs">
+                      <span className="text-xs font-semibold">
                         {stats.totalDownloaded >= 1024
                           ? `${(stats.totalDownloaded / 1024).toFixed(2)} TB`
                           : stats.totalDownloaded >= 1
@@ -808,27 +819,26 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  Total Transfer
-                </div>
+                <Network className="w-8 h-8 text-indigo-500" />
               </div>
             </div>
 
             {/* Active Streams */}
             <div
               onClick={() => navigate("/vod-streams")}
-              className="relative bg-theme-card border border-theme rounded-xl p-4 hover:shadow-lg hover:bg-pink-500/10 hover:border-pink-500/50 transition-all group cursor-pointer"
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-pink-500/10 hover:border-pink-500/50 transition-all group cursor-pointer"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <Video className="w-5 h-5 text-pink-500" />
-                  <div className="text-2xl font-bold text-pink-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Video className="w-3 h-3 text-pink-500" />
+                    VOD Streams
+                  </p>
+                  <p className="text-2xl font-bold text-pink-500 mt-1">
                     {stats.activeStreams}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-xs uppercase tracking-wider text-theme-text-muted font-medium text-left">
-                  VOD Streams
-                </div>
+                <Video className="w-8 h-8 text-pink-500" />
               </div>
             </div>
           </div>
