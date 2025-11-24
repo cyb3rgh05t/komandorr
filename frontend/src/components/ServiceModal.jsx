@@ -45,7 +45,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
       });
       // Set icon preview if service has an icon
       if (service?.icon) {
-        setIconPreview(`http://localhost:8000${service.icon}`);
+        setIconPreview(service.icon);
       } else {
         setIconPreview(null);
       }
@@ -142,15 +142,31 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
         const uploadFormData = new FormData();
         uploadFormData.append("file", iconFile);
 
-        const response = await fetch("http://localhost:8000/api/upload-icon", {
+        // Get auth credentials from sessionStorage
+        const credentials = sessionStorage.getItem("auth_credentials");
+
+        const response = await fetch("/api/upload-icon", {
           method: "POST",
+          headers: {
+            ...(credentials && { Authorization: `Basic ${credentials}` }),
+          },
           body: uploadFormData,
         });
 
         if (response.ok) {
           const data = await response.json();
           iconPath = data.path;
+          console.log("Icon uploaded successfully:", iconPath);
+          console.log("Full response:", data);
+          // Update preview to show the uploaded icon
+          setIconPreview(iconPath);
         } else {
+          const errorText = await response.text();
+          console.error(
+            "Upload failed with status:",
+            response.status,
+            errorText
+          );
           alert("Failed to upload icon");
           return;
         }
@@ -298,6 +314,16 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                       src={iconPreview}
                       alt="Icon preview"
                       className="w-16 h-16 object-contain rounded-lg"
+                      onLoad={() =>
+                        console.log("Icon preview loaded:", iconPreview)
+                      }
+                      onError={(e) => {
+                        console.error(
+                          "Failed to load icon preview:",
+                          iconPreview
+                        );
+                        console.error("Error event:", e);
+                      }}
                     />
                     <div className="flex-1">
                       <p className="text-sm text-theme-text">Icon selected</p>

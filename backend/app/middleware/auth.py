@@ -49,6 +49,12 @@ async def basic_auth_middleware(request: Request, call_next):
     if request.url.path.startswith("/api/auth/"):
         return await call_next(request)
 
+    # Allow static files (icons, assets) without authentication
+    if request.url.path.startswith("/icons/") or request.url.path.startswith(
+        "/assets/"
+    ):
+        return await call_next(request)
+
     # Get Authorization header
     auth_header = request.headers.get("Authorization")
 

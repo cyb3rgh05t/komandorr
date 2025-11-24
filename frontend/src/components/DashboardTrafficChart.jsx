@@ -173,11 +173,11 @@ const DashboardTrafficChart = ({
             <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
               {t("dashboard.trafficChart") || "Traffic Overview"}
             </h2>
-            <p className="text-xs text-theme-text-muted flex items-center gap-1.5">
+            <div className="text-xs text-theme-text-muted flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
               {activeServices.length} active{" "}
               {activeServices.length === 1 ? "service" : "services"}
-            </p>
+            </div>
           </div>
         </div>
 

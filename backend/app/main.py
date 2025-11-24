@@ -552,8 +552,14 @@ async def get_config():
     }
 
 
+from app.middleware.auth import require_auth
+from fastapi import Depends
+
+
 @app.post("/api/upload-icon")
-async def upload_icon(file: UploadFile = File(...)):
+async def upload_icon(
+    file: UploadFile = File(...), username: str = Depends(require_auth)
+):
     """Upload a service icon"""
     # Validate file type
     allowed_types = [

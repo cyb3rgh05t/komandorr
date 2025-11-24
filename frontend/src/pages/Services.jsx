@@ -16,7 +16,7 @@ import { useToast } from "../context/ToastContext";
 
 export default function Services() {
   const { t } = useTranslation();
-  const { showToast } = useToast();
+  const toast = useToast();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -56,7 +56,7 @@ export default function Services() {
       }
     } catch (error) {
       console.error("Failed to fetch services:", error);
-      showToast(t("errors.fetchServices"), "error");
+      toast.error(t("errors.fetchServices"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -106,13 +106,10 @@ export default function Services() {
       setRefreshing(true);
       const data = await api.checkAllServices();
       setServices(data);
-      showToast(t("success.servicesChecked") || "Services checked", "success");
+      toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
-      showToast(
-        t("errors.checkServices") || "Failed to check services",
-        "error"
-      );
+      toast.error(t("errors.checkServices") || "Failed to check services");
     } finally {
       setTimeout(() => setRefreshing(false), 500);
     }
@@ -123,10 +120,10 @@ export default function Services() {
       const newService = await api.createService(data);
       setServices([...services, newService]);
       setShowModal(false);
-      showToast(t("success.serviceCreated"), "success");
+      toast.success(t("success.serviceCreated"));
     } catch (error) {
       console.error("Failed to create service:", error);
-      showToast(t("errors.createService"), "error");
+      toast.error(t("errors.createService"));
     }
   };
 
@@ -138,10 +135,10 @@ export default function Services() {
       );
       setShowModal(false);
       setEditingService(null);
-      showToast(t("success.serviceUpdated"), "success");
+      toast.success(t("success.serviceUpdated"));
     } catch (error) {
       console.error("Failed to update service:", error);
-      showToast(t("errors.updateService"), "error");
+      toast.error(t("errors.updateService"));
     }
   };
 
@@ -151,10 +148,10 @@ export default function Services() {
     try {
       await api.deleteService(id);
       setServices(services.filter((s) => s.id !== id));
-      showToast(t("success.serviceDeleted"), "success");
+      toast.success(t("success.serviceDeleted"));
     } catch (error) {
       console.error("Failed to delete service:", error);
-      showToast(t("errors.deleteService"), "error");
+      toast.error(t("errors.deleteService"));
     }
   };
 
@@ -163,10 +160,10 @@ export default function Services() {
       setRefreshing(true);
       const updatedService = await api.checkService(id);
       setServices(services.map((s) => (s.id === id ? updatedService : s)));
-      showToast(t("success.serviceChecked"), "success");
+      toast.success(t("success.serviceChecked"));
     } catch (error) {
       console.error("Failed to check service:", error);
-      showToast(t("errors.checkService"), "error");
+      toast.error(t("errors.checkService"));
     } finally {
       setTimeout(() => setRefreshing(false), 500);
     }

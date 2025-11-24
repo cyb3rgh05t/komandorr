@@ -75,7 +75,7 @@ export default function DashboardServiceCard({
           {service.icon && (
             <div className="relative flex-shrink-0">
               <img
-                src={`http://localhost:8000${service.icon}`}
+                src={service.icon}
                 alt={service.name}
                 className="w-8 h-8 object-contain relative z-10 transition-transform duration-300 group-hover:scale-110"
                 onError={(e) => {

@@ -54,6 +54,9 @@ class Settings(BaseSettings):
             self.ENABLE_AUTH = auth_config.get("enabled", self.ENABLE_AUTH)
             self.AUTH_USERNAME = auth_config.get("username", self.AUTH_USERNAME)
             self.AUTH_PASSWORD = auth_config.get("password", self.AUTH_PASSWORD)
+        if "cors" in config_data:
+            cors_config = config_data["cors"]
+            self.CORS_ORIGINS = cors_config.get("origins", self.CORS_ORIGINS)
 
     @property
     def cors_origins_list(self) -> List[str]:

@@ -57,10 +57,14 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
           {service.icon && (
             <div className="relative flex-shrink-0">
               <img
-                src={`http://localhost:8000${service.icon}`}
+                src={service.icon}
                 alt={service.name}
                 className="w-8 h-8 object-contain relative z-10 transition-transform duration-300 group-hover:scale-110"
                 onError={(e) => {
+                  console.error(
+                    `Failed to load icon for ${service.name}:`,
+                    service.icon
+                  );
                   e.target.style.display = "none";
                 }}
               />
