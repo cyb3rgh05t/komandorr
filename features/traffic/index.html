@@ -854,6 +854,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#circular-progress-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Circular Progress Cards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bandwidth-metrics-display" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bandwidth Metrics Display
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Formatting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1825,6 +1875,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#circular-progress-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Circular Progress Cards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bandwidth-metrics-display" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bandwidth Metrics Display
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Formatting
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2161,9 +2261,38 @@
 
 
 <h1 id="traffic-monitoring">Traffic Monitoring<a class="headerlink" href="#traffic-monitoring" title="Permanent link">&para;</a></h1>
-<p>Monitor network bandwidth usage with real-time and historical data visualization.</p>
+<p>Monitor network bandwidth usage with circular progress visualizations, real-time speeds, and cumulative data transfer tracking.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Komandorr's traffic monitoring feature tracks network bandwidth consumption, providing insights into upload/download usage patterns.</p>
+<p>Komandorr's traffic monitoring feature tracks network bandwidth consumption with beautiful circular progress indicators showing percentage utilization, current upload/download speeds, and total data transferred.</p>
+<h2 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">&para;</a></h2>
+<h3 id="circular-progress-cards">Circular Progress Cards<a class="headerlink" href="#circular-progress-cards" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Top 5 Services</strong>: Displays the 5 services with highest bandwidth usage</li>
+<li><strong>200px Diameter Circles</strong>: Large, easy-to-read circular progress rings</li>
+<li><strong>Percentage Display</strong>: Shows bandwidth usage as percentage of configured MAX_BANDWIDTH</li>
+<li><strong>Color-Coded</strong>: Each service gets unique colors (pink, violet, cyan, emerald, amber)</li>
+<li><strong>Active Indicator</strong>: Green pulsing dot when service has active traffic</li>
+</ul>
+<h3 id="bandwidth-metrics-display">Bandwidth Metrics Display<a class="headerlink" href="#bandwidth-metrics-display" title="Permanent link">&para;</a></h3>
+<p>Each card shows a two-row metrics box:</p>
+<p><strong>Row 1 - Current Speeds:</strong></p>
+<ul>
+<li>Upload (blue): Real-time upload speed in MB/s</li>
+<li>Download (green): Real-time download speed in MB/s</li>
+<li>Total (purple): Combined current bandwidth</li>
+</ul>
+<p><strong>Row 2 - Cumulative Data:</strong></p>
+<ul>
+<li>Uploaded (orange): Total data uploaded (GB/TB)</li>
+<li>Downloaded (cyan): Total data downloaded (GB/TB)</li>
+<li>Combined (amber): Total data transferred (GB/TB)</li>
+</ul>
+<h3 id="data-formatting">Data Formatting<a class="headerlink" href="#data-formatting" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Speeds</strong>: Automatically switches between KB/s and MB/s</li>
+<li><strong>Totals</strong>: Displays in GB, automatically converts to TB when ≥ 1000 GB</li>
+<li><strong>Monospace Font</strong>: Consistent number alignment for easy reading</li>
+</ul>
 <h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
 <p>Traffic monitoring consists of two components:</p>
 <ol>

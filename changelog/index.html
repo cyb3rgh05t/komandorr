@@ -1465,6 +1465,125 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
+<h1 id="220-2025-11-25"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.1.0...v2.2.0">2.2.0</a> (2025-11-25)<a class="headerlink" href="#220-2025-11-25" title="Permanent link">&para;</a></h1>
+<h3 id="traffic-visualization-enhancement">🎨 Traffic Visualization Enhancement<a class="headerlink" href="#traffic-visualization-enhancement" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>dashboard: Circular progress traffic cards</strong>
+◦ Complete redesign of traffic visualization with circular progress indicators
+◦ Top 5 services by bandwidth displayed with 200px diameter circular progress rings
+◦ Percentage calculated using configured MAX_BANDWIDTH (realistic 3 Gbps = 375 MB/s)
+◦ Color-coded service cards: pink, violet, cyan, emerald, amber rotation
+◦ Removed line charts in favor of cleaner circular progress design
+◦ Active indicator: green pulsing dot on top-right of cards
+◦ Centered layout using flexbox (flex flex-wrap justify-center gap-8)
+◦ Responsive grid fallback for smaller screens</p>
+<p>• <strong>traffic: Enhanced bandwidth display box</strong>
+◦ Two-row layout showing both real-time speeds AND cumulative data
+◦ Row 1: Current speeds (Upload: blue, Download: green, Total: purple)
+◦ Row 2: Total transferred (Uploaded: orange, Downloaded: cyan, Combined: amber)
+◦ formatBandwidth(): Handles MB/s and KB/s for current speeds
+◦ formatData(): Displays GB with automatic TB conversion for values ≥1000 GB
+◦ Mono font for consistent number alignment
+◦ Border separator between speed and data rows</p>
+<p>• <strong>traffic-agent: MAX_BANDWIDTH configuration</strong>
+◦ Added MAX_BANDWIDTH = 375.0 (3 Gbps connection = 375 MB/s)
+◦ Backend stores max_bandwidth from agent updates
+◦ TrafficMetrics model includes max_bandwidth field
+◦ Percentage calculation: (serviceBandwidth / max_bandwidth) × 100
+◦ Fallback to relative percentages if max_bandwidth not configured
+◦ Comment guide: 125 MB/s = 1 Gbps, 1250 MB/s = 10 Gbps, 12.5 MB/s = 100 Mbps</p>
+<p><strong>Bug Fixes</strong></p>
+<p>• <strong>services: Fixed copy button interaction</strong>
+◦ Service card copy button now properly stops event propagation
+◦ handleCopyClick uses e.preventDefault() and e.stopPropagation()
+◦ Prevents card link navigation when copying service ID
+◦ Copy feedback shows Check icon for 2 seconds after successful copy</p>
+<h3 id="documentation">📚 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<p>• <strong>traffic: Updated monitoring documentation</strong>
+◦ Documented circular progress visualization approach
+◦ Added MAX_BANDWIDTH configuration examples
+◦ Bandwidth calculation formulas and percentage logic
+◦ Color scheme documentation for service cards</p>
+<hr />
+<h1 id="210-2025-11-24"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.0.0...v2.1.0">2.1.0</a> (2025-11-24)<a class="headerlink" href="#210-2025-11-24" title="Permanent link">&para;</a></h1>
+<h3 id="configuration-management">⚙️ Configuration Management<a class="headerlink" href="#configuration-management" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>config: Unified configuration system</strong>
+◦ Simplified configuration to two-tier system (environment variables + config.json)
+◦ Removed .env file complexity - only HOST, PORT, DEBUG, CORS_ORIGINS needed
+◦ All application settings (auth, logging, timezone, API tokens, Plex) managed via config.json
+◦ Settings UI provides unified interface for runtime configuration changes
+◦ Created comprehensive CONFIGURATION.md documentation
+◦ Priority order: config.json &gt; environment variables &gt; hardcoded defaults</p>
+<p>• <strong>config: Settings API with Plex integration</strong>
+◦ Added /api/settings endpoint with GET/POST operations
+◦ Pydantic models for LoggingSettings, GeneralSettings, APISettings, PlexSettings
+◦ Moved Plex configuration from database to config.json (server_url, server_token, server_name)
+◦ Database now only stores peak_concurrent statistic
+◦ Live statistics (movies/shows/users) fetched directly from Plex API
+◦ Migration function handles automatic DB → config.json transition</p>
+<p>• <strong>config: Enhanced Settings UI</strong>
+◦ Unified Settings page with single "Save Settings" button
+◦ Sections for Auth, Plex, Logging, General, and API configuration
+◦ Added GitHub token and TMDB API key fields for invite redemption flow
+◦ Plex validation button to test server connection
+◦ All settings load from /api/settings endpoint
+◦ Removed separate Plex save - integrated into main settings save</p>
+<p><strong>Bug Fixes</strong></p>
+<p>• <strong>plex: Fixed OAuth redemption flow</strong>
+◦ Updated invite_plex_user_oauth to use settings instead of database
+◦ Fixed 'PlexStatsDB' object has no attribute 'server_url' errors
+◦ Removed all database field references (server_url, server_token, server_name)
+◦ Invites endpoints now use settings.PLEX_SERVER_NAME instead of database query
+◦ get_plex_stats endpoint loads config from config.json and fetches live stats</p>
+<p>• <strong>docker: Cleaned up environment variables</strong>
+◦ Removed application settings from docker-compose.yml (LOG_LEVEL, CORS_ORIGINS, etc.)
+◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
+◦ CORS moved back to environment variables (deployment-level security setting)
+◦ Simplified .env.example to server parameters only with migration comments</p>
+<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>monitor: Clickable service cards</strong>
+◦ Service cards now link directly to service URLs
+◦ Removed separate URL badge - entire card is clickable
+◦ Added hover effects: border highlights to theme-primary color
+◦ Service name changes color on hover for visual feedback
+◦ Maintained target="_blank" for security</p>
+<p>• <strong>dashboard/services/traffic: Consistent hover effects</strong>
+◦ Applied clickable card pattern across all pages
+◦ DashboardServiceCard, ServiceCard, and Traffic cards now clickable
+◦ Unified hover styling: border-theme-primary + shadow-lg
+◦ Action buttons preventDefault to avoid navigation conflicts
+◦ Consistent user experience across the application</p>
+<h3 id="authentication-security-improvements">🔒 Authentication &amp; Security Improvements<a class="headerlink" href="#authentication-security-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>Bug Fixes</strong></p>
+<p>• <strong>auth: fixed Basic Auth popup with ENABLE_AUTH=false</strong>
+◦ Added <code>HTTPBasic(auto_error=False)</code> to prevent automatic authentication challenge
+◦ Changed credentials parameter to <code>Optional[HTTPBasicCredentials]</code> in require_auth dependency
+◦ Fixed browser Basic Auth popup appearing on <code>/api/invites/plex/config</code> endpoint
+◦ Authentication now properly skips when ENABLE_AUTH=false without triggering login prompts
+◦ Added proper credential validation check when auth is enabled</p>
+<p>• <strong>ui: authentication settings always visible</strong>
+◦ Removed conditional rendering of auth settings based on ENABLE_AUTH state
+◦ Auth toggle and credentials form now always visible in Settings page
+◦ Allows dual-layer security: Authelia/Traefik + optional Komandorr Basic Auth
+◦ Dynamic warning message adapts based on auth enabled/disabled state
+◦ Users can enable additional security layer on top of external authentication</p>
+<p><strong>Documentation</strong></p>
+<p>• <strong>authelia: reference configuration</strong>
+◦ Created complete Authelia configuration file (authelia-config.yml)
+◦ Proper access control rule ordering (specific domains before wildcards)
+◦ API endpoint bypass rules for /api/_ paths
+◦ Public invite page bypass rules for /invite/_, /invites, /redeem
+◦ NTP time synchronization configuration
+◦ Complete session, regulation, storage, and notifier settings</p>
+<p>• <strong>traefik: docker-compose labels</strong>
+◦ Updated docker-compose.yml with Traefik routing configuration
+◦ Three-router setup: API (priority 100), public invites (priority 90), main app (priority 10)
+◦ API routes bypass Authelia for frontend functionality
+◦ Public invite redemption pages accessible without authentication
+◦ Main application protected by Authelia middleware</p>
+<hr />
 <h1 id="200-2025-11-23"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.8.0...v2.0.0">2.0.0</a> (2025-11-23)<a class="headerlink" href="#200-2025-11-23" title="Permanent link">&para;</a></h1>
 <h3 id="major-release-vod-invites-system">🎉 Major Release - VOD Invites System<a class="headerlink" href="#major-release-vod-invites-system" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
@@ -1938,7 +2057,7 @@
 ◦ Modified <code>/traffic/summary</code> endpoint to include <code>traffic_history</code> field
 ◦ Limited history to last 60 data points to optimize response size
 ◦ Fixed dashboard traffic chart showing no data</p>
-<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_1">Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>docs: improved styling and readability</strong>
 ◦ Darkened primary navbar color from <code>#e97b2e</code> to <code>#c05d1a</code> for better contrast
 ◦ Updated accent color from <code>#ff8c42</code> to <code>#d9681f</code> for more professional appearance
@@ -1971,7 +2090,7 @@
 ◦ Added <code>/api/version/debug</code> endpoint for diagnosing version detection issues
 ◦ Shows environment type (docker/local), file paths, existence, and content
 ◦ Helps troubleshoot path issues in containerized deployments</p>
-<h3 id="documentation_1">Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_2">Documentation<a class="headerlink" href="#documentation_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>docs: cleaner appearance and proper branding</strong>
 ◦ Removed all emoji characters from documentation files
 ◦ Copied logo.png and favicon.png from frontend to docs/images
@@ -2137,7 +2256,7 @@
 ◦ Enhanced badge styling for service descriptions and types
 ◦ Better visual hierarchy in service information display</p>
 <h1 id="122-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.2.1...v1.2.2">1.2.2</a> (2025-11-06)<a class="headerlink" href="#122-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="documentation_2">Documentation<a class="headerlink" href="#documentation_2" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_3">Documentation<a class="headerlink" href="#documentation_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>changelog: adopt vodwisharr format</strong>
 ◦ Reformatted changelog to match vodwisharr style
 ◦ Added compare links in version headers
