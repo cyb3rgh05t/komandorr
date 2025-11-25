@@ -80,6 +80,11 @@
     "createGroup": "Create New Group",
     "newGroupName": "Enter group name",
     "types": {
+      "app": "App",
+      "website": "Website",
+      "panel": "Panel",
+      "project": "Project",
+      "server": "Server",
       "http": "HTTP",
       "https": "HTTPS",
       "tcp": "TCP",
@@ -88,7 +93,6 @@
       "api": "API",
       "websocket": "WebSocket",
       "database": "Database",
-      "panel": "Panel",
       "custom": "Custom"
     },
     "stats": {
