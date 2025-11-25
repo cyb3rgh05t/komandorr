@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Video,
   Mail,
+  Users,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -26,6 +27,7 @@ export default function Sidebar() {
     { path: "/monitor", label: t("nav.monitor"), icon: Activity },
     { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
     { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
+    { path: "/vod-activity", label: t("nav.vodActivity"), icon: Users },
     { path: "/invites", label: "VOD Invites", icon: Mail },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },

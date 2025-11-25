@@ -992,3 +992,218 @@ async def proxy_plex_image(url: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error proxying image: {str(e)}",
         )
+
+
+@router.get("/sessions")
+async def get_plex_sessions():
+    """
+    Get live Plex sessions (currently streaming users)
+    Similar to Wizarr's activity monitoring
+    """
+    try:
+        plex_config = load_plex_config()
+
+        if (
+            not plex_config
+            or not plex_config.get("url")
+            or not plex_config.get("token")
+        ):
+            return {
+                "error": False,
+                "sessions": [],
+                "message": "Plex server not configured",
+            }
+
+        url = plex_config["url"]
+        token = plex_config["token"]
+
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            headers = {"X-Plex-Token": token, "Accept": "application/json"}
+
+            # Fetch active sessions
+            sessions_response = await client.get(
+                f"{url}/status/sessions", headers=headers
+            )
+
+            if sessions_response.status_code != 200:
+                logger.warning(
+                    f"Failed to fetch sessions: {sessions_response.status_code}"
+                )
+                return {"error": False, "sessions": [], "message": "No active sessions"}
+
+            sessions_data = sessions_response.json()
+            raw_sessions = sessions_data.get("MediaContainer", {}).get("Metadata", [])
+
+            processed_sessions = []
+
+            for session in raw_sessions:
+                # Extract user information
+                user_info = session.get("User", {})
+                user_name = user_info.get("title", "Unknown User")
+                user_id = user_info.get("id", "")
+                user_thumb = user_info.get("thumb", "")
+
+                # Extract media information
+                media_type = session.get("type", "unknown")
+                media_title = session.get("title", "Unknown")
+                rating_key = session.get("ratingKey", "")
+                grandparent_rating_key = session.get("grandparentRatingKey", "")
+
+                # For TV shows, include series info and fetch show poster
+                if media_type == "episode":
+                    series_title = session.get("grandparentTitle", "")
+                    season_num = session.get("parentIndex", 0)
+                    episode_num = session.get("index", 0)
+                    full_title = f"{series_title} - S{season_num:02d}E{episode_num:02d} - {media_title}"
+
+                    # Fetch the show's metadata to get the poster
+                    show_thumb = None
+                    if grandparent_rating_key:
+                        try:
+                            logger.info(
+                                f"Fetching show metadata for grandparent key: {grandparent_rating_key}"
+                            )
+                            show_metadata_response = await client.get(
+                                f"{url}/library/metadata/{grandparent_rating_key}",
+                                headers=headers,
+                            )
+                            logger.info(
+                                f"Show metadata response status: {show_metadata_response.status_code}"
+                            )
+                            if show_metadata_response.status_code == 200:
+                                show_data = show_metadata_response.json()
+                                show_metadata = show_data.get("MediaContainer", {}).get(
+                                    "Metadata", [{}]
+                                )[0]
+                                show_thumb = show_metadata.get("thumb", "")
+                                logger.info(f"Show thumb retrieved: {show_thumb}")
+                        except Exception as e:
+                            logger.warning(f"Failed to fetch show metadata: {e}")
+                    else:
+                        logger.warning(
+                            f"No grandparent_rating_key found for episode: {full_title}"
+                        )
+                else:
+                    full_title = media_title
+                    show_thumb = None
+
+                # Extract playback information
+                view_offset = int(session.get("viewOffset", 0))
+                duration = int(session.get("duration", 1))
+                progress = (view_offset / duration * 100) if duration > 0 else 0
+
+                # Extract player/device information
+                player = session.get("Player", {})
+                state = player.get(
+                    "state", "stopped"
+                )  # playing, paused, buffering, stopped
+                device_name = player.get("device", "Unknown Device")
+                client_name = player.get("product", "Unknown Client")
+                platform = player.get("platform", "Unknown")
+
+                # Extract transcode information
+                transcode_session = session.get("TranscodeSession", {})
+                is_transcoding = bool(transcode_session)
+                transcode_speed = None
+                video_decision = None
+                audio_decision = None
+
+                if is_transcoding:
+                    transcode_speed = transcode_session.get("speed", 0)
+                    video_decision = transcode_session.get("videoDecision", "copy")
+                    audio_decision = transcode_session.get("audioDecision", "copy")
+                    # Only consider it transcoding if not direct play/stream
+                    is_transcoding = (
+                        video_decision == "transcode" or audio_decision == "transcode"
+                    )
+
+                # Extract media details
+                media = session.get("Media", [{}])[0] if session.get("Media") else {}
+                video_resolution = media.get("videoResolution", "Unknown")
+                video_codec = media.get("videoCodec", "Unknown")
+                audio_codec = media.get("audioCodec", "Unknown")
+                container = media.get("container", "Unknown")
+                bitrate = media.get("bitrate", 0)
+
+                # Extract artwork
+                thumb = session.get("thumb", "")
+                art = session.get("art", "")
+
+                # For TV episodes, use the fetched show poster
+                if media_type == "episode" and show_thumb:
+                    artwork_path = show_thumb
+                else:
+                    artwork_path = thumb or art
+
+                artwork_url = (
+                    f"{url}{artwork_path}?X-Plex-Token={token}"
+                    if artwork_path
+                    else None
+                )
+
+                # Extract location/IP if available
+                session_location = session.get("Session", {})
+                location = session_location.get("location", "wan")  # lan or wan
+                bandwidth = session_location.get("bandwidth", 0)
+
+                processed_session = {
+                    "session_id": session.get("sessionKey", ""),
+                    "user": {
+                        "name": user_name,
+                        "id": user_id,
+                        "thumb": (
+                            f"{user_thumb}?X-Plex-Token={token}"
+                            if user_thumb and user_thumb.startswith("http")
+                            else (
+                                f"{url}{user_thumb}?X-Plex-Token={token}"
+                                if user_thumb
+                                else None
+                            )
+                        ),
+                    },
+                    "media": {
+                        "title": full_title,
+                        "type": media_type,
+                        "year": session.get("year", None),
+                        "rating": session.get("rating", None),
+                        "thumb": artwork_url,
+                    },
+                    "playback": {
+                        "state": state,
+                        "progress": round(progress, 2),
+                        "position_ms": view_offset,
+                        "duration_ms": duration,
+                    },
+                    "device": {
+                        "name": device_name,
+                        "client": client_name,
+                        "platform": platform,
+                    },
+                    "transcode": {
+                        "is_transcoding": is_transcoding,
+                        "speed": transcode_speed,
+                        "video_decision": video_decision,
+                        "audio_decision": audio_decision,
+                    },
+                    "stream": {
+                        "video_resolution": video_resolution,
+                        "video_codec": video_codec,
+                        "audio_codec": audio_codec,
+                        "container": container,
+                        "bitrate": bitrate,
+                        "location": location,
+                        "bandwidth": bandwidth,
+                    },
+                }
+
+                processed_sessions.append(processed_session)
+
+            return {
+                "error": False,
+                "sessions": processed_sessions,
+                "total": len(processed_sessions),
+            }
+
+    except Exception as e:
+        logger.error(f"Error fetching Plex sessions: {e}", exc_info=True)
+        return {"error": True, "message": str(e), "sessions": []}

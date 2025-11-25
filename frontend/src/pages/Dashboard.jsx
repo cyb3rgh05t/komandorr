@@ -74,7 +74,6 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
-  const [refreshing, setRefreshing] = useState(false);
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
   const [dashboardVisibility, setDashboardVisibility] = useState(() => {
     // Load from localStorage or use defaults
@@ -190,7 +189,6 @@ export default function Dashboard() {
 
   const handleRefreshAll = async () => {
     try {
-      setRefreshing(true);
       const data = await api.checkAllServices();
       // Update the cache with the new data
       queryClient.setQueryData(["services"], data);
@@ -198,20 +196,15 @@ export default function Dashboard() {
     } catch (error) {
       toast.error(t("common.error"));
       console.error("Failed to check all services:", error);
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
   const handleRefreshTraffic = async () => {
-    setRefreshing(true);
     await queryClient.refetchQueries(["traffic"]);
-    setTimeout(() => setRefreshing(false), 500);
   };
 
   const handleCheckService = async (id) => {
     try {
-      setRefreshing(true);
       const updated = await api.checkService(id);
       // Update the cache with the updated service
       queryClient.setQueryData(["services"], (old) =>
@@ -221,8 +214,6 @@ export default function Dashboard() {
     } catch (error) {
       toast.error(t("common.error"));
       console.error("Failed to check service:", error);
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -362,16 +353,20 @@ export default function Dashboard() {
           </button>
           <button
             onClick={handleRefreshAll}
-            disabled={refreshing}
+            disabled={isFetching}
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
               className={`text-theme-primary transition-transform duration-500 ${
-                refreshing ? "animate-spin" : ""
+                isFetching ? "animate-spin" : ""
               }`}
             />
-            <span className="text-xs sm:text-sm">{t("service.checkNow")}</span>
+            <span className="text-xs sm:text-sm">
+              {isFetching
+                ? t("common.refreshing", "Refreshing")
+                : t("service.checkNow")}
+            </span>
           </button>
           <button
             onClick={() => setShowModal(true)}
@@ -977,7 +972,7 @@ export default function Dashboard() {
                           <DashboardTrafficCards
                             trafficData={filteredTrafficData}
                             onRefresh={handleRefreshTraffic}
-                            refreshing={refreshing}
+                            refreshing={trafficFetching}
                           />
                         </div>
                       )}
@@ -1070,7 +1065,7 @@ export default function Dashboard() {
                         <DashboardTrafficCards
                           trafficData={filteredTrafficData}
                           onRefresh={handleRefreshTraffic}
-                          refreshing={refreshing}
+                          refreshing={trafficFetching}
                         />
                       </div>
                     )}

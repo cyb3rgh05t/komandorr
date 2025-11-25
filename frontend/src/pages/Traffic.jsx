@@ -156,7 +156,6 @@ export default function Traffic() {
   const services = allServices.filter((s) => s.traffic);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
 
@@ -207,9 +206,7 @@ export default function Traffic() {
   }, [services, searchTerm, activeTab]);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
     await queryClient.refetchQueries(["services"]);
-    setRefreshing(false);
     toast.success(t("traffic.page.refreshSuccess"));
   };
 
@@ -356,17 +353,19 @@ export default function Traffic() {
 
             <button
               onClick={handleRefresh}
-              disabled={refreshing}
+              disabled={isFetching}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary ${
-                  refreshing ? "animate-spin" : ""
+                  isFetching ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {t("traffic.page.refresh")}
+                {isFetching
+                  ? t("common.refreshing", "Refreshing")
+                  : t("traffic.page.refresh")}
               </span>
             </button>
           </div>

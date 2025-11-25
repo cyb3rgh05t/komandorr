@@ -157,7 +157,6 @@ export default function Monitor() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
@@ -216,15 +215,12 @@ export default function Monitor() {
 
   const handleRefresh = async () => {
     try {
-      setRefreshing(true);
       const data = await api.checkAllServices();
       queryClient.setQueryData(["services"], data);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
       toast.error(t("errors.checkServices") || "Failed to check services");
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -386,17 +382,21 @@ export default function Monitor() {
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={handleRefresh}
-                disabled={refreshing}
+                disabled={isFetching}
                 className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw
                   size={16}
                   className={`text-theme-primary transition-transform duration-500 ${
-                    refreshing ? "animate-spin" : ""
+                    isFetching ? "animate-spin" : ""
                   }`}
                 />
 
-                <span>{t("monitor.refresh")}</span>
+                <span>
+                  {isFetching
+                    ? t("common.refreshing", "Refreshing")
+                    : t("monitor.refresh")}
+                </span>
               </button>
             </div>
           </div>

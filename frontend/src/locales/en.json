@@ -9,6 +9,7 @@
     "monitor": "Response Monitor",
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",
+    "vodActivity": "VOD Activity",
     "invites": "Plex Invites",
     "settings": "Settings",
     "about": "About"
@@ -363,7 +364,8 @@
     "success": "Success",
     "confirm": "Confirm",
     "close": "Close",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "refreshing": "Refreshing"
   },
   "versionBadge": {
     "version": "Version",
@@ -623,6 +625,41 @@
       "services": "services",
       "previous": "Previous page",
       "next": "Next page"
+    }
+  },
+  "vodActivity": {
+    "title": "VOD Activity",
+    "subtitle": "Monitor live streaming activity from your Plex server",
+    "refresh": "Refresh",
+    "autoRefreshOn": "Auto",
+    "autoRefreshOff": "Manual",
+    "refreshSuccess": "Sessions refreshed successfully",
+    "refreshError": "Failed to refresh sessions",
+    "error": "Failed to load sessions",
+    "noSessions": "No Active Sessions",
+    "noSessionsDesc": "There are currently no active streaming sessions on your Plex server.",
+    "noMatching": "No matching sessions",
+    "noMatchingDesc": "No sessions found matching",
+    "stats": {
+      "totalSessions": "Total",
+      "playing": "Playing",
+      "paused": "Paused",
+      "transcoding": "Transcoding"
+    },
+    "states": {
+      "playing": "Playing",
+      "paused": "Paused",
+      "buffering": "Buffering",
+      "stopped": "Stopped"
+    },
+    "labels": {
+      "unknown": "Unknown",
+      "directPlay": "Direct Play",
+      "transcoding": "Transcoding",
+      "lan": "LAN",
+      "wan": "WAN",
+      "movie": "Movie",
+      "episode": "Episode"
     }
   }
 }

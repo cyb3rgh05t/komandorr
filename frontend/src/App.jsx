@@ -9,6 +9,7 @@ import Services from "./pages/Services";
 import Monitor from "./pages/Monitor";
 import Traffic from "./pages/Traffic";
 import VODStreams from "./pages/VODStreams";
+import VODActivity from "./pages/VODActivity";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import InviteRedemption from "./pages/InviteRedemption";
@@ -158,6 +159,7 @@ function App() {
                       <Route path="/monitor" element={<Monitor />} />
                       <Route path="/traffic" element={<Traffic />} />
                       <Route path="/vod-streams" element={<VODStreams />} />
+                      <Route path="/vod-activity" element={<VODActivity />} />
                       <Route path="/invites" element={<InvitesManager />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />

@@ -9,6 +9,7 @@
     "monitor": "Response Monitor",
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",
+    "vodActivity": "VOD Aktivität",
     "invites": "Plex-Einladungen",
     "settings": "Einstellungen",
     "about": "Über"
@@ -357,7 +358,8 @@
     "success": "Erfolg",
     "confirm": "Bestätigen",
     "close": "Schließen",
-    "refresh": "Aktualisieren"
+    "refresh": "Aktualisieren",
+    "refreshing": "Aktualisiere"
   },
   "versionBadge": {
     "version": "Version",
@@ -617,6 +619,41 @@
       "services": "Dienste",
       "previous": "Vorherige Seite",
       "next": "Nächste Seite"
+    }
+  },
+  "vodActivity": {
+    "title": "VOD Aktivität",
+    "subtitle": "Überwachen Sie die Live-Streaming-Aktivität von Ihrem Plex-Server",
+    "refresh": "Aktualisieren",
+    "autoRefreshOn": "Auto",
+    "autoRefreshOff": "Manuell",
+    "refreshSuccess": "Sitzungen erfolgreich aktualisiert",
+    "refreshError": "Fehler beim Aktualisieren der Sitzungen",
+    "error": "Fehler beim Laden der Sitzungen",
+    "noSessions": "Keine aktiven Sitzungen",
+    "noSessionsDesc": "Derzeit gibt es keine aktiven Streaming-Sitzungen auf Ihrem Plex-Server.",
+    "noMatching": "Keine passenden Sitzungen",
+    "noMatchingDesc": "Keine Sitzungen gefunden, die entsprechen",
+    "stats": {
+      "totalSessions": "Gesamt",
+      "playing": "Wiedergabe",
+      "paused": "Pausiert",
+      "transcoding": "Transkodierung"
+    },
+    "states": {
+      "playing": "Wiedergabe",
+      "paused": "Pausiert",
+      "buffering": "Pufferung",
+      "stopped": "Gestoppt"
+    },
+    "labels": {
+      "unknown": "Unbekannt",
+      "directPlay": "Direktwiedergabe",
+      "transcoding": "Transkodierung",
+      "lan": "LAN",
+      "wan": "WAN",
+      "movie": "Film",
+      "episode": "Episode"
     }
   }
 }

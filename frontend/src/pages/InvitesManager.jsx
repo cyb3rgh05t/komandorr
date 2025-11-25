@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { formatDateTime } from "../utils/dateUtils";
@@ -116,7 +116,7 @@ const InvitesManager = () => {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const isFetching = useIsFetching();
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -286,25 +286,27 @@ const InvitesManager = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={async () => {
-              setRefreshing(true);
               await Promise.all([
                 queryClient.refetchQueries(["invites"]),
                 queryClient.refetchQueries(["inviteStats"]),
                 queryClient.refetchQueries(["plexUsersCount"]),
               ]);
-              setRefreshing(false);
               toast.success(t("invites.refreshed"));
             }}
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-            disabled={refreshing}
+            disabled={isFetching}
           >
             <RefreshCw
               size={16}
               className={`text-theme-primary ${
-                refreshing ? "animate-spin" : ""
+                isFetching ? "animate-spin" : ""
               }`}
             />
-            <span className="text-xs sm:text-sm">{t("invites.refresh")}</span>
+            <span className="text-xs sm:text-sm">
+              {isFetching
+                ? t("common.refreshing", "Refreshing")
+                : t("invites.refresh")}
+            </span>
           </button>
           <button
             onClick={() => setShowCreateModal(true)}

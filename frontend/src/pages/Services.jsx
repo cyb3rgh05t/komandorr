@@ -36,7 +36,6 @@ export default function Services() {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
 
@@ -80,15 +79,12 @@ export default function Services() {
 
   const handleRefresh = async () => {
     try {
-      setRefreshing(true);
       const data = await api.checkAllServices();
       queryClient.setQueryData(["services"], data);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
       toast.error(t("errors.checkServices") || "Failed to check services");
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -136,7 +132,6 @@ export default function Services() {
 
   const handleCheckService = async (id) => {
     try {
-      setRefreshing(true);
       const updatedService = await api.checkService(id);
       queryClient.setQueryData(["services"], (old) =>
         old.map((s) => (s.id === id ? updatedService : s))
@@ -145,8 +140,6 @@ export default function Services() {
     } catch (error) {
       console.error("Failed to check service:", error);
       toast.error(t("errors.checkService"));
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -261,17 +254,19 @@ export default function Services() {
             <div className="flex gap-2 w-full sm:w-auto">
               <button
                 onClick={handleRefresh}
-                disabled={refreshing}
+                disabled={isFetching}
                 className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
               >
                 <RefreshCw
                   size={16}
                   className={`text-theme-primary transition-transform duration-500 ${
-                    refreshing ? "animate-spin" : ""
+                    isFetching ? "animate-spin" : ""
                   }`}
                 />
                 <span className="text-xs sm:text-sm">
-                  {t("service.checkNow")}
+                  {isFetching
+                    ? t("common.refreshing", "Refreshing")
+                    : t("service.checkNow")}
                 </span>
               </button>
               <button
