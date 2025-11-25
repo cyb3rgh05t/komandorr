@@ -591,17 +591,17 @@ async def get_plex_activities():
 
             # 1. Check for background activities (downloads, sync)
             try:
-                logger.info(f"Checking /activities endpoint...")
+                logger.debug(f"Checking /activities endpoint...")
                 activities_response = await client.get(
                     f"{url}/activities", headers=headers
                 )
-                logger.info(
+                logger.debug(
                     f"Activities endpoint status: {activities_response.status_code}"
                 )
 
                 if activities_response.status_code == 200:
                     activities_data = activities_response.json()
-                    logger.info(
+                    logger.debug(
                         f"Activities response: {json.dumps(activities_data, indent=2)}"
                     )
 
@@ -627,17 +627,17 @@ async def get_plex_activities():
 
             # 2. Check for active sessions (streams/transcodes)
             try:
-                logger.info(f"Checking /status/sessions endpoint...")
+                logger.debug(f"Checking /status/sessions endpoint...")
                 sessions_response = await client.get(
                     f"{url}/status/sessions", headers=headers
                 )
-                logger.info(
+                logger.debug(
                     f"Sessions endpoint status: {sessions_response.status_code}"
                 )
 
                 if sessions_response.status_code == 200:
                     sessions_data = sessions_response.json()
-                    logger.info(
+                    logger.debug(
                         f"Sessions response keys: {sessions_data.get('MediaContainer', {}).keys()}"
                     )
 

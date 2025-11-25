@@ -47,7 +47,7 @@ async def update_traffic(traffic_data: TrafficUpdate):
     # Save to database
     monitor._save_service(service)
 
-    logger.info(
+    logger.debug(
         f"Updated traffic for {service.name}: "
         f"↑{traffic_data.bandwidth_up:.2f}MB/s ↓{traffic_data.bandwidth_down:.2f}MB/s"
     )
