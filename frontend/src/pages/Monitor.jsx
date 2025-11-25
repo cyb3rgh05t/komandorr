@@ -146,12 +146,13 @@ export default function Monitor() {
   const {
     data: services = [],
     isLoading: loading,
-    isRefetching,
+    isFetching,
   } = useQuery({
     queryKey: ["services"],
     queryFn: () => api.getServices(),
     staleTime: 5000,
     refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
   });
 
   const [searchTerm, setSearchTerm] = useState("");

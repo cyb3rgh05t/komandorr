@@ -58,6 +58,7 @@ const InvitesManager = () => {
     },
     staleTime: 10000,
     refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
   });
 
   // Use React Query for stats
@@ -66,6 +67,7 @@ const InvitesManager = () => {
     queryFn: () => api.get("/invites/stats"),
     staleTime: 10000,
     refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
   });
 
   // Use React Query for Plex config
@@ -73,6 +75,7 @@ const InvitesManager = () => {
     queryKey: ["plexConfig"],
     queryFn: () => api.get("/invites/plex/config"),
     staleTime: 60000,
+    placeholderData: (previousData) => previousData,
   });
 
   const plexServers = plexConfig?.servers || [];
@@ -88,6 +91,7 @@ const InvitesManager = () => {
     },
     staleTime: 10000,
     refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
   });
 
   const plexUsersCount = plexUsersData?.count || 0;
@@ -98,6 +102,7 @@ const InvitesManager = () => {
     queryFn: () => api.get("/plex/stats/live"),
     staleTime: 60000,
     refetchInterval: 60000,
+    placeholderData: (previousData) => previousData,
   });
 
   const plexLiveStats = {

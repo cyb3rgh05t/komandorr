@@ -18,14 +18,16 @@ import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
 
-// Create a client with default options
+// Create a client with optimized options for instant page loads
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30000, // Data is fresh for 30 seconds
-      cacheTime: 300000, // Keep unused data in cache for 5 minutes
+      staleTime: 0, // Always consider data stale (rely on page-specific settings)
+      gcTime: 300000, // Keep unused data in cache for 5 minutes (renamed from cacheTime)
       refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnMount: false, // Don't refetch on mount if we have data
       retry: 1, // Retry failed requests once
+      networkMode: "online", // Only fetch when online
     },
   },
 });

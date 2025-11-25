@@ -234,13 +234,14 @@ export default function VODStreams() {
   const {
     data: activities = [],
     isLoading: loading,
-    isRefetching,
+    isFetching,
     error,
   } = useQuery({
     queryKey: ["plexActivities"],
     queryFn: fetchPlexActivities,
     staleTime: 5000,
     refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);

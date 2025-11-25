@@ -24,12 +24,13 @@ export default function Services() {
   const {
     data: services = [],
     isLoading: loading,
-    isRefetching,
+    isFetching,
   } = useQuery({
     queryKey: ["services"],
     queryFn: () => api.getServices(),
     staleTime: 10000,
     refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
   });
 
   const [showModal, setShowModal] = useState(false);

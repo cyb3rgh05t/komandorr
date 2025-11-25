@@ -42,28 +42,31 @@ export default function Dashboard() {
   const {
     data: services = [],
     isLoading: loading,
-    isRefetching,
+    isFetching,
   } = useQuery({
     queryKey: ["services"],
     queryFn: () => api.getServices(),
     staleTime: 10000, // 10 seconds
     refetchInterval: 10000, // Auto-refresh every 10 seconds
+    placeholderData: (previousData) => previousData, // Show old data while fetching
   });
 
   // Use React Query for traffic data
-  const { data: trafficData } = useQuery({
+  const { data: trafficData, isFetching: trafficFetching } = useQuery({
     queryKey: ["traffic"],
     queryFn: () => api.getTrafficSummary(),
     staleTime: 10000,
     refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
   });
 
   // Use React Query for Plex activities
-  const { data: plexActivities = [] } = useQuery({
+  const { data: plexActivities = [], isFetching: plexFetching } = useQuery({
     queryKey: ["plexActivities"],
     queryFn: fetchPlexActivities,
     staleTime: 5000,
     refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
   });
 
   const [showModal, setShowModal] = useState(false);

@@ -143,12 +143,13 @@ export default function Traffic() {
   const {
     data: allServices = [],
     isLoading: loading,
-    isRefetching,
+    isFetching,
   } = useQuery({
     queryKey: ["services"],
     queryFn: () => api.getServices(),
     staleTime: 5000,
     refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
   });
 
   // Filter services that have traffic data
