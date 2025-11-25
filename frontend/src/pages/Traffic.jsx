@@ -374,7 +374,7 @@ export default function Traffic() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {/* Total Services */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -390,7 +390,7 @@ export default function Traffic() {
             </div>
 
             {/* Upload Speed */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -406,7 +406,7 @@ export default function Traffic() {
             </div>
 
             {/* Download Speed */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -422,7 +422,7 @@ export default function Traffic() {
             </div>
 
             {/* Total Uploaded */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -438,7 +438,7 @@ export default function Traffic() {
             </div>
 
             {/* Total Downloaded */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -454,7 +454,7 @@ export default function Traffic() {
             </div>
 
             {/* Total Traffic */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">

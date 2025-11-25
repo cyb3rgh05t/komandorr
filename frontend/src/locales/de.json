@@ -168,6 +168,10 @@
     "refreshData": "Daten aktualisieren",
     "lastDataPoints": "Letzte 20 Datenpunkte",
     "activeServicesLabel": "Aktive Dienste",
+    "topServices": "Top-Dienste",
+    "up": "Hoch",
+    "down": "Runter",
+    "total": "Gesamt",
     "page": {
       "searchPlaceholder": "Dienste durchsuchen...",
       "refresh": "Aktualisieren",
@@ -458,6 +462,7 @@
     "inviteCreated": "Einladung erfolgreich erstellt!",
     "inviteDeleted": "Einladung erfolgreich gelöscht!",
     "linkCopied": "Einladungslink in Zwischenablage kopiert!",
+    "searchPlaceholder": "Einladungen durchsuchen...",
     "errorLoading": "Fehler beim Laden der Einladungen",
     "errorCreating": "Fehler beim Erstellen der Einladung",
     "errorDeleting": "Fehler beim Löschen der Einladung",

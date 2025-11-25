@@ -38,13 +38,17 @@ init(autoreset=True)
 KOMANDORR_URL = "https://komandorr.mystreamnet.club"
 
 # Service ID from Komandorr (get this from the dashboard)
-SERVICE_ID = "your-service-id-here"
+SERVICE_ID = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # How often to send data (in seconds)
 UPDATE_INTERVAL = 30
 
 # Network interface to monitor (None = all interfaces, or specify like 'eth0', 'ens18')
 NETWORK_INTERFACE = None
+
+# Maximum bandwidth capacity of this server in MB/s (used for percentage calculations)
+# Example: 125 MB/s = 1 Gbps, 1250 MB/s = 10 Gbps, 12.5 MB/s = 100 Mbps
+MAX_BANDWIDTH = 100.0
 
 # Optional: Basic auth credentials if enabled in Komandorr
 AUTH_USERNAME = None
@@ -168,6 +172,7 @@ class TrafficMonitor:
             "bandwidth_down": round(bandwidth_down, 2),
             "total_up": round(self.total_sent_gb, 3),
             "total_down": round(self.total_recv_gb, 3),
+            "max_bandwidth": MAX_BANDWIDTH,
         }
 
     def send_to_komandorr(self, traffic_data: Dict) -> bool:

@@ -16,6 +16,7 @@ import {
   Music,
   RefreshCw,
   Clock,
+  Search,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -117,6 +118,7 @@ const InvitesManager = () => {
   const [copiedCode, setCopiedCode] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Custom dropdown states
   const [usageDropdownOpen, setUsageDropdownOpen] = useState(false);
@@ -265,37 +267,55 @@ const InvitesManager = () => {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Header with Buttons */}
-      <div className="flex justify-end items-center gap-2">
-        <button
-          onClick={async () => {
-            setRefreshing(true);
-            await Promise.all([
-              queryClient.refetchQueries(["invites"]),
-              queryClient.refetchQueries(["inviteStats"]),
-              queryClient.refetchQueries(["plexUsersCount"]),
-            ]);
-            setRefreshing(false);
-            toast.success(t("invites.refreshed"));
-          }}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-          disabled={refreshing}
-        >
-          <RefreshCw
-            size={16}
-            className={`text-theme-primary ${refreshing ? "animate-spin" : ""}`}
+      {/* Header with Search & Buttons */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+            size={18}
           />
-          <span className="text-xs sm:text-sm">{t("invites.refresh")}</span>
-        </button>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-        >
-          <Plus size={16} className="text-theme-primary" />
-          <span className="text-xs sm:text-sm">
-            {t("invites.createInvite")}
-          </span>
-        </button>
+          <input
+            type="text"
+            placeholder={t("invites.searchPlaceholder") || "Search invites..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={async () => {
+              setRefreshing(true);
+              await Promise.all([
+                queryClient.refetchQueries(["invites"]),
+                queryClient.refetchQueries(["inviteStats"]),
+                queryClient.refetchQueries(["plexUsersCount"]),
+              ]);
+              setRefreshing(false);
+              toast.success(t("invites.refreshed"));
+            }}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            disabled={refreshing}
+          >
+            <RefreshCw
+              size={16}
+              className={`text-theme-primary ${
+                refreshing ? "animate-spin" : ""
+              }`}
+            />
+            <span className="text-xs sm:text-sm">{t("invites.refresh")}</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <Plus size={16} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm">
+              {t("invites.createInvite")}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -305,7 +325,7 @@ const InvitesManager = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div
               onClick={() => setFilter("all")}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/50"
+              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -323,7 +343,11 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("active")}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-green-500/50"
+              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-green-500/10 ${
+                filter === "active"
+                  ? "border-green-500 ring-2 ring-green-500/20"
+                  : "border-theme hover:border-green-500/50"
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -341,7 +365,11 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("used-up")}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-orange-500/50"
+              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-orange-500/10 ${
+                filter === "used-up"
+                  ? "border-orange-500 ring-2 ring-orange-500/20"
+                  : "border-theme hover:border-orange-500/50"
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -359,7 +387,11 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("expired")}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-red-500/50"
+              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-red-500/10 ${
+                filter === "expired"
+                  ? "border-red-500 ring-2 ring-red-500/20"
+                  : "border-theme hover:border-red-500/50"
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -612,6 +644,7 @@ const InvitesManager = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {invites
           .filter((invite) => {
+            // Filter by status
             if (filter === "all") return true;
             if (filter === "active")
               return (
@@ -621,6 +654,18 @@ const InvitesManager = () => {
             if (filter === "used-up") return invite.is_exhausted;
             if (filter === "disabled") return !invite.is_active;
             return true;
+          })
+          .filter((invite) => {
+            // Filter by search term
+            if (!searchTerm) return true;
+            const searchLower = searchTerm.toLowerCase();
+            return (
+              invite.code.toLowerCase().includes(searchLower) ||
+              (invite.custom_code &&
+                invite.custom_code.toLowerCase().includes(searchLower)) ||
+              (invite.created_by &&
+                invite.created_by.toLowerCase().includes(searchLower))
+            );
           })
           .map((invite) => {
             const status = getInviteStatus(invite);
@@ -694,17 +739,19 @@ const InvitesManager = () => {
                     <code className="flex-1 font-mono text-sm font-bold text-theme-text tracking-wide">
                       {invite.code}
                     </code>
-                    <button
-                      onClick={() => handleCopyCode(invite.code)}
-                      className="p-1.5 hover:bg-theme-card rounded-md transition-colors group/btn"
-                      title="Copy invite link"
-                    >
-                      {copiedCode === invite.code ? (
-                        <Check className="w-3.5 h-3.5 text-green-500" />
-                      ) : (
-                        <Clipboard className="w-3.5 h-3.5 text-theme-muted group-hover/btn:text-theme-primary transition-colors" />
-                      )}
-                    </button>
+                    {!invite.is_expired && !invite.is_exhausted && (
+                      <button
+                        onClick={() => handleCopyCode(invite.code)}
+                        className="p-1.5 hover:bg-theme-card rounded-md transition-colors group/btn"
+                        title="Copy invite link"
+                      >
+                        {copiedCode === invite.code ? (
+                          <Check className="w-3.5 h-3.5 text-green-500" />
+                        ) : (
+                          <Clipboard className="w-3.5 h-3.5 text-theme-muted group-hover/btn:text-theme-primary transition-colors" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1038,48 +1085,166 @@ const InvitesManager = () => {
 
                 {/* Action Buttons */}
                 <div className="relative flex gap-2">
-                  <button
-                    onClick={() => handleCopyCode(invite.code)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2  hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text hover:text-theme-primary rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md group/copy"
-                  >
-                    {copiedCode === invite.code ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>{t("invites.buttons.copied")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clipboard className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
-                        <span>{t("invites.buttons.copyLink")}</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteInvite(invite.id)}
-                    className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md group/delete"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 group-hover/delete:scale-110 transition-transform" />
-                  </button>
+                  {!invite.is_expired && !invite.is_exhausted ? (
+                    <>
+                      <button
+                        onClick={() => handleCopyCode(invite.code)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2  hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text hover:text-theme-primary rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md group/copy"
+                      >
+                        {copiedCode === invite.code ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{t("invites.buttons.copied")}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clipboard className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
+                            <span>{t("invites.buttons.copyLink")}</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteInvite(invite.id)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md group/delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 group-hover/delete:scale-110 transition-transform" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleDeleteInvite(invite.id)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-lg transition-all text-sm font-semibold shadow-sm hover:shadow-md group/delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 group-hover/delete:scale-110 transition-transform" />
+                      <span>{t("invites.buttons.delete")}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })}
-        {invites.length === 0 && (
-          <div className="col-span-full bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
-            <Mail size={48} className="mx-auto mb-4 text-theme-text-muted" />
-            <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {t("invites.empty.title")}
-            </h3>
-            <p className="text-theme-text-muted mb-6">
-              {t("invites.empty.description")}
-            </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-            >
-              <Plus size={20} className="text-theme-primary" />
-              <span>{t("invites.createInvite")}</span>
-            </button>
+        {invites.filter((invite) => {
+          if (filter === "all") return true;
+          if (filter === "active")
+            return (
+              !invite.is_expired && !invite.is_exhausted && invite.is_active
+            );
+          if (filter === "expired") return invite.is_expired;
+          if (filter === "used-up") return invite.is_exhausted;
+          if (filter === "disabled") return !invite.is_active;
+          return true;
+        }).length === 0 && (
+          <div className="col-span-full">
+            {filter === "all" ? (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    {t("invites.empty.title")}
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    {t("invites.empty.description")}
+                  </p>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    <Plus size={20} />
+                    <span>{t("invites.createInvite")}</span>
+                  </button>
+                </div>
+              </div>
+            ) : filter === "active" ? (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check size={32} className="text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Active Invites
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    You don't have any active invites at the moment. Create a
+                    new invite to get started.
+                  </p>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    <Plus size={20} />
+                    <span>Create Active Invite</span>
+                  </button>
+                </div>
+              </div>
+            ) : filter === "expired" ? (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock size={32} className="text-red-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Expired Invites
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    Great news! You don't have any expired invites. All your
+                    invites are either active or have been used.
+                  </p>
+                  <button
+                    onClick={() => setFilter("all")}
+                    className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                  >
+                    <Mail size={20} className="text-theme-primary" />
+                    <span>View All Invites</span>
+                  </button>
+                </div>
+              </div>
+            ) : filter === "used-up" ? (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X size={32} className="text-orange-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Used Up Invites
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    None of your invites have reached their usage limit yet. All
+                    invites are still available for use.
+                  </p>
+                  <button
+                    onClick={() => setFilter("all")}
+                    className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                  >
+                    <Mail size={20} className="text-theme-primary" />
+                    <span>View All Invites</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Invites Found
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    No invites match the current filter. Try selecting a
+                    different filter or create a new invite.
+                  </p>
+                  <button
+                    onClick={() => setFilter("all")}
+                    className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+                  >
+                    <Mail size={20} className="text-theme-primary" />
+                    <span>View All Invites</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -32,12 +32,6 @@ wget https://raw.githubusercontent.com/cyb3rgh05t/komandorr/refs/heads/main/traf
 ### 2. Install dependencies
 
 ```bash
-pip install psutil requests
-```
-
-Or use the a requirements file:
-
-```bash
 pip install -r requirements.txt
 ```
 
@@ -61,6 +55,10 @@ UPDATE_INTERVAL = 30
 
 # Optional: Specific network interface to monitor
 NETWORK_INTERFACE = None  # None for all or "eth0", "ens18", etc.
+
+# Maximum bandwidth capacity of this server in MB/s (used for percentage calculations)
+# Example: 125 MB/s = 1 Gbps, 1250 MB/s = 10 Gbps, 12.5 MB/s = 100 Mbps
+MAX_BANDWIDTH = 100.0
 
 # Optional: Authentication if enabled in Komandorr
 AUTH_USERNAME = None

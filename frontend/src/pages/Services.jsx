@@ -321,9 +321,9 @@ export default function Services() {
             </button>
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 ${
                 statusFilter === "online"
-                  ? "border-green-500"
+                  ? "border-green-500 ring-2 ring-green-500/20"
                   : "border-theme hover:border-green-500/50"
               }`}
             >
@@ -355,9 +355,9 @@ export default function Services() {
             </button>
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 ${
                 statusFilter === "offline"
-                  ? "border-red-500"
+                  ? "border-red-500 ring-2 ring-red-500/20"
                   : "border-theme hover:border-red-500/50"
               }`}
             >
@@ -389,9 +389,9 @@ export default function Services() {
             </button>
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 ${
                 statusFilter === "problem"
-                  ? "border-yellow-500"
+                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
                   : "border-theme hover:border-yellow-500/50"
               }`}
             >
@@ -480,43 +480,107 @@ export default function Services() {
 
           {/* Services List */}
           {filteredServices.length === 0 ? (
-            <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+            <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
               {statusFilter !== null ? (
-                <>
-                  <div className="text-6xl mb-4">
-                    {statusFilter === "online" && "🟢"}
-                    {statusFilter === "offline" && "✓"}
-                    {statusFilter === "problem" && "✓"}
-                  </div>
-                  <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                    {statusFilter === "online" &&
-                      t("services.emptyStates.noOnline.title")}
-                    {statusFilter === "offline" &&
-                      t("services.emptyStates.noOffline.title")}
-                    {statusFilter === "problem" &&
-                      t("services.emptyStates.noProblems.title")}
-                  </h3>
-                  <p className="text-theme-text-muted">
-                    {statusFilter === "online" &&
-                      t("services.emptyStates.noOnline.message")}
-                    {statusFilter === "offline" &&
-                      t("services.emptyStates.noOffline.message")}
-                    {statusFilter === "problem" &&
-                      t("services.emptyStates.noProblems.message")}
-                  </p>
-                </>
+                (() => {
+                  const emptyStates = {
+                    online: {
+                      iconComponent: () => (
+                        <svg
+                          className="w-8 h-8 text-green-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                          />
+                        </svg>
+                      ),
+                      bgColor: "bg-green-500/10",
+                      title: t("services.emptyStates.noOnline.title"),
+                      message: t("services.emptyStates.noOnline.message"),
+                    },
+                    offline: {
+                      iconComponent: () => (
+                        <svg
+                          className="w-8 h-8 text-red-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                          />
+                        </svg>
+                      ),
+                      bgColor: "bg-red-500/10",
+                      title: t("services.emptyStates.noOffline.title"),
+                      message: t("services.emptyStates.noOffline.message"),
+                    },
+                    problem: {
+                      iconComponent: () => (
+                        <svg
+                          className="w-8 h-8 text-yellow-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                      ),
+                      bgColor: "bg-yellow-500/10",
+                      title: t("services.emptyStates.noProblems.title"),
+                      message: t("services.emptyStates.noProblems.message"),
+                    },
+                  };
+
+                  const state = emptyStates[statusFilter];
+                  const IconComponent = state.iconComponent;
+
+                  return (
+                    <div className="max-w-md mx-auto">
+                      <div
+                        className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
+                      >
+                        <IconComponent />
+                      </div>
+                      <h3 className="text-xl font-bold text-theme-text mb-2">
+                        {state.title}
+                      </h3>
+                      <p className="text-theme-muted mb-6">{state.message}</p>
+                      <button
+                        onClick={() => setStatusFilter(null)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                      >
+                        <Server size={20} className="text-theme-primary" />
+                        <span>View All Services</span>
+                      </button>
+                    </div>
+                  );
+                })()
               ) : (
-                <>
-                  <Server
-                    className="mx-auto mb-4 text-theme-text-muted"
-                    size={48}
-                  />
-                  <h3 className="text-lg font-semibold text-theme-text mb-2">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Server size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
                     {searchTerm
                       ? t("services.noResults")
                       : t("dashboard.noServices")}
                   </h3>
-                  <p className="text-theme-text-muted mb-6">
+                  <p className="text-theme-muted mb-6">
                     {searchTerm
                       ? "Try adjusting your search criteria"
                       : "Get started by adding your first service to monitor"}
@@ -524,13 +588,13 @@ export default function Services() {
                   {!searchTerm && (
                     <button
                       onClick={() => setShowModal(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
                     >
-                      <Plus size={20} className="text-theme-primary" />
+                      <Plus size={20} />
                       <span>{t("dashboard.addService")}</span>
                     </button>
                   )}
-                </>
+                </div>
               )}
             </div>
           ) : (

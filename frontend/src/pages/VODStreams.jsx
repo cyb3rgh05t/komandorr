@@ -556,7 +556,7 @@ export default function VODStreams() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <div
           onClick={() => setActiveFilter("all")}
-          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/50"
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -574,7 +574,11 @@ export default function VODStreams() {
 
         <div
           onClick={() => setActiveFilter("downloading")}
-          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-green-500/50"
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-green-500/10 ${
+            activeFilter === "downloading"
+              ? "border-green-500 ring-2 ring-green-500/20"
+              : "border-theme hover:border-green-500/50"
+          }`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -596,7 +600,11 @@ export default function VODStreams() {
 
         <div
           onClick={() => setActiveFilter("paused")}
-          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-orange-500/50"
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-orange-500/10 ${
+            activeFilter === "paused"
+              ? "border-orange-500 ring-2 ring-orange-500/20"
+              : "border-theme hover:border-orange-500/50"
+          }`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -614,7 +622,11 @@ export default function VODStreams() {
 
         <div
           onClick={() => setActiveFilter("transcoding")}
-          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-cyan-500/50"
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-cyan-500/10 ${
+            activeFilter === "transcoding"
+              ? "border-cyan-500 ring-2 ring-cyan-500/20"
+              : "border-theme hover:border-cyan-500/50"
+          }`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -636,7 +648,11 @@ export default function VODStreams() {
 
         <div
           onClick={() => setActiveFilter("streaming")}
-          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-blue-500/50"
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-blue-500/10 ${
+            activeFilter === "streaming"
+              ? "border-blue-500 ring-2 ring-blue-500/20"
+              : "border-theme hover:border-blue-500/50"
+          }`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -816,52 +832,123 @@ export default function VODStreams() {
             <LoadingItem />
           </>
         ) : !plexConfigured ? (
-          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-lg p-8 text-center">
-            <Server size={48} className="mx-auto mb-4 text-theme-primary" />
-            <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {t("vodStreams.plexNotConfigured.title")}
-            </h3>
-            <p className="text-theme-muted mb-6">
-              {t("vodStreams.plexNotConfigured.description")}
-            </p>
-            <Link
-              to="/settings"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
-            >
-              <Server size={20} />
-              {t("vodStreams.plexNotConfigured.goToSettings")}
-            </Link>
+          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Server size={32} className="text-theme-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-theme-text mb-2">
+                {t("vodStreams.plexNotConfigured.title")}
+              </h3>
+              <p className="text-theme-muted mb-6">
+                {t("vodStreams.plexNotConfigured.description")}
+              </p>
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+              >
+                <Server size={20} />
+                {t("vodStreams.plexNotConfigured.goToSettings")}
+              </Link>
+            </div>
           </div>
         ) : error ? (
-          <div className="lg:col-span-2 bg-theme-card border border-red-500/30 rounded-lg p-6 text-center">
-            <AlertCircle size={24} className="text-red-400 mx-auto mb-3" />
-            <p className="text-red-400">{t("vodStreams.loadError")}</p>
-            <p className="text-theme-muted text-sm mt-2">{error}</p>
+          <div className="lg:col-span-2 bg-theme-card border border-red-500/30 rounded-xl p-8 text-center shadow-lg">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={32} className="text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-red-400 mb-2">
+                {t("vodStreams.loadError")}
+              </h3>
+              <p className="text-theme-muted">{error}</p>
+            </div>
           </div>
         ) : !filteredActivities?.length ? (
-          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
-            <Download
-              size={48}
-              className="mx-auto mb-4 text-theme-text-muted"
-            />
-            <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {searchQuery
-                ? t("vodStreams.noMatching")
-                : t("vodStreams.noActivities")}
-            </h3>
-            <p className="text-theme-text-muted mb-6">
-              {searchQuery
-                ? `${t("vodStreams.noMatchingDescription")} "${searchQuery}"`
-                : t("vodStreams.noActivitiesDescription")}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
-              >
-                {t("vodStreams.clearSearch")}
-              </button>
-            )}
+          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+            <div className="max-w-md mx-auto">
+              {searchQuery ? (
+                <>
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    {t("vodStreams.noMatching")}
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    {`${t(
+                      "vodStreams.noMatchingDescription"
+                    )} "${searchQuery}"`}
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    {t("vodStreams.clearSearch")}
+                  </button>
+                </>
+              ) : activeFilter === "all" ? (
+                <>
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Server size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    {t("vodStreams.noActivities")}
+                  </h3>
+                  <p className="text-theme-muted">
+                    {t("vodStreams.noActivitiesDescription")}
+                  </p>
+                </>
+              ) : activeFilter === "downloading" ? (
+                <>
+                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Download size={32} className="text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Downloading Streams
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no active downloads at the moment
+                  </p>
+                </>
+              ) : activeFilter === "paused" ? (
+                <>
+                  <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Pause size={32} className="text-orange-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Paused Streams
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no paused streams at the moment
+                  </p>
+                </>
+              ) : activeFilter === "transcoding" ? (
+                <>
+                  <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Video size={32} className="text-cyan-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Transcoding Streams
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no active transcoding sessions at the moment
+                  </p>
+                </>
+              ) : activeFilter === "streaming" ? (
+                <>
+                  <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play size={32} className="text-blue-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Streaming Sessions
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no active streaming sessions at the moment
+                  </p>
+                </>
+              ) : null}
+            </div>
           </div>
         ) : (
           <>

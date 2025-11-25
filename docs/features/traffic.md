@@ -1,10 +1,42 @@
 # Traffic Monitoring
 
-Monitor network bandwidth usage with real-time and historical data visualization.
+Monitor network bandwidth usage with circular progress visualizations, real-time speeds, and cumulative data transfer tracking.
 
 ## Overview
 
-Komandorr's traffic monitoring feature tracks network bandwidth consumption, providing insights into upload/download usage patterns.
+Komandorr's traffic monitoring feature tracks network bandwidth consumption with beautiful circular progress indicators showing percentage utilization, current upload/download speeds, and total data transferred.
+
+## Visualization
+
+### Circular Progress Cards
+
+- **Top 5 Services**: Displays the 5 services with highest bandwidth usage
+- **200px Diameter Circles**: Large, easy-to-read circular progress rings
+- **Percentage Display**: Shows bandwidth usage as percentage of configured MAX_BANDWIDTH
+- **Color-Coded**: Each service gets unique colors (pink, violet, cyan, emerald, amber)
+- **Active Indicator**: Green pulsing dot when service has active traffic
+
+### Bandwidth Metrics Display
+
+Each card shows a two-row metrics box:
+
+**Row 1 - Current Speeds:**
+
+- Upload (blue): Real-time upload speed in MB/s
+- Download (green): Real-time download speed in MB/s
+- Total (purple): Combined current bandwidth
+
+**Row 2 - Cumulative Data:**
+
+- Uploaded (orange): Total data uploaded (GB/TB)
+- Downloaded (cyan): Total data downloaded (GB/TB)
+- Combined (amber): Total data transferred (GB/TB)
+
+### Data Formatting
+
+- **Speeds**: Automatically switches between KB/s and MB/s
+- **Totals**: Displays in GB, automatically converts to TB when ≥ 1000 GB
+- **Monospace Font**: Consistent number alignment for easy reading
 
 ## Architecture
 

@@ -11,7 +11,7 @@
 
 Komandorr is a powerful, feature-rich service monitoring dashboard designed to keep track of your applications, websites, APIs, panels, and infrastructure. With SQLite-backed data persistence, built-in Plex integration, traffic monitoring, and 11 beautiful themes, Komandorr makes monitoring your services simple, elegant, and scalable.
 
-**Version 1.7.0** brings major UI improvements with 4-column grid layouts, compact service cards, problem badges, clickable stats navigation, and updated navigation labels.
+**Version 2.2.0** introduces circular progress traffic visualization with real-time bandwidth monitoring, cumulative data tracking, and automatic TB/GB conversion.
 
 ## Key Features
 
@@ -29,7 +29,7 @@ Seamlessly integrate with Plex Media Server to monitor and display your video-on
 
 ### :material-chart-line: Traffic & Bandwidth Monitoring
 
-Track bandwidth usage and network traffic with beautiful visualizations, response time graphs, and comprehensive historical data.
+Track bandwidth usage with circular progress visualizations showing real-time speeds (MB/s) and cumulative data transfer (GB/TB) with automatic unit conversion.
 
 ### :material-palette: 11 Beautiful Themes
 

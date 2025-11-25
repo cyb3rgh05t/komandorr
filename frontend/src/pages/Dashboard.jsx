@@ -26,7 +26,7 @@ import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
-import DashboardTrafficChart from "@/components/DashboardTrafficChart";
+import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import ServiceModal from "@/components/ServiceModal";
 
 const API_URL = "/api";
@@ -879,31 +879,57 @@ export default function Dashboard() {
                 if (filteredServices.length === 0 && statusFilter !== null) {
                   const emptyStates = {
                     online: {
-                      icon: "🟢",
+                      icon: CheckCircle,
+                      iconColor: "text-green-500",
+                      bgColor: "bg-green-500/10",
                       title: t("dashboard.emptyStates.noOnline.title"),
                       message: t("dashboard.emptyStates.noOnline.message"),
+                      buttonText: "View All Services",
                     },
                     offline: {
-                      icon: "✓",
+                      icon: AlertCircle,
+                      iconColor: "text-red-500",
+                      bgColor: "bg-red-500/10",
                       title: t("dashboard.emptyStates.noOffline.title"),
                       message: t("dashboard.emptyStates.noOffline.message"),
+                      buttonText: "View All Services",
                     },
                     problem: {
-                      icon: "✓",
+                      icon: AlertCircle,
+                      iconColor: "text-yellow-500",
+                      bgColor: "bg-yellow-500/10",
                       title: t("dashboard.emptyStates.noProblems.title"),
                       message: t("dashboard.emptyStates.noProblems.message"),
+                      buttonText: "View All Services",
                     },
                   };
 
                   const state = emptyStates[statusFilter];
+                  const IconComponent = state.icon;
 
                   return (
-                    <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
-                      <div className="text-6xl mb-4">{state.icon}</div>
-                      <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                        {state.title}
-                      </h3>
-                      <p className="text-theme-text-muted">{state.message}</p>
+                    <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                      <div className="max-w-md mx-auto">
+                        <div
+                          className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
+                        >
+                          <IconComponent
+                            size={32}
+                            className={state.iconColor}
+                          />
+                        </div>
+                        <h3 className="text-xl font-bold text-theme-text mb-2">
+                          {state.title}
+                        </h3>
+                        <p className="text-theme-muted mb-6">{state.message}</p>
+                        <button
+                          onClick={() => setStatusFilter(null)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                        >
+                          <Server size={20} className="text-theme-primary" />
+                          <span>{state.buttonText}</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 }
@@ -947,12 +973,13 @@ export default function Dashboard() {
                     <div className="space-y-6">
                       {/* Traffic Chart */}
                       {dashboardVisibility.trafficChart && (
-                        <DashboardTrafficChart
-                          trafficData={filteredTrafficData}
-                          onRefresh={handleRefreshTraffic}
-                          refreshing={refreshing}
-                          lineThickness={chartLineThickness}
-                        />
+                        <div className="flex justify-center w-full">
+                          <DashboardTrafficCards
+                            trafficData={filteredTrafficData}
+                            onRefresh={handleRefreshTraffic}
+                            refreshing={refreshing}
+                          />
+                        </div>
                       )}
 
                       {Object.entries(grouped).map(
@@ -1039,12 +1066,13 @@ export default function Dashboard() {
 
                     {/* Traffic Chart - filtered by active tab */}
                     {dashboardVisibility.trafficChart && (
-                      <DashboardTrafficChart
-                        trafficData={filteredTrafficData}
-                        onRefresh={handleRefreshTraffic}
-                        refreshing={refreshing}
-                        lineThickness={chartLineThickness}
-                      />
+                      <div className="flex justify-center w-full">
+                        <DashboardTrafficCards
+                          trafficData={filteredTrafficData}
+                          onRefresh={handleRefreshTraffic}
+                          refreshing={refreshing}
+                        />
+                      </div>
                     )}
 
                     {/* Active Tab Content */}
