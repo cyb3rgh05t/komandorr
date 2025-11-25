@@ -53,6 +53,7 @@ class Invite(BaseModel):
 
     class Config:
         from_attributes = True
+        json_encoders = {datetime: lambda v: v.isoformat() + "Z" if v else None}
 
 
 class PlexUser(BaseModel):
@@ -69,6 +70,7 @@ class PlexUser(BaseModel):
 
     class Config:
         from_attributes = True
+        json_encoders = {datetime: lambda v: v.isoformat() + "Z" if v else None}
 
 
 class InviteWithUsers(Invite):

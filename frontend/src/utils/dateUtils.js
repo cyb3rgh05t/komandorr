@@ -3,6 +3,15 @@ let cachedTimezone = null;
 let fetchingTimezone = null;
 
 /**
+ * Clear the cached timezone (call this when timezone settings are updated)
+ */
+export function clearTimezoneCache() {
+  cachedTimezone = null;
+  fetchingTimezone = null;
+  console.log("Timezone cache cleared");
+}
+
+/**
  * Fetch timezone from backend config
  * @returns {Promise<string>} The configured timezone
  */

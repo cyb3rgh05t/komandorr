@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/context/ToastContext";
+import { clearTimezoneCache } from "@/utils/dateUtils";
 import {
   Shield,
   AlertCircle,
@@ -223,6 +224,10 @@ export default function Settings() {
           server_name: plexServerName,
         },
       });
+
+      // Clear timezone cache so new timezone takes effect immediately
+      clearTimezoneCache();
+
       toast.success(t("settings.settingsSaved"));
     } catch (error) {
       console.error("Failed to save settings:", error);
