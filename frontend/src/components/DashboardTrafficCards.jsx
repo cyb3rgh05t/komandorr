@@ -183,14 +183,12 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
         // Calculate percentage based on configured max_bandwidth or relative to highest
         let percentage;
-        if (
-          service.traffic?.max_bandwidth &&
-          service.traffic.max_bandwidth > 0
-        ) {
+        const maxBandwidthValue =
+          service.traffic?.max_bandwidth || service.max_bandwidth;
+
+        if (maxBandwidthValue && maxBandwidthValue > 0) {
           // Absolute percentage based on configured maximum
-          percentage = Math.round(
-            (serviceBandwidth / service.traffic.max_bandwidth) * 100
-          );
+          percentage = Math.round((serviceBandwidth / maxBandwidthValue) * 100);
         } else {
           // Relative percentage (fallback)
           percentage = Math.round((serviceBandwidth / maxBandwidth) * 100);
