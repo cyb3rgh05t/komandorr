@@ -59,7 +59,9 @@ def db_invite_to_pydantic(
 
 @overload
 def db_invite_to_pydantic(
-    db_invite: InviteDB, include_users: Literal[False] = False, plex_server: str = "Plex Server"
+    db_invite: InviteDB,
+    include_users: Literal[False] = False,
+    plex_server: str = "Plex Server",
 ) -> Invite: ...
 
 
