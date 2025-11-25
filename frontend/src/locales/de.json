@@ -304,6 +304,7 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "settings": "Einstellungen",
     "theme": "Theme",
     "language": "Sprache",
     "loggingSettings": "Protokollierungseinstellungen",
@@ -320,6 +321,7 @@
     "tmdbApiKey": "TMDB API-Schlüssel",
     "tmdbApiKeyHelp": "API-Schlüssel für The Movie Database (wird für Einladungseinlösungs-Hintergründe verwendet)",
     "saveSettings": "Einstellungen speichern",
+    "saveNow": "Jetzt speichern",
     "saving": "Speichere...",
     "settingsSaved": "Einstellungen erfolgreich gespeichert",
     "saveError": "Fehler beim Speichern der Einstellungen",

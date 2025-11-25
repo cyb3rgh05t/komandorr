@@ -310,6 +310,7 @@
   },
   "settings": {
     "title": "Settings",
+    "settings": "Settings",
     "theme": "Theme",
     "language": "Language",
     "loggingSettings": "Logging Settings",
@@ -326,6 +327,7 @@
     "tmdbApiKey": "TMDB API Key",
     "tmdbApiKeyHelp": "API key for The Movie Database (used for invite redemption backgrounds)",
     "saveSettings": "Save Settings",
+    "saveNow": "Save Now",
     "saving": "Saving...",
     "settingsSaved": "Settings saved successfully",
     "saveError": "Failed to save settings",
