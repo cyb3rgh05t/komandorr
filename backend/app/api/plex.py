@@ -1135,8 +1135,15 @@ async def get_plex_sessions():
                 else:
                     artwork_path = thumb or art
 
+                # Force HTTP for image URLs if using HTTPS with IP address to avoid cert errors
+                image_url = url
+                if image_url.startswith("https://") and any(
+                    char.isdigit() for char in image_url.split("://")[1].split(":")[0]
+                ):
+                    image_url = image_url.replace("https://", "http://")
+
                 artwork_url = (
-                    f"{url}{artwork_path}?X-Plex-Token={token}"
+                    f"{image_url}{artwork_path}?X-Plex-Token={token}"
                     if artwork_path
                     else None
                 )
@@ -1155,7 +1162,7 @@ async def get_plex_sessions():
                             f"{user_thumb}?X-Plex-Token={token}"
                             if user_thumb and user_thumb.startswith("http")
                             else (
-                                f"{url}{user_thumb}?X-Plex-Token={token}"
+                                f"{image_url}{user_thumb}?X-Plex-Token={token}"
                                 if user_thumb
                                 else None
                             )
