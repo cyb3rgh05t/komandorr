@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { formatDateTime } from "../utils/dateUtils";
@@ -37,20 +38,78 @@ const FormattedDate = ({ date }) => {
 const InvitesManager = () => {
   const { t } = useTranslation();
   const toast = useToast();
-  const [invites, setInvites] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [plexUsersCount, setPlexUsersCount] = useState(0);
-  const [plexServerName, setPlexServerName] = useState("Plex Server");
-  const [plexLiveStats, setPlexLiveStats] = useState({
-    total_movies: 0,
-    total_tv_shows: 0,
-    total_episodes: 0,
+  const queryClient = useQueryClient();
+
+  // Use React Query for invites
+  const { data: invites = [], isLoading: loading } = useQuery({
+    queryKey: ["invites"],
+    queryFn: async () => {
+      const data = await api.get("/invites/");
+      console.log("Invites data:", data);
+      if (data && data.length > 0) {
+        console.log(
+          "First invite full object:",
+          JSON.stringify(data[0], null, 2)
+        );
+        console.log("First invite plex_server:", data[0].plex_server);
+        console.log("First invite keys:", Object.keys(data[0]));
+      }
+      return data;
+    },
+    staleTime: 10000,
+    refetchInterval: 10000,
   });
+
+  // Use React Query for stats
+  const { data: stats = null } = useQuery({
+    queryKey: ["inviteStats"],
+    queryFn: () => api.get("/invites/stats"),
+    staleTime: 10000,
+    refetchInterval: 10000,
+  });
+
+  // Use React Query for Plex config
+  const { data: plexConfig } = useQuery({
+    queryKey: ["plexConfig"],
+    queryFn: () => api.get("/invites/plex/config"),
+    staleTime: 60000,
+  });
+
+  const plexServers = plexConfig?.servers || [];
+  const plexLibraries = plexConfig?.libraries || [];
+
+  // Use React Query for Plex users count
+  const { data: plexUsersData } = useQuery({
+    queryKey: ["plexUsersCount"],
+    queryFn: async () => {
+      const data = await api.get("/plex/users/count");
+      console.log("Plex users count response:", data);
+      return data;
+    },
+    staleTime: 10000,
+    refetchInterval: 10000,
+  });
+
+  const plexUsersCount = plexUsersData?.count || 0;
+
+  // Use React Query for Plex live stats
+  const { data: plexLiveStatsData } = useQuery({
+    queryKey: ["plexLiveStats"],
+    queryFn: () => api.get("/plex/stats/live"),
+    staleTime: 60000,
+    refetchInterval: 60000,
+  });
+
+  const plexLiveStats = {
+    total_movies: plexLiveStatsData?.total_movies || 0,
+    total_tv_shows: plexLiveStatsData?.total_tv_shows || 0,
+    total_episodes: plexLiveStatsData?.total_episodes || 0,
+  };
+
+  const plexServerName = plexLiveStatsData?.server_name || "Plex Server";
+
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
-  const [plexServers, setPlexServers] = useState([]);
-  const [plexLibraries, setPlexLibraries] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
 
@@ -72,32 +131,6 @@ const InvitesManager = () => {
     libraries: [],
   });
 
-  useEffect(() => {
-    fetchInvites();
-    fetchStats();
-    fetchPlexConfig();
-    fetchPlexUsersCount();
-    fetchPlexServerName();
-    fetchPlexLiveStats();
-
-    // Auto-refresh Plex stats every 60 seconds
-    const statsInterval = setInterval(() => {
-      fetchPlexLiveStats();
-    }, 60000);
-
-    // Auto-refresh invites, stats, and Plex users every 10 seconds
-    const invitesInterval = setInterval(() => {
-      fetchInvites();
-      fetchStats();
-      fetchPlexUsersCount();
-    }, 10000);
-
-    return () => {
-      clearInterval(statsInterval);
-      clearInterval(invitesInterval);
-    };
-  }, []);
-
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -114,87 +147,6 @@ const InvitesManager = () => {
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [usageDropdownOpen, expiryDropdownOpen, serverDropdownOpen]);
-
-  const fetchInvites = async () => {
-    try {
-      const data = await api.get("/invites/");
-      console.log("Invites data:", data);
-      if (data && data.length > 0) {
-        console.log(
-          "First invite full object:",
-          JSON.stringify(data[0], null, 2)
-        );
-        console.log("First invite plex_server:", data[0].plex_server);
-        console.log("First invite keys:", Object.keys(data[0]));
-      }
-      setInvites(data);
-    } catch (error) {
-      console.error("Error fetching invites:", error);
-      toast.error(t("invites.errorLoading"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const data = await api.get("/invites/stats");
-      setStats(data);
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
-
-  const fetchPlexConfig = async () => {
-    try {
-      const data = await api.get("/invites/plex/config");
-      setPlexServers(data.servers || []);
-      setPlexLibraries(data.libraries || []);
-    } catch (error) {
-      console.error("Error fetching Plex config:", error);
-    }
-  };
-
-  const fetchPlexUsersCount = async () => {
-    try {
-      const data = await api.get("/plex/users/count");
-      console.log("Plex users count response:", data);
-      const count = data?.count || 0;
-      console.log("Setting plexUsersCount to:", count);
-      setPlexUsersCount(count);
-    } catch (error) {
-      console.error("Error fetching Plex users count:", error);
-      setPlexUsersCount(0);
-    }
-  };
-
-  const fetchPlexServerName = async () => {
-    try {
-      const data = await api.get("/plex/stats");
-      if (data?.server_name) {
-        setPlexServerName(data.server_name);
-        console.log("Fetched Plex server name:", data.server_name);
-      }
-    } catch (error) {
-      console.error("Error fetching Plex server name:", error);
-    }
-  };
-
-  const fetchPlexLiveStats = async () => {
-    try {
-      const data = await api.get("/plex/stats/live");
-      setPlexLiveStats({
-        total_movies: data.total_movies || 0,
-        total_tv_shows: data.total_tv_shows || 0,
-        total_episodes: data.total_episodes || 0,
-      });
-      if (data.server_name) {
-        setPlexServerName(data.server_name);
-      }
-    } catch (error) {
-      console.error("Error fetching live Plex stats:", error);
-    }
-  };
 
   const handleCreateInvite = async (e) => {
     e.preventDefault();
@@ -230,8 +182,8 @@ const InvitesManager = () => {
         libraries: [],
       });
 
-      fetchInvites();
-      fetchStats();
+      queryClient.invalidateQueries(["invites"]);
+      queryClient.invalidateQueries(["inviteStats"]);
       toast.success(t("invites.inviteCreated"));
     } catch (error) {
       console.error("Error creating invite:", error);
@@ -246,8 +198,8 @@ const InvitesManager = () => {
 
     try {
       await api.delete(`/invites/${inviteId}`);
-      fetchInvites();
-      fetchStats();
+      queryClient.invalidateQueries(["invites"]);
+      queryClient.invalidateQueries(["inviteStats"]);
       fetchPlexLiveStats(); // Force refresh Plex stats
       toast.success(t("invites.inviteDeleted"));
     } catch (error) {
@@ -314,9 +266,9 @@ const InvitesManager = () => {
           onClick={async () => {
             setRefreshing(true);
             await Promise.all([
-              fetchInvites(),
-              fetchStats(),
-              fetchPlexUsersCount(),
+              queryClient.refetchQueries(["invites"]),
+              queryClient.refetchQueries(["inviteStats"]),
+              queryClient.refetchQueries(["plexUsersCount"]),
             ]);
             setRefreshing(false);
             toast.success(t("invites.refreshed"));

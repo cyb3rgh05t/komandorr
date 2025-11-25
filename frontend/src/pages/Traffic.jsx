@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import {
   Activity,
@@ -136,20 +137,27 @@ const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
 export default function Traffic() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data with traffic filtering
+  const {
+    data: allServices = [],
+    isLoading: loading,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 5000,
+    refetchInterval: 5000,
+  });
+
+  // Filter services that have traffic data
+  const services = allServices.filter((s) => s.traffic);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
-
-  useEffect(() => {
-    fetchTrafficData();
-    const interval = setInterval(() => {
-      fetchTrafficData(false, true); // Pass true for isAutoRefresh
-    }, 5000); // Update every 5 seconds for real-time traffic monitoring
-    return () => clearInterval(interval);
-  }, []);
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -158,37 +166,6 @@ export default function Traffic() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const fetchTrafficData = async (
-    isManualRefresh = false,
-    isAutoRefresh = false
-  ) => {
-    try {
-      // Save current scroll position before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-
-      const data = await api.getServices();
-      // Filter services that have traffic data
-      const servicesWithTraffic = data.filter((s) => s.traffic);
-      setServices(servicesWithTraffic);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      console.error("Error fetching traffic data:", error);
-    } finally {
-      setLoading(false);
-      if (isManualRefresh) {
-        setRefreshing(false);
-      }
-    }
-  };
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -230,7 +207,8 @@ export default function Traffic() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchTrafficData(true);
+    await queryClient.refetchQueries(["services"]);
+    setRefreshing(false);
     toast.success(t("traffic.page.refreshSuccess"));
   };
 

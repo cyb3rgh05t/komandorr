@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   RefreshCw,
@@ -35,15 +36,42 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data
+  const {
+    data: services = [],
+    isLoading: loading,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 10000, // 10 seconds
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
+  });
+
+  // Use React Query for traffic data
+  const { data: trafficData } = useQuery({
+    queryKey: ["traffic"],
+    queryFn: () => api.getTrafficSummary(),
+    staleTime: 10000,
+    refetchInterval: 10000,
+  });
+
+  // Use React Query for Plex activities
+  const { data: plexActivities = [] } = useQuery({
+    queryKey: ["plexActivities"],
+    queryFn: fetchPlexActivities,
+    staleTime: 5000,
+    refetchInterval: 5000,
+  });
+
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [refreshing, setRefreshing] = useState(false);
-  const [trafficData, setTrafficData] = useState(null);
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
   const [dashboardVisibility, setDashboardVisibility] = useState(() => {
     // Load from localStorage or use defaults
@@ -67,7 +95,6 @@ export default function Dashboard() {
     is_update_available: false,
     loading: true,
   });
-  const [plexActivities, setPlexActivities] = useState([]);
 
   // Save visibility settings to localStorage whenever they change
   useEffect(() => {
@@ -83,31 +110,13 @@ export default function Dashboard() {
   }, [chartLineThickness]);
 
   useEffect(() => {
-    loadServices();
     fetchVersion();
-    fetchTrafficData();
-    fetchPlexData();
 
     // Check for updates every 12 hours
     const versionCheckInterval = setInterval(fetchVersion, 12 * 60 * 60 * 1000);
 
-    // Fetch traffic data every 10 seconds for more responsive updates
-    const trafficInterval = setInterval(fetchTrafficData, 10000);
-
-    // Fetch Plex activities every 5 seconds for real-time updates
-    const plexInterval = setInterval(fetchPlexData, 5000);
-
-    // Refresh services every 10 seconds for updated stats
-    // Don't reset scroll position or active tab during auto-refresh
-    const servicesInterval = setInterval(() => {
-      loadServices(true); // Pass true to indicate this is auto-refresh
-    }, 10000);
-
     return () => {
       clearInterval(versionCheckInterval);
-      clearInterval(trafficInterval);
-      clearInterval(plexInterval);
-      clearInterval(servicesInterval);
     };
   }, []);
 
@@ -135,56 +144,6 @@ export default function Dashboard() {
         is_update_available: false,
         loading: false,
       });
-    }
-  };
-
-  const fetchTrafficData = async () => {
-    try {
-      const data = await api.getTrafficSummary();
-      setTrafficData(data);
-    } catch (error) {
-      console.error("Error fetching traffic data:", error);
-      // Don't show error to user, traffic is optional
-    }
-  };
-
-  const fetchPlexData = async () => {
-    try {
-      const activities = await fetchPlexActivities();
-      setPlexActivities(activities);
-    } catch (error) {
-      console.error("Error fetching Plex activities:", error);
-      // Don't show error to user, Plex is optional
-    }
-  };
-
-  const loadServices = async (isAutoRefresh = false) => {
-    try {
-      // Save current scroll position before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-
-      if (!isAutoRefresh) {
-        setLoading(true);
-      }
-
-      const data = await api.getServices();
-      setServices(data);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        // Use setTimeout to ensure DOM has updated
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      toast.error(t("common.error"));
-      console.error("Failed to load services:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -230,7 +189,8 @@ export default function Dashboard() {
     try {
       setRefreshing(true);
       const data = await api.checkAllServices();
-      setServices(data);
+      // Update the cache with the new data
+      queryClient.setQueryData(["services"], data);
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));
@@ -242,7 +202,7 @@ export default function Dashboard() {
 
   const handleRefreshTraffic = async () => {
     setRefreshing(true);
-    await fetchTrafficData();
+    await queryClient.refetchQueries(["traffic"]);
     setTimeout(() => setRefreshing(false), 500);
   };
 
@@ -250,7 +210,10 @@ export default function Dashboard() {
     try {
       setRefreshing(true);
       const updated = await api.checkService(id);
-      setServices(services.map((s) => (s.id === id ? updated : s)));
+      // Update the cache with the updated service
+      queryClient.setQueryData(["services"], (old) =>
+        old.map((s) => (s.id === id ? updated : s))
+      );
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));
@@ -263,7 +226,8 @@ export default function Dashboard() {
   const handleCreateService = async (data) => {
     try {
       const newService = await api.createService(data);
-      setServices([...services, newService]);
+      // Add to cache
+      queryClient.setQueryData(["services"], (old) => [...old, newService]);
       setShowModal(false);
       toast.success(t("common.success"));
     } catch (error) {
@@ -275,7 +239,10 @@ export default function Dashboard() {
   const handleUpdateService = async (data) => {
     try {
       const updated = await api.updateService(editingService.id, data);
-      setServices(services.map((s) => (s.id === updated.id ? updated : s)));
+      // Update cache
+      queryClient.setQueryData(["services"], (old) =>
+        old.map((s) => (s.id === updated.id ? updated : s))
+      );
       setShowModal(false);
       setEditingService(null);
       toast.success(t("common.success"));
@@ -290,7 +257,10 @@ export default function Dashboard() {
 
     try {
       await api.deleteService(id);
-      setServices(services.filter((s) => s.id !== id));
+      // Remove from cache
+      queryClient.setQueryData(["services"], (old) =>
+        old.filter((s) => s.id !== id)
+      );
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));

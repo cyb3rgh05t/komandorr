@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import {
   Video,
@@ -227,10 +228,22 @@ const Pagination = ({
 export default function VODStreams() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for Plex activities
+  const {
+    data: activities = [],
+    isLoading: loading,
+    isRefetching,
+    error,
+  } = useQuery({
+    queryKey: ["plexActivities"],
+    queryFn: fetchPlexActivities,
+    staleTime: 5000,
+    refetchInterval: 5000,
+  });
+
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState(null);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const refreshInterval = useRef(null);
   const REFRESH_INTERVAL = 5000; // 5 seconds for real-time VOD stream monitoring
@@ -306,157 +319,127 @@ export default function VODStreams() {
     );
   }, [completedActivities]);
 
-  const fetchActivities = async () => {
-    try {
-      const processedActivities = await fetchPlexActivities();
+  // Process activities for timestamps and progress tracking
+  useEffect(() => {
+    if (!activities || activities.length === 0) return;
 
-      // Track timestamps for new activities
-      const now = Date.now();
-      const newTimestamps = { ...activityTimestamps };
-      const newProgress = { ...activityProgress };
-      const newCompleted = { ...completedActivities };
-      const currentActivityIds = new Set();
+    const now = Date.now();
+    const newTimestamps = { ...activityTimestamps };
+    const newProgress = { ...activityProgress };
+    const newCompleted = { ...completedActivities };
+    const currentActivityIds = new Set();
 
-      processedActivities.forEach((activity) => {
-        currentActivityIds.add(activity.uuid);
-        const currentProgress = activity.progress;
-        const previousProgress = newProgress[activity.uuid];
-        const existingTimestamp = newTimestamps[activity.uuid];
+    activities.forEach((activity) => {
+      currentActivityIds.add(activity.uuid);
+      const currentProgress = activity.progress;
+      const previousProgress = newProgress[activity.uuid];
+      const existingTimestamp = newTimestamps[activity.uuid];
 
-        // Determine start time
-        if (existingTimestamp === undefined) {
-          // This is the first time we see this activity
-          if (currentProgress < 2) {
-            // Activity just started, use current time
-            newTimestamps[activity.uuid] = now;
-          } else {
-            // Activity already in progress
-            // Set timestamp to null initially, will be set after 1% progress
-            newTimestamps[activity.uuid] = null;
-          }
-        } else if (
-          existingTimestamp === null &&
-          previousProgress !== undefined &&
-          currentProgress >= previousProgress + 1
-        ) {
-          // Progress has increased by at least 1%, now we can start tracking
+      // Determine start time
+      if (existingTimestamp === undefined) {
+        // This is the first time we see this activity
+        if (currentProgress < 2) {
+          // Activity just started, use current time
           newTimestamps[activity.uuid] = now;
-        } else if (typeof existingTimestamp === "number") {
-          // Already tracking, keep the existing timestamp
-          // No need to do anything, it's already in newTimestamps from the spread
+        } else {
+          // Activity already in progress
+          // Set timestamp to null initially, will be set after 1% progress
+          newTimestamps[activity.uuid] = null;
         }
+      } else if (
+        existingTimestamp === null &&
+        previousProgress !== undefined &&
+        currentProgress >= previousProgress + 1
+      ) {
+        // Progress has increased by at least 1%, now we can start tracking
+        newTimestamps[activity.uuid] = now;
+      } else if (typeof existingTimestamp === "number") {
+        // Already tracking, keep the existing timestamp
+        // No need to do anything, it's already in newTimestamps from the spread
+      }
 
-        // Track progress history (do this AFTER checking for changes)
-        newProgress[activity.uuid] = currentProgress;
+      // Track progress history (do this AFTER checking for changes)
+      newProgress[activity.uuid] = currentProgress;
 
-        // If activity is complete (100%), record completion time
-        if (currentProgress >= 100 && !newCompleted[activity.uuid]) {
-          const startTime = newTimestamps[activity.uuid];
-          if (startTime) {
-            const elapsedMs = now - startTime;
-            newCompleted[activity.uuid] = {
+      // If activity is complete (100%), record completion time
+      if (currentProgress >= 100 && !newCompleted[activity.uuid]) {
+        const startTime = newTimestamps[activity.uuid];
+        if (startTime) {
+          const elapsedMs = now - startTime;
+          newCompleted[activity.uuid] = {
+            completedAt: now,
+            elapsedMs: elapsedMs,
+            title: activity.title,
+            subtitle: activity.subtitle,
+          };
+        }
+      }
+    });
+
+    // Clean up old timestamps for activities that are no longer present
+    // Keep them for 1 hour in case they reappear
+    const oneHourAgo = now - 60 * 60 * 1000;
+    Object.keys(newTimestamps).forEach((uuid) => {
+      if (!currentActivityIds.has(uuid)) {
+        const timestamp = newTimestamps[uuid];
+        if (timestamp && timestamp < oneHourAgo) {
+          // Check if it was completed
+          if (!newCompleted[uuid]) {
+            // Activity disappeared without completing, might have been cancelled
+            const elapsedMs = now - timestamp;
+            newCompleted[uuid] = {
               completedAt: now,
               elapsedMs: elapsedMs,
-              title: activity.title,
-              subtitle: activity.subtitle,
+              title: "Unknown",
+              subtitle: "Activity cancelled or incomplete",
             };
           }
+          delete newTimestamps[uuid];
+          delete newProgress[uuid];
         }
-      });
+      }
+    });
 
-      // Clean up old timestamps for activities that are no longer present
-      // Keep them for 1 hour in case they reappear
-      const oneHourAgo = now - 60 * 60 * 1000;
-      Object.keys(newTimestamps).forEach((uuid) => {
-        if (!currentActivityIds.has(uuid)) {
-          const timestamp = newTimestamps[uuid];
-          if (timestamp && timestamp < oneHourAgo) {
-            // Check if it was completed
-            if (!newCompleted[uuid]) {
-              // Activity disappeared without completing, might have been cancelled
-              const elapsedMs = now - timestamp;
-              newCompleted[uuid] = {
-                completedAt: now,
-                elapsedMs: elapsedMs,
-                cancelled: true,
-              };
-            }
-            delete newTimestamps[uuid];
-            delete newProgress[uuid];
-          }
-        }
-      });
+    // Clean up old completed activities (older than 24 hours)
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    Object.keys(newCompleted).forEach((uuid) => {
+      if (newCompleted[uuid].completedAt < oneDayAgo) {
+        delete newCompleted[uuid];
+      }
+    });
 
-      // Clean up old completed activities (older than 24 hours)
-      const oneDayAgo = now - 24 * 60 * 60 * 1000;
-      Object.keys(newCompleted).forEach((uuid) => {
-        if (newCompleted[uuid].completedAt < oneDayAgo) {
-          delete newCompleted[uuid];
-        }
-      });
+    setActivityTimestamps(newTimestamps);
+    setActivityProgress(newProgress);
+    setCompletedActivities(newCompleted);
 
-      setActivityTimestamps(newTimestamps);
-      setActivityProgress(newProgress);
-      setCompletedActivities(newCompleted);
-      setActivities(processedActivities);
-      setError(null);
-      setPlexConfigured(true);
+    // Update peak concurrent activities - save to database
+    const currentCount = activities.length;
+    const currentPeak = peakConcurrentRef.current;
 
-      // Update peak concurrent activities - save to database
-      const currentCount = processedActivities.length;
-      const currentPeak = peakConcurrentRef.current;
-
-      if (currentCount > currentPeak) {
-        console.log(`Updating peak: ${currentPeak} -> ${currentCount}`);
-        try {
-          const result = await updatePeakConcurrent(currentCount);
+    if (currentCount > currentPeak) {
+      console.log(`Updating peak: ${currentPeak} -> ${currentCount}`);
+      updatePeakConcurrent(currentCount)
+        .then((result) => {
           setPeakConcurrent(result.peak_concurrent);
           peakConcurrentRef.current = result.peak_concurrent;
-        } catch (error) {
+        })
+        .catch((error) => {
           console.error("Error updating peak concurrent:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-
-      // Check if error is due to Plex not being configured
-      if (error.message && error.message.includes("Plex not configured")) {
-        setPlexConfigured(false);
-        setError(null);
-      } else {
-        setError(error.message);
-      }
-    } finally {
-      setLoading(false);
+        });
     }
-  };
+  }, [activities]);
 
   const handleRefresh = async (isManual = false) => {
     if (isRefreshing) return;
 
     setIsRefreshing(true);
-    await fetchActivities();
+    await queryClient.refetchQueries(["plexActivities"]);
     setIsRefreshing(false);
     setLastRefreshTime(Date.now());
     if (isManual) {
       toast.success("Refreshed successfully!");
     }
   };
-
-  useEffect(() => {
-    fetchActivities();
-    setLastRefreshTime(Date.now());
-
-    refreshInterval.current = setInterval(() => {
-      handleRefresh(false); // Auto-refresh, no toast
-    }, REFRESH_INTERVAL);
-
-    return () => {
-      if (refreshInterval.current) {
-        clearInterval(refreshInterval.current);
-      }
-    };
-  }, []);
 
   const timeUntilNextRefresh = Math.max(
     0,

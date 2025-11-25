@@ -9,6 +9,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
@@ -17,51 +18,26 @@ import { useToast } from "../context/ToastContext";
 export default function Services() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data
+  const {
+    data: services = [],
+    isLoading: loading,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 10000,
+    refetchInterval: 10000,
+  });
+
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
-
-  useEffect(() => {
-    fetchServices();
-    const interval = setInterval(() => {
-      fetchServices(true); // Pass true to indicate auto-refresh
-    }, 10000); // Update every 10 seconds for faster updates
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchServices = async (isAutoRefresh = false) => {
-    try {
-      // Save current scroll position before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-
-      if (!isAutoRefresh) {
-        setLoading(true);
-      }
-
-      const data = await api.getServices();
-      setServices(data);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch services:", error);
-      toast.error(t("errors.fetchServices"));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -105,7 +81,7 @@ export default function Services() {
     try {
       setRefreshing(true);
       const data = await api.checkAllServices();
-      setServices(data);
+      queryClient.setQueryData(["services"], data);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
@@ -118,7 +94,7 @@ export default function Services() {
   const handleCreateService = async (data) => {
     try {
       const newService = await api.createService(data);
-      setServices([...services, newService]);
+      queryClient.setQueryData(["services"], (old) => [...old, newService]);
       setShowModal(false);
       toast.success(t("success.serviceCreated"));
     } catch (error) {
@@ -130,8 +106,8 @@ export default function Services() {
   const handleUpdateService = async (data) => {
     try {
       const updatedService = await api.updateService(editingService.id, data);
-      setServices(
-        services.map((s) => (s.id === editingService.id ? updatedService : s))
+      queryClient.setQueryData(["services"], (old) =>
+        old.map((s) => (s.id === editingService.id ? updatedService : s))
       );
       setShowModal(false);
       setEditingService(null);
@@ -147,7 +123,9 @@ export default function Services() {
 
     try {
       await api.deleteService(id);
-      setServices(services.filter((s) => s.id !== id));
+      queryClient.setQueryData(["services"], (old) =>
+        old.filter((s) => s.id !== id)
+      );
       toast.success(t("success.serviceDeleted"));
     } catch (error) {
       console.error("Failed to delete service:", error);
@@ -159,7 +137,9 @@ export default function Services() {
     try {
       setRefreshing(true);
       const updatedService = await api.checkService(id);
-      setServices(services.map((s) => (s.id === id ? updatedService : s)));
+      queryClient.setQueryData(["services"], (old) =>
+        old.map((s) => (s.id === id ? updatedService : s))
+      );
       toast.success(t("success.serviceChecked"));
     } catch (error) {
       console.error("Failed to check service:", error);

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import Layout from "./components/layout/Layout";
@@ -16,6 +17,18 @@ import InvitesManager from "./pages/InvitesManager";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
+
+// Create a client with default options
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30000, // Data is fresh for 30 seconds
+      cacheTime: 300000, // Keep unused data in cache for 5 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      retry: 1, // Retry failed requests once
+    },
+  },
+});
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -104,51 +117,57 @@ function App() {
 
   if (isLoading) {
     return (
-      <ThemeProvider>
-        <LoadingScreen />
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <LoadingScreen />
+        </ThemeProvider>
+      </QueryClientProvider>
     );
   }
 
   if (authEnabled && !isAuthenticated) {
     return (
-      <ThemeProvider>
-        <LoginScreen onLoginSuccess={handleLoginSuccess} />
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <LoginScreen onLoginSuccess={handleLoginSuccess} />
+        </ThemeProvider>
+      </QueryClientProvider>
     );
   }
 
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public invite redemption pages (no layout) */}
-            <Route path="/invite/:code" element={<InviteRedemption />} />
-            <Route path="/redeem" element={<InviteRedeem />} />
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public invite redemption pages (no layout) */}
+              <Route path="/invite/:code" element={<InviteRedemption />} />
+              <Route path="/redeem" element={<InviteRedeem />} />
 
-            {/* Protected routes with layout */}
-            <Route
-              path="*"
-              element={
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/services" element={<Services />} />
-                    <Route path="/monitor" element={<Monitor />} />
-                    <Route path="/traffic" element={<Traffic />} />
-                    <Route path="/vod-streams" element={<VODStreams />} />
-                    <Route path="/invites" element={<InvitesManager />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/about" element={<About />} />
-                  </Routes>
-                </Layout>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </ToastProvider>
-    </ThemeProvider>
+              {/* Protected routes with layout */}
+              <Route
+                path="*"
+                element={
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/services" element={<Services />} />
+                      <Route path="/monitor" element={<Monitor />} />
+                      <Route path="/traffic" element={<Traffic />} />
+                      <Route path="/vod-streams" element={<VODStreams />} />
+                      <Route path="/invites" element={<InvitesManager />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/about" element={<About />} />
+                    </Routes>
+                  </Layout>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

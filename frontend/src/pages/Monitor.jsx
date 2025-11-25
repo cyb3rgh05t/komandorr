@@ -14,6 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 
@@ -139,8 +140,20 @@ const MiniChart = ({ data = [], serviceId }) => {
 export default function Monitor() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data
+  const {
+    data: services = [],
+    isLoading: loading,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 5000,
+    refetchInterval: 5000,
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
@@ -148,14 +161,6 @@ export default function Monitor() {
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const itemsPerPage = 10;
-
-  useEffect(() => {
-    fetchServices();
-    const interval = setInterval(() => {
-      fetchServices(true); // Pass true to indicate auto-refresh
-    }, 5000); // Update every 5 seconds for real-time monitoring
-    return () => clearInterval(interval);
-  }, []);
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -169,31 +174,6 @@ export default function Monitor() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-
-  const fetchServices = async (isAutoRefresh = false) => {
-    try {
-      // Save current scroll position and page before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-      const currentPageNum = isAutoRefresh ? currentPage : 1;
-
-      const data = await api.getServices();
-      setServices(data);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch services:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -237,7 +217,7 @@ export default function Monitor() {
     try {
       setRefreshing(true);
       const data = await api.checkAllServices();
-      setServices(data);
+      queryClient.setQueryData(["services"], data);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
