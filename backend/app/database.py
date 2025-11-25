@@ -41,6 +41,7 @@ class ServiceDB(Base):
     bandwidth_down = Column(Float, default=0.0)
     total_up = Column(Float, default=0.0)
     total_down = Column(Float, default=0.0)
+    max_bandwidth = Column(Float, nullable=True)  # Maximum bandwidth capacity in MB/s
     traffic_last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
 
     # Relationships
@@ -198,6 +199,15 @@ class Database:
 
             conn = sqlite3.connect(str(self.db_path))
             cursor = conn.cursor()
+
+            # Check if new columns exist in services table
+            cursor.execute("PRAGMA table_info(services)")
+            service_columns = [row[1] for row in cursor.fetchall()]
+
+            # Add max_bandwidth column if it doesn't exist
+            if "max_bandwidth" not in service_columns:
+                logger.info("Adding max_bandwidth column to services table")
+                cursor.execute("ALTER TABLE services ADD COLUMN max_bandwidth REAL")
 
             # Check if new columns exist in plex_stats table
             cursor.execute("PRAGMA table_info(plex_stats)")

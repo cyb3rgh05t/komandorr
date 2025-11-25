@@ -202,6 +202,7 @@ class ServiceMonitor:
                         bandwidth_down=float(db_service.bandwidth_down),  # type: ignore
                         total_up=float(db_service.total_up),  # type: ignore
                         total_down=float(db_service.total_down),  # type: ignore
+                        max_bandwidth=float(db_service.max_bandwidth) if db_service.max_bandwidth else None,  # type: ignore
                         last_updated=(
                             db_service.traffic_last_updated.replace(tzinfo=timezone.utc)  # type: ignore
                             if db_service.traffic_last_updated
@@ -273,6 +274,7 @@ class ServiceMonitor:
                     db_service.bandwidth_down = service.traffic.bandwidth_down  # type: ignore
                     db_service.total_up = service.traffic.total_up  # type: ignore
                     db_service.total_down = service.traffic.total_down  # type: ignore
+                    db_service.max_bandwidth = service.traffic.max_bandwidth  # type: ignore
                     db_service.traffic_last_updated = to_naive_utc(  # type: ignore
                         service.traffic.last_updated
                     )
@@ -297,6 +299,9 @@ class ServiceMonitor:
                     ),
                     total_up=service.traffic.total_up if service.traffic else 0.0,
                     total_down=service.traffic.total_down if service.traffic else 0.0,
+                    max_bandwidth=(
+                        service.traffic.max_bandwidth if service.traffic else None
+                    ),
                     traffic_last_updated=(
                         to_naive_utc(service.traffic.last_updated)
                         if service.traffic
