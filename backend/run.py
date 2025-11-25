@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "loggers": {
             "uvicorn": {"handlers": ["default"], "level": "INFO"},
             "uvicorn.error": {"level": "INFO"},
-            "uvicorn.access": {"handlers": ["default"], "level": "INFO"},
+            "uvicorn.access": {"handlers": ["default"], "level": "WARNING"},
         },
     }
 
