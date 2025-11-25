@@ -41,7 +41,7 @@ KOMANDORR_URL = "https://komandorr.mystreamnet.club"
 SERVICE_ID = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # How often to send data (in seconds)
-UPDATE_INTERVAL = 30
+UPDATE_INTERVAL = 5
 
 # Network interface to monitor (None = all interfaces, or specify like 'eth0', 'ens18')
 NETWORK_INTERFACE = None

@@ -55,8 +55,8 @@ export default function Dashboard() {
   const { data: trafficData, isFetching: trafficFetching } = useQuery({
     queryKey: ["traffic"],
     queryFn: () => api.getTrafficSummary(),
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 5000,
+    refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 
