@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List, Optional
+from typing import List, Optional, overload, Literal
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import func
 import secrets
@@ -49,6 +49,18 @@ def generate_invite_code(length: int = 8) -> str:
     """Generate a random invite code"""
     chars = string.ascii_uppercase + string.digits
     return "".join(secrets.choice(chars) for _ in range(length))
+
+
+@overload
+def db_invite_to_pydantic(
+    db_invite: InviteDB, include_users: Literal[True], plex_server: str = "Plex Server"
+) -> InviteWithUsers: ...
+
+
+@overload
+def db_invite_to_pydantic(
+    db_invite: InviteDB, include_users: Literal[False] = False, plex_server: str = "Plex Server"
+) -> Invite: ...
 
 
 def db_invite_to_pydantic(
@@ -687,7 +699,7 @@ async def redeem_invite(request: RedeemInviteRequest):
 
             # Invite user to Plex
             success, error = await invite_plex_user(
-                email=request.email,
+                email=str(request.email),
                 plex_config=plex_config,
                 libraries=db_invite.libraries,  # type: ignore
                 allow_sync=db_invite.allow_sync,  # type: ignore
