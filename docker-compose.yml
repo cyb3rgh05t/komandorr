@@ -8,19 +8,11 @@ services:
       - "PUID=1000"
       - "TZ=Europe/Berlin"
       - "TERM=xterm"
-      # Server Configuration
       - "HOST=0.0.0.0"
       - "PORT=8000"
       - "DEBUG=false"
-      # Logging Configuration
-      - "LOG_LEVEL=INFO"
-      - "LOG_FILE=/app/logs/komandorr.log"
-      - "LOG_ENABLE_FILE=true"
-      - "LOG_SHOW_TIMESTAMP_CONSOLE=false"
-      - "LOG_SHOW_LOCATION_FILE=false"
-      # CORS Configuration
       - "CORS_ORIGINS=http://localhost,http://localhost:8000"
-    image: "ghcr.io/cyb3rgh05t/komandorr:dev"
+    image: "ghcr.io/cyb3rgh05t/komandorr:latest"
     restart: "unless-stopped"
     ports:
       - "8010:8000"

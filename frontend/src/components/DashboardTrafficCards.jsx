@@ -166,13 +166,9 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     { primary: "#f59e0b", shadow: "rgba(245, 158, 11, 0.4)" }, // amber
   ];
 
-  // Get top 5 services by bandwidth
+  // Get top 5 services by bandwidth, sorted alphabetically
   const topServices = [...activeServices]
-    .sort((a, b) => {
-      const aTotal = (a.bandwidth_up || 0) + (a.bandwidth_down || 0);
-      const bTotal = (b.bandwidth_up || 0) + (b.bandwidth_down || 0);
-      return bTotal - aTotal;
-    })
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 5);
 
   return topServices.length > 0 ? (
