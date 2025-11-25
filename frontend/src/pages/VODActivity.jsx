@@ -107,7 +107,9 @@ const SessionCard = ({ session }) => {
         <div className="flex-shrink-0 w-32 bg-theme-hover/50">
           {session.media.thumb ? (
             <img
-              src={session.media.thumb}
+              src={`/api/plex/proxy/image?url=${encodeURIComponent(
+                session.media.thumb
+              )}`}
               alt={session.media.title}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -140,7 +142,9 @@ const SessionCard = ({ session }) => {
               <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                 {session.user.thumb ? (
                   <img
-                    src={session.user.thumb}
+                    src={`/api/plex/proxy/image?url=${encodeURIComponent(
+                      session.user.thumb
+                    )}`}
                     alt={session.user.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {

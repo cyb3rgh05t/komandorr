@@ -1137,10 +1137,15 @@ async def get_plex_sessions():
 
                 # Force HTTP for image URLs if using HTTPS with IP address to avoid cert errors
                 image_url = url
-                if image_url.startswith("https://") and any(
-                    char.isdigit() for char in image_url.split("://")[1].split(":")[0]
-                ):
-                    image_url = image_url.replace("https://", "http://")
+                if image_url.startswith("https://"):
+                    # Extract hostname/IP from URL
+                    hostname = image_url.split("://")[1].split(":")[0].split("/")[0]
+                    # Check if it's an IP address (contains only digits and dots)
+                    if hostname.replace(".", "").isdigit():
+                        image_url = image_url.replace("https://", "http://")
+                        logger.info(
+                            f"Converting HTTPS to HTTP for IP-based Plex server: {hostname}"
+                        )
 
                 artwork_url = (
                     f"{image_url}{artwork_path}?X-Plex-Token={token}"
