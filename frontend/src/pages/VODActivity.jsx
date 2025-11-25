@@ -101,17 +101,31 @@ const SessionCard = ({ session }) => {
   };
 
   return (
-    <div className="bg-theme-card border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all shadow-sm hover:shadow-md">
-      <div className="flex">
+    <div className="bg-theme-card border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all shadow-sm hover:shadow-md relative">
+      {/* Background Fanart */}
+      {session.media.art && (
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={`/api/plex/proxy/image?url=${encodeURIComponent(
+              session.media.art
+            )}`}
+            alt=""
+            className="w-full h-auto object-cover object-center opacity-50"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/55" />
+        </div>
+      )}
+
+      <div className="flex relative z-10">
         {/* Left: Poster */}
-        <div className="flex-shrink-0 w-32 bg-theme-hover/50">
+        <div className="flex-shrink-0 w-32 self-stretch bg-theme-hover/50 relative z-10">
           {session.media.thumb ? (
             <img
               src={`/api/plex/proxy/image?url=${encodeURIComponent(
                 session.media.thumb
               )}`}
               alt={session.media.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-l-lg"
               onError={(e) => {
                 e.target.style.display = "none";
               }}
@@ -124,7 +138,7 @@ const SessionCard = ({ session }) => {
         </div>
 
         {/* Right: Content */}
-        <div className="flex-1 p-4 min-w-0">
+        <div className="flex-1 p-4 min-w-0 relative z-10">
           <div className="space-y-3">
             {/* Title & User with Avatar */}
             <div className="flex items-start justify-between gap-3">
@@ -132,14 +146,28 @@ const SessionCard = ({ session }) => {
                 <h3 className="text-base font-bold text-theme-text mb-1 line-clamp-2">
                   {session.media.title}
                 </h3>
-                <p className="text-xs text-theme-text-muted flex items-center gap-1">
-                  <Users size={12} />
-                  {session.user.name}
-                </p>
+                <div className="flex items-center flex-wrap gap-1.5">
+                  <Users
+                    size={12}
+                    className="text-theme-text-muted flex-shrink-0"
+                  />
+                  <span className="text-sm bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-medium">
+                    {session.user.name}
+                  </span>
+                  <span className="text-theme-text-muted">•</span>
+                  <Monitor
+                    size={12}
+                    className="text-theme-text-muted flex-shrink-0"
+                  />
+                  <span className="text-sm text-theme-text-muted truncate">
+                    {session.device.client ||
+                      t("vodActivity.labels.unknown", "Unknown")}
+                  </span>
+                </div>
               </div>
 
               {/* User Avatar */}
-              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 relative z-20">
                 {session.user.thumb ? (
                   <img
                     src={`/api/plex/proxy/image?url=${encodeURIComponent(
@@ -232,43 +260,36 @@ const SessionCard = ({ session }) => {
             />
 
             {/* Technical Details */}
-            <div className="space-y-2 text-xs pt-2 border-t border-theme">
-              {/* First Row */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-theme-text-muted">
-                  <Monitor size={12} className="flex-shrink-0" />
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-theme">
+              <div className="flex items-center flex-wrap gap-3 text-theme-text-muted">
+                <div className="flex items-center gap-1.5">
+                  <Server size={12} className="flex-shrink-0" />
                   <span className="truncate">
-                    {session.device.client ||
+                    {session.device.platform ||
                       t("vodActivity.labels.unknown", "Unknown")}
                   </span>
                 </div>
-                <StateBadge state={session.playback.state} />
-              </div>
-              {/* Second Row */}
-              <div className="flex items-center gap-1.5 text-theme-text-muted">
-                <Server size={12} className="flex-shrink-0" />
-                <span className="truncate">
-                  {session.device.platform ||
-                    t("vodActivity.labels.unknown", "Unknown")}
-                </span>
-              </div>{" "}
-              {/* Third Row */}
-              <div className="flex items-center gap-1.5 text-theme-text-muted">
-                <Video size={12} className="flex-shrink-0" />
-                <span className="truncate uppercase">
-                  {session.stream.video_codec || "?"} /{" "}
-                  {session.stream.audio_codec || "?"}
-                </span>
-              </div>
-              {/* Fourth Row */}
-              {session.stream.bandwidth > 0 && (
-                <div className="flex items-center gap-1.5 text-theme-text-muted">
-                  <Activity size={12} className="flex-shrink-0" />
-                  <span className="truncate">
-                    {formatBitrate(session.stream.bandwidth)}
+                <span>•</span>
+                <div className="flex items-center gap-1.5">
+                  <Video size={12} className="flex-shrink-0" />
+                  <span className="truncate uppercase">
+                    {session.stream.video_codec || "?"} /{" "}
+                    {session.stream.audio_codec || "?"}
                   </span>
                 </div>
-              )}
+                {session.stream.bandwidth > 0 && (
+                  <>
+                    <span>•</span>
+                    <div className="flex items-center gap-1.5">
+                      <Activity size={12} className="flex-shrink-0" />
+                      <span className="truncate">
+                        {formatBitrate(session.stream.bandwidth)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              <StateBadge state={session.playback.state} />
             </div>
           </div>
         </div>

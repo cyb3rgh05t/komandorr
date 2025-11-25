@@ -965,7 +965,9 @@ async def proxy_plex_image(url: str):
             session.close()
 
         # Fetch image from Plex server with SSL verification disabled
-        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+        async with httpx.AsyncClient(
+            verify=False, timeout=10.0, follow_redirects=True
+        ) as client:
             response = await client.get(url)
             response.raise_for_status()
 
@@ -1129,11 +1131,29 @@ async def get_plex_sessions():
                 thumb = session.get("thumb", "")
                 art = session.get("art", "")
 
-                # For TV episodes, use the fetched show poster
+                # For TV episodes, use the fetched show poster and art
                 if media_type == "episode" and show_thumb:
                     artwork_path = show_thumb
+                    # Also try to get show art from the fetched metadata
+                    show_art = None
+                    if grandparent_rating_key:
+                        try:
+                            show_metadata_response = await client.get(
+                                f"{url}/library/metadata/{grandparent_rating_key}",
+                                headers=headers,
+                            )
+                            if show_metadata_response.status_code == 200:
+                                show_data = show_metadata_response.json()
+                                show_metadata = show_data.get("MediaContainer", {}).get(
+                                    "Metadata", [{}]
+                                )[0]
+                                show_art = show_metadata.get("art", "")
+                        except Exception as e:
+                            logger.warning(f"Failed to fetch show art: {e}")
+                    art_path = show_art if show_art else art
                 else:
                     artwork_path = thumb or art
+                    art_path = art
 
                 # Force HTTP for image URLs if using HTTPS with IP address to avoid cert errors
                 image_url = url
@@ -1153,6 +1173,10 @@ async def get_plex_sessions():
                     else None
                 )
 
+                art_url = (
+                    f"{image_url}{art_path}?X-Plex-Token={token}" if art_path else None
+                )
+
                 # Extract location/IP if available
                 session_location = session.get("Session", {})
                 location = session_location.get("location", "wan")  # lan or wan
@@ -1164,7 +1188,7 @@ async def get_plex_sessions():
                         "name": user_name,
                         "id": user_id,
                         "thumb": (
-                            f"{user_thumb}?X-Plex-Token={token}"
+                            f"{user_thumb}&X-Plex-Token={token}"
                             if user_thumb and user_thumb.startswith("http")
                             else (
                                 f"{image_url}{user_thumb}?X-Plex-Token={token}"
@@ -1179,6 +1203,7 @@ async def get_plex_sessions():
                         "year": session.get("year", None),
                         "rating": session.get("rating", None),
                         "thumb": artwork_url,
+                        "art": art_url,
                     },
                     "playback": {
                         "state": state,
