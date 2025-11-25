@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   RefreshCw,
@@ -25,7 +26,7 @@ import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
-import DashboardTrafficChart from "@/components/DashboardTrafficChart";
+import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import ServiceModal from "@/components/ServiceModal";
 
 const API_URL = "/api";
@@ -35,15 +36,45 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data
+  const {
+    data: services = [],
+    isLoading: loading,
+    isFetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 10000, // 10 seconds
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
+    placeholderData: (previousData) => previousData, // Show old data while fetching
+  });
+
+  // Use React Query for traffic data
+  const { data: trafficData, isFetching: trafficFetching } = useQuery({
+    queryKey: ["traffic"],
+    queryFn: () => api.getTrafficSummary(),
+    staleTime: 10000,
+    refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Use React Query for Plex activities
+  const { data: plexActivities = [], isFetching: plexFetching } = useQuery({
+    queryKey: ["plexActivities"],
+    queryFn: fetchPlexActivities,
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [refreshing, setRefreshing] = useState(false);
-  const [trafficData, setTrafficData] = useState(null);
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
   const [dashboardVisibility, setDashboardVisibility] = useState(() => {
     // Load from localStorage or use defaults
@@ -67,7 +98,6 @@ export default function Dashboard() {
     is_update_available: false,
     loading: true,
   });
-  const [plexActivities, setPlexActivities] = useState([]);
 
   // Save visibility settings to localStorage whenever they change
   useEffect(() => {
@@ -83,31 +113,13 @@ export default function Dashboard() {
   }, [chartLineThickness]);
 
   useEffect(() => {
-    loadServices();
     fetchVersion();
-    fetchTrafficData();
-    fetchPlexData();
 
     // Check for updates every 12 hours
     const versionCheckInterval = setInterval(fetchVersion, 12 * 60 * 60 * 1000);
 
-    // Fetch traffic data every 10 seconds for more responsive updates
-    const trafficInterval = setInterval(fetchTrafficData, 10000);
-
-    // Fetch Plex activities every 5 seconds for real-time updates
-    const plexInterval = setInterval(fetchPlexData, 5000);
-
-    // Refresh services every 10 seconds for updated stats
-    // Don't reset scroll position or active tab during auto-refresh
-    const servicesInterval = setInterval(() => {
-      loadServices(true); // Pass true to indicate this is auto-refresh
-    }, 10000);
-
     return () => {
       clearInterval(versionCheckInterval);
-      clearInterval(trafficInterval);
-      clearInterval(plexInterval);
-      clearInterval(servicesInterval);
     };
   }, []);
 
@@ -135,56 +147,6 @@ export default function Dashboard() {
         is_update_available: false,
         loading: false,
       });
-    }
-  };
-
-  const fetchTrafficData = async () => {
-    try {
-      const data = await api.getTrafficSummary();
-      setTrafficData(data);
-    } catch (error) {
-      console.error("Error fetching traffic data:", error);
-      // Don't show error to user, traffic is optional
-    }
-  };
-
-  const fetchPlexData = async () => {
-    try {
-      const activities = await fetchPlexActivities();
-      setPlexActivities(activities);
-    } catch (error) {
-      console.error("Error fetching Plex activities:", error);
-      // Don't show error to user, Plex is optional
-    }
-  };
-
-  const loadServices = async (isAutoRefresh = false) => {
-    try {
-      // Save current scroll position before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-
-      if (!isAutoRefresh) {
-        setLoading(true);
-      }
-
-      const data = await api.getServices();
-      setServices(data);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        // Use setTimeout to ensure DOM has updated
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      toast.error(t("common.error"));
-      console.error("Failed to load services:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -230,7 +192,8 @@ export default function Dashboard() {
     try {
       setRefreshing(true);
       const data = await api.checkAllServices();
-      setServices(data);
+      // Update the cache with the new data
+      queryClient.setQueryData(["services"], data);
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));
@@ -242,7 +205,7 @@ export default function Dashboard() {
 
   const handleRefreshTraffic = async () => {
     setRefreshing(true);
-    await fetchTrafficData();
+    await queryClient.refetchQueries(["traffic"]);
     setTimeout(() => setRefreshing(false), 500);
   };
 
@@ -250,7 +213,10 @@ export default function Dashboard() {
     try {
       setRefreshing(true);
       const updated = await api.checkService(id);
-      setServices(services.map((s) => (s.id === id ? updated : s)));
+      // Update the cache with the updated service
+      queryClient.setQueryData(["services"], (old) =>
+        old.map((s) => (s.id === id ? updated : s))
+      );
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));
@@ -263,7 +229,8 @@ export default function Dashboard() {
   const handleCreateService = async (data) => {
     try {
       const newService = await api.createService(data);
-      setServices([...services, newService]);
+      // Add to cache
+      queryClient.setQueryData(["services"], (old) => [...old, newService]);
       setShowModal(false);
       toast.success(t("common.success"));
     } catch (error) {
@@ -275,7 +242,10 @@ export default function Dashboard() {
   const handleUpdateService = async (data) => {
     try {
       const updated = await api.updateService(editingService.id, data);
-      setServices(services.map((s) => (s.id === updated.id ? updated : s)));
+      // Update cache
+      queryClient.setQueryData(["services"], (old) =>
+        old.map((s) => (s.id === updated.id ? updated : s))
+      );
       setShowModal(false);
       setEditingService(null);
       toast.success(t("common.success"));
@@ -290,7 +260,10 @@ export default function Dashboard() {
 
     try {
       await api.deleteService(id);
-      setServices(services.filter((s) => s.id !== id));
+      // Remove from cache
+      queryClient.setQueryData(["services"], (old) =>
+        old.filter((s) => s.id !== id)
+      );
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));
@@ -619,11 +592,7 @@ export default function Dashboard() {
             {/* Total Services */}
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-theme-primary/10 group ${
-                statusFilter === null
-                  ? "border-theme-primary ring-2 ring-theme-primary/20"
-                  : "border-theme hover:border-theme-primary/50"
-              }`}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/50"
             >
               <div className="flex items-center justify-between">
                 <div className="text-left">
@@ -910,31 +879,57 @@ export default function Dashboard() {
                 if (filteredServices.length === 0 && statusFilter !== null) {
                   const emptyStates = {
                     online: {
-                      icon: "🟢",
+                      icon: CheckCircle,
+                      iconColor: "text-green-500",
+                      bgColor: "bg-green-500/10",
                       title: t("dashboard.emptyStates.noOnline.title"),
                       message: t("dashboard.emptyStates.noOnline.message"),
+                      buttonText: "View All Services",
                     },
                     offline: {
-                      icon: "✓",
+                      icon: AlertCircle,
+                      iconColor: "text-red-500",
+                      bgColor: "bg-red-500/10",
                       title: t("dashboard.emptyStates.noOffline.title"),
                       message: t("dashboard.emptyStates.noOffline.message"),
+                      buttonText: "View All Services",
                     },
                     problem: {
-                      icon: "✓",
+                      icon: AlertCircle,
+                      iconColor: "text-yellow-500",
+                      bgColor: "bg-yellow-500/10",
                       title: t("dashboard.emptyStates.noProblems.title"),
                       message: t("dashboard.emptyStates.noProblems.message"),
+                      buttonText: "View All Services",
                     },
                   };
 
                   const state = emptyStates[statusFilter];
+                  const IconComponent = state.icon;
 
                   return (
-                    <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
-                      <div className="text-6xl mb-4">{state.icon}</div>
-                      <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                        {state.title}
-                      </h3>
-                      <p className="text-theme-text-muted">{state.message}</p>
+                    <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                      <div className="max-w-md mx-auto">
+                        <div
+                          className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
+                        >
+                          <IconComponent
+                            size={32}
+                            className={state.iconColor}
+                          />
+                        </div>
+                        <h3 className="text-xl font-bold text-theme-text mb-2">
+                          {state.title}
+                        </h3>
+                        <p className="text-theme-muted mb-6">{state.message}</p>
+                        <button
+                          onClick={() => setStatusFilter(null)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                        >
+                          <Server size={20} className="text-theme-primary" />
+                          <span>{state.buttonText}</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 }
@@ -978,12 +973,13 @@ export default function Dashboard() {
                     <div className="space-y-6">
                       {/* Traffic Chart */}
                       {dashboardVisibility.trafficChart && (
-                        <DashboardTrafficChart
-                          trafficData={filteredTrafficData}
-                          onRefresh={handleRefreshTraffic}
-                          refreshing={refreshing}
-                          lineThickness={chartLineThickness}
-                        />
+                        <div className="flex justify-center w-full">
+                          <DashboardTrafficCards
+                            trafficData={filteredTrafficData}
+                            onRefresh={handleRefreshTraffic}
+                            refreshing={refreshing}
+                          />
+                        </div>
                       )}
 
                       {Object.entries(grouped).map(
@@ -1070,12 +1066,13 @@ export default function Dashboard() {
 
                     {/* Traffic Chart - filtered by active tab */}
                     {dashboardVisibility.trafficChart && (
-                      <DashboardTrafficChart
-                        trafficData={filteredTrafficData}
-                        onRefresh={handleRefreshTraffic}
-                        refreshing={refreshing}
-                        lineThickness={chartLineThickness}
-                      />
+                      <div className="flex justify-center w-full">
+                        <DashboardTrafficCards
+                          trafficData={filteredTrafficData}
+                          onRefresh={handleRefreshTraffic}
+                          refreshing={refreshing}
+                        />
+                      </div>
                     )}
 
                     {/* Active Tab Content */}

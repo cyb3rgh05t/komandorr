@@ -143,6 +143,7 @@ class Logger:
         """Setup logger with console and file handlers"""
         self._logger = logging.getLogger("komandorr")
         self._logger.handlers.clear()  # Clear any existing handlers
+        self._logger.propagate = False  # Prevent duplicate logs to root logger
 
         # Import settings here to avoid circular import
         try:

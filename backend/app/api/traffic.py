@@ -28,6 +28,8 @@ async def update_traffic(traffic_data: TrafficUpdate):
     service.traffic.bandwidth_down = traffic_data.bandwidth_down
     service.traffic.total_up = traffic_data.total_up
     service.traffic.total_down = traffic_data.total_down
+    if traffic_data.max_bandwidth is not None:
+        service.traffic.max_bandwidth = traffic_data.max_bandwidth
     service.traffic.last_updated = datetime.now(timezone.utc)
 
     # Add to history (keep last 100 data points)
@@ -47,7 +49,7 @@ async def update_traffic(traffic_data: TrafficUpdate):
     # Save to database
     monitor._save_service(service)
 
-    logger.info(
+    logger.debug(
         f"Updated traffic for {service.name}: "
         f"↑{traffic_data.bandwidth_up:.2f}MB/s ↓{traffic_data.bandwidth_down:.2f}MB/s"
     )

@@ -10,6 +10,7 @@ class TrafficMetrics(BaseModel):
     bandwidth_down: float = 0.0  # Current download speed in MB/s
     total_up: float = 0.0  # Total upload in GB
     total_down: float = 0.0  # Total download in GB
+    max_bandwidth: float | None = None  # Maximum bandwidth capacity in MB/s
     last_updated: datetime | None = None
 
 
@@ -85,3 +86,4 @@ class TrafficUpdate(BaseModel):
     bandwidth_down: float  # MB/s
     total_up: float  # GB
     total_down: float  # GB
+    max_bandwidth: float | None = None  # Maximum bandwidth capacity in MB/s

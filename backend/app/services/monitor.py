@@ -109,7 +109,7 @@ class ServiceMonitor:
 
         # Save after all services are checked
         self._save_all_services()
-        logger.info(f"Checked {len(tasks)} services")
+        logger.debug(f"Checked {len(tasks)} services")
 
     async def start_monitoring(self, interval: int = 60) -> None:
         """Start monitoring all services at specified interval (seconds)"""

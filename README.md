@@ -32,7 +32,7 @@
 
 - **Real-time Status Tracking**: Monitor websites, APIs, apps, and custom services
 - **Response Time Graphs**: Visual charts showing service performance over time
-- **Traffic Analytics**: Bandwidth monitoring for compatible services (Plex, etc.)
+- **Traffic Analytics**: Circular progress bandwidth monitoring with real-time speeds and cumulative data transfer
 - **Smart Health Checks**: Automatic detection of online/offline/problem states
 - **Grouped Services**: Organize services by category (Production, Development, Media, etc.)
 
@@ -89,7 +89,7 @@ The setup script automatically:
 - ✅ Creates Python virtual environment
 - ✅ Installs backend dependencies
 - ✅ Installs frontend dependencies
-- ✅ Creates .env configuration file
+- ✅ Creates config.json configuration file
 - ✅ Sets up logs directory
 
 #### Option 2: Manual Setup (Cross-Platform)
@@ -126,8 +126,8 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment (copy and edit .env)
-cp .env.example .env
+# Configuration will be created automatically on first run
+# Edit backend/data/config.json for settings after first launch
 ```
 
 **Frontend Setup:**
@@ -266,66 +266,86 @@ python migrate_to_sqlite.py
 ]
 ```
 
-## Authentication
+## ⚙️ Configuration
+
+### Configuration System
+
+Komandorr uses a **two-tier configuration system**:
+
+1. **Environment Variables** (`.env` file) - Server-level settings:
+
+   - `HOST` - Server host (default: 0.0.0.0)
+   - `PORT` - Server port (default: 8000)
+   - `DEBUG` - Debug mode (default: false)
+   - `CORS_ORIGINS` - CORS allowed origins
+
+2. **config.json** (created automatically) - Application settings:
+   - Authentication (enable/disable, credentials)
+   - Logging (level, file size, backup count)
+   - Timezone configuration
+   - Plex integration (server URL, token, name)
+   - API tokens (GitHub, TMDB for invites)
+
+### Authentication
 
 Komandorr supports Basic Authentication to protect the dashboard.
 
-### Enable Authentication
-
-Create a `.env` file in the `backend` directory:
-
-```env
-ENABLE_AUTH=true
-AUTH_USERNAME=dein_benutzername
-AUTH_PASSWORD=dein_passwort
-```
-
-### Timezone Configuration
-
-Komandorr uses UTC by default for all timestamps. You can customize the timezone in the `.env` file:
-
-```env
-TIMEZONE=Europe/Berlin
-# Or other valid timezones:
-# TIMEZONE=America/New_York
-# TIMEZONE=Asia/Tokyo
-# TIMEZONE=Europe/London
-```
-
-**Note**: The configured timezone is used for:
-
-- Backend logging
-- Display in the About tab of the UI
-
-See the full list of valid timezones: [Wikipedia - TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-
-### Default Credentials (when enabled)
+**Default Credentials:**
 
 - **Username**: admin
 - **Password**: admin
 
 **⚠️ IMPORTANT**: Change the default credentials in production!
 
-### Managing Authentication
+### Managing Settings
 
-After logging in, you can:
+All application settings can be managed through the **Settings UI**:
 
-1. **Logout**: Click on the user icon in the top navigation bar and select "Logout"
-2. **Open Settings**: Via the user menu or directly under Settings
-3. **Enable/Disable Authentication**: In the settings under "Authentication Settings"
-4. **Change Credentials**: Update username and password in the settings
+1. **Open Settings**: Click the user icon in top navigation → Settings
+2. **Authentication**: Enable/disable auth, change username/password
+3. **Logging**: Configure log level, file rotation settings
+4. **General**: Set timezone for logs and UI display
+5. **Plex**: Configure Plex Media Server integration
+6. **API Tokens**: Set GitHub and TMDB tokens for invite system
+7. **Save Settings**: Single button saves all configuration to `config.json`
 
-**Note**: When enabling authentication, you will be automatically redirected to the login page.
+**Settings are stored in:** `backend/data/config.json`
 
-### Disable Authentication
+### Timezone Configuration
 
-Set in the `.env` file:
+Komandorr uses UTC by default. Configure timezone via Settings UI or edit `config.json`:
 
-```env
-ENABLE_AUTH=false
+```json
+{
+  "general": {
+    "timezone": "Europe/Berlin"
+  }
+}
 ```
 
-Or disable it directly in the settings (when logged in).
+Valid timezones: [Wikipedia - TZ database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+
+**Note**: Timezone is used for backend logging and UI timestamp display.
+
+### Authentication Management
+
+After logging in:
+
+1. **Change Credentials**: Settings → Authentication Settings
+2. **Enable/Disable Auth**: Toggle in Settings (redirects to login when enabled)
+3. **Logout**: User icon → Logout
+
+**Alternative**: Manually edit `backend/data/config.json`:
+
+```json
+{
+  "auth": {
+    "enabled": true,
+    "username": "your_username",
+    "password": "your_password"
+  }
+}
+```
 
 ## 🎨 Themes & Localization
 

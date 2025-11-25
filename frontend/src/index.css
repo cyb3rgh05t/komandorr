@@ -826,11 +826,18 @@ select {
   -moz-appearance: none;
 }
 
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--theme-primary) !important;
+}
+
 select option {
   background-color: var(--theme-bg-card) !important;
   color: var(--theme-text) !important;
   padding: 0.75rem 1rem !important;
   font-size: 0.875rem !important;
+  border: none !important;
 }
 
 select option:hover,
@@ -840,6 +847,7 @@ select option:focus {
   color: white !important;
   box-shadow: none !important;
   outline: none !important;
+  border: none !important;
 }
 
 select option:checked,
@@ -848,6 +856,7 @@ select option[selected] {
   background: var(--theme-primary) !important;
   color: white !important;
   font-weight: 500 !important;
+  border: none !important;
 }
 
 /* Firefox specific */
@@ -866,6 +875,27 @@ select option:checked {
     var(--theme-primary)
   ) !important;
   color: white !important;
+}
+
+/* Remove blue highlight on Windows */
+select::-ms-expand {
+  display: none;
+}
+
+select:-internal-autofill-selected {
+  background-color: var(--theme-bg-hover) !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+  select option {
+    background-color: var(--theme-bg-card);
+    color: var(--theme-text);
+  }
+
+  select option:checked {
+    background: var(--theme-primary);
+    color: white;
+  }
 }
 
 /* ========================================

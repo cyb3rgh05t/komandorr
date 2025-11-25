@@ -6,6 +6,7 @@ from datetime import datetime
 class InviteCreate(BaseModel):
     """Model for creating a new invite"""
 
+    custom_code: Optional[str] = None  # Optional custom invite code
     usage_limit: Optional[int] = None  # null = unlimited
     expires_in_days: Optional[int] = None  # null = never expires
     allow_sync: bool = False
@@ -52,6 +53,7 @@ class Invite(BaseModel):
 
     class Config:
         from_attributes = True
+        json_encoders = {datetime: lambda v: v.isoformat() + "Z" if v else None}
 
 
 class PlexUser(BaseModel):
@@ -68,6 +70,7 @@ class PlexUser(BaseModel):
 
     class Config:
         from_attributes = True
+        json_encoders = {datetime: lambda v: v.isoformat() + "Z" if v else None}
 
 
 class InviteWithUsers(Invite):
@@ -97,5 +100,7 @@ class InviteStatsResponse(BaseModel):
 
     total_invites: int
     active_invites: int
+    used_up_invites: int
+    total_redemptions: int
     total_users: int
     active_users: int

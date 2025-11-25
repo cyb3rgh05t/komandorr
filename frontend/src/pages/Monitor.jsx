@@ -14,6 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 
@@ -139,8 +140,21 @@ const MiniChart = ({ data = [], serviceId }) => {
 export default function Monitor() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data
+  const {
+    data: services = [],
+    isLoading: loading,
+    isFetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
@@ -148,14 +162,6 @@ export default function Monitor() {
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const itemsPerPage = 10;
-
-  useEffect(() => {
-    fetchServices();
-    const interval = setInterval(() => {
-      fetchServices(true); // Pass true to indicate auto-refresh
-    }, 5000); // Update every 5 seconds for real-time monitoring
-    return () => clearInterval(interval);
-  }, []);
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -169,31 +175,6 @@ export default function Monitor() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-
-  const fetchServices = async (isAutoRefresh = false) => {
-    try {
-      // Save current scroll position and page before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-      const currentPageNum = isAutoRefresh ? currentPage : 1;
-
-      const data = await api.getServices();
-      setServices(data);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch services:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -237,7 +218,7 @@ export default function Monitor() {
     try {
       setRefreshing(true);
       const data = await api.checkAllServices();
-      setServices(data);
+      queryClient.setQueryData(["services"], data);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
@@ -424,11 +405,7 @@ export default function Monitor() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
-                statusFilter === null
-                  ? "border-theme-primary"
-                  : "border-theme hover:border-theme-primary/50"
-              }`}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
@@ -456,9 +433,9 @@ export default function Monitor() {
             </button>
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 ${
                 statusFilter === "online"
-                  ? "border-green-500"
+                  ? "border-green-500 ring-2 ring-green-500/20"
                   : "border-theme hover:border-green-500/50"
               }`}
             >
@@ -490,9 +467,9 @@ export default function Monitor() {
             </button>
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 ${
                 statusFilter === "offline"
-                  ? "border-red-500"
+                  ? "border-red-500 ring-2 ring-red-500/20"
                   : "border-theme hover:border-red-500/50"
               }`}
             >
@@ -524,9 +501,9 @@ export default function Monitor() {
             </button>
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-lg ${
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 ${
                 statusFilter === "problem"
-                  ? "border-yellow-500"
+                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
                   : "border-theme hover:border-yellow-500/50"
               }`}
             >
@@ -559,7 +536,7 @@ export default function Monitor() {
                 </div>
               </div>
             </button>
-            <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-lg hover:border-blue-500/50">
+            <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-blue-500/50">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-left flex-1">
                   <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
@@ -637,61 +614,131 @@ export default function Monitor() {
             </div>
           )}
 
-          {/* Services List */}
+          {/* Service Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {paginatedServices.length === 0 ? (
-              <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+              <div className="lg:col-span-4">
                 {statusFilter !== null ? (
-                  <>
-                    <div className="text-6xl mb-4">
-                      {statusFilter === "online" && "🟢"}
-                      {statusFilter === "offline" && "✓"}
-                      {statusFilter === "problem" && "✓"}
-                    </div>
-                    <h3 className="text-xl font-semibold text-theme-primary mb-2">
-                      {statusFilter === "online" &&
-                        t("monitor.emptyStates.noOnline.title")}
-                      {statusFilter === "offline" &&
-                        t("monitor.emptyStates.noOffline.title")}
-                      {statusFilter === "problem" &&
-                        t("monitor.emptyStates.noProblem.title")}
-                    </h3>
-                    <p className="text-theme-text-muted">
-                      {statusFilter === "online" &&
-                        t("monitor.emptyStates.noOnline.description")}
-                      {statusFilter === "offline" &&
-                        t("monitor.emptyStates.noOffline.description")}
-                      {statusFilter === "problem" &&
-                        t("monitor.emptyStates.noProblem.description")}
-                    </p>
-                  </>
+                  (() => {
+                    const emptyStates = {
+                      online: {
+                        iconComponent: () => (
+                          <svg
+                            className="w-8 h-8 text-green-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                            />
+                          </svg>
+                        ),
+                        bgColor: "bg-green-500/10",
+                        title: t("monitor.emptyStates.noOnline.title"),
+                        message: t("monitor.emptyStates.noOnline.description"),
+                      },
+                      offline: {
+                        iconComponent: () => (
+                          <svg
+                            className="w-8 h-8 text-red-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                            />
+                          </svg>
+                        ),
+                        bgColor: "bg-red-500/10",
+                        title: t("monitor.emptyStates.noOffline.title"),
+                        message: t("monitor.emptyStates.noOffline.description"),
+                      },
+                      problem: {
+                        iconComponent: () => (
+                          <svg
+                            className="w-8 h-8 text-yellow-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        ),
+                        bgColor: "bg-yellow-500/10",
+                        title: t("monitor.emptyStates.noProblem.title"),
+                        message: t("monitor.emptyStates.noProblem.description"),
+                      },
+                    };
+
+                    const state = emptyStates[statusFilter];
+                    const IconComponent = state.iconComponent;
+
+                    return (
+                      <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                        <div className="max-w-md mx-auto">
+                          <div
+                            className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
+                          >
+                            <IconComponent />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            {state.title}
+                          </h3>
+                          <p className="text-theme-muted mb-6">
+                            {state.message}
+                          </p>
+                          <button
+                            onClick={() => setStatusFilter(null)}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                          >
+                            <Server size={20} className="text-theme-primary" />
+                            <span>View All Services</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()
                 ) : (
-                  <>
-                    <Server
-                      size={48}
-                      className="mx-auto mb-4 text-theme-text-muted"
-                    />
-                    <h3 className="text-lg font-semibold text-theme-text mb-2">
-                      {searchTerm
-                        ? t("monitor.emptyStates.noMatching.title")
-                        : t("monitor.emptyStates.noServices.title")}
-                    </h3>
-                    <p className="text-theme-text-muted mb-4">
-                      {searchTerm
-                        ? t("monitor.emptyStates.noMatching.description", {
-                            searchTerm,
-                          })
-                        : t("monitor.emptyStates.noServices.description")}
-                    </p>
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm("")}
-                        className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary/80 transition-colors"
-                      >
-                        {t("monitor.emptyStates.clearSearch")}
-                      </button>
-                    )}
-                  </>
+                  <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                    <div className="max-w-md mx-auto">
+                      <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Server size={32} className="text-theme-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold text-theme-text mb-2">
+                        {searchTerm
+                          ? t("monitor.emptyStates.noMatching.title")
+                          : t("monitor.emptyStates.noServices.title")}
+                      </h3>
+                      <p className="text-theme-muted mb-6">
+                        {searchTerm
+                          ? t("monitor.emptyStates.noMatching.description", {
+                              searchTerm,
+                            })
+                          : t("monitor.emptyStates.noServices.description")}
+                      </p>
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                        >
+                          <span>{t("monitor.emptyStates.clearSearch")}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (

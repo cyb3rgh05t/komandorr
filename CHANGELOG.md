@@ -1,5 +1,56 @@
 # CHANGELOG.md
 
+# [2.2.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.1.0...v2.2.0) (2025-11-25)
+
+### 🎨 Traffic Visualization Enhancement
+
+**New Features**
+
+• **dashboard: Circular progress traffic cards**
+◦ Complete redesign of traffic visualization with circular progress indicators
+◦ Top 5 services by bandwidth displayed with 200px diameter circular progress rings
+◦ Percentage calculated using configured MAX_BANDWIDTH (realistic 3 Gbps = 375 MB/s)
+◦ Color-coded service cards: pink, violet, cyan, emerald, amber rotation
+◦ Removed line charts in favor of cleaner circular progress design
+◦ Active indicator: green pulsing dot on top-right of cards
+◦ Centered layout using flexbox (flex flex-wrap justify-center gap-8)
+◦ Responsive grid fallback for smaller screens
+
+• **traffic: Enhanced bandwidth display box**
+◦ Two-row layout showing both real-time speeds AND cumulative data
+◦ Row 1: Current speeds (Upload: blue, Download: green, Total: purple)
+◦ Row 2: Total transferred (Uploaded: orange, Downloaded: cyan, Combined: amber)
+◦ formatBandwidth(): Handles MB/s and KB/s for current speeds
+◦ formatData(): Displays GB with automatic TB conversion for values ≥1000 GB
+◦ Mono font for consistent number alignment
+◦ Border separator between speed and data rows
+
+• **traffic-agent: MAX_BANDWIDTH configuration**
+◦ Added MAX_BANDWIDTH = 375.0 (3 Gbps connection = 375 MB/s)
+◦ Backend stores max_bandwidth from agent updates
+◦ TrafficMetrics model includes max_bandwidth field
+◦ Percentage calculation: (serviceBandwidth / max_bandwidth) × 100
+◦ Fallback to relative percentages if max_bandwidth not configured
+◦ Comment guide: 125 MB/s = 1 Gbps, 1250 MB/s = 10 Gbps, 12.5 MB/s = 100 Mbps
+
+**Bug Fixes**
+
+• **services: Fixed copy button interaction**
+◦ Service card copy button now properly stops event propagation
+◦ handleCopyClick uses e.preventDefault() and e.stopPropagation()
+◦ Prevents card link navigation when copying service ID
+◦ Copy feedback shows Check icon for 2 seconds after successful copy
+
+### 📚 Documentation
+
+• **traffic: Updated monitoring documentation**
+◦ Documented circular progress visualization approach
+◦ Added MAX_BANDWIDTH configuration examples
+◦ Bandwidth calculation formulas and percentage logic
+◦ Color scheme documentation for service cards
+
+---
+
 # [2.1.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.0.0...v2.1.0) (2025-11-24)
 
 ### ⚙️ Configuration Management

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import {
   Video,
@@ -227,15 +228,29 @@ const Pagination = ({
 export default function VODStreams() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for Plex activities
+  const {
+    data: activities = [],
+    isLoading: loading,
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey: ["plexActivities"],
+    queryFn: fetchPlexActivities,
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState(null);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const refreshInterval = useRef(null);
   const REFRESH_INTERVAL = 5000; // 5 seconds for real-time VOD stream monitoring
   const [plexConfigured, setPlexConfigured] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -305,136 +320,121 @@ export default function VODStreams() {
     );
   }, [completedActivities]);
 
-  const fetchActivities = async () => {
-    try {
-      const processedActivities = await fetchPlexActivities();
+  // Process activities for timestamps and progress tracking
+  useEffect(() => {
+    if (!activities || activities.length === 0) return;
 
-      // Track timestamps for new activities
-      const now = Date.now();
-      const newTimestamps = { ...activityTimestamps };
-      const newProgress = { ...activityProgress };
-      const newCompleted = { ...completedActivities };
-      const currentActivityIds = new Set();
+    const now = Date.now();
+    const newTimestamps = { ...activityTimestamps };
+    const newProgress = { ...activityProgress };
+    const newCompleted = { ...completedActivities };
+    const currentActivityIds = new Set();
 
-      processedActivities.forEach((activity) => {
-        currentActivityIds.add(activity.uuid);
-        const currentProgress = activity.progress;
-        const previousProgress = newProgress[activity.uuid];
-        const existingTimestamp = newTimestamps[activity.uuid];
+    activities.forEach((activity) => {
+      currentActivityIds.add(activity.uuid);
+      const currentProgress = activity.progress;
+      const previousProgress = newProgress[activity.uuid];
+      const existingTimestamp = newTimestamps[activity.uuid];
 
-        // Determine start time
-        if (existingTimestamp === undefined) {
-          // This is the first time we see this activity
-          if (currentProgress < 2) {
-            // Activity just started, use current time
-            newTimestamps[activity.uuid] = now;
-          } else {
-            // Activity already in progress
-            // Set timestamp to null initially, will be set after 1% progress
-            newTimestamps[activity.uuid] = null;
-          }
-        } else if (
-          existingTimestamp === null &&
-          previousProgress !== undefined &&
-          currentProgress >= previousProgress + 1
-        ) {
-          // Progress has increased by at least 1%, now we can start tracking
+      // Determine start time
+      if (existingTimestamp === undefined) {
+        // This is the first time we see this activity
+        if (currentProgress < 2) {
+          // Activity just started, use current time
           newTimestamps[activity.uuid] = now;
-        } else if (typeof existingTimestamp === "number") {
-          // Already tracking, keep the existing timestamp
-          // No need to do anything, it's already in newTimestamps from the spread
+        } else {
+          // Activity already in progress
+          // Set timestamp to null initially, will be set after 1% progress
+          newTimestamps[activity.uuid] = null;
         }
+      } else if (
+        existingTimestamp === null &&
+        previousProgress !== undefined &&
+        currentProgress >= previousProgress + 1
+      ) {
+        // Progress has increased by at least 1%, now we can start tracking
+        newTimestamps[activity.uuid] = now;
+      } else if (typeof existingTimestamp === "number") {
+        // Already tracking, keep the existing timestamp
+        // No need to do anything, it's already in newTimestamps from the spread
+      }
 
-        // Track progress history (do this AFTER checking for changes)
-        newProgress[activity.uuid] = currentProgress;
+      // Track progress history (do this AFTER checking for changes)
+      newProgress[activity.uuid] = currentProgress;
 
-        // If activity is complete (100%), record completion time
-        if (currentProgress >= 100 && !newCompleted[activity.uuid]) {
-          const startTime = newTimestamps[activity.uuid];
-          if (startTime) {
-            const elapsedMs = now - startTime;
-            newCompleted[activity.uuid] = {
+      // If activity is complete (100%), record completion time
+      if (currentProgress >= 100 && !newCompleted[activity.uuid]) {
+        const startTime = newTimestamps[activity.uuid];
+        if (startTime) {
+          const elapsedMs = now - startTime;
+          newCompleted[activity.uuid] = {
+            completedAt: now,
+            elapsedMs: elapsedMs,
+            title: activity.title,
+            subtitle: activity.subtitle,
+          };
+        }
+      }
+    });
+
+    // Clean up old timestamps for activities that are no longer present
+    // Keep them for 1 hour in case they reappear
+    const oneHourAgo = now - 60 * 60 * 1000;
+    Object.keys(newTimestamps).forEach((uuid) => {
+      if (!currentActivityIds.has(uuid)) {
+        const timestamp = newTimestamps[uuid];
+        if (timestamp && timestamp < oneHourAgo) {
+          // Check if it was completed
+          if (!newCompleted[uuid]) {
+            // Activity disappeared without completing, might have been cancelled
+            const elapsedMs = now - timestamp;
+            newCompleted[uuid] = {
               completedAt: now,
               elapsedMs: elapsedMs,
-              title: activity.title,
-              subtitle: activity.subtitle,
+              title: "Unknown",
+              subtitle: "Activity cancelled or incomplete",
             };
           }
+          delete newTimestamps[uuid];
+          delete newProgress[uuid];
         }
-      });
+      }
+    });
 
-      // Clean up old timestamps for activities that are no longer present
-      // Keep them for 1 hour in case they reappear
-      const oneHourAgo = now - 60 * 60 * 1000;
-      Object.keys(newTimestamps).forEach((uuid) => {
-        if (!currentActivityIds.has(uuid)) {
-          const timestamp = newTimestamps[uuid];
-          if (timestamp && timestamp < oneHourAgo) {
-            // Check if it was completed
-            if (!newCompleted[uuid]) {
-              // Activity disappeared without completing, might have been cancelled
-              const elapsedMs = now - timestamp;
-              newCompleted[uuid] = {
-                completedAt: now,
-                elapsedMs: elapsedMs,
-                cancelled: true,
-              };
-            }
-            delete newTimestamps[uuid];
-            delete newProgress[uuid];
-          }
-        }
-      });
+    // Clean up old completed activities (older than 24 hours)
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    Object.keys(newCompleted).forEach((uuid) => {
+      if (newCompleted[uuid].completedAt < oneDayAgo) {
+        delete newCompleted[uuid];
+      }
+    });
 
-      // Clean up old completed activities (older than 24 hours)
-      const oneDayAgo = now - 24 * 60 * 60 * 1000;
-      Object.keys(newCompleted).forEach((uuid) => {
-        if (newCompleted[uuid].completedAt < oneDayAgo) {
-          delete newCompleted[uuid];
-        }
-      });
+    setActivityTimestamps(newTimestamps);
+    setActivityProgress(newProgress);
+    setCompletedActivities(newCompleted);
 
-      setActivityTimestamps(newTimestamps);
-      setActivityProgress(newProgress);
-      setCompletedActivities(newCompleted);
-      setActivities(processedActivities);
-      setError(null);
-      setPlexConfigured(true);
+    // Update peak concurrent activities - save to database
+    const currentCount = activities.length;
+    const currentPeak = peakConcurrentRef.current;
 
-      // Update peak concurrent activities - save to database
-      const currentCount = processedActivities.length;
-      const currentPeak = peakConcurrentRef.current;
-
-      if (currentCount > currentPeak) {
-        console.log(`Updating peak: ${currentPeak} -> ${currentCount}`);
-        try {
-          const result = await updatePeakConcurrent(currentCount);
+    if (currentCount > currentPeak) {
+      console.log(`Updating peak: ${currentPeak} -> ${currentCount}`);
+      updatePeakConcurrent(currentCount)
+        .then((result) => {
           setPeakConcurrent(result.peak_concurrent);
           peakConcurrentRef.current = result.peak_concurrent;
-        } catch (error) {
+        })
+        .catch((error) => {
           console.error("Error updating peak concurrent:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-
-      // Check if error is due to Plex not being configured
-      if (error.message && error.message.includes("Plex not configured")) {
-        setPlexConfigured(false);
-        setError(null);
-      } else {
-        setError(error.message);
-      }
-    } finally {
-      setLoading(false);
+        });
     }
-  };
+  }, [activities]);
 
   const handleRefresh = async (isManual = false) => {
     if (isRefreshing) return;
 
     setIsRefreshing(true);
-    await fetchActivities();
+    await queryClient.refetchQueries(["plexActivities"]);
     setIsRefreshing(false);
     setLastRefreshTime(Date.now());
     if (isManual) {
@@ -442,29 +442,33 @@ export default function VODStreams() {
     }
   };
 
-  useEffect(() => {
-    fetchActivities();
-    setLastRefreshTime(Date.now());
-
-    refreshInterval.current = setInterval(() => {
-      handleRefresh(false); // Auto-refresh, no toast
-    }, REFRESH_INTERVAL);
-
-    return () => {
-      if (refreshInterval.current) {
-        clearInterval(refreshInterval.current);
-      }
-    };
-  }, []);
-
   const timeUntilNextRefresh = Math.max(
     0,
     REFRESH_INTERVAL - (Date.now() - lastRefreshTime)
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
 
-  // Filter activities based on search query
+  // Filter activities based on search query and active filter
   const filteredActivities = activities.filter((activity) => {
+    // Apply type filter
+    if (
+      activeFilter === "downloading" &&
+      !(activity.type === "download" || activity.type === "media.download")
+    )
+      return false;
+    if (activeFilter === "paused" && activity.state !== "paused") return false;
+    if (
+      activeFilter === "transcoding" &&
+      !(activity.transcodeSession && activity.state === "playing")
+    )
+      return false;
+    if (
+      activeFilter === "streaming" &&
+      !(activity.state === "playing" && !activity.transcodeSession)
+    )
+      return false;
+
+    // Apply search query
     if (!searchQuery) return true;
 
     const query = searchQuery.toLowerCase();
@@ -490,10 +494,10 @@ export default function VODStreams() {
     }
   }, [totalPages, currentPage]);
 
-  // Reset to page 1 when search query changes
+  // Reset to page 1 when search query or filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, activeFilter]);
 
   const currentItems = filteredActivities
     ? filteredActivities.slice(startIndex, endIndex)
@@ -549,8 +553,11 @@ export default function VODStreams() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div
+          onClick={() => setActiveFilter("all")}
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -558,14 +565,21 @@ export default function VODStreams() {
                 {t("vodStreams.stats.total")}
               </p>
               <p className="text-2xl font-bold text-theme-text mt-1">
-                {totalItems}
+                {activities.length}
               </p>
             </div>
             <Server className="w-8 h-8 text-theme-primary" />
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("downloading")}
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-green-500/10 ${
+            activeFilter === "downloading"
+              ? "border-green-500 ring-2 ring-green-500/20"
+              : "border-theme hover:border-green-500/50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -584,7 +598,14 @@ export default function VODStreams() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("paused")}
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-orange-500/10 ${
+            activeFilter === "paused"
+              ? "border-orange-500 ring-2 ring-orange-500/20"
+              : "border-theme hover:border-orange-500/50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -599,7 +620,14 @@ export default function VODStreams() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("transcoding")}
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-cyan-500/10 ${
+            activeFilter === "transcoding"
+              ? "border-cyan-500 ring-2 ring-cyan-500/20"
+              : "border-theme hover:border-cyan-500/50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -618,7 +646,14 @@ export default function VODStreams() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          onClick={() => setActiveFilter("streaming")}
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-blue-500/10 ${
+            activeFilter === "streaming"
+              ? "border-blue-500 ring-2 ring-blue-500/20"
+              : "border-theme hover:border-blue-500/50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -669,6 +704,125 @@ export default function VODStreams() {
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "all"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.all")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "all"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              ({activities.length})
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("downloading")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "downloading"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.downloading")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "downloading"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                activities.filter(
+                  (a) => a.type === "download" || a.type === "media.download"
+                ).length
+              }
+              )
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("paused")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "paused"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.paused")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "paused"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              ({activities.filter((a) => a.state === "paused").length})
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("transcoding")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "transcoding"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.transcoding")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "transcoding"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                activities.filter(
+                  (a) => a.transcodeSession && a.state === "playing"
+                ).length
+              }
+              )
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveFilter("streaming")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              activeFilter === "streaming"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("vodStreams.filter.streaming")}
+            <span
+              className={`ml-2 text-xs ${
+                activeFilter === "streaming"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                activities.filter(
+                  (a) => a.state === "playing" && !a.transcodeSession
+                ).length
+              }
+              )
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {loading ? (
@@ -678,52 +832,123 @@ export default function VODStreams() {
             <LoadingItem />
           </>
         ) : !plexConfigured ? (
-          <div className="bg-theme-card border border-theme rounded-lg p-8 text-center">
-            <Server size={48} className="mx-auto mb-4 text-theme-primary" />
-            <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {t("vodStreams.plexNotConfigured.title")}
-            </h3>
-            <p className="text-theme-muted mb-6">
-              {t("vodStreams.plexNotConfigured.description")}
-            </p>
-            <Link
-              to="/settings"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
-            >
-              <Server size={20} />
-              {t("vodStreams.plexNotConfigured.goToSettings")}
-            </Link>
+          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Server size={32} className="text-theme-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-theme-text mb-2">
+                {t("vodStreams.plexNotConfigured.title")}
+              </h3>
+              <p className="text-theme-muted mb-6">
+                {t("vodStreams.plexNotConfigured.description")}
+              </p>
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+              >
+                <Server size={20} />
+                {t("vodStreams.plexNotConfigured.goToSettings")}
+              </Link>
+            </div>
           </div>
         ) : error ? (
-          <div className="bg-theme-card border border-red-500/30 rounded-lg p-6 text-center">
-            <AlertCircle size={24} className="text-red-400 mx-auto mb-3" />
-            <p className="text-red-400">{t("vodStreams.loadError")}</p>
-            <p className="text-theme-muted text-sm mt-2">{error}</p>
+          <div className="lg:col-span-2 bg-theme-card border border-red-500/30 rounded-xl p-8 text-center shadow-lg">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={32} className="text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-red-400 mb-2">
+                {t("vodStreams.loadError")}
+              </h3>
+              <p className="text-theme-muted">{error}</p>
+            </div>
           </div>
         ) : !filteredActivities?.length ? (
-          <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
-            <Download
-              size={48}
-              className="mx-auto mb-4 text-theme-text-muted"
-            />
-            <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {searchQuery
-                ? t("vodStreams.noMatching")
-                : t("vodStreams.noActivities")}
-            </h3>
-            <p className="text-theme-text-muted mb-6">
-              {searchQuery
-                ? `${t("vodStreams.noMatchingDescription")} "${searchQuery}"`
-                : t("vodStreams.noActivitiesDescription")}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
-              >
-                {t("vodStreams.clearSearch")}
-              </button>
-            )}
+          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+            <div className="max-w-md mx-auto">
+              {searchQuery ? (
+                <>
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    {t("vodStreams.noMatching")}
+                  </h3>
+                  <p className="text-theme-muted mb-6">
+                    {`${t(
+                      "vodStreams.noMatchingDescription"
+                    )} "${searchQuery}"`}
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                  >
+                    {t("vodStreams.clearSearch")}
+                  </button>
+                </>
+              ) : activeFilter === "all" ? (
+                <>
+                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Server size={32} className="text-theme-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    {t("vodStreams.noActivities")}
+                  </h3>
+                  <p className="text-theme-muted">
+                    {t("vodStreams.noActivitiesDescription")}
+                  </p>
+                </>
+              ) : activeFilter === "downloading" ? (
+                <>
+                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Download size={32} className="text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Downloading Streams
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no active downloads at the moment
+                  </p>
+                </>
+              ) : activeFilter === "paused" ? (
+                <>
+                  <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Pause size={32} className="text-orange-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Paused Streams
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no paused streams at the moment
+                  </p>
+                </>
+              ) : activeFilter === "transcoding" ? (
+                <>
+                  <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Video size={32} className="text-cyan-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Transcoding Streams
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no active transcoding sessions at the moment
+                  </p>
+                </>
+              ) : activeFilter === "streaming" ? (
+                <>
+                  <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play size={32} className="text-blue-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-theme-text mb-2">
+                    No Streaming Sessions
+                  </h3>
+                  <p className="text-theme-muted">
+                    There are no active streaming sessions at the moment
+                  </p>
+                </>
+              ) : null}
+            </div>
           </div>
         ) : (
           <>

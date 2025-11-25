@@ -174,6 +174,10 @@
     "refreshData": "Refresh Data",
     "lastDataPoints": "Last 20 data points",
     "activeServicesLabel": "Active Services",
+    "topServices": "Top Services",
+    "up": "Up",
+    "down": "Down",
+    "total": "Total",
     "page": {
       "searchPlaceholder": "Search services...",
       "refresh": "Refresh",
@@ -231,6 +235,13 @@
     "noActivitiesDescription": "There are no active downloads or sync activities at this time",
     "showing": "Showing {{from}} to {{to}} of {{total}} activities",
     "live": "LIVE",
+    "filter": {
+      "all": "All",
+      "downloading": "Downloading",
+      "paused": "Paused",
+      "transcoding": "Transcoding",
+      "streaming": "Streaming"
+    },
     "stats": {
       "total": "Total",
       "downloading": "Downloading",
@@ -303,6 +314,7 @@
   },
   "settings": {
     "title": "Settings",
+    "settings": "Settings",
     "theme": "Theme",
     "language": "Language",
     "loggingSettings": "Logging Settings",
@@ -319,6 +331,7 @@
     "tmdbApiKey": "TMDB API Key",
     "tmdbApiKeyHelp": "API key for The Movie Database (used for invite redemption backgrounds)",
     "saveSettings": "Save Settings",
+    "saveNow": "Save Now",
     "saving": "Saving...",
     "settingsSaved": "Settings saved successfully",
     "saveError": "Failed to save settings",
@@ -455,6 +468,7 @@
     "inviteCreated": "Invite created successfully!",
     "inviteDeleted": "Invite deleted successfully!",
     "linkCopied": "Invite link copied to clipboard!",
+    "searchPlaceholder": "Search invites...",
     "errorLoading": "Error loading invites",
     "errorCreating": "Error creating invite",
     "errorDeleting": "Error deleting invite",
@@ -463,10 +477,20 @@
       "totalInvites": "Total Invites",
       "activeInvites": "Active Invites",
       "totalRedemptions": "Total Redemptions",
+      "usedUp": "Used Up",
+      "expired": "Expired",
       "plexUsers": "Plex Users",
       "movies": "Movies",
       "tvShows": "TV Shows",
       "episodes": "Episodes"
+    },
+    "filter": {
+      "label": "Filter",
+      "all": "All",
+      "active": "Active",
+      "expired": "Expired",
+      "usedUp": "Used Up",
+      "disabled": "Disabled"
     },
     "status": {
       "disabled": "Disabled",
@@ -500,6 +524,10 @@
       "create": "Create Invite"
     },
     "form": {
+      "customCode": "Custom Invite Code",
+      "optional": "optional",
+      "customCodePlaceholder": "e.g. WELCOME2024 or leave empty for auto-generated",
+      "customCodeDesc": "Min 4 characters. Letters, numbers, hyphens, and underscores allowed. Leave empty to auto-generate.",
       "usageLimit": "Usage Limit",
       "unlimited": "Unlimited",
       "uses": "uses",

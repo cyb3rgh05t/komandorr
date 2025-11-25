@@ -48,6 +48,12 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCopyClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleCopyId();
+  };
+
   return (
     <a
       href={service.url}
@@ -171,7 +177,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
               {service.id}...
             </code>
             <button
-              onClick={handleCopyId}
+              onClick={handleCopyClick}
               className="p-1 hover:bg-theme-hover rounded transition-colors border border-transparent hover:border-theme"
               title="Copy Service ID"
             >

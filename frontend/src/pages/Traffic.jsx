@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import {
   Activity,
@@ -136,20 +137,28 @@ const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
 export default function Traffic() {
   const { t } = useTranslation();
   const toast = useToast();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Use React Query for services data with traffic filtering
+  const {
+    data: allServices = [],
+    isLoading: loading,
+    isFetching,
+  } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Filter services that have traffic data
+  const services = allServices.filter((s) => s.traffic);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
-
-  useEffect(() => {
-    fetchTrafficData();
-    const interval = setInterval(() => {
-      fetchTrafficData(false, true); // Pass true for isAutoRefresh
-    }, 5000); // Update every 5 seconds for real-time traffic monitoring
-    return () => clearInterval(interval);
-  }, []);
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -158,37 +167,6 @@ export default function Traffic() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const fetchTrafficData = async (
-    isManualRefresh = false,
-    isAutoRefresh = false
-  ) => {
-    try {
-      // Save current scroll position before updating
-      const currentScrollY = isAutoRefresh ? window.scrollY : 0;
-
-      const data = await api.getServices();
-      // Filter services that have traffic data
-      const servicesWithTraffic = data.filter((s) => s.traffic);
-      setServices(servicesWithTraffic);
-
-      // Don't manage activeTab here - let useEffect handle it
-
-      // Restore scroll position after state update for auto-refresh
-      if (isAutoRefresh && currentScrollY > 0) {
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
-        }, 0);
-      }
-    } catch (error) {
-      console.error("Error fetching traffic data:", error);
-    } finally {
-      setLoading(false);
-      if (isManualRefresh) {
-        setRefreshing(false);
-      }
-    }
-  };
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -230,7 +208,8 @@ export default function Traffic() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchTrafficData(true);
+    await queryClient.refetchQueries(["services"]);
+    setRefreshing(false);
     toast.success(t("traffic.page.refreshSuccess"));
   };
 
@@ -395,7 +374,7 @@ export default function Traffic() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {/* Total Services */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -411,7 +390,7 @@ export default function Traffic() {
             </div>
 
             {/* Upload Speed */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -427,7 +406,7 @@ export default function Traffic() {
             </div>
 
             {/* Download Speed */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -443,7 +422,7 @@ export default function Traffic() {
             </div>
 
             {/* Total Uploaded */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -459,7 +438,7 @@ export default function Traffic() {
             </div>
 
             {/* Total Downloaded */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -475,7 +454,7 @@ export default function Traffic() {
             </div>
 
             {/* Total Traffic */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
