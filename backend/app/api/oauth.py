@@ -17,6 +17,10 @@ from app.database import db, InviteDB, PlexUserDB
 
 router = APIRouter(prefix="/api/oauth", tags=["oauth"])
 
+logger.info(
+    "===== OAuth module loaded, routes will be: /api/oauth/plex/login, /api/oauth/plex/check, /api/oauth/plex/redeem ====="
+)
+
 # Store OAuth states temporarily (in production, use Redis or database)
 oauth_states = {}
 
@@ -203,6 +207,10 @@ async def redeem_with_plex_oauth(request: PlexRedeemRequest):
     This is called after user has authorized via Plex OAuth
     Similar to Wizarr's handle_oauth_token function
     """
+    logger.info(
+        f"=== OAUTH REDEEM CALLED === Email: {request.email}, Invite: {request.invite_code}"
+    )
+
     session = db.get_session()
     try:
         # Validate invite
@@ -243,8 +251,13 @@ async def redeem_with_plex_oauth(request: PlexRedeemRequest):
                 detail="You have already redeemed this invite",
             )
 
-        # Now invite the user to Plex using their OAuth token
+        # ALWAYS invite/update the user in Plex, even if they exist in our database
+        # This ensures library access is updated if they're redeeming a different invite
         from app.utils.plex_invite import invite_plex_user_oauth
+
+        logger.info(
+            f"About to call invite_plex_user_oauth for {request.email} with invite libraries: {invite.libraries}"
+        )
 
         success, error_msg = await invite_plex_user_oauth(
             auth_token=request.auth_token,
@@ -253,10 +266,14 @@ async def redeem_with_plex_oauth(request: PlexRedeemRequest):
             invite=invite,
         )
 
+        logger.info(
+            f"invite_plex_user_oauth returned: success={success}, error={error_msg}"
+        )
+
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=error_msg or "Failed to send Plex invitation",
+            # Log warning but don't fail - user might already be in Plex
+            logger.warning(
+                f"Plex invitation failed for {request.email}: {error_msg}, continuing anyway"
             )
 
         if existing_user:

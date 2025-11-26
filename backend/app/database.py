@@ -41,6 +41,7 @@ class ServiceDB(Base):
     bandwidth_down = Column(Float, default=0.0)
     total_up = Column(Float, default=0.0)
     total_down = Column(Float, default=0.0)
+    max_bandwidth = Column(Float, nullable=True)  # Maximum bandwidth capacity in MB/s
     traffic_last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
 
     # Relationships
@@ -143,6 +144,7 @@ class PlexUserDB(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
     plex_id = Column(String, nullable=True)  # Plex user ID
+    thumb = Column(String, nullable=True)  # Plex avatar URL
 
     # Invite relationship
     invite_id = Column(Integer, ForeignKey("invites.id"), nullable=False)
@@ -155,6 +157,7 @@ class PlexUserDB(Base):
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     last_seen = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)  # When the user account expires
 
     # Status
     is_active = Column(Boolean, default=True)
@@ -199,6 +202,15 @@ class Database:
             conn = sqlite3.connect(str(self.db_path))
             cursor = conn.cursor()
 
+            # Check if new columns exist in services table
+            cursor.execute("PRAGMA table_info(services)")
+            service_columns = [row[1] for row in cursor.fetchall()]
+
+            # Add max_bandwidth column if it doesn't exist
+            if "max_bandwidth" not in service_columns:
+                logger.info("Adding max_bandwidth column to services table")
+                cursor.execute("ALTER TABLE services ADD COLUMN max_bandwidth REAL")
+
             # Check if new columns exist in plex_stats table
             cursor.execute("PRAGMA table_info(plex_stats)")
             columns = [row[1] for row in cursor.fetchall()]
@@ -223,6 +235,20 @@ class Database:
                 cursor.execute(
                     "ALTER TABLE plex_stats ADD COLUMN total_tv_shows INTEGER DEFAULT 0"
                 )
+
+            # Check if new columns exist in plex_users table
+            cursor.execute("PRAGMA table_info(plex_users)")
+            plex_users_columns = [row[1] for row in cursor.fetchall()]
+
+            # Add expires_at column if it doesn't exist
+            if "expires_at" not in plex_users_columns:
+                logger.info("Adding expires_at column to plex_users table")
+                cursor.execute("ALTER TABLE plex_users ADD COLUMN expires_at DATETIME")
+
+            # Add thumb column if it doesn't exist
+            if "thumb" not in plex_users_columns:
+                logger.info("Adding thumb column to plex_users table")
+                cursor.execute("ALTER TABLE plex_users ADD COLUMN thumb TEXT")
 
             conn.commit()
             conn.close()

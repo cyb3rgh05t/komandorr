@@ -37,7 +37,7 @@ class Service(BaseModel):
     id: str
     name: str
     url: str
-    type: Literal["app", "website", "panel", "project"]
+    type: Literal["app", "website", "panel", "project", "server"]
     status: Literal["online", "offline", "problem"] = "offline"
     last_check: datetime | None = None
     response_time: float | None = None
@@ -54,7 +54,7 @@ class ServiceCreate(BaseModel):
 
     name: str
     url: str
-    type: Literal["app", "website", "panel", "project"]
+    type: Literal["app", "website", "panel", "project", "server"]
     description: str | None = None
     icon: str | None = None
     group: str | None = None
@@ -65,7 +65,7 @@ class ServiceUpdate(BaseModel):
 
     name: str | None = None
     url: str | None = None
-    type: Literal["app", "website", "panel", "project"] | None = None
+    type: Literal["app", "website", "panel", "project", "server"] | None = None
     description: str | None = None
     icon: str | None = None
     group: str | None = None

@@ -41,7 +41,7 @@ KOMANDORR_URL = "https://komandorr.mystreamnet.club"
 SERVICE_ID = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # How often to send data (in seconds)
-UPDATE_INTERVAL = 30
+UPDATE_INTERVAL = 5
 
 # Network interface to monitor (None = all interfaces, or specify like 'eth0', 'ens18')
 NETWORK_INTERFACE = None
@@ -194,10 +194,10 @@ class TrafficMonitor:
             if response.status_code == 200:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 logger.success(
-                    f"[{timestamp}] Sent: {Fore.CYAN}↑{traffic_data['bandwidth_up']:.2f} MB/s "
-                    f"{Fore.BLUE}↓{traffic_data['bandwidth_down']:.2f} MB/s{Style.RESET_ALL} "
-                    f"| Total: {Fore.YELLOW}↑{traffic_data['total_up']:.2f} GB "
-                    f"↓{traffic_data['total_down']:.2f} GB{Style.RESET_ALL}"
+                    f"[{timestamp}] Sent: {Fore.CYAN}UP {traffic_data['bandwidth_up']:.2f} MB/s "
+                    f"{Fore.BLUE}DOWN {traffic_data['bandwidth_down']:.2f} MB/s{Style.RESET_ALL} "
+                    f"| Total: {Fore.YELLOW}UP {traffic_data['total_up']:.2f} GB "
+                    f"DOWN {traffic_data['total_down']:.2f} GB{Style.RESET_ALL}"
                 )
                 return True
             else:

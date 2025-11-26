@@ -63,9 +63,11 @@ class PlexUser(BaseModel):
     email: str
     username: Optional[str] = None
     plex_id: Optional[str] = None
+    thumb: Optional[str] = None
     invite_id: int
     created_at: datetime
     last_seen: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
     is_active: bool = True
 
     class Config:

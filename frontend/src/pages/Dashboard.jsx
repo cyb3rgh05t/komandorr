@@ -28,6 +28,7 @@ import { fetchPlexActivities } from "@/services/plexService";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import ServiceModal from "@/components/ServiceModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const API_URL = "/api";
 const REPO_URL = "https://github.com/cyb3rgh05t/komandorr/releases/latest";
@@ -55,8 +56,8 @@ export default function Dashboard() {
   const { data: trafficData, isFetching: trafficFetching } = useQuery({
     queryKey: ["traffic"],
     queryFn: () => api.getTrafficSummary(),
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 5000,
+    refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -74,8 +75,15 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
-  const [refreshing, setRefreshing] = useState(false);
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    serviceId: null,
+    serviceName: null,
+  });
+
   const [dashboardVisibility, setDashboardVisibility] = useState(() => {
     // Load from localStorage or use defaults
     const saved = localStorage.getItem("dashboardVisibility");
@@ -190,7 +198,6 @@ export default function Dashboard() {
 
   const handleRefreshAll = async () => {
     try {
-      setRefreshing(true);
       const data = await api.checkAllServices();
       // Update the cache with the new data
       queryClient.setQueryData(["services"], data);
@@ -198,20 +205,15 @@ export default function Dashboard() {
     } catch (error) {
       toast.error(t("common.error"));
       console.error("Failed to check all services:", error);
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
   const handleRefreshTraffic = async () => {
-    setRefreshing(true);
     await queryClient.refetchQueries(["traffic"]);
-    setTimeout(() => setRefreshing(false), 500);
   };
 
   const handleCheckService = async (id) => {
     try {
-      setRefreshing(true);
       const updated = await api.checkService(id);
       // Update the cache with the updated service
       queryClient.setQueryData(["services"], (old) =>
@@ -221,8 +223,6 @@ export default function Dashboard() {
     } catch (error) {
       toast.error(t("common.error"));
       console.error("Failed to check service:", error);
-    } finally {
-      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -255,14 +255,20 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteService = async (id) => {
-    if (!confirm(t("common.confirm"))) return;
+  const handleDeleteService = (service) => {
+    setConfirmDialog({
+      isOpen: true,
+      serviceId: service.id,
+      serviceName: service.name,
+    });
+  };
 
+  const confirmDeleteService = async () => {
     try {
-      await api.deleteService(id);
+      await api.deleteService(confirmDialog.serviceId);
       // Remove from cache
       queryClient.setQueryData(["services"], (old) =>
-        old.filter((s) => s.id !== id)
+        old.filter((s) => s.id !== confirmDialog.serviceId)
       );
       toast.success(t("common.success"));
     } catch (error) {
@@ -362,16 +368,20 @@ export default function Dashboard() {
           </button>
           <button
             onClick={handleRefreshAll}
-            disabled={refreshing}
+            disabled={isFetching}
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
               className={`text-theme-primary transition-transform duration-500 ${
-                refreshing ? "animate-spin" : ""
+                isFetching ? "animate-spin" : ""
               }`}
             />
-            <span className="text-xs sm:text-sm">{t("service.checkNow")}</span>
+            <span className="text-xs sm:text-sm">
+              {isFetching
+                ? t("common.refreshing", "Refreshing")
+                : t("service.checkNow")}
+            </span>
           </button>
           <button
             onClick={() => setShowModal(true)}
@@ -977,7 +987,7 @@ export default function Dashboard() {
                           <DashboardTrafficCards
                             trafficData={filteredTrafficData}
                             onRefresh={handleRefreshTraffic}
-                            refreshing={refreshing}
+                            refreshing={trafficFetching}
                           />
                         </div>
                       )}
@@ -1070,7 +1080,7 @@ export default function Dashboard() {
                         <DashboardTrafficCards
                           trafficData={filteredTrafficData}
                           onRefresh={handleRefreshTraffic}
-                          refreshing={refreshing}
+                          refreshing={trafficFetching}
                         />
                       </div>
                     )}
@@ -1113,6 +1123,30 @@ export default function Dashboard() {
           onSave={editingService ? handleUpdateService : handleCreateService}
         />
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() =>
+          setConfirmDialog({
+            isOpen: false,
+            serviceId: null,
+            serviceName: null,
+          })
+        }
+        onConfirm={confirmDeleteService}
+        title={t("confirmations.deleteService")}
+        message={
+          confirmDialog.serviceName
+            ? t("confirmations.deleteServiceMessage", {
+                name: confirmDialog.serviceName,
+              })
+            : t("confirmations.deleteServiceMessage")
+        }
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+      />
     </div>
   );
 }

@@ -156,7 +156,6 @@ export default function Traffic() {
   const services = allServices.filter((s) => s.traffic);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
 
@@ -207,9 +206,7 @@ export default function Traffic() {
   }, [services, searchTerm, activeTab]);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
     await queryClient.refetchQueries(["services"]);
-    setRefreshing(false);
     toast.success(t("traffic.page.refreshSuccess"));
   };
 
@@ -256,11 +253,11 @@ export default function Traffic() {
 
   // Calculate total traffic (cumulative) across all services
   const totalTrafficUp = services.reduce(
-    (sum, service) => sum + (service.traffic?.total_up || 0),
+    (sum, service) => sum + Math.abs(service.traffic?.total_up || 0),
     0
   );
   const totalTrafficDown = services.reduce(
-    (sum, service) => sum + (service.traffic?.total_down || 0),
+    (sum, service) => sum + Math.abs(service.traffic?.total_down || 0),
     0
   );
 
@@ -356,17 +353,19 @@ export default function Traffic() {
 
             <button
               onClick={handleRefresh}
-              disabled={refreshing}
+              disabled={isFetching}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary ${
-                  refreshing ? "animate-spin" : ""
+                  isFetching ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {t("traffic.page.refresh")}
+                {isFetching
+                  ? t("common.refreshing", "Refreshing")
+                  : t("traffic.page.refresh")}
               </span>
             </button>
           </div>
@@ -523,7 +522,7 @@ export default function Traffic() {
           )}
 
           {/* Services Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {servicesInActiveGroup.length === 0 ? (
               <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
                 <Server
@@ -576,49 +575,61 @@ export default function Traffic() {
                   </div>
 
                   {/* Traffic Stats Row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                    <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-2">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <ArrowUp className="w-3 h-3 text-blue-400" />
-                        <p className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                    <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-3 hover:border-blue-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <div className="p-1 bg-blue-500/20 rounded">
+                          <ArrowUp className="w-3 h-3 text-blue-400" />
+                        </div>
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">
                           {t("traffic.page.stats.uploadSpeed")}
                         </p>
                       </div>
-                      <p className="text-base font-bold text-blue-500">
+                      <p className="text-lg font-bold text-blue-400">
                         {formatBandwidth(service.traffic?.bandwidth_up || 0)}
                       </p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-lg p-2">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <ArrowDown className="w-3 h-3 text-green-400" />
-                        <p className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">
+                    <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-3 hover:border-green-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <div className="p-1 bg-green-500/20 rounded">
+                          <ArrowDown className="w-3 h-3 text-green-400" />
+                        </div>
+                        <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider">
                           {t("traffic.page.stats.downloadSpeed")}
                         </p>
                       </div>
-                      <p className="text-base font-bold text-green-500">
+                      <p className="text-lg font-bold text-green-400">
                         {formatBandwidth(service.traffic?.bandwidth_down || 0)}
                       </p>
                     </div>
-                    <div className="bg-theme-card border border-theme rounded-lg p-2">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <ArrowUp className="w-3 h-3 text-theme-text-muted" />
-                        <p className="text-[10px] text-theme-text-muted font-semibold uppercase tracking-wider">
+                    <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded-lg p-3 hover:border-orange-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <div className="p-1 bg-orange-500/20 rounded">
+                          <ArrowUp className="w-3 h-3 text-orange-400" />
+                        </div>
+                        <p className="text-[10px] text-orange-400 font-bold uppercase tracking-wider">
                           {t("traffic.page.stats.totalUpload")}
                         </p>
                       </div>
-                      <p className="text-base font-bold text-theme-text">
-                        {formatTraffic(service.traffic?.total_up || 0)}
+                      <p className="text-lg font-bold text-orange-400">
+                        {formatTraffic(
+                          Math.abs(service.traffic?.total_up || 0)
+                        )}
                       </p>
                     </div>
-                    <div className="bg-theme-card border border-theme rounded-lg p-2">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <ArrowDown className="w-3 h-3 text-theme-text-muted" />
-                        <p className="text-[10px] text-theme-text-muted font-semibold uppercase tracking-wider">
+                    <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg p-3 hover:border-cyan-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <div className="p-1 bg-cyan-500/20 rounded">
+                          <ArrowDown className="w-3 h-3 text-cyan-400" />
+                        </div>
+                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
                           {t("traffic.page.stats.totalDownload")}
                         </p>
                       </div>
-                      <p className="text-base font-bold text-theme-text">
-                        {formatTraffic(service.traffic?.total_down || 0)}
+                      <p className="text-lg font-bold text-cyan-400">
+                        {formatTraffic(
+                          Math.abs(service.traffic?.total_down || 0)
+                        )}
                       </p>
                     </div>
                   </div>

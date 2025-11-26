@@ -538,16 +538,20 @@ export default function VODStreams() {
           </div>
           <button
             onClick={() => handleRefresh(true)}
-            disabled={isRefreshing}
+            disabled={isFetching}
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
               className={`text-theme-primary transition-transform duration-500 ${
-                isRefreshing ? "animate-spin" : ""
+                isFetching ? "animate-spin" : ""
               }`}
             />
-            <span className="text-xs sm:text-sm">{t("common.refresh")}</span>
+            <span className="text-xs sm:text-sm">
+              {isFetching
+                ? t("common.refreshing", "Refreshing")
+                : t("common.refresh")}
+            </span>
           </button>
         </div>
       </div>

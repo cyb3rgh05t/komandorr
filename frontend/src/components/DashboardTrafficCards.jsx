@@ -166,13 +166,9 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     { primary: "#f59e0b", shadow: "rgba(245, 158, 11, 0.4)" }, // amber
   ];
 
-  // Get top 5 services by bandwidth
+  // Get top 5 services by bandwidth, sorted alphabetically
   const topServices = [...activeServices]
-    .sort((a, b) => {
-      const aTotal = (a.bandwidth_up || 0) + (a.bandwidth_down || 0);
-      const bTotal = (b.bandwidth_up || 0) + (b.bandwidth_down || 0);
-      return bTotal - aTotal;
-    })
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 5);
 
   return topServices.length > 0 ? (
@@ -183,11 +179,12 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
         // Calculate percentage based on configured max_bandwidth or relative to highest
         let percentage;
-        if (service.max_bandwidth && service.max_bandwidth > 0) {
+        const maxBandwidthValue =
+          service.traffic?.max_bandwidth || service.max_bandwidth;
+
+        if (maxBandwidthValue && maxBandwidthValue > 0) {
           // Absolute percentage based on configured maximum
-          percentage = Math.round(
-            (serviceBandwidth / service.max_bandwidth) * 100
-          );
+          percentage = Math.round((serviceBandwidth / maxBandwidthValue) * 100);
         } else {
           // Relative percentage (fallback)
           percentage = Math.round((serviceBandwidth / maxBandwidth) * 100);

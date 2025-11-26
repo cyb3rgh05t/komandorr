@@ -9,11 +9,13 @@ import Services from "./pages/Services";
 import Monitor from "./pages/Monitor";
 import Traffic from "./pages/Traffic";
 import VODStreams from "./pages/VODStreams";
+import VODActivity from "./pages/VODActivity";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import InviteRedemption from "./pages/InviteRedemption";
 import InviteRedeem from "./pages/InviteRedeem";
 import InvitesManager from "./pages/InvitesManager";
+import UserAccounts from "./pages/UserAccounts";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -158,7 +160,9 @@ function App() {
                       <Route path="/monitor" element={<Monitor />} />
                       <Route path="/traffic" element={<Traffic />} />
                       <Route path="/vod-streams" element={<VODStreams />} />
+                      <Route path="/vod-activity" element={<VODActivity />} />
                       <Route path="/invites" element={<InvitesManager />} />
+                      <Route path="/user-accounts" element={<UserAccounts />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>
