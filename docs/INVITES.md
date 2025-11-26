@@ -2,30 +2,35 @@
 
 ## Overview
 
-Komandorr now includes a comprehensive Plex invite system similar to Streamarr and Wizarr. This feature allows you to create and manage invite codes for inviting new users to your Plex server with granular control over permissions and library access.
+Komandorr v2.3.0 includes a comprehensive Plex invite management system similar to Wizarr and Streamarr. This feature allows you to create and manage invite codes for inviting new users to your Plex server with granular control over permissions, library access, and user expiration dates.
 
 ## Features
 
 ### ✨ Core Features
 
 - **Invite Code Generation**: Automatically generates unique 8-character invite codes
-- **Usage Limits**: Set maximum number of times an invite can be used (or unlimited)
+- **Usage Limits**: Set maximum number of times an invite can be used (1-100 or unlimited)
 - **Expiration**: Set expiration dates for invites (or never expire)
 - **Permission Control**: Fine-grained control over user permissions:
   - Downloads/Sync
   - Live TV/Channels
-  - Camera Upload
   - Plex Home vs Friend invitations
-- **Library Access**: Control which Plex libraries users can access
-- **User Tracking**: Track who redeemed each invite
-- **Statistics Dashboard**: View invite usage statistics
+- **Library Access**: Control which Plex libraries users can access (Movies, TV Shows, Music, or All)
+- **User Management**: Comprehensive user account management with individual expiration dates
+- **OAuth Redemption**: Wizarr-style OAuth flow for seamless Plex account integration
+- **User Tracking**: Track all users who redeemed invites with profile pictures and metadata
+- **Statistics Dashboard**: View invite usage statistics and user metrics
+- **User Refresh**: Update user information from Plex server on-demand
+- **User Removal**: Remove users from Plex server directly from the dashboard
 
 ### 🎯 Use Cases
 
 - Share your Plex server with friends and family
 - Create temporary invites for trial access
 - Manage library access per invite
+- Set individual user expiration dates
 - Track server growth and user acquisition
+- Bulk user management with search and filtering
 
 ## Installation & Setup
 

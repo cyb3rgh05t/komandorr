@@ -28,6 +28,7 @@ import { fetchPlexActivities } from "@/services/plexService";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import ServiceModal from "@/components/ServiceModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const API_URL = "/api";
 const REPO_URL = "https://github.com/cyb3rgh05t/komandorr/releases/latest";
@@ -75,6 +76,14 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    serviceId: null,
+    serviceName: null,
+  });
+
   const [dashboardVisibility, setDashboardVisibility] = useState(() => {
     // Load from localStorage or use defaults
     const saved = localStorage.getItem("dashboardVisibility");
@@ -246,14 +255,20 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteService = async (id) => {
-    if (!confirm(t("common.confirm"))) return;
+  const handleDeleteService = (service) => {
+    setConfirmDialog({
+      isOpen: true,
+      serviceId: service.id,
+      serviceName: service.name,
+    });
+  };
 
+  const confirmDeleteService = async () => {
     try {
-      await api.deleteService(id);
+      await api.deleteService(confirmDialog.serviceId);
       // Remove from cache
       queryClient.setQueryData(["services"], (old) =>
-        old.filter((s) => s.id !== id)
+        old.filter((s) => s.id !== confirmDialog.serviceId)
       );
       toast.success(t("common.success"));
     } catch (error) {
@@ -1108,6 +1123,30 @@ export default function Dashboard() {
           onSave={editingService ? handleUpdateService : handleCreateService}
         />
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() =>
+          setConfirmDialog({
+            isOpen: false,
+            serviceId: null,
+            serviceName: null,
+          })
+        }
+        onConfirm={confirmDeleteService}
+        title={t("confirmations.deleteService")}
+        message={
+          confirmDialog.serviceName
+            ? t("confirmations.deleteServiceMessage", {
+                name: confirmDialog.serviceName,
+              })
+            : t("confirmations.deleteServiceMessage")
+        }
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
+      />
     </div>
   );
 }

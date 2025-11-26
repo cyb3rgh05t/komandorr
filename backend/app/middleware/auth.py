@@ -49,6 +49,16 @@ async def basic_auth_middleware(request: Request, call_next):
     if request.url.path.startswith("/api/auth/"):
         return await call_next(request)
 
+    # Allow invite-related endpoints without authentication
+    if (
+        request.url.path.startswith("/api/invites/")
+        or request.url.path.startswith("/api/plex/stats")
+        or request.url.path.startswith("/api/plex/media/recent")
+        or request.url.path.startswith("/api/plex/proxy/image")
+        or request.url.path.startswith("/api/oauth/plex/")
+    ):
+        return await call_next(request)
+
     # Allow static files (icons, assets) without authentication
     if request.url.path.startswith("/icons/") or request.url.path.startswith(
         "/assets/"

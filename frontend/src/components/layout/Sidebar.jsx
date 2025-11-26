@@ -28,7 +28,8 @@ export default function Sidebar() {
     { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
     { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
     { path: "/vod-activity", label: t("nav.vodActivity"), icon: Users },
-    { path: "/invites", label: "VOD Invites", icon: Mail },
+    { path: "/invites", label: t("nav.invites"), icon: Mail },
+    { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];

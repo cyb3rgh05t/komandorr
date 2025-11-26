@@ -9,9 +9,9 @@
 
 ## Overview
 
-Komandorr is a powerful, feature-rich service monitoring dashboard designed to keep track of your applications, websites, APIs, panels, and infrastructure. With SQLite-backed data persistence, built-in Plex integration, traffic monitoring, and 11 beautiful themes, Komandorr makes monitoring your services simple, elegant, and scalable.
+Komandorr is a powerful, feature-rich service monitoring dashboard designed to keep track of your applications, websites, APIs, panels, and infrastructure. With SQLite-backed data persistence, built-in Plex integration with invite management, traffic monitoring, and 11 beautiful themes, Komandorr makes monitoring your services simple, elegant, and scalable.
 
-**Version 2.2.0** introduces circular progress traffic visualization with real-time bandwidth monitoring, cumulative data tracking, and automatic TB/GB conversion.
+**Version 2.3.0** introduces a complete Plex invite management system with user accounts, OAuth redemption flow, library-specific access control, and advanced user management capabilities.
 
 ## Key Features
 
@@ -22,6 +22,10 @@ Monitor unlimited services in real-time with customizable health checks, service
 ### :material-database: SQLite Database Storage
 
 Efficient database backend stores up to 1000 historical data points per service. Automatic migration from JSON, better performance, and reliable data persistence.
+
+### :material-account-group: Plex Invite Management _(New in v2.3.0!)_
+
+Complete Plex invitation system with custom invite codes, library-specific access control, permission management, OAuth-based redemption, and comprehensive user account management. Create invite links with usage limits and expiration dates, manage user access to specific libraries, and track all invited users with detailed statistics.
 
 ### :material-movie-open-play: VOD Streams (Plex Integration)
 

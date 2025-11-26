@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { useToast } from "../context/ToastContext";
 
 export default function Services() {
@@ -38,6 +39,13 @@ export default function Services() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    serviceId: null,
+    serviceName: null,
+  });
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -115,13 +123,19 @@ export default function Services() {
     }
   };
 
-  const handleDeleteService = async (id) => {
-    if (!confirm(t("confirmations.deleteService"))) return;
+  const handleDeleteService = (service) => {
+    setConfirmDialog({
+      isOpen: true,
+      serviceId: service.id,
+      serviceName: service.name,
+    });
+  };
 
+  const confirmDeleteService = async () => {
     try {
-      await api.deleteService(id);
+      await api.deleteService(confirmDialog.serviceId);
       queryClient.setQueryData(["services"], (old) =>
-        old.filter((s) => s.id !== id)
+        old.filter((s) => s.id !== confirmDialog.serviceId)
       );
       toast.success(t("success.serviceDeleted"));
     } catch (error) {
@@ -617,6 +631,30 @@ export default function Services() {
         }}
         onSave={editingService ? handleUpdateService : handleCreateService}
         service={editingService}
+      />
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() =>
+          setConfirmDialog({
+            isOpen: false,
+            serviceId: null,
+            serviceName: null,
+          })
+        }
+        onConfirm={confirmDeleteService}
+        title={t("confirmations.deleteService")}
+        message={
+          confirmDialog.serviceName
+            ? t("confirmations.deleteServiceMessage", {
+                name: confirmDialog.serviceName,
+              })
+            : t("confirmations.deleteServiceMessage")
+        }
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        variant="danger"
       />
     </div>
   );

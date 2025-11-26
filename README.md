@@ -36,12 +36,24 @@
 - **Smart Health Checks**: Automatic detection of online/offline/problem states
 - **Grouped Services**: Organize services by category (Production, Development, Media, etc.)
 
+### 🎭 Plex Invite Management (New in v2.3.0!)
+
+- **Custom Invite Codes**: Generate secure invite links with usage limits and expiration dates
+- **Library-Specific Access**: Grant access to specific Plex libraries (Movies, TV Shows, Music) or all
+- **Permission Control**: Configure Sync, Live TV/Channels, and Plex Home access per invite
+- **OAuth Redemption**: Wizarr-style OAuth flow for seamless Plex account integration
+- **User Management**: View, edit, refresh, and remove Plex users from a dedicated management interface
+- **User Expiration**: Set individual expiration dates for users independent from invite expiration
+- **Automatic Provisioning**: Users are automatically added to your Plex server upon redemption
+- **Real-time Statistics**: Track invite usage, active users, and redemption rates
+
 ### 💾 Database & Storage
 
 - **SQLite Backend**: Efficient database storage with up to 1000 historical data points per service
 - **Automatic Migration**: Seamless upgrade from JSON to SQLite
 - **Data Persistence**: All service configurations and history stored reliably
 - **Timezone Support**: Configurable timezone for logs and timestamps
+- **Invite Storage**: Comprehensive invite and user data with relational schema
 
 ### 🎨 Customization
 
@@ -49,12 +61,14 @@
 - **Multi-Language**: Full support for English and German (more coming soon)
 - **Responsive Design**: Modern UI inspired by Sonarr/Radarr with sidebar navigation
 - **Custom Intervals**: Set individual check intervals per service (30s - 1 hour)
+- **Skeleton Loading**: Smooth loading states matching actual content layouts
 
 ### 🔐 Security
 
 - **Optional Authentication**: Built-in username/password protection
 - **Session Management**: Secure login with automatic session handling
 - **Configurable Access**: Enable/disable auth dynamically via settings or .env
+- **OAuth Security**: Secure Plex OAuth integration with PIN-based authentication
 
 ### 🛠️ Technology Stack
 

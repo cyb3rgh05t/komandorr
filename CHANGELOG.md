@@ -1,5 +1,135 @@
 # CHANGELOG.md
 
+# [2.3.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.2.0...v2.3.0) (2025-11-26)
+
+### 🎭 Plex Invite Management System
+
+**New Features**
+
+• **invites: Complete Plex invitation system**
+◦ Create custom invite codes with usage limits and expiration dates
+◦ Library-specific access control (Movies, TV Shows, Music, or All)
+◦ Permission management (Sync, Live TV/Channels, Plex Home)
+◦ OAuth-based redemption flow (Wizarr-style)
+◦ Automatic user provisioning to Plex Media Server
+◦ Support for both Plex Friends and Plex Home invitations
+
+• **user-accounts: Advanced user management**
+◦ View all redeemed Plex users with detailed information
+◦ User avatars/thumbnails from Plex profiles
+◦ Individual user expiration dates (independent from invite expiration)
+◦ Edit user expiration dates via modal dialog
+◦ Refresh user information from Plex server on-demand
+◦ Delete/remove users from Plex server
+◦ Library and permission badges for each user
+◦ Real-time statistics (Total Users, Redeemed Invites, Plex Server Name)
+◦ Search functionality across username, email, and invite codes
+◦ Skeleton loading states matching card layouts
+
+• **invites-manager: Comprehensive invite administration**
+◦ Create invites with library selection (multi-select dropdown)
+◦ Set usage limits (1-100 or unlimited)
+◦ Configure expiration dates for invites
+◦ Toggle permissions: Allow Sync, Allow Channels/Live TV, Plex Home
+◦ View invite statistics and redemption status
+◦ Copy invite links with one click
+◦ Active/Expired/Exhausted status indicators
+◦ Batch delete and edit capabilities
+◦ Real-time invite validation
+
+• **oauth: Wizarr-style Plex OAuth flow**
+◦ Secure OAuth PIN-based authentication
+◦ Automatic Plex account detection
+◦ Email collection for new users
+◦ Seamless invitation acceptance
+◦ Success/failure redirect handling
+
+• **api: RESTful invite endpoints**
+◦ `POST /api/invites/` - Create new invite
+◦ `GET /api/invites/` - List all invites with users
+◦ `GET /api/invites/{id}` - Get specific invite details
+◦ `PUT /api/invites/{id}` - Update invite settings
+◦ `DELETE /api/invites/{id}` - Delete invite
+◦ `POST /api/invites/validate` - Validate invite code
+◦ `POST /api/invites/redeem` - Redeem invite (OAuth)
+◦ `GET /api/invites/stats` - Invite statistics
+◦ `GET /api/invites/plex/config` - Plex server config & libraries
+◦ `GET /api/invites/users` - List all Plex users
+◦ `POST /api/invites/users/{id}/refresh` - Refresh user info from Plex
+◦ `DELETE /api/invites/users/{id}` - Remove user from Plex
+◦ `PUT /api/invites/users/{id}/expiration` - Update user expiration
+
+### 🎨 UI/UX Improvements
+
+• **skeleton-loading: Enhanced loading states**
+◦ Replaced spinner loaders with skeleton cards across UserAccounts page
+◦ Skeleton cards match actual card layouts (avatar, text, badges, buttons)
+◦ Smooth pulse animation for better perceived performance
+◦ Consistent with loading patterns in other pages
+
+• **user-cards: Beautiful user display**
+◦ Plex-themed background watermark on user cards
+◦ Color-coded library badges (Movies=blue, TV=purple, Music=pink, All=cyan)
+◦ Permission badges with icons (Sync, Channels, Plex Home)
+◦ Active status indicators with green pulse animation
+◦ Hover effects and smooth transitions
+◦ Responsive grid layout (1/2/3 columns)
+
+• **invite-cards: Rich invite visualization**
+◦ Usage progress bars showing redemption percentage
+◦ Status badges (Active, Expired, Exhausted, Inactive)
+◦ Library icons and names displayed inline
+◦ Copy invite link button with success feedback
+◦ Edit and delete actions with confirmation dialogs
+
+### 🔧 Backend Enhancements
+
+• **database: Extended schema for invites**
+◦ InviteDB model with SQLite storage
+◦ PlexUserDB model with user metadata
+◦ Foreign key relationships between invites and users
+◦ User expiration field (expires_at) separate from invite expiration
+◦ Thumbnail/avatar storage for user profiles
+◦ Last seen tracking for user activity
+
+• **plex-integration: PlexAPI utilities**
+◦ `invite_plex_friend()` - Invite users as Plex Friends
+◦ `invite_plex_home()` - Invite users to Plex Home
+◦ `remove_plex_user()` - Remove users from Plex server
+◦ `get_plex_libraries()` - Fetch available libraries
+◦ `refresh_plex_user()` - Update user info from Plex API
+◦ Library access control via library IDs
+◦ Permission flags (sync, channels, camera upload)
+
+### 📚 Documentation
+
+• **invites: New invite system documentation**
+◦ Complete guide for creating and managing invites
+◦ OAuth redemption flow explanation
+◦ Library and permission configuration
+◦ API endpoint reference
+◦ Troubleshooting common issues
+
+• **README: Updated feature list**
+◦ Added Plex Invite Management section
+◦ User Accounts management description
+◦ OAuth flow documentation
+◦ Updated technology stack
+
+### 🐛 Bug Fixes
+
+• **user-refresh: Fixed concurrent refresh operations**
+◦ Added refreshingUsers state to track in-progress refreshes
+◦ Disabled refresh button during operation
+◦ Proper loading spinner on individual user refresh
+
+• **event-propagation: Fixed copy button click handling**
+◦ Prevented card navigation when copying invite links
+◦ Added stopPropagation to copy button clicks
+◦ Success feedback with checkmark icon
+
+---
+
 # [2.2.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.1.0...v2.2.0) (2025-11-25)
 
 ### 🎨 Traffic Visualization Enhancement

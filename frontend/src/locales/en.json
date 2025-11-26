@@ -11,6 +11,7 @@
     "vodStreams": "VOD Monitor",
     "vodActivity": "VOD Activity",
     "invites": "Plex Invites",
+    "userAccounts": "User Accounts",
     "settings": "Settings",
     "about": "About"
   },
@@ -315,7 +316,8 @@
     "checkServices": "Failed to check services"
   },
   "confirmations": {
-    "deleteService": "Are you sure you want to delete this service?"
+    "deleteService": "Delete Service",
+    "deleteServiceMessage": "Are you sure you want to delete this service? This action cannot be undone."
   },
   "settings": {
     "title": "Settings",
@@ -358,11 +360,55 @@
       "de": "Deutsch"
     }
   },
+  "userAccounts": {
+    "title": "User Accounts",
+    "subtitle": "Manage Plex users from redeemed invites",
+    "noUsers": "No Users Found",
+    "noUsersMessage": "No users have redeemed invites yet. Users will appear here once they redeem an invite code.",
+    "noResults": "No Results Found",
+    "noResultsMessage": "No users match your search criteria. Try a different search term.",
+    "searchPlaceholder": "Search by username, email, or invite code...",
+    "refreshed": "User accounts refreshed",
+    "userDeleted": "User removed successfully! They have been removed from your Plex server.",
+    "userUpdated": "User updated successfully!",
+    "userRefreshed": "User info refreshed from Plex",
+    "errorDeleting": "Error removing user",
+    "errorUpdating": "Error updating user",
+    "errorRefreshing": "Error refreshing user info",
+    "confirmDelete": "Remove User",
+    "confirmDeleteMessage": "Are you sure you want to remove {{name}} from your Plex server? This will delete their invite and revoke their access. This action cannot be undone.",
+    "editUser": "Edit User Account",
+    "editUserMessage": "Set an expiration date for {{name}}. When the date is reached, the user will be automatically removed from your Plex server.",
+    "expirationDate": "Expiration Date",
+    "expirationHint": "Leave empty for no expiration. User will be removed automatically on the set date.",
+    "stats": {
+      "totalUsers": "Total Users",
+      "activeInvites": "Redeemed Invites",
+      "redeemedInvites": "Redeemed Invites",
+      "plexServer": "Plex Server"
+    },
+    "fields": {
+      "inviteCode": "Invite Code",
+      "joined": "Joined",
+      "expires": "Expires"
+    },
+    "status": {
+      "active": "Active"
+    },
+    "buttons": {
+      "refreshUser": "Refresh user info from Plex",
+      "editUser": "Edit User",
+      "removeUser": "Remove User"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
     "confirm": "Confirm",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
     "close": "Close",
     "refresh": "Refresh",
     "refreshing": "Refreshing"
@@ -478,7 +524,10 @@
     "errorLoading": "Error loading invites",
     "errorCreating": "Error creating invite",
     "errorDeleting": "Error deleting invite",
-    "confirmDelete": "Are you sure you want to delete this invite?",
+    "errorDeletingWithUsers": "Cannot delete invite with active users. Remove users first from User Accounts page.",
+    "confirmDelete": "Delete Invite",
+    "confirmDeleteMessage": "Are you sure you want to delete this invite? This action cannot be undone.",
+    "confirmDeleteWithUsers": "This invite has {{count}} redeemed user(s). To delete this invite, you must first remove the users from the User Accounts page. Deleting the invite code will not remove users from Plex.",
     "stats": {
       "totalInvites": "Total Invites",
       "activeInvites": "Active Invites",

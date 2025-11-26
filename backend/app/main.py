@@ -41,8 +41,25 @@ async def lifespan(app: FastAPI):
 
     migrate_plex_config_if_needed()
 
+    # Background task to check for expired invites
+    async def check_expired_invites_loop():
+        """Background task to check for expired invites every hour"""
+        from app.api.invites import check_expired_invites
+
+        while True:
+            try:
+                await asyncio.sleep(3600)  # Check every hour
+                await check_expired_invites()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in expiration check loop: {e}")
+
     # Start monitoring in background
     monitoring_task = asyncio.create_task(monitor.start_monitoring(interval=10))
+
+    # Start invite expiration checker
+    expiration_task = asyncio.create_task(check_expired_invites_loop())
 
     yield
 
@@ -50,8 +67,13 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Komandorr Dashboard Backend")
     monitor.stop_monitoring()
     monitoring_task.cancel()
+    expiration_task.cancel()
     try:
         await monitoring_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await expiration_task
     except asyncio.CancelledError:
         pass
 

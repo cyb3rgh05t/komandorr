@@ -111,9 +111,11 @@ def db_invite_to_pydantic(
                 email=u.email,
                 username=u.username,
                 plex_id=u.plex_id,
+                thumb=u.thumb,
                 invite_id=u.invite_id,
                 created_at=u.created_at,
                 last_seen=u.last_seen,
+                expires_at=u.expires_at,
                 is_active=u.is_active,
             )
             for u in db_invite.users
@@ -154,17 +156,22 @@ async def invite_plex_user(
             return True, None
 
         # Determine which libraries to share
+        logger.info(f"Processing libraries parameter: '{libraries}'")
         if libraries == "all":
             # Get all libraries
             library_list = await get_plex_libraries(url, token)
             library_ids = [lib["id"] for lib in library_list]
+            logger.info(f"Sharing ALL libraries: {library_ids}")
         else:
             # Parse comma-separated IDs
             library_ids = [
                 lib_id.strip() for lib_id in libraries.split(",") if lib_id.strip()
             ]
+            logger.info(f"Sharing SPECIFIC libraries: {library_ids}")
 
-        logger.info(f"Inviting {email} to Plex with {len(library_ids)} libraries")
+        logger.info(
+            f"Inviting {email} to Plex with {len(library_ids)} libraries: {library_ids}"
+        )
 
         # Invite based on type
         if plex_home:
@@ -292,6 +299,51 @@ async def list_invites(
                 query = query.filter_by(is_active=True)
 
             invites = query.order_by(InviteDB.created_at.desc()).all()
+
+            # Auto-update missing user info (username, plex_id, thumb) for users without thumb
+            if plex_config and plex_config.get("token"):
+                for invite in invites:
+                    if invite.users:
+                        for user in invite.users:
+                            # Check if user is missing thumb or username
+                            if not user.thumb or not user.username:
+                                try:
+                                    logger.info(
+                                        f"Auto-fetching missing info for user {user.email}"
+                                    )
+                                    from app.utils.plex_invite import get_plex_user_info
+
+                                    user_info = await get_plex_user_info(
+                                        token=plex_config["token"], email=user.email
+                                    )
+
+                                    if user_info:
+                                        logger.info(
+                                            f"Successfully fetched info for {user.email}: {user_info}"
+                                        )
+                                        user.username = (
+                                            user_info.get("username") or user.username
+                                        )
+                                        user.plex_id = (
+                                            user_info.get("id") or user.plex_id
+                                        )
+                                        user.thumb = (
+                                            user_info.get("thumb") or user.thumb
+                                        )
+                                        session.commit()
+                                        logger.info(
+                                            f"Updated user {user.email} with avatar and info"
+                                        )
+                                    else:
+                                        logger.warning(
+                                            f"Could not fetch info for user {user.email}"
+                                        )
+                                except Exception as user_error:
+                                    logger.warning(
+                                        f"Error auto-updating user {user.email}: {user_error}"
+                                    )
+                                    # Continue processing other users even if one fails
+                                    continue
 
             return [
                 db_invite_to_pydantic(inv, include_users=True, plex_server=plex_server)
@@ -494,7 +546,7 @@ async def update_invite(
 
 @router.delete("/{invite_id}")
 async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
-    """Delete an invite and remove associated users from Plex"""
+    """Delete an invite code (does not remove users from Plex - use User Accounts page for that)"""
     try:
         session = db.get_session()
         try:
@@ -507,49 +559,17 @@ async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
 
             code = db_invite.code
 
-            # Get Plex config
-            plex_config = get_plex_config_from_settings()
-
-            # Get associated users before deletion
+            # Check if invite has associated users
             users = session.query(PlexUserDB).filter_by(invite_id=invite_id).all()
             user_count = len(users)
 
-            # Remove users from Plex server if they exist
-            if user_count > 0 and plex_config:
-                removed_count = 0
-                failed_removals = []
-
-                for user in users:
-                    if user.email:
-                        success, error = await remove_plex_user(
-                            token=plex_config["token"], email=str(user.email)
-                        )
-                        if success:
-                            removed_count += 1
-                            logger.info(f"Removed {user.email} from Plex server")
-                        else:
-                            failed_removals.append(f"{user.email}: {error}")
-                            logger.warning(
-                                f"Failed to remove {user.email} from Plex: {error}"
-                            )
-
-                if removed_count > 0:
-                    logger.info(
-                        f"Successfully removed {removed_count}/{user_count} users from Plex"
-                    )
-                if failed_removals:
-                    logger.warning(
-                        f"Failed to remove some users: {', '.join(failed_removals)}"
-                    )
-
-            # Delete users from database
             if user_count > 0:
-                session.query(PlexUserDB).filter_by(invite_id=invite_id).delete()
-                session.flush()  # Ensure users are deleted before deleting invite
-                logger.info(
-                    f"Deleted {user_count} users from database for invite {code}"
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot delete invite with {user_count} active user(s). Please remove users first from User Accounts page.",
                 )
 
+            # Delete invite
             session.delete(db_invite)
             session.commit()
 
@@ -557,7 +577,7 @@ async def delete_invite(invite_id: int, username: str = Depends(require_auth)):
 
             return {
                 "success": True,
-                "message": "Invite deleted and users removed from Plex",
+                "message": "Invite deleted successfully",
             }
 
         except Exception as e:
@@ -716,10 +736,13 @@ async def redeem_invite(request: RedeemInviteRequest):
                     detail=f"Failed to invite user to Plex: {error}",
                 )
 
-            # Create user record
+            # Create user record first (user info will be populated when they accept the invite)
             plex_user = PlexUserDB(
                 email=request.email.lower(),
                 invite_id=db_invite.id,
+                username=None,  # Will be populated when user accepts invite
+                plex_id=None,  # Will be populated when user accepts invite
+                thumb=None,  # Will be populated when user accepts invite
             )
             session.add(plex_user)
 
@@ -728,6 +751,50 @@ async def redeem_invite(request: RedeemInviteRequest):
 
             session.commit()
             session.refresh(plex_user)
+
+            # Try to fetch user info from Plex (may not be available until user accepts)
+            # This runs in the background and doesn't block the response
+            from app.utils.plex_invite import get_plex_user_info
+            import asyncio
+
+            try:
+                # Wait a moment for Plex to process
+                await asyncio.sleep(2)
+
+                user_info = await get_plex_user_info(
+                    token=plex_config["token"],
+                    email=str(request.email),
+                )
+
+                if user_info:
+                    logger.info(
+                        f"Successfully fetched user info for {request.email}: username={user_info.get('username')}"
+                    )
+                    # Update the user record with the info
+                    session2 = db.get_session()
+                    try:
+                        db_user = (
+                            session2.query(PlexUserDB)
+                            .filter_by(id=plex_user.id)
+                            .first()
+                        )
+                        if db_user:
+                            db_user.username = user_info.get("username")  # type: ignore
+                            db_user.plex_id = user_info.get("id")  # type: ignore
+                            db_user.thumb = user_info.get("thumb")  # type: ignore
+                            session2.commit()
+                            session2.refresh(db_user)
+                            # Update local reference
+                            plex_user = db_user
+                            logger.info(f"Updated user record for {request.email}")
+                    finally:
+                        session2.close()
+                else:
+                    logger.info(
+                        f"User info not yet available for {request.email} - will be populated when they accept the invitation"
+                    )
+            except Exception as e:
+                logger.warning(f"Could not fetch user info immediately: {e}")
 
             logger.info(f"User {request.email} redeemed invite {db_invite.code}")
 
@@ -739,9 +806,11 @@ async def redeem_invite(request: RedeemInviteRequest):
                     email=plex_user.email,  # type: ignore
                     username=plex_user.username,  # type: ignore
                     plex_id=plex_user.plex_id,  # type: ignore
+                    thumb=plex_user.thumb,  # type: ignore
                     invite_id=plex_user.invite_id,  # type: ignore
                     created_at=plex_user.created_at,  # type: ignore
                     last_seen=plex_user.last_seen,  # type: ignore
+                    expires_at=plex_user.expires_at,  # type: ignore
                     is_active=plex_user.is_active,  # type: ignore
                 ),
             }
@@ -769,15 +838,17 @@ async def list_plex_users(username: str = Depends(require_auth)):
                 session.query(PlexUserDB).order_by(PlexUserDB.created_at.desc()).all()
             )
 
-            return [
+            users = [
                 PlexUser(
                     id=u.id,  # type: ignore
                     email=u.email,  # type: ignore
                     username=u.username,  # type: ignore
                     plex_id=u.plex_id,  # type: ignore
+                    thumb=u.thumb,  # type: ignore
                     invite_id=u.invite_id,  # type: ignore
                     created_at=u.created_at,  # type: ignore
                     last_seen=u.last_seen,  # type: ignore
+                    expires_at=u.expires_at,  # type: ignore
                     is_active=u.is_active,  # type: ignore
                 )
                 for u in users
@@ -798,3 +869,291 @@ async def list_plex_users(username: str = Depends(require_auth)):
 async def get_tmdb_api_key():
     """Get TMDB API key for invite redemption backgrounds (public endpoint)"""
     return {"api_key": settings.TMDB_API_KEY or ""}
+
+
+@router.post("/users/{user_id}/refresh", response_model=PlexUser)
+async def refresh_user_info(user_id: int, username: str = Depends(require_auth)):
+    """Refresh user information from Plex (username, plex_id, avatar)"""
+    try:
+        session = db.get_session()
+        try:
+            db_user = session.query(PlexUserDB).filter_by(id=user_id).first()
+
+            if not db_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                )
+
+            # Get Plex config
+            plex_config = get_plex_config_from_settings()
+            if not plex_config:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Plex server not configured",
+                )
+
+            # Fetch fresh user info from Plex
+            from app.utils.plex_invite import get_plex_user_info
+
+            user_info = await get_plex_user_info(
+                token=plex_config["token"],
+                email=str(db_user.email),  # type: ignore
+            )
+
+            if user_info:
+                # Update user info
+                db_user.username = user_info.get("username")  # type: ignore
+                db_user.plex_id = user_info.get("id")  # type: ignore
+                db_user.thumb = user_info.get("thumb")  # type: ignore
+
+                session.commit()
+                session.refresh(db_user)
+
+                logger.info(
+                    f"Refreshed Plex info for user {db_user.email} by {username}"
+                )
+            else:
+                logger.warning(
+                    f"Could not fetch Plex info for user {db_user.email} - user may not exist on Plex"
+                )
+
+            return PlexUser(
+                id=db_user.id,  # type: ignore
+                email=db_user.email,  # type: ignore
+                username=db_user.username,  # type: ignore
+                plex_id=db_user.plex_id,  # type: ignore
+                thumb=db_user.thumb,  # type: ignore
+                invite_id=db_user.invite_id,  # type: ignore
+                created_at=db_user.created_at,  # type: ignore
+                last_seen=db_user.last_seen,  # type: ignore
+                expires_at=db_user.expires_at,  # type: ignore
+                is_active=db_user.is_active,  # type: ignore
+            )
+
+        finally:
+            session.close()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error refreshing user info: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error refreshing user info: {str(e)}",
+        )
+
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: int, username: str = Depends(require_auth)):
+    """Delete a user from database and remove from Plex server"""
+    try:
+        session = db.get_session()
+        try:
+            db_user = session.query(PlexUserDB).filter_by(id=user_id).first()
+
+            if not db_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                )
+
+            user_email = db_user.email
+
+            # Get Plex config
+            plex_config = get_plex_config_from_settings()
+
+            # Remove user from Plex server
+            if plex_config and user_email:
+                from app.utils.plex_invite import remove_plex_user
+
+                success, error = await remove_plex_user(
+                    token=plex_config["token"], email=str(user_email)
+                )
+
+                if success:
+                    logger.info(f"Removed {user_email} from Plex server")
+                else:
+                    logger.warning(f"Failed to remove {user_email} from Plex: {error}")
+                    # Continue with database deletion even if Plex removal fails
+
+            # Delete user from database
+            session.delete(db_user)
+            session.commit()
+
+            logger.info(f"Deleted user {user_email} by {username}")
+
+            return {
+                "success": True,
+                "message": f"User {user_email} removed from Plex and database",
+            }
+
+        except Exception as e:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error deleting user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting user: {str(e)}",
+        )
+
+
+@router.put("/users/{user_id}/expiration", response_model=PlexUser)
+async def update_user_expiration(
+    user_id: int, expiration_data: dict, username: str = Depends(require_auth)
+):
+    """Update a user's expiration date"""
+    try:
+        session = db.get_session()
+        try:
+            db_user = session.query(PlexUserDB).filter_by(id=user_id).first()
+
+            if not db_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                )
+
+            # Update expiration date
+            expires_at_str = expiration_data.get("expires_at")
+            if expires_at_str:
+                # Parse ISO datetime string
+                db_user.expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00")).replace(tzinfo=None)  # type: ignore
+            else:
+                db_user.expires_at = None  # type: ignore
+
+            session.commit()
+            session.refresh(db_user)
+
+            logger.info(f"Updated expiration for user {db_user.email} by {username}")
+
+            return PlexUser(
+                id=db_user.id,  # type: ignore
+                email=db_user.email,  # type: ignore
+                username=db_user.username,  # type: ignore
+                plex_id=db_user.plex_id,  # type: ignore
+                thumb=db_user.thumb,  # type: ignore
+                invite_id=db_user.invite_id,  # type: ignore
+                created_at=db_user.created_at,  # type: ignore
+                last_seen=db_user.last_seen,  # type: ignore
+                expires_at=db_user.expires_at,  # type: ignore
+                is_active=db_user.is_active,  # type: ignore
+            )
+
+        finally:
+            session.close()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user expiration: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user expiration: {str(e)}",
+        )
+
+
+async def check_expired_invites():
+    """Background task to check for expired user accounts and remove them from Plex"""
+    try:
+        session = db.get_session()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+            # First, try to update user info for users missing username/plex_id/thumb
+            users_missing_info = (
+                session.query(PlexUserDB)
+                .filter(
+                    PlexUserDB.is_active == True,
+                    (PlexUserDB.username.is_(None) | PlexUserDB.thumb.is_(None)),
+                )
+                .all()
+            )
+
+            if users_missing_info:
+                logger.info(
+                    f"Found {len(users_missing_info)} users with missing info, attempting to update"
+                )
+                plex_config = get_plex_config_from_settings()
+
+                if plex_config:
+                    from app.utils.plex_invite import get_plex_user_info
+
+                    for user in users_missing_info:
+                        try:
+                            user_info = await get_plex_user_info(
+                                token=plex_config["token"],
+                                email=str(user.email),  # type: ignore
+                            )
+
+                            if user_info:
+                                user.username = user_info.get("username")  # type: ignore
+                                user.plex_id = user_info.get("id")  # type: ignore
+                                user.thumb = user_info.get("thumb")  # type: ignore
+                                logger.info(
+                                    f"Updated info for user {user.email}: username={user_info.get('username')}"
+                                )
+                        except Exception as e:
+                            logger.debug(f"Could not update info for {user.email}: {e}")
+
+            # Get all expired user accounts
+            expired_users = (
+                session.query(PlexUserDB)
+                .filter(
+                    PlexUserDB.expires_at.isnot(None),
+                    PlexUserDB.expires_at < now,
+                    PlexUserDB.is_active == True,
+                )
+                .all()
+            )
+
+            if expired_users:
+                logger.info(f"Found {len(expired_users)} expired user accounts")
+
+                # Get Plex config
+                plex_config = get_plex_config_from_settings()
+
+                if plex_config:
+                    for user in expired_users:
+                        try:
+                            # Remove user from Plex
+                            user_email = str(user.email)  # type: ignore
+                            success, error_msg = await remove_plex_user(
+                                plex_config["token"], user_email
+                            )
+
+                            if success:
+                                logger.info(
+                                    f"Removed expired user {user_email} from Plex"
+                                )
+                                # Delete the user record
+                                session.delete(user)
+                            else:
+                                logger.warning(
+                                    f"Failed to remove expired user {user_email} from Plex: {error_msg}"
+                                )
+                        except Exception as e:
+                            logger.error(
+                                f"Error removing expired user {user.email}: {e}"
+                            )
+                else:
+                    logger.warning(
+                        "Plex config not available, cannot remove expired users"
+                    )
+
+            session.commit()
+
+            if expired_users:
+                logger.info(f"Processed {len(expired_users)} expired user accounts")
+
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error checking expired user accounts: {e}", exc_info=True)
+        finally:
+            session.close()
+
+    except Exception as e:
+        logger.error(f"Error in check_expired_invites: {e}", exc_info=True)

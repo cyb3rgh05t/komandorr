@@ -11,6 +11,7 @@
     "vodStreams": "VOD Monitor",
     "vodActivity": "VOD Aktivität",
     "invites": "Plex-Einladungen",
+    "userAccounts": "Benutzerkonten",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -357,9 +358,53 @@
     "error": "Fehler",
     "success": "Erfolg",
     "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "save": "Speichern",
     "close": "Schließen",
     "refresh": "Aktualisieren",
     "refreshing": "Aktualisiere"
+  },
+  "userAccounts": {
+    "title": "Benutzerkonten",
+    "subtitle": "Plex-Benutzer von eingelösten Einladungen verwalten",
+    "noUsers": "Keine Benutzer gefunden",
+    "noUsersMessage": "Noch keine Benutzer haben Einladungen eingelöst. Benutzer werden hier angezeigt, sobald sie einen Einladungscode eingelöst haben.",
+    "noResults": "Keine Ergebnisse gefunden",
+    "noResultsMessage": "Keine Benutzer entsprechen Ihren Suchkriterien. Versuchen Sie einen anderen Suchbegriff.",
+    "searchPlaceholder": "Suche nach Benutzername, E-Mail oder Einladungscode...",
+    "refreshed": "Benutzerkonten aktualisiert",
+    "userDeleted": "Benutzer erfolgreich entfernt! Sie wurden von Ihrem Plex-Server entfernt.",
+    "userUpdated": "Benutzer erfolgreich aktualisiert!",
+    "userRefreshed": "Benutzerinfo von Plex aktualisiert",
+    "errorDeleting": "Fehler beim Entfernen des Benutzers",
+    "errorUpdating": "Fehler beim Aktualisieren des Benutzers",
+    "errorRefreshing": "Fehler beim Aktualisieren der Benutzerinfo",
+    "confirmDelete": "Benutzer entfernen",
+    "confirmDeleteMessage": "Möchten Sie {{name}} wirklich von Ihrem Plex-Server entfernen? Dies löscht die Einladung und widerruft den Zugriff. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "editUser": "Benutzerkonto bearbeiten",
+    "editUserMessage": "Legen Sie ein Ablaufdatum für {{name}} fest. Wenn das Datum erreicht ist, wird der Benutzer automatisch von Ihrem Plex-Server entfernt.",
+    "expirationDate": "Ablaufdatum",
+    "expirationHint": "Leer lassen für kein Ablaufdatum. Der Benutzer wird am festgelegten Datum automatisch entfernt.",
+    "stats": {
+      "totalUsers": "Benutzer gesamt",
+      "activeInvites": "Eingelöste Einladungen",
+      "redeemedInvites": "Eingelöste Einladungen",
+      "plexServer": "Plex-Server"
+    },
+    "fields": {
+      "inviteCode": "Einladungscode",
+      "joined": "Beigetreten",
+      "expires": "Läuft ab"
+    },
+    "status": {
+      "active": "Aktiv"
+    },
+    "buttons": {
+      "refreshUser": "Benutzerinfo von Plex aktualisieren",
+      "editUser": "Benutzer bearbeiten",
+      "removeUser": "Benutzer entfernen"
+    }
   },
   "versionBadge": {
     "version": "Version",
@@ -472,7 +517,10 @@
     "errorLoading": "Fehler beim Laden der Einladungen",
     "errorCreating": "Fehler beim Erstellen der Einladung",
     "errorDeleting": "Fehler beim Löschen der Einladung",
-    "confirmDelete": "Möchten Sie diese Einladung wirklich löschen?",
+    "errorDeletingWithUsers": "Einladung mit aktiven Benutzern kann nicht gelöscht werden. Entfernen Sie zuerst die Benutzer auf der Seite Benutzerkonten.",
+    "confirmDelete": "Einladung löschen",
+    "confirmDeleteMessage": "Möchten Sie diese Einladung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmDeleteWithUsers": "Diese Einladung hat {{count}} eingelöste Benutzer. Um diese Einladung zu löschen, müssen Sie zuerst die Benutzer auf der Seite Benutzerkonten entfernen. Das Löschen des Einladungscodes entfernt keine Benutzer von Plex.",
     "stats": {
       "totalInvites": "Einladungen gesamt",
       "activeInvites": "Aktive Einladungen",

@@ -97,9 +97,19 @@ async def invite_plex_friend(
         all_sections = plex.library.sections()
         sections_to_share = []
 
+        logging.info(
+            f"Available Plex sections: {[f'{s.title} (ID: {s.key})' for s in all_sections]}"
+        )
+        logging.info(f"Looking for library IDs: {library_ids}")
+
         for section in all_sections:
             if str(section.key) in library_ids:
                 sections_to_share.append(section)
+                logging.info(f"Adding section: {section.title} (ID: {section.key})")
+
+        logging.info(
+            f"Sharing {len(sections_to_share)} sections with {email}: {[s.title for s in sections_to_share]}"
+        )
 
         if not sections_to_share:
             return False, "No valid libraries selected"
@@ -166,9 +176,19 @@ async def invite_plex_home(
         all_sections = plex.library.sections()
         sections_to_share = []
 
+        logging.info(
+            f"Available Plex sections: {[f'{s.title} (ID: {s.key})' for s in all_sections]}"
+        )
+        logging.info(f"Looking for library IDs: {library_ids}")
+
         for section in all_sections:
             if str(section.key) in library_ids:
                 sections_to_share.append(section)
+                logging.info(f"Adding section: {section.title} (ID: {section.key})")
+
+        logging.info(
+            f"Sharing {len(sections_to_share)} sections with {email}: {[s.title for s in sections_to_share]}"
+        )
 
         if not sections_to_share:
             return False, "No valid libraries selected"
@@ -258,13 +278,18 @@ async def get_plex_user_info(
         user = account.user(email)
 
         if user:
-            return {
+            user_info = {
                 "email": user.email,
                 "username": user.username,
                 "id": str(user.id),
                 "thumb": user.thumb,
             }
+            logging.info(
+                f"Found Plex user {email}: username={user.username}, id={user.id}, thumb={'present' if user.thumb else 'missing'}"
+            )
+            return user_info
 
+        logging.warning(f"Plex user not found for email: {email}")
         return None
 
     except Exception as e:
@@ -295,6 +320,10 @@ async def invite_plex_user_oauth(
     Returns:
         Tuple of (success: bool, error_message: Optional[str])
     """
+    logging.info(
+        f"OAuth invite started for {email}, invite libraries: {getattr(invite, 'libraries', 'NOT FOUND')}"
+    )
+
     if not PLEXAPI_AVAILABLE:
         return False, "PlexAPI library not installed. Install with: pip install plexapi"
 
@@ -312,26 +341,56 @@ async def invite_plex_user_oauth(
         # Get libraries to share
         all_sections = plex_server.library.sections()
 
+        logging.info(
+            f"Available Plex sections: {[f'{s.title} (ID: {s.key})' for s in all_sections]}"
+        )
+
         # If specific libraries are configured, use those
-        if hasattr(invite, "library_ids") and invite.library_ids:
-            library_ids = (
-                invite.library_ids.split(",")
-                if isinstance(invite.library_ids, str)
-                else invite.library_ids
-            )
+        if (
+            hasattr(invite, "libraries")
+            and invite.libraries
+            and invite.libraries != "all"
+        ):
+            # Parse comma-separated library IDs
+            library_ids = [
+                lid.strip() for lid in invite.libraries.split(",") if lid.strip()
+            ]
             sections_to_share = [s for s in all_sections if str(s.key) in library_ids]
+            logging.info(f"Sharing SPECIFIC libraries via OAuth: {library_ids}")
+            logging.info(f"Matched sections: {[s.title for s in sections_to_share]}")
         else:
             # Share all libraries
             sections_to_share = all_sections
+            logging.info(
+                f"Sharing ALL libraries via OAuth: {[s.title for s in all_sections]}"
+            )
+
+        if not sections_to_share:
+            return False, "No valid libraries selected"
 
         # Get permissions
         allow_sync = getattr(invite, "allow_sync", False)
         allow_channels = getattr(invite, "allow_channels", False)
         plex_home = getattr(invite, "plex_home", False)
 
-        logging.info(f"Inviting {email} to Plex (home={plex_home})")
+        logging.info(
+            f"Inviting {email} to Plex (home={plex_home}) with {len(sections_to_share)} sections"
+        )
 
-        # Step 1: Send invitation
+        # IMPORTANT: Remove user first if they already exist, to ensure library access is updated
+        try:
+            logging.info(
+                f"Checking if {email} already exists in Plex to remove them first"
+            )
+            # Remove user from Plex to reset their library access
+            plex_server.myPlexAccount().removeShare(plex_server, email)
+            logging.info(f"Removed existing user {email} from Plex before re-adding")
+        except Exception as e:
+            logging.info(
+                f"User {email} didn't exist in Plex or couldn't be removed: {e}"
+            )
+
+        # Step 1: Send invitation with correct library access
         if plex_home:
             # Plex Home invitation
             admin_account.createExistingUser(

@@ -1,6 +1,6 @@
 # Features
 
-Discover everything Komandorr has to offer for monitoring your infrastructure.
+Discover everything Komandorr has to offer for monitoring your infrastructure and managing your Plex server.
 
 ## Core Features
 
@@ -9,6 +9,12 @@ Discover everything Komandorr has to offer for monitoring your infrastructure.
 Real-time health monitoring for all your services with customizable check intervals and alerting.
 
 [Learn more →](services.md){ .md-button }
+
+### :material-account-group: Plex Invite Management _(New in v2.3.0!)_
+
+Complete Plex invitation system with custom invite codes, library-specific access control, permission management, OAuth-based redemption, and comprehensive user account management.
+
+[Learn more →](../INVITES.md){ .md-button }
 
 ### :material-movie-open-play: VOD Streams
 
@@ -33,6 +39,8 @@ Multiple theme options including light, dark, and custom color schemes to match 
 | Feature                    | Description                                     |
 | -------------------------- | ----------------------------------------------- |
 | **Real-time Status**       | Instant visibility into service health          |
+| **Plex Invites** ✨        | Create and manage Plex invite codes             |
+| **User Management** ✨     | Manage Plex users with expiration control       |
 | **Service Groups**         | Organize services by environment, type, or team |
 | **Response Time Tracking** | Historical performance metrics                  |
 | **Uptime Monitoring**      | Track availability over time                    |
