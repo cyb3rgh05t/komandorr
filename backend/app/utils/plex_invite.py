@@ -436,4 +436,9 @@ async def invite_plex_user_oauth(
     except Exception as e:
         error_msg = str(e)
         logging.error(f"Error inviting {email} via OAuth: {error_msg}")
+
+        # Check if user is already shared with this server
+        if "already sharing" in error_msg.lower() or "already a" in error_msg.lower():
+            return False, "already_member"
+
         return False, f"Failed to invite user: {error_msg}"

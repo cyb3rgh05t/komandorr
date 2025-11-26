@@ -34,7 +34,13 @@ const InviteRedemption = () => {
   const [plexMedia, setPlexMedia] = useState([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [tmdbApiKey, setTmdbApiKey] = useState("");
+  const [alreadyMember, setAlreadyMember] = useState(false);
   const pollIntervalRef = React.useRef(null);
+
+  // Fetch TMDB API key immediately on mount
+  useEffect(() => {
+    fetchTmdbApiKey();
+  }, []);
 
   useEffect(() => {
     if (code) {
@@ -42,16 +48,24 @@ const InviteRedemption = () => {
       fetchServerStats();
       fetchPlexMedia();
     }
-    fetchTmdbApiKey();
   }, [code]);
 
   useEffect(() => {
+    console.log(
+      "🎨 TMDB API key changed:",
+      tmdbApiKey ? "✓ Available" : "✗ Not set"
+    );
     if (tmdbApiKey) {
       fetchBackgrounds();
     }
   }, [tmdbApiKey]);
 
   useEffect(() => {
+    console.log(
+      "🖼️ Background images updated:",
+      backgroundImages.length,
+      "images"
+    );
     if (backgroundImages.length > 0) {
       const interval = setInterval(() => {
         setCurrentBgIndex((prev) => (prev + 1) % backgroundImages.length);
@@ -140,10 +154,16 @@ const InviteRedemption = () => {
 
   const fetchTmdbApiKey = async () => {
     try {
+      console.log("🔑 Fetching TMDB API key...");
       const response = await api.get("/invites/tmdb/api-key");
+      console.log("🔑 TMDB API key response:", response);
       setTmdbApiKey(response.api_key || "");
+      console.log(
+        "🔑 TMDB API key set:",
+        response.api_key ? "✓ Available" : "✗ Not configured"
+      );
     } catch (error) {
-      console.error("Error fetching TMDB API key:", error);
+      console.error("❌ Error fetching TMDB API key:", error);
       // Fallback to empty string if not configured
       setTmdbApiKey("");
     }
@@ -152,24 +172,31 @@ const InviteRedemption = () => {
   const fetchBackgrounds = async () => {
     // Only fetch if TMDB API key is available
     if (!tmdbApiKey) {
-      console.log("TMDB API key not configured, skipping background fetch");
+      console.log("⚠️ TMDB API key not configured, skipping background fetch");
       return;
     }
 
     try {
+      console.log(
+        "🎬 Fetching TMDB backgrounds with API key:",
+        tmdbApiKey.substring(0, 8) + "..."
+      );
       const response = await fetch(
         `https://api.themoviedb.org/3/trending/movie/week?api_key=${tmdbApiKey}`
       );
       const data = await response.json();
+      console.log("🎬 TMDB API response:", data);
       const images = data.results
         .slice(0, 10)
         .map(
           (movie) => `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
         )
         .filter((path) => path.includes("http"));
+      console.log("🎬 Background images loaded:", images.length, "images");
+      console.log("🎬 First image:", images[0]);
       setBackgroundImages(images);
     } catch (error) {
-      console.error("Error fetching backgrounds:", error);
+      console.error("❌ Error fetching backgrounds:", error);
     }
   };
 
@@ -292,12 +319,17 @@ const InviteRedemption = () => {
       }
     } catch (err) {
       console.error("Redeem error:", err);
-      // Check if it's "already redeemed" - treat as success since user is already added
-      if (err.message && err.message.includes("already redeemed")) {
-        setSuccess(true);
-        setCurrentStep(0);
+      // Check if it's "already member" or "already redeemed" - show in modal instead of toast
+      const errorMsg = err.message || "";
+      if (
+        errorMsg.includes("already_member") ||
+        errorMsg.includes("already redeemed") ||
+        errorMsg.includes("already sharing") ||
+        errorMsg.includes("already a member")
+      ) {
+        setAlreadyMember(true);
       } else {
-        toast.error(err.message || "Fehler beim Einlösen der Einladung.");
+        toast.error(errorMsg || "Fehler beim Einlösen der Einladung.");
       }
     } finally {
       setIsRedeeming(false);
@@ -488,7 +520,7 @@ const InviteRedemption = () => {
               href="https://app.plex.tv"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full h-12 rounded-xl font-semibold bg-[#e5a00d] hover:bg-[#cc8f0c] text-white transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-xl font-semibold bg-[#e5a00d] hover:bg-[#cc8f0c] text-white transition-all duration-300 transform flex items-center justify-center gap-2"
             >
               <Play className="w-5 h-5" />
               Plex Web App öffnen
@@ -711,8 +743,6 @@ const InviteRedemption = () => {
         )}
 
         <div className="max-w-3xl w-full bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-gray-700/50 relative z-10">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-amber-500"></div>
-
           <div className="bg-slate-700/50 px-8 py-5 border-b border-slate-600/30">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold text-gray-300">
@@ -749,10 +779,10 @@ const InviteRedemption = () => {
             </div>
 
             <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">
+              <h2 className="text-4xl font-bold mb-3 text-white bg-clip-text text-transparent">
                 {currentStepData.title}
               </h2>
-              <p className="text-lg text-gray-300">
+              <p className="text-lg text-[#e5a00d]">
                 {currentStepData.description}
               </p>
             </div>
@@ -784,7 +814,7 @@ const InviteRedemption = () => {
               {!isLastStep ? (
                 <button
                   onClick={nextStep}
-                  className="flex-1 h-12 rounded-xl font-semibold bg-gradient-to-r from-yellow-400 via-orange-500 to-amber-500 text-white transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                  className="flex-1 h-12 rounded-xl font-semibold bg-[#e5a00d] hover:bg-[#cc8f0c] text-white transition-all duration-300 transform flex items-center justify-center gap-2"
                 >
                   Weiter
                   <svg
@@ -806,7 +836,7 @@ const InviteRedemption = () => {
                   href="https://app.plex.tv"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 h-12 rounded-xl font-semibold bg-gradient-to-r from-yellow-400 via-orange-500 to-amber-500 hover:shadow-orange-500/50 hover:shadow-xl text-white transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                  className="flex-1 h-12 rounded-xl font-semibold bg-[#e5a00d] hover:bg-[#cc8f0c] text-white transition-all duration-300 transform flex items-center justify-center gap-2"
                 >
                   Plex Web App öffnen
                   <Play className="w-5 h-5" />
@@ -974,65 +1004,105 @@ const InviteRedemption = () => {
               {/* Divider */}
               <div className="border-t border-gray-700/50"></div>
 
-              {/* Code Entry Section */}
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    Gib den Code ein, um fortzufahren
-                  </h2>
-                  <p className="text-gray-400/80 text-sm">Einladungscode</p>
+              {/* Already Member Message */}
+              {alreadyMember && (
+                <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-emerald-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-7 h-7 text-emerald-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-white mb-2">
+                        Du bist bereits Mitglied!
+                      </h3>
+                      <p className="text-emerald-100 text-base mb-4 leading-relaxed">
+                        Gute Nachrichten! Du hast bereits Zugriff auf{" "}
+                        <strong className="text-white">
+                          {invite.plex_server_name || "diesen Plex Server"}
+                        </strong>
+                        . Du musst diese Einladung nicht erneut einlösen.
+                      </p>
+                      <div className="space-y-3">
+                        <a
+                          href="https://app.plex.tv"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full h-12 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg"
+                        >
+                          <Play className="w-5 h-5" />
+                          Jetzt Plex öffnen
+                        </a>
+                        <p className="text-emerald-200/80 text-sm text-center">
+                          Melde dich mit deinem Plex-Konto an, um fortzufahren
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={invite.code}
-                    readOnly
-                    className="w-full px-4 py-4 text-center text-xl font-mono tracking-[0.3em] bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl backdrop-blur-sm focus:outline-none"
-                  />
+              {/* Code Entry Section - Only show if not already member */}
+              {!alreadyMember && (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      Gib den Code ein, um fortzufahren
+                    </h2>
+                    <p className="text-gray-400/80 text-sm">Einladungscode</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={invite.code}
+                      readOnly
+                      className="w-full px-4 py-4 text-center text-xl font-mono tracking-[0.3em] bg-slate-700/60 border-2 border-slate-600 text-white rounded-xl backdrop-blur-sm focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handlePlexLogin}
+                    disabled={authInProgress || isRedeeming}
+                    className={`w-full px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                      authInProgress || isRedeeming
+                        ? "bg-gray-600 cursor-not-allowed"
+                        : "bg-[#e5a00d] hover:bg-[#cc8f0c]"
+                    } text-white flex items-center justify-center gap-2`}
+                  >
+                    {isRedeeming ? (
+                      <>
+                        <Loader className="w-5 h-5 animate-spin" />
+                        <span>Einladung wird eingelöst...</span>
+                      </>
+                    ) : authInProgress ? (
+                      <>
+                        <Loader className="w-5 h-5 animate-spin" />
+                        <span>Warte auf Autorisierung...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {invite?.plex_server_name || "Plex"} beitreten
+                        </span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="pt-4 border-t border-gray-700/50">
+                    <p className="text-center text-sm text-gray-400">
+                      Kein Plex-Konto?{" "}
+                      <a
+                        href="https://www.plex.tv/sign-up/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-amber-400 hover:text-amber-300 font-medium underline"
+                      >
+                        Hier erstellen
+                      </a>
+                    </p>
+                  </div>
                 </div>
-
-                <button
-                  onClick={handlePlexLogin}
-                  disabled={authInProgress || isRedeeming}
-                  className={`w-full px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
-                    authInProgress || isRedeeming
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-[#e5a00d] hover:bg-[#cc8f0c]"
-                  } text-white flex items-center justify-center gap-2`}
-                >
-                  {isRedeeming ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      <span>Einladung wird eingelöst...</span>
-                    </>
-                  ) : authInProgress ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      <span>Warte auf Autorisierung...</span>
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-5 h-5" />
-                      <span>Server beitreten</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="pt-4 border-t border-gray-700/50">
-                  <p className="text-center text-sm text-gray-400">
-                    Kein Plex-Konto?{" "}
-                    <a
-                      href="https://www.plex.tv/sign-up/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-amber-400 hover:text-amber-300 font-medium underline"
-                    >
-                      Hier erstellen
-                    </a>
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
