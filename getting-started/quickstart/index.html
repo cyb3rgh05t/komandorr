@@ -740,6 +740,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Optional: Configure Plex Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-plex-invites-new-in-v230" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create Plex Invites (New in v2.3.0!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manage-plex-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manage Plex Users
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1654,6 +1682,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Optional: Configure Plex Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-plex-invites-new-in-v230" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create Plex Invites (New in v2.3.0!)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manage-plex-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manage Plex Users
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1776,19 +1832,46 @@
 <li>Detailed logs</li>
 </ul>
 <h2 id="optional-configure-plex-integration">Optional: Configure Plex Integration<a class="headerlink" href="#optional-configure-plex-integration" title="Permanent link">&para;</a></h2>
-<p>To monitor your Plex Media Server:</p>
+<p>To monitor your Plex Media Server and manage invites:</p>
 <ol>
 <li>Get your Plex token from <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/">Plex.tv</a></li>
 <li>Navigate to <strong>Settings</strong></li>
 <li>Enter your Plex server URL and token</li>
 <li>Enable VOD Streams monitoring</li>
+<li>Install PlexAPI for invite functionality:</li>
+</ol>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">cd</span><span class="w"> </span>backend
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span>plexapi
+</span></code></pre></div>
+<h3 id="create-plex-invites-new-in-v230">Create Plex Invites (New in v2.3.0!)<a class="headerlink" href="#create-plex-invites-new-in-v230" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Navigate to <strong>Invites</strong> page</li>
+<li>Click <strong>Create Invite</strong></li>
+<li>Configure:</li>
+<li>Select libraries (Movies, TV Shows, Music, or All)</li>
+<li>Set usage limit (1-100 or unlimited)</li>
+<li>Set expiration date (optional)</li>
+<li>Configure permissions (Sync, Channels, Plex Home)</li>
+<li>Copy the invite link and share it</li>
+</ol>
+<h3 id="manage-plex-users">Manage Plex Users<a class="headerlink" href="#manage-plex-users" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Navigate to <strong>User Accounts</strong> page</li>
+<li>View all invited users with:</li>
+<li>Profile pictures from Plex</li>
+<li>Library access and permissions</li>
+<li>User expiration dates</li>
+<li>Manage users:</li>
+<li>Edit user expiration dates</li>
+<li>Refresh user info from Plex</li>
+<li>Remove users from server</li>
 </ol>
 <h2 id="optional-enable-traffic-monitoring">Optional: Enable Traffic Monitoring<a class="headerlink" href="#optional-enable-traffic-monitoring" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Install the traffic agent on your server:</li>
 </ol>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>traffic/requirements.txt
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>traffic/traffic_agent.py
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>traffic/requirements.txt
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>traffic/traffic_agent.py
 </span></code></pre></div>
 <ol>
 <li>Configure the agent endpoint in Settings</li>

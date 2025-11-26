@@ -1465,6 +1465,114 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
+<h1 id="230-2025-11-26"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.2.0...v2.3.0">2.3.0</a> (2025-11-26)<a class="headerlink" href="#230-2025-11-26" title="Permanent link">&para;</a></h1>
+<h3 id="plex-invite-management-system">🎭 Plex Invite Management System<a class="headerlink" href="#plex-invite-management-system" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>invites: Complete Plex invitation system</strong>
+◦ Create custom invite codes with usage limits and expiration dates
+◦ Library-specific access control (Movies, TV Shows, Music, or All)
+◦ Permission management (Sync, Live TV/Channels, Plex Home)
+◦ OAuth-based redemption flow (Wizarr-style)
+◦ Automatic user provisioning to Plex Media Server
+◦ Support for both Plex Friends and Plex Home invitations</p>
+<p>• <strong>user-accounts: Advanced user management</strong>
+◦ View all redeemed Plex users with detailed information
+◦ User avatars/thumbnails from Plex profiles
+◦ Individual user expiration dates (independent from invite expiration)
+◦ Edit user expiration dates via modal dialog
+◦ Refresh user information from Plex server on-demand
+◦ Delete/remove users from Plex server
+◦ Library and permission badges for each user
+◦ Real-time statistics (Total Users, Redeemed Invites, Plex Server Name)
+◦ Search functionality across username, email, and invite codes
+◦ Skeleton loading states matching card layouts</p>
+<p>• <strong>invites-manager: Comprehensive invite administration</strong>
+◦ Create invites with library selection (multi-select dropdown)
+◦ Set usage limits (1-100 or unlimited)
+◦ Configure expiration dates for invites
+◦ Toggle permissions: Allow Sync, Allow Channels/Live TV, Plex Home
+◦ View invite statistics and redemption status
+◦ Copy invite links with one click
+◦ Active/Expired/Exhausted status indicators
+◦ Batch delete and edit capabilities
+◦ Real-time invite validation</p>
+<p>• <strong>oauth: Wizarr-style Plex OAuth flow</strong>
+◦ Secure OAuth PIN-based authentication
+◦ Automatic Plex account detection
+◦ Email collection for new users
+◦ Seamless invitation acceptance
+◦ Success/failure redirect handling</p>
+<p>• <strong>api: RESTful invite endpoints</strong>
+◦ <code>POST /api/invites/</code> - Create new invite
+◦ <code>GET /api/invites/</code> - List all invites with users
+◦ <code>GET /api/invites/{id}</code> - Get specific invite details
+◦ <code>PUT /api/invites/{id}</code> - Update invite settings
+◦ <code>DELETE /api/invites/{id}</code> - Delete invite
+◦ <code>POST /api/invites/validate</code> - Validate invite code
+◦ <code>POST /api/invites/redeem</code> - Redeem invite (OAuth)
+◦ <code>GET /api/invites/stats</code> - Invite statistics
+◦ <code>GET /api/invites/plex/config</code> - Plex server config &amp; libraries
+◦ <code>GET /api/invites/users</code> - List all Plex users
+◦ <code>POST /api/invites/users/{id}/refresh</code> - Refresh user info from Plex
+◦ <code>DELETE /api/invites/users/{id}</code> - Remove user from Plex
+◦ <code>PUT /api/invites/users/{id}/expiration</code> - Update user expiration</p>
+<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<p>• <strong>skeleton-loading: Enhanced loading states</strong>
+◦ Replaced spinner loaders with skeleton cards across UserAccounts page
+◦ Skeleton cards match actual card layouts (avatar, text, badges, buttons)
+◦ Smooth pulse animation for better perceived performance
+◦ Consistent with loading patterns in other pages</p>
+<p>• <strong>user-cards: Beautiful user display</strong>
+◦ Plex-themed background watermark on user cards
+◦ Color-coded library badges (Movies=blue, TV=purple, Music=pink, All=cyan)
+◦ Permission badges with icons (Sync, Channels, Plex Home)
+◦ Active status indicators with green pulse animation
+◦ Hover effects and smooth transitions
+◦ Responsive grid layout (&frac12;/3 columns)</p>
+<p>• <strong>invite-cards: Rich invite visualization</strong>
+◦ Usage progress bars showing redemption percentage
+◦ Status badges (Active, Expired, Exhausted, Inactive)
+◦ Library icons and names displayed inline
+◦ Copy invite link button with success feedback
+◦ Edit and delete actions with confirmation dialogs</p>
+<h3 id="backend-enhancements">🔧 Backend Enhancements<a class="headerlink" href="#backend-enhancements" title="Permanent link">&para;</a></h3>
+<p>• <strong>database: Extended schema for invites</strong>
+◦ InviteDB model with SQLite storage
+◦ PlexUserDB model with user metadata
+◦ Foreign key relationships between invites and users
+◦ User expiration field (expires_at) separate from invite expiration
+◦ Thumbnail/avatar storage for user profiles
+◦ Last seen tracking for user activity</p>
+<p>• <strong>plex-integration: PlexAPI utilities</strong>
+◦ <code>invite_plex_friend()</code> - Invite users as Plex Friends
+◦ <code>invite_plex_home()</code> - Invite users to Plex Home
+◦ <code>remove_plex_user()</code> - Remove users from Plex server
+◦ <code>get_plex_libraries()</code> - Fetch available libraries
+◦ <code>refresh_plex_user()</code> - Update user info from Plex API
+◦ Library access control via library IDs
+◦ Permission flags (sync, channels, camera upload)</p>
+<h3 id="documentation">📚 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<p>• <strong>invites: New invite system documentation</strong>
+◦ Complete guide for creating and managing invites
+◦ OAuth redemption flow explanation
+◦ Library and permission configuration
+◦ API endpoint reference
+◦ Troubleshooting common issues</p>
+<p>• <strong>README: Updated feature list</strong>
+◦ Added Plex Invite Management section
+◦ User Accounts management description
+◦ OAuth flow documentation
+◦ Updated technology stack</p>
+<h3 id="bug-fixes">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<p>• <strong>user-refresh: Fixed concurrent refresh operations</strong>
+◦ Added refreshingUsers state to track in-progress refreshes
+◦ Disabled refresh button during operation
+◦ Proper loading spinner on individual user refresh</p>
+<p>• <strong>event-propagation: Fixed copy button click handling</strong>
+◦ Prevented card navigation when copying invite links
+◦ Added stopPropagation to copy button clicks
+◦ Success feedback with checkmark icon</p>
+<hr />
 <h1 id="220-2025-11-25"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.1.0...v2.2.0">2.2.0</a> (2025-11-25)<a class="headerlink" href="#220-2025-11-25" title="Permanent link">&para;</a></h1>
 <h3 id="traffic-visualization-enhancement">🎨 Traffic Visualization Enhancement<a class="headerlink" href="#traffic-visualization-enhancement" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
@@ -1498,7 +1606,7 @@
 ◦ handleCopyClick uses e.preventDefault() and e.stopPropagation()
 ◦ Prevents card link navigation when copying service ID
 ◦ Copy feedback shows Check icon for 2 seconds after successful copy</p>
-<h3 id="documentation">📚 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_1">📚 Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: Updated monitoring documentation</strong>
 ◦ Documented circular progress visualization approach
 ◦ Added MAX_BANDWIDTH configuration examples
@@ -1541,7 +1649,7 @@
 ◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
 ◦ CORS moved back to environment variables (deployment-level security setting)
 ◦ Simplified .env.example to server parameters only with migration comments</p>
-<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
 <p>• <strong>monitor: Clickable service cards</strong>
 ◦ Service cards now link directly to service URLs
@@ -2045,7 +2153,7 @@
 ◦ Fixed timer reset issues on page refresh with proper state management
 ◦ Added "Tracking..." state for activities waiting to start timing
 ◦ Real-time timer updates with live elapsed time display</p>
-<h3 id="bug-fixes">Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_1">Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: fixed missing Search icon import</strong>
 ◦ Re-added Search icon to imports after cleanup
 ◦ Fixed ReferenceError when rendering search bar</p>
@@ -2057,7 +2165,7 @@
 ◦ Modified <code>/traffic/summary</code> endpoint to include <code>traffic_history</code> field
 ◦ Limited history to last 60 data points to optimize response size
 ◦ Fixed dashboard traffic chart showing no data</p>
-<h3 id="documentation_1">Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_2">Documentation<a class="headerlink" href="#documentation_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>docs: improved styling and readability</strong>
 ◦ Darkened primary navbar color from <code>#e97b2e</code> to <code>#c05d1a</code> for better contrast
 ◦ Updated accent color from <code>#ff8c42</code> to <code>#d9681f</code> for more professional appearance
@@ -2074,7 +2182,7 @@
 ◦ English: "Documentation", "View All Releases", "Traffic Overview", "No traffic data available", "No active traffic"
 ◦ German: "Dokumentation", "Alle Releases anzeigen", "Traffic-Übersicht", "Keine Traffic-Daten verfügbar", "Kein aktiver Traffic"</p>
 <h1 id="142-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.1...v1.4.2">1.4.2</a> (2025-11-08)<a class="headerlink" href="#142-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="bug-fixes_1">Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_2">Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: hardcoded fallback causing false update alerts</strong>
 ◦ Removed hardcoded version fallback from '1.4.0' to 'unknown'
 ◦ Fixed "Update Available" badge showing incorrectly when on latest version
@@ -2090,7 +2198,7 @@
 ◦ Added <code>/api/version/debug</code> endpoint for diagnosing version detection issues
 ◦ Shows environment type (docker/local), file paths, existence, and content
 ◦ Helps troubleshoot path issues in containerized deployments</p>
-<h3 id="documentation_2">Documentation<a class="headerlink" href="#documentation_2" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_3">Documentation<a class="headerlink" href="#documentation_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>docs: cleaner appearance and proper branding</strong>
 ◦ Removed all emoji characters from documentation files
 ◦ Copied logo.png and favicon.png from frontend to docs/images
@@ -2098,7 +2206,7 @@
 ◦ Replaced emoji bullets with plain text throughout documentation
 ◦ Changed 'Made with ❤️' to 'Made with love'</p>
 <h1 id="141-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.0...v1.4.1">1.4.1</a> (2025-11-08)<a class="headerlink" href="#141-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="bug-fixes_2">Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: timestamp display and timezone handling</strong>
 ◦ Fixed traffic <code>last_updated</code> timestamp not being loaded correctly from JSON storage
 ◦ Added proper datetime deserialization for traffic metrics and history on service load
@@ -2256,7 +2364,7 @@
 ◦ Enhanced badge styling for service descriptions and types
 ◦ Better visual hierarchy in service information display</p>
 <h1 id="122-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.2.1...v1.2.2">1.2.2</a> (2025-11-06)<a class="headerlink" href="#122-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="documentation_3">Documentation<a class="headerlink" href="#documentation_3" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_4">Documentation<a class="headerlink" href="#documentation_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>changelog: adopt vodwisharr format</strong>
 ◦ Reformatted changelog to match vodwisharr style
 ◦ Added compare links in version headers
@@ -2304,7 +2412,7 @@
 ◦ Service ID display with copy-to-clipboard functionality in service cards
 ◦ Service ID visibility for easy agent configuration</p>
 <h2 id="111-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.1.0...v1.1.1">1.1.1</a> (2024-XX-XX)<a class="headerlink" href="#111-2024-xx-xx" title="Permanent link">&para;</a></h2>
-<h3 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_4">Bug Fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: version check improvements</strong> (<a href="https://github.com/cyb3rgh05t/komandorr/commit/">commit</a>)</p>
 <h2 id="110-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.0.0...v1.1.0">1.1.0</a> (2024-XX-XX)<a class="headerlink" href="#110-2024-xx-xx" title="Permanent link">&para;</a></h2>
 <h3 id="features_15">Features<a class="headerlink" href="#features_15" title="Permanent link">&para;</a></h3>

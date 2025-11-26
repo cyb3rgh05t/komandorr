@@ -2027,28 +2027,33 @@
 
 <h1 id="plex-invite-system-documentation">Plex Invite System - Documentation<a class="headerlink" href="#plex-invite-system-documentation" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Komandorr now includes a comprehensive Plex invite system similar to Streamarr and Wizarr. This feature allows you to create and manage invite codes for inviting new users to your Plex server with granular control over permissions and library access.</p>
+<p>Komandorr v2.3.0 includes a comprehensive Plex invite management system similar to Wizarr and Streamarr. This feature allows you to create and manage invite codes for inviting new users to your Plex server with granular control over permissions, library access, and user expiration dates.</p>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <h3 id="core-features">✨ Core Features<a class="headerlink" href="#core-features" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Invite Code Generation</strong>: Automatically generates unique 8-character invite codes</li>
-<li><strong>Usage Limits</strong>: Set maximum number of times an invite can be used (or unlimited)</li>
+<li><strong>Usage Limits</strong>: Set maximum number of times an invite can be used (1-100 or unlimited)</li>
 <li><strong>Expiration</strong>: Set expiration dates for invites (or never expire)</li>
 <li><strong>Permission Control</strong>: Fine-grained control over user permissions:</li>
 <li>Downloads/Sync</li>
 <li>Live TV/Channels</li>
-<li>Camera Upload</li>
 <li>Plex Home vs Friend invitations</li>
-<li><strong>Library Access</strong>: Control which Plex libraries users can access</li>
-<li><strong>User Tracking</strong>: Track who redeemed each invite</li>
-<li><strong>Statistics Dashboard</strong>: View invite usage statistics</li>
+<li><strong>Library Access</strong>: Control which Plex libraries users can access (Movies, TV Shows, Music, or All)</li>
+<li><strong>User Management</strong>: Comprehensive user account management with individual expiration dates</li>
+<li><strong>OAuth Redemption</strong>: Wizarr-style OAuth flow for seamless Plex account integration</li>
+<li><strong>User Tracking</strong>: Track all users who redeemed invites with profile pictures and metadata</li>
+<li><strong>Statistics Dashboard</strong>: View invite usage statistics and user metrics</li>
+<li><strong>User Refresh</strong>: Update user information from Plex server on-demand</li>
+<li><strong>User Removal</strong>: Remove users from Plex server directly from the dashboard</li>
 </ul>
 <h3 id="use-cases">🎯 Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Share your Plex server with friends and family</li>
 <li>Create temporary invites for trial access</li>
 <li>Manage library access per invite</li>
+<li>Set individual user expiration dates</li>
 <li>Track server growth and user acquisition</li>
+<li>Bulk user management with search and filtering</li>
 </ul>
 <h2 id="installation-setup">Installation &amp; Setup<a class="headerlink" href="#installation-setup" title="Permanent link">&para;</a></h2>
 <h3 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h3>
