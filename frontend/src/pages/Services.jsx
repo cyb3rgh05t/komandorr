@@ -200,6 +200,19 @@ export default function Services() {
     return matchesSearch && matchesTab && matchesStatus;
   });
 
+  // Calculate ALL tab count (without tab filter, only search and status)
+  const allTabCount = services.filter((service) => {
+    const matchesSearch =
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === null || service.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  }).length;
+
   // Group services for tab counts - use filteredServices for display
   const groupedServices = filteredServices.reduce((acc, service) => {
     const groupName = service.group || t("dashboard.groupUngrouped");
@@ -463,7 +476,7 @@ export default function Services() {
                         : "text-theme-text-muted"
                     }`}
                   >
-                    ({filteredServices.length})
+                    ({allTabCount})
                   </span>
                 </button>
                 {allGroups.map((groupName) => {
