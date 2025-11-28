@@ -200,8 +200,16 @@ export default function Services() {
     return matchesSearch && matchesTab && matchesStatus;
   });
 
-  // Group services for tab counts
+  // Group services for tab counts - use filteredServices for display
   const groupedServices = filteredServices.reduce((acc, service) => {
+    const groupName = service.group || t("dashboard.groupUngrouped");
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(service);
+    return acc;
+  }, {});
+
+  // Group ALL services by group to show correct tab counts
+  const allGroupedServices = services.reduce((acc, service) => {
     const groupName = service.group || t("dashboard.groupUngrouped");
     if (!acc[groupName]) acc[groupName] = [];
     acc[groupName].push(service);
@@ -459,7 +467,7 @@ export default function Services() {
                   </span>
                 </button>
                 {allGroups.map((groupName) => {
-                  const groupServices = groupedServices[groupName] || [];
+                  const groupServices = allGroupedServices[groupName] || [];
                   return (
                     <button
                       key={groupName}
