@@ -7,6 +7,8 @@ import {
   RefreshCw,
   Server,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const CircularProgress = ({ percentage, color, size = 120 }) => {
@@ -56,6 +58,7 @@ const CircularProgress = ({ percentage, color, size = 120 }) => {
 
 const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   const { t } = useTranslation();
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   if (
     !trafficData ||
@@ -166,147 +169,190 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     { primary: "#f59e0b", shadow: "rgba(245, 158, 11, 0.4)" }, // amber
   ];
 
-  // Get top 5 services by bandwidth, sorted alphabetically
-  const topServices = [...activeServices]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 5);
+  // Get top 6 services by bandwidth, sorted alphabetically
+  const allServices = [...activeServices].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
+  const itemsPerPage = 6;
+  const hasMoreCards = allServices.length > itemsPerPage;
+  const maxIndex = Math.ceil(allServices.length / itemsPerPage) - 1;
+
+  // Get current visible services based on carousel index
+  const startIdx = carouselIndex * itemsPerPage;
+  const topServices = allServices.slice(startIdx, startIdx + itemsPerPage);
+
+  const handlePrevious = () => {
+    setCarouselIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+  };
+
+  const handleNext = () => {
+    setCarouselIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+  };
 
   return topServices.length > 0 ? (
-    <div className="flex flex-wrap justify-center gap-8">
-      {topServices.map((service, index) => {
-        const serviceBandwidth =
-          (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
+    <div className="flex items-center justify-center gap-4">
+      {/* Left Chevron */}
+      {hasMoreCards && (
+        <button
+          onClick={handlePrevious}
+          className="p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
+          title={t("common.previous") || "Previous"}
+        >
+          <ChevronLeft size={20} className="text-theme-primary" />
+        </button>
+      )}
 
-        // Calculate percentage based on configured max_bandwidth or relative to highest
-        let percentage;
-        const maxBandwidthValue =
-          service.traffic?.max_bandwidth || service.max_bandwidth;
+      {/* Cards Container */}
+      <div className="flex flex-wrap justify-center gap-8">
+        {topServices.map((service, index) => {
+          const serviceBandwidth =
+            (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
 
-        if (maxBandwidthValue && maxBandwidthValue > 0) {
-          // Absolute percentage based on configured maximum
-          percentage = Math.round((serviceBandwidth / maxBandwidthValue) * 100);
-        } else {
-          // Relative percentage (fallback)
-          percentage = Math.round((serviceBandwidth / maxBandwidth) * 100);
-        }
+          // Calculate percentage based on configured max_bandwidth or relative to highest
+          let percentage;
+          const maxBandwidthValue =
+            service.traffic?.max_bandwidth || service.max_bandwidth;
 
-        // Cap at 100% for display
-        percentage = Math.min(percentage, 100);
+          if (maxBandwidthValue && maxBandwidthValue > 0) {
+            // Absolute percentage based on configured maximum
+            percentage = Math.round(
+              (serviceBandwidth / maxBandwidthValue) * 100
+            );
+          } else {
+            // Relative percentage (fallback)
+            percentage = Math.round((serviceBandwidth / maxBandwidth) * 100);
+          }
 
-        const colorScheme = colors[index % colors.length];
+          // Cap at 100% for display
+          percentage = Math.min(percentage, 100);
 
-        return (
-          <div
-            key={service.id || index}
-            className="relative group transition-all duration-300"
-          >
-            {/* Circular Progress */}
-            <div className="flex justify-center mb-4">
-              <CircularProgress
-                percentage={percentage}
-                color={colorScheme.primary}
-                size={200}
-              />
+          const colorScheme = colors[index % colors.length];
+
+          return (
+            <div
+              key={service.id || index}
+              className="relative group transition-all duration-300"
+            >
+              {/* Circular Progress */}
+              <div className="flex justify-center mb-4">
+                <CircularProgress
+                  percentage={percentage}
+                  color={colorScheme.primary}
+                  size={200}
+                />
+              </div>
+
+              {/* Service Name */}
+              <div className="text-center mb-3">
+                <div className="text-xl font-semibold text-theme-text truncate group-hover:text-theme-primary transition-colors">
+                  {service.name}
+                </div>
+              </div>
+
+              {/* Bandwidth Details */}
+              <div className="bg-theme-card border border-theme rounded-lg p-3">
+                {/* Row 1: Current Speeds */}
+                <div className="grid grid-cols-3 gap-3 text-center pb-3 border-b border-theme-primary/20">
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <ArrowUp className="w-3 h-3 text-blue-400" />
+                      <span className="text-xs font-medium text-blue-400">
+                        {t("traffic.up")}
+                      </span>
+                    </div>
+                    <div className="font-mono font-semibold text-sm text-blue-400">
+                      {formatBandwidth(service.bandwidth_up || 0)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <ArrowDown className="w-3 h-3 text-green-400" />
+                      <span className="text-xs font-medium text-green-400">
+                        {t("traffic.down")}
+                      </span>
+                    </div>
+                    <div className="font-mono font-semibold text-sm text-green-400">
+                      {formatBandwidth(service.bandwidth_down || 0)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Activity className="w-3 h-3 text-purple-400" />
+                      <span className="text-xs font-medium text-purple-400">
+                        {t("traffic.total")}
+                      </span>
+                    </div>
+                    <div className="font-mono font-semibold text-sm text-purple-400">
+                      {formatBandwidth(serviceBandwidth)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Total Data Transferred */}
+                <div className="grid grid-cols-3 gap-3 text-center pt-3">
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <ArrowUp className="w-3 h-3 text-orange-400" />
+                      <span className="text-xs font-medium text-orange-400">
+                        Uploaded
+                      </span>
+                    </div>
+                    <div className="font-mono font-semibold text-sm text-orange-400">
+                      {formatData(service.total_up || 0)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <ArrowDown className="w-3 h-3 text-cyan-400" />
+                      <span className="text-xs font-medium text-cyan-400">
+                        Downloaded
+                      </span>
+                    </div>
+                    <div className="font-mono font-semibold text-sm text-cyan-400">
+                      {formatData(service.total_down || 0)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Activity className="w-3 h-3 text-amber-400" />
+                      <span className="text-xs font-medium text-amber-400">
+                        Combined
+                      </span>
+                    </div>
+                    <div className="font-mono font-semibold text-sm text-amber-400">
+                      {formatData(
+                        (service.total_up || 0) + (service.total_down || 0)
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activity indicator */}
+              {serviceBandwidth > 0 && (
+                <div className="absolute -top-1 -right-1">
+                  <div className="relative w-3 h-3">
+                    <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+                    <div className="relative w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                </div>
+              )}
             </div>
+          );
+        })}
+      </div>
 
-            {/* Service Name */}
-            <div className="text-center mb-3">
-              <div className="text-xl font-semibold text-theme-text truncate group-hover:text-theme-primary transition-colors">
-                {service.name}
-              </div>
-            </div>
-
-            {/* Bandwidth Details */}
-            <div className="bg-theme-card border border-theme rounded-lg p-3">
-              {/* Row 1: Current Speeds */}
-              <div className="grid grid-cols-3 gap-3 text-center pb-3 border-b border-theme-primary/20">
-                <div>
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <ArrowUp className="w-3 h-3 text-blue-400" />
-                    <span className="text-xs font-medium text-blue-400">
-                      {t("traffic.up")}
-                    </span>
-                  </div>
-                  <div className="font-mono font-semibold text-sm text-blue-400">
-                    {formatBandwidth(service.bandwidth_up || 0)}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <ArrowDown className="w-3 h-3 text-green-400" />
-                    <span className="text-xs font-medium text-green-400">
-                      {t("traffic.down")}
-                    </span>
-                  </div>
-                  <div className="font-mono font-semibold text-sm text-green-400">
-                    {formatBandwidth(service.bandwidth_down || 0)}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Activity className="w-3 h-3 text-purple-400" />
-                    <span className="text-xs font-medium text-purple-400">
-                      {t("traffic.total")}
-                    </span>
-                  </div>
-                  <div className="font-mono font-semibold text-sm text-purple-400">
-                    {formatBandwidth(serviceBandwidth)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 2: Total Data Transferred */}
-              <div className="grid grid-cols-3 gap-3 text-center pt-3">
-                <div>
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <ArrowUp className="w-3 h-3 text-orange-400" />
-                    <span className="text-xs font-medium text-orange-400">
-                      Uploaded
-                    </span>
-                  </div>
-                  <div className="font-mono font-semibold text-sm text-orange-400">
-                    {formatData(service.total_up || 0)}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <ArrowDown className="w-3 h-3 text-cyan-400" />
-                    <span className="text-xs font-medium text-cyan-400">
-                      Downloaded
-                    </span>
-                  </div>
-                  <div className="font-mono font-semibold text-sm text-cyan-400">
-                    {formatData(service.total_down || 0)}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Activity className="w-3 h-3 text-amber-400" />
-                    <span className="text-xs font-medium text-amber-400">
-                      Combined
-                    </span>
-                  </div>
-                  <div className="font-mono font-semibold text-sm text-amber-400">
-                    {formatData(
-                      (service.total_up || 0) + (service.total_down || 0)
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity indicator */}
-            {serviceBandwidth > 0 && (
-              <div className="absolute -top-1 -right-1">
-                <div className="relative w-3 h-3">
-                  <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-                  <div className="relative w-3 h-3 bg-green-500 rounded-full"></div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {/* Right Chevron */}
+      {hasMoreCards && (
+        <button
+          onClick={handleNext}
+          className="p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
+          title={t("common.next") || "Next"}
+        >
+          <ChevronRight size={20} className="text-theme-primary" />
+        </button>
+      )}
     </div>
   ) : null;
 };
