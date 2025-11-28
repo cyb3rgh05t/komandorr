@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../../services/api";
 import {
   LayoutDashboard,
   Settings,
@@ -20,6 +22,63 @@ export default function Sidebar() {
   const { t } = useTranslation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Fetch invites to count expired/unused
+  const { data: invites = [] } = useQuery({
+    queryKey: ["invites"],
+    queryFn: () => api.get("/invites/"),
+    staleTime: 10000,
+    refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Fetch Plex sessions for active session count
+  const { data: sessionsData } = useQuery({
+    queryKey: ["plex-sessions"],
+    queryFn: async () => {
+      try {
+        const response = await api.get("/plex/sessions");
+        return response;
+      } catch {
+        return { sessions: [] };
+      }
+    },
+    refetchInterval: 5000,
+    staleTime: 3000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const activeSessions = sessionsData?.sessions || [];
+
+  // Count expired invites that are not redeemed
+  const expiredUnusedCount = invites.filter(
+    (invite) =>
+      invite.is_expired && (!invite.users || invite.users.length === 0)
+  ).length;
+
+  // Extract all users from invites
+  const getAllUsers = () => {
+    const usersMap = new Map();
+    invites.forEach((invite) => {
+      if (invite.users && invite.users.length > 0) {
+        invite.users.forEach((user) => {
+          if (!usersMap.has(user.id)) {
+            usersMap.set(user.id, user);
+          }
+        });
+      }
+    });
+    return Array.from(usersMap.values());
+  };
+
+  const allUsers = getAllUsers();
+
+  // Count expired user accounts
+  const expiredUsersCount = allUsers.filter((user) => {
+    if (!user.expires_at) return false;
+    const expiryDate = new Date(user.expires_at);
+    return expiryDate < new Date();
+  }).length;
 
   const menuItems = [
     { path: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
@@ -79,6 +138,27 @@ export default function Sidebar() {
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
+                const invitesExpiredBadge =
+                  item.path === "/invites" && expiredUnusedCount > 0;
+                const usersExpiredBadge =
+                  item.path === "/user-accounts" && expiredUsersCount > 0;
+                const vodActivityBadge =
+                  item.path === "/vod-activity" && activeSessions.length > 0;
+                const showBadge =
+                  invitesExpiredBadge || usersExpiredBadge || vodActivityBadge;
+                let badgeCount = 0;
+                let badgeColor = "bg-red-500";
+
+                if (invitesExpiredBadge) {
+                  badgeCount = expiredUnusedCount;
+                  badgeColor = "bg-red-500";
+                } else if (usersExpiredBadge) {
+                  badgeCount = expiredUsersCount;
+                  badgeColor = "bg-red-500";
+                } else if (vodActivityBadge) {
+                  badgeCount = activeSessions.length;
+                  badgeColor = "bg-green-500";
+                }
 
                 return (
                   <li key={item.path}>
@@ -96,7 +176,14 @@ export default function Sidebar() {
                       `}
                     >
                       <Icon size={20} />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {showBadge && (
+                        <span
+                          className={`inline-flex items-center justify-center min-w-6 px-2 py-1 text-xs font-bold rounded-full ${badgeColor} text-white`}
+                        >
+                          {badgeCount}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );
