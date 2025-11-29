@@ -374,21 +374,30 @@ async def invite_plex_user_oauth(
         plex_home = getattr(invite, "plex_home", False)
 
         logging.info(
-            f"Inviting {email} to Plex (home={plex_home}) with {len(sections_to_share)} sections"
+            f"Inviting {email} to Plex (home={plex_home}) with {len(sections_to_share)} sections: {[s.title for s in sections_to_share]}"
         )
 
-        # IMPORTANT: Remove user first if they already exist, to ensure library access is updated
+        # Try to update existing share if user already exists
         try:
-            logging.info(
-                f"Checking if {email} already exists in Plex to remove them first"
-            )
-            # Remove user from Plex to reset their library access
-            plex_server.myPlexAccount().removeShare(plex_server, email)
-            logging.info(f"Removed existing user {email} from Plex before re-adding")
+            existing_user = admin_account.user(email)
+            if existing_user:
+                logging.info(
+                    f"User {email} already exists in Plex, updating library access"
+                )
+                # Update the existing share with new library access
+                admin_account.updateFriend(
+                    user=existing_user,
+                    server=plex_server,
+                    sections=sections_to_share,
+                    allowSync=allow_sync,
+                    allowCameraUpload=getattr(invite, "allow_camera_upload", False),
+                    allowChannels=allow_channels,
+                )
+                logging.info(f"Updated library access for existing user {email}")
+                return True, None
         except Exception as e:
-            logging.info(
-                f"User {email} didn't exist in Plex or couldn't be removed: {e}"
-            )
+            logging.info(f"User {email} doesn't exist yet or update failed: {e}")
+            # Continue with new invitation
 
         # Step 1: Send invitation with correct library access
         if plex_home:
