@@ -385,7 +385,9 @@
     "editUser": "Benutzerkonto bearbeiten",
     "editUserMessage": "Legen Sie ein Ablaufdatum für {{name}} fest. Wenn das Datum erreicht ist, wird der Benutzer automatisch von Ihrem Plex-Server entfernt.",
     "expirationDate": "Ablaufdatum",
+    "expirationTime": "Ablaufzeit",
     "expirationHint": "Leer lassen für kein Ablaufdatum. Der Benutzer wird am festgelegten Datum automatisch entfernt.",
+    "expirationTimeHint": "Der Benutzerzugriff läuft zu dieser Zeit ab",
     "stats": {
       "totalUsers": "Benutzer gesamt",
       "activeInvites": "Eingelöste Einladungen",

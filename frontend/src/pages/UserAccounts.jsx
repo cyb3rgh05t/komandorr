@@ -88,6 +88,7 @@ const UserAccounts = () => {
     isOpen: false,
     user: null,
     expirationDate: "",
+    expirationTime: "00:00",
   });
   const [refreshingUsers, setRefreshingUsers] = useState(new Set());
 
@@ -161,20 +162,39 @@ const UserAccounts = () => {
   const handleEditUser = (user) => {
     // Get current expiration date from user
     const currentExpiration = user.expires_at || "";
+    let expirationDate = "";
+    let expirationTime = "00:00";
+
+    if (currentExpiration) {
+      const date = new Date(currentExpiration);
+      expirationDate = currentExpiration.split("T")[0];
+      expirationTime = `${String(date.getHours()).padStart(2, "0")}:${String(
+        date.getMinutes()
+      ).padStart(2, "0")}`;
+    }
 
     setEditModal({
       isOpen: true,
       user: user,
-      expirationDate: currentExpiration ? currentExpiration.split("T")[0] : "",
+      expirationDate: expirationDate,
+      expirationTime: expirationTime,
     });
   };
 
   const confirmEditUser = async () => {
     try {
+      let expiresAt = null;
+
+      if (editModal.expirationDate) {
+        // Combine date and time
+        const [hours, minutes] = editModal.expirationTime.split(":");
+        const dateTime = new Date(editModal.expirationDate);
+        dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        expiresAt = dateTime.toISOString();
+      }
+
       const updateData = {
-        expires_at: editModal.expirationDate
-          ? new Date(editModal.expirationDate).toISOString()
-          : null,
+        expires_at: expiresAt,
       };
 
       console.log("Updating user expiration:", {
@@ -189,7 +209,12 @@ const UserAccounts = () => {
       queryClient.invalidateQueries(["invites"]);
       queryClient.invalidateQueries(["inviteStats"]);
       toast.success(t("userAccounts.userUpdated"));
-      setEditModal({ isOpen: false, user: null, expirationDate: "" });
+      setEditModal({
+        isOpen: false,
+        user: null,
+        expirationDate: "",
+        expirationTime: "00:00",
+      });
     } catch (error) {
       console.error("Error updating user:", error);
       console.error("Error response:", error.response?.data);
@@ -685,24 +710,54 @@ const UserAccounts = () => {
                   })}
                 </p>
 
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("userAccounts.expirationDate")}
-                </label>
-                <input
-                  type="date"
-                  value={editModal.expirationDate}
-                  onChange={(e) =>
-                    setEditModal({
-                      ...editModal,
-                      expirationDate: e.target.value,
-                    })
-                  }
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary transition-colors"
-                />
-                <p className="text-xs text-theme-text-muted mt-2">
-                  {t("userAccounts.expirationHint")}
-                </p>
+                <div className="space-y-4">
+                  {/* Date Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("userAccounts.expirationDate")}
+                    </label>
+                    <input
+                      type="date"
+                      value={editModal.expirationDate}
+                      onChange={(e) =>
+                        setEditModal({
+                          ...editModal,
+                          expirationDate: e.target.value,
+                        })
+                      }
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary transition-colors"
+                    />
+                  </div>
+
+                  {/* Time Input */}
+                  {editModal.expirationDate && (
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("userAccounts.expirationTime") || "Expiration Time"}
+                      </label>
+                      <input
+                        type="time"
+                        value={editModal.expirationTime}
+                        onChange={(e) =>
+                          setEditModal({
+                            ...editModal,
+                            expirationTime: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary transition-colors"
+                      />
+                      <p className="text-xs text-theme-text-muted mt-2">
+                        {t("userAccounts.expirationTimeHint") ||
+                          "User access will expire at this time"}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-theme-text-muted">
+                    {t("userAccounts.expirationHint")}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -714,6 +769,7 @@ const UserAccounts = () => {
                     isOpen: false,
                     user: null,
                     expirationDate: "",
+                    expirationTime: "00:00",
                   })
                 }
                 className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-theme-text font-medium transition-all"

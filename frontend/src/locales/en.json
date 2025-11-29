@@ -380,7 +380,9 @@
     "editUser": "Edit User Account",
     "editUserMessage": "Set an expiration date for {{name}}. When the date is reached, the user will be automatically removed from your Plex server.",
     "expirationDate": "Expiration Date",
+    "expirationTime": "Expiration Time",
     "expirationHint": "Leave empty for no expiration. User will be removed automatically on the set date.",
+    "expirationTimeHint": "User access will expire at this time",
     "stats": {
       "totalUsers": "Total Users",
       "activeInvites": "Redeemed Invites",
