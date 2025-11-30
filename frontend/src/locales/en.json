@@ -12,6 +12,7 @@
     "vodActivity": "VOD Activity",
     "invites": "Plex Invites",
     "userAccounts": "User Accounts",
+    "userHistory": "User History",
     "settings": "Settings",
     "about": "About"
   },
@@ -711,6 +712,36 @@
       "wan": "WAN",
       "movie": "Movie",
       "episode": "Episode"
+    }
+  },
+  "userHistory": {
+    "title": "User Watch History",
+    "subtitle": "View detailed watch statistics and history for Plex users",
+    "selectUser": "Select User",
+    "searchPlaceholder": "Search users...",
+    "noUsers": "No users found",
+    "selectUserPrompt": "Select a user to view their watch history",
+    "refreshed": "Watch history refreshed",
+    "totalViews": "Total Views",
+    "totalWatched": "Total Watched",
+    "movies": "Movies",
+    "episodes": "Episodes",
+    "watchTime": "Watch Time",
+    "timeRange": "Time Range",
+    "mediaType": "Media Type",
+    "watchHistory": "Watch History",
+    "items": "items",
+    "noHistory": "No watch history found for this user",
+    "filter": {
+      "all": "All Time",
+      "today": "Today",
+      "week": "This Week",
+      "month": "This Month"
+    },
+    "type": {
+      "all": "All Types",
+      "movie": "Movies",
+      "episode": "Episodes"
     }
   }
 }

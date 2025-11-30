@@ -12,6 +12,7 @@
     "vodActivity": "VOD Aktivität",
     "invites": "Plex-Einladungen",
     "userAccounts": "Benutzerkonten",
+    "userHistory": "Wiedergabeverlauf",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -704,6 +705,36 @@
       "wan": "WAN",
       "movie": "Film",
       "episode": "Episode"
+    }
+  },
+  "userHistory": {
+    "title": "Benutzer-Wiedergabeverlauf",
+    "subtitle": "Detaillierte Wiedergabestatistiken und -verlauf für Plex-Benutzer anzeigen",
+    "selectUser": "Benutzer auswählen",
+    "searchPlaceholder": "Benutzer suchen...",
+    "noUsers": "Keine Benutzer gefunden",
+    "selectUserPrompt": "Wählen Sie einen Benutzer aus, um seinen Wiedergabeverlauf anzuzeigen",
+    "refreshed": "Wiedergabeverlauf aktualisiert",
+    "totalViews": "Gesamtansichten",
+    "totalWatched": "Gesamt angesehen",
+    "movies": "Filme",
+    "episodes": "Episoden",
+    "watchTime": "Wiedergabezeit",
+    "timeRange": "Zeitraum",
+    "mediaType": "Medientyp",
+    "watchHistory": "Wiedergabeverlauf",
+    "items": "Einträge",
+    "noHistory": "Kein Wiedergabeverlauf für diesen Benutzer gefunden",
+    "filter": {
+      "all": "Alle Zeit",
+      "today": "Heute",
+      "week": "Diese Woche",
+      "month": "Dieser Monat"
+    },
+    "type": {
+      "all": "Alle Typen",
+      "movie": "Filme",
+      "episode": "Episoden"
     }
   }
 }
