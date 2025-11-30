@@ -1274,6 +1274,17 @@ async def get_watch_history():
                 if item.progress is not None:
                     progress_value = float(cast(float, item.progress))
 
+                # Convert direct Plex thumbnail URL to proxy URL to avoid SSL issues
+                thumb_url = None
+                if item.thumb:
+                    # If it's already a full URL with the Plex server, proxy it
+                    if item.thumb.startswith("http"):
+                        from urllib.parse import quote
+
+                        thumb_url = f"/api/plex/proxy/image?url={quote(item.thumb)}"
+                    else:
+                        thumb_url = item.thumb
+
                 watch_history.append(
                     {
                         "user_id": item.user_id,
@@ -1293,7 +1304,7 @@ async def get_watch_history():
                         "view_count": item.view_count,
                         "rating": item.rating,
                         "year": item.year,
-                        "thumb": item.thumb,
+                        "thumb": thumb_url,
                         "content_rating": item.content_rating,
                         "studio": item.studio,
                         "summary": item.summary,
