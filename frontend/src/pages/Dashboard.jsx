@@ -198,9 +198,10 @@ export default function Dashboard() {
 
   const handleRefreshAll = async () => {
     try {
-      const data = await api.checkAllServices();
-      // Update the cache with the new data
-      queryClient.setQueryData(["services"], data);
+      // Start refetch first to trigger isFetching animation immediately
+      const refetchPromise = queryClient.refetchQueries(["services"]);
+      // Trigger backend check in parallel
+      await Promise.all([api.checkAllServices(), refetchPromise]);
       toast.success(t("common.success"));
     } catch (error) {
       toast.error(t("common.error"));

@@ -215,8 +215,10 @@ export default function Monitor() {
 
   const handleRefresh = async () => {
     try {
-      const data = await api.checkAllServices();
-      queryClient.setQueryData(["services"], data);
+      // Start refetch first to trigger isFetching animation immediately
+      const refetchPromise = queryClient.refetchQueries(["services"]);
+      // Trigger backend check in parallel
+      await Promise.all([api.checkAllServices(), refetchPromise]);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);

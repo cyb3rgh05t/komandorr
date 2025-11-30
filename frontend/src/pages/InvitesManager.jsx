@@ -317,19 +317,19 @@ const InvitesManager = () => {
               ]);
               toast.success(t("invites.refreshed"));
             }}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
             disabled={isFetching}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
-              className={`text-theme-primary ${
+              className={`text-theme-primary transition-transform duration-500 ${
                 isFetching ? "animate-spin" : ""
               }`}
             />
             <span className="text-xs sm:text-sm">
               {isFetching
                 ? t("common.refreshing", "Refreshing")
-                : t("invites.refresh")}
+                : t("common.refresh")}
             </span>
           </button>
           <button

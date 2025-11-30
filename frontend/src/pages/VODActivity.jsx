@@ -423,7 +423,9 @@ const VODActivity = () => {
               }`}
             />
             <span className="text-xs sm:text-sm">
-              {t("common.refresh", "Refresh")}
+              {isFetching
+                ? t("common.refreshing", "Refreshing")
+                : t("common.refresh")}
             </span>
           </button>
         </div>

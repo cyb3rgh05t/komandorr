@@ -293,19 +293,19 @@ const UserAccounts = () => {
 
         <button
           onClick={handleRefresh}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           disabled={loading || isFetching}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
         >
           <RefreshCw
             size={16}
-            className={`text-theme-primary ${
-              loading || isFetching ? "animate-spin" : ""
+            className={`text-theme-primary transition-transform duration-500 ${
+              isFetching ? "animate-spin" : ""
             }`}
           />
           <span className="text-xs sm:text-sm">
-            {loading || isFetching
+            {isFetching
               ? t("common.refreshing", "Refreshing")
-              : t("common.refresh", "Refresh")}
+              : t("common.refresh")}
           </span>
         </button>
       </div>
