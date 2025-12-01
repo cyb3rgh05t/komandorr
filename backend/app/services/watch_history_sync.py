@@ -118,13 +118,13 @@ class WatchHistorySync:
 
                         if existing:
                             # Update view count if re-watched
-                            existing.view_count = getattr(entry, "viewCount", 1)
+                            existing.view_count = int(getattr(entry, "viewCount", 1))  # type: ignore
                             updated_count += 1
                             continue
 
                         # Get duration and metadata
                         duration = getattr(entry, "duration", None)
-                        view_count = getattr(entry, "viewCount", 1)
+                        view_count = int(getattr(entry, "viewCount", 1))
                         view_offset = getattr(entry, "viewOffset", 0)
 
                         content_rating = getattr(entry, "contentRating", None)
@@ -168,7 +168,7 @@ class WatchHistorySync:
                                             if genre_objs
                                             else []
                                         )
-                                    except:
+                                    except Exception:
                                         pass
                             except Exception as fetch_error:
                                 logger.debug(
