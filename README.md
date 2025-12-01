@@ -36,7 +36,7 @@
 - **Smart Health Checks**: Automatic detection of online/offline/problem states
 - **Grouped Services**: Organize services by category (Production, Development, Media, etc.)
 
-### 🎭 Plex Invite Management (New in v2.3.0!)
+### 🎭 Plex Invite Management
 
 - **Custom Invite Codes**: Generate secure invite links with usage limits and expiration dates
 - **Library-Specific Access**: Grant access to specific Plex libraries (Movies, TV Shows, Music) or all
