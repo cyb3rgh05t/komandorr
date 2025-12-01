@@ -412,7 +412,7 @@ const UserHistory = () => {
                 {/* Plex Background */}
                 <div
                   className="absolute inset-0 opacity-5 bg-center bg-no-repeat bg-contain pointer-events-none"
-                  style={{ backgroundImage: "url(/plex.png)" }}
+                  style={{ backgroundImage: "url(/streamnet.png)" }}
                 />
                 <div className="flex items-start gap-3 mb-3">
                   <div
