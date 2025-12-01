@@ -163,6 +163,54 @@ class PlexUserDB(Base):
     is_active = Column(Boolean, default=True)
 
 
+class WatchHistoryDB(Base):
+    """SQLAlchemy model for Plex Watch History"""
+
+    __tablename__ = "watch_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # User info
+    user_id = Column(String, nullable=True, index=True)  # Plex user ID
+    email = Column(String, nullable=True, index=True)
+    username = Column(String, nullable=True)
+
+    # Media info
+    type = Column(String, nullable=False)  # movie, episode, track
+    title = Column(String, nullable=False)
+    grandparent_title = Column(String, nullable=True)  # Series name for episodes
+    parent_index = Column(Integer, nullable=True)  # Season number
+    index = Column(Integer, nullable=True)  # Episode number
+    rating_key = Column(String, nullable=True, index=True)  # Plex rating key
+
+    # Viewing info
+    viewed_at = Column(DateTime, nullable=False, index=True)  # When it was watched
+    duration = Column(Integer, nullable=False)  # Duration in seconds
+    view_offset = Column(Integer, default=0)  # Watch position in seconds
+    progress = Column(Float, default=0.0)  # Progress percentage
+    view_count = Column(Integer, default=1)  # Number of times watched
+
+    # Metadata
+    rating = Column(Float, nullable=True)  # Rating (e.g., 8.5)
+    year = Column(Integer, nullable=True)  # Release year
+    thumb = Column(String, nullable=True)  # Thumbnail URL
+    content_rating = Column(String, nullable=True)  # PG-13, TV-MA, etc.
+    studio = Column(String, nullable=True)  # Studio/network
+    summary = Column(String, nullable=True)  # Description
+    genres = Column(String, nullable=True)  # Comma-separated genres
+
+    # Timestamps
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+
+    # Add unique constraint to prevent duplicate entries
+    # This is based on user + rating_key + viewed_at
+    # Note: SQLite doesn't enforce this until we add indexes/constraints explicitly
+
+
 class Database:
     """Database connection and session management"""
 
@@ -249,6 +297,13 @@ class Database:
             if "thumb" not in plex_users_columns:
                 logger.info("Adding thumb column to plex_users table")
                 cursor.execute("ALTER TABLE plex_users ADD COLUMN thumb TEXT")
+
+            # Check if watch_history table exists
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='watch_history'"
+            )
+            if not cursor.fetchone():
+                logger.info("watch_history table doesn't exist, it will be created")
 
             conn.commit()
             conn.close()

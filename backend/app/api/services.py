@@ -12,6 +12,15 @@ router = APIRouter(prefix="/api/services", tags=["services"])
 async def get_services():
     """Get all monitored services"""
     services = monitor.get_all_services()
+
+    # Filter out stale traffic data (agent not sending updates)
+    for service in services:
+        if service.traffic and not service.is_traffic_active:
+            # Keep the traffic data but clear current metrics to hide from UI
+            # This preserves historical totals in the database
+            service.traffic = None
+            service.traffic_history = []
+
     logger.debug(f"Returning {len(services)} services")
     return services
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Literal, List
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 class TrafficMetrics(BaseModel):
@@ -47,6 +47,15 @@ class Service(BaseModel):
     traffic: TrafficMetrics | None = None
     traffic_history: List[TrafficDataPoint] = []
     response_history: List[ResponseTimeDataPoint] = []
+
+    @property
+    def is_traffic_active(self) -> bool:
+        """Check if traffic agent is actively sending updates (within last 30 seconds)"""
+        if not self.traffic or not self.traffic.last_updated:
+            return False
+        # Consider traffic stale if no update in 30 seconds
+        stale_threshold = datetime.now(timezone.utc) - timedelta(seconds=30)
+        return self.traffic.last_updated > stale_threshold
 
 
 class ServiceCreate(BaseModel):

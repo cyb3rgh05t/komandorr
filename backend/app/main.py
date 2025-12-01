@@ -61,19 +61,32 @@ async def lifespan(app: FastAPI):
     # Start invite expiration checker
     expiration_task = asyncio.create_task(check_expired_invites_loop())
 
+    # Start watch history sync (every 15 minutes)
+    from app.services.watch_history_sync import watch_history_sync
+
+    watch_history_task = asyncio.create_task(
+        watch_history_sync.start_sync_loop(interval=900)
+    )
+
     yield
 
     # Shutdown
     logger.info("Shutting down Komandorr Dashboard Backend")
     monitor.stop_monitoring()
+    watch_history_sync.stop()
     monitoring_task.cancel()
     expiration_task.cancel()
+    watch_history_task.cancel()
     try:
         await monitoring_task
     except asyncio.CancelledError:
         pass
     try:
         await expiration_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await watch_history_task
     except asyncio.CancelledError:
         pass
 

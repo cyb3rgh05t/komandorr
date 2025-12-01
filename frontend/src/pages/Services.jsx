@@ -87,8 +87,10 @@ export default function Services() {
 
   const handleRefresh = async () => {
     try {
-      const data = await api.checkAllServices();
-      queryClient.setQueryData(["services"], data);
+      // Start refetch first to trigger isFetching animation immediately
+      const refetchPromise = queryClient.refetchQueries(["services"]);
+      // Trigger backend check in parallel
+      await Promise.all([api.checkAllServices(), refetchPromise]);
       toast.success(t("success.servicesChecked") || "Services checked");
     } catch (error) {
       console.error("Failed to check all services:", error);
@@ -200,8 +202,29 @@ export default function Services() {
     return matchesSearch && matchesTab && matchesStatus;
   });
 
-  // Group services for tab counts
+  // Calculate ALL tab count (without tab filter, only search and status)
+  const allTabCount = services.filter((service) => {
+    const matchesSearch =
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.type.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === null || service.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  }).length;
+
+  // Group services for tab counts - use filteredServices for display
   const groupedServices = filteredServices.reduce((acc, service) => {
+    const groupName = service.group || t("dashboard.groupUngrouped");
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(service);
+    return acc;
+  }, {});
+
+  // Group ALL services by group to show correct tab counts
+  const allGroupedServices = services.reduce((acc, service) => {
     const groupName = service.group || t("dashboard.groupUngrouped");
     if (!acc[groupName]) acc[groupName] = [];
     acc[groupName].push(service);
@@ -455,11 +478,11 @@ export default function Services() {
                         : "text-theme-text-muted"
                     }`}
                   >
-                    ({filteredServices.length})
+                    ({allTabCount})
                   </span>
                 </button>
                 {allGroups.map((groupName) => {
-                  const groupServices = groupedServices[groupName] || [];
+                  const groupServices = allGroupedServices[groupName] || [];
                   return (
                     <button
                       key={groupName}

@@ -5,7 +5,7 @@ import httpx
 import json
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 from datetime import datetime, timezone
 
 from app.utils.logger import logger
@@ -1242,5 +1242,97 @@ async def get_plex_sessions():
             }
 
     except Exception as e:
-        logger.error(f"Error fetching Plex sessions: {e}", exc_info=True)
+        logger.error(f"Error fetching Plex sessions: {e}")
         return {"error": True, "message": str(e), "sessions": []}
+
+
+@router.get("/watch-history")
+async def get_watch_history():
+    """Get watch history from database (fast) - synced by background task"""
+    from app.database import db, WatchHistoryDB
+
+    try:
+        session = db.get_session()
+        try:
+            # Query all watch history from database
+            history_items = (
+                session.query(WatchHistoryDB)
+                .order_by(WatchHistoryDB.viewed_at.desc())
+                .limit(500)  # Limit to last 500 items
+                .all()
+            )
+
+            watch_history = []
+            for item in history_items:
+                # Parse genres back to list
+                genres = []
+                if item.genres:
+                    genres = item.genres.split(",")
+
+                # Get progress value and ensure it's a float for type checking
+                progress_value = 0.0
+                if item.progress is not None:
+                    progress_value = float(cast(float, item.progress))
+
+                # Convert direct Plex thumbnail URL to proxy URL to avoid SSL issues
+                thumb_url = None
+                if item.thumb:
+                    # If it's already a full URL with the Plex server, proxy it
+                    if item.thumb.startswith("http"):
+                        from urllib.parse import quote
+
+                        thumb_url = f"/api/plex/proxy/image?url={quote(item.thumb)}"
+                    else:
+                        thumb_url = item.thumb
+
+                watch_history.append(
+                    {
+                        "user_id": item.user_id,
+                        "email": item.username
+                        or item.email,  # Use username as display name
+                        "type": item.type,
+                        "title": item.title,
+                        "grandparent_title": item.grandparent_title,
+                        "parent_index": item.parent_index,
+                        "index": item.index,
+                        "viewed_at": (
+                            item.viewed_at.isoformat() if item.viewed_at else None
+                        ),
+                        "duration": item.duration,  # already in seconds
+                        "view_offset": item.view_offset,  # already in seconds
+                        "progress": round(progress_value, 2),
+                        "view_count": item.view_count,
+                        "rating": item.rating,
+                        "year": item.year,
+                        "thumb": thumb_url,
+                        "content_rating": item.content_rating,
+                        "studio": item.studio,
+                        "summary": item.summary,
+                        "genres": genres,
+                    }
+                )
+
+            logger.info(
+                f"Returned {len(watch_history)} watch history items from database"
+            )
+            return watch_history
+
+        finally:
+            session.close()
+
+    except Exception as e:
+        logger.error(f"Error fetching watch history from database: {e}")
+        return []
+
+
+@router.post("/watch-history/sync")
+async def sync_watch_history_now():
+    """Manually trigger watch history sync (admin only)"""
+    from app.services.watch_history_sync import watch_history_sync
+
+    try:
+        await watch_history_sync.sync_watch_history()
+        return {"success": True, "message": "Watch history sync completed"}
+    except Exception as e:
+        logger.error(f"Error during manual sync: {e}")
+        return {"success": False, "message": str(e)}

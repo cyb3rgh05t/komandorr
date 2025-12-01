@@ -271,10 +271,24 @@ async def redeem_with_plex_oauth(request: PlexRedeemRequest):
         )
 
         if not success:
-            # Log warning but don't fail - user might already be in Plex
-            logger.warning(
-                f"Plex invitation failed for {request.email}: {error_msg}, continuing anyway"
-            )
+            # Check if user is already in Plex - return specific error
+            if error_msg and (
+                "already_member" in error_msg.lower()
+                or "already sharing" in error_msg.lower()
+                or "already a" in error_msg.lower()
+            ):
+                logger.info(f"User {request.email} is already in Plex server")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="already_member",
+                )
+            else:
+                # Other errors - log and fail
+                logger.error(f"Plex invitation failed for {request.email}: {error_msg}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=error_msg or "Failed to add user to Plex server",
+                )
 
         if existing_user:
             # Update existing user record with new invite

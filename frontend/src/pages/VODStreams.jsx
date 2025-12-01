@@ -244,7 +244,6 @@ export default function VODStreams() {
     placeholderData: (previousData) => previousData,
   });
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const refreshInterval = useRef(null);
   const REFRESH_INTERVAL = 5000; // 5 seconds for real-time VOD stream monitoring
@@ -431,11 +430,9 @@ export default function VODStreams() {
   }, [activities]);
 
   const handleRefresh = async (isManual = false) => {
-    if (isRefreshing) return;
+    if (isFetching) return;
 
-    setIsRefreshing(true);
     await queryClient.refetchQueries(["plexActivities"]);
-    setIsRefreshing(false);
     setLastRefreshTime(Date.now());
     if (isManual) {
       toast.success("Refreshed successfully!");

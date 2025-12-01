@@ -1,5 +1,135 @@
 # CHANGELOG.md
 
+# [2.4.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.3.0...v2.4.0) (2025-12-01)
+
+### 📊 Watch History & User Analytics
+
+**New Features**
+
+• **watch-history: Complete Plex watch history tracking**
+◦ New User History page with comprehensive viewing analytics
+◦ Real-time sync of Plex watch history to local database
+◦ Track movies, TV episodes, and music playback per user
+◦ View progress, duration, view count, and ratings for all content
+◦ Background sync service fetches up to 200 most recent history items
+◦ Automatic account mapping with Plex system accounts
+◦ Persistent storage in SQLite database (WatchHistoryDB model)
+◦ Support for thumbnails, studio, genres, and content ratings
+
+• **user-analytics: Advanced filtering and search**
+◦ Filter by time period: All Time, Today, This Week, This Month
+◦ Filter by content type: All, Movies, TV Episodes, Music
+◦ Search across username, email, and content titles
+◦ User statistics with total views, favorite content type, and last activity
+◦ Per-user detailed history with play progress indicators
+◦ Responsive card layout with media type icons and badges
+◦ Real-time data refresh with optimized caching (15-minute stale time)
+
+• **api: Watch history endpoints**
+◦ `GET /api/plex/watch-history` - Retrieve all watch history from database
+◦ Background service automatically syncs every 5 minutes
+◦ Efficient database queries with indexed lookups
+◦ Support for duplicate detection using rating_key + viewed_at
+
+### 🎨 UI/UX Enhancements
+
+**New Features**
+
+• **carousel: Traffic and media carousel navigation**
+◦ DashboardTrafficCards now displays traffic data in paginated carousel
+◦ Auto-scrolling carousel for top bandwidth consumers
+◦ Previous/Next navigation arrows with smooth transitions
+◦ Pagination dots showing current position
+◦ Configurable items per page (default: 5 services)
+◦ InviteRedemption page features auto-scrolling Plex media showcase
+◦ Horizontal scroll animation for poster images
+
+• **badges: Enhanced visual indicators**
+◦ Expiration badges on User Accounts cards showing time until expiry
+◦ "Expires in X days" display with color coding (red < 7 days, yellow < 30 days)
+◦ "Expired" badge for users past expiration date
+◦ Badge counters on Services tab showing active service count
+◦ User count badges in sidebar navigation
+
+• **sidebar: Improved navigation**
+◦ User History menu item with Activity icon
+◦ Dynamic badge counts for Services and User Accounts
+◦ Responsive collapsing on mobile devices
+◦ Active route highlighting with theme colors
+
+### 🔧 Invite System Improvements
+
+**New Features**
+
+• **invite-editing: Full CRUD operations for invites**
+◦ Edit existing invites with modal dialog
+◦ Update usage limits, expiration dates, and permissions
+◦ Modify library access after invite creation
+◦ Real-time validation and error handling
+◦ Confirmation dialogs for destructive actions
+
+• **library-selection: Enhanced library picker**
+◦ Fixed individual library selection in multi-select dropdown
+◦ Support for Movies, TV Shows, Music, and All Libraries
+◦ Visual checkboxes for selected libraries
+◦ "All Libraries" option properly toggles individual selections
+
+• **expiration-picker: Time selection for expiry dates**
+◦ Added time picker to expiration date selector
+◦ Support for hour and minute precision on invite expiration
+◦ User expiration date editor with time selection
+◦ Default time set to end of day (23:59) for better UX
+
+### 🚀 Traffic Agent Improvements
+
+**New Features**
+
+• **persistence: Traffic data persistence across restarts**
+◦ State file saves total upload/download counters to disk
+◦ Automatic state restoration on agent startup
+◦ JSON-based state storage in `traffic_state.json`
+◦ Prevents data loss when agent restarts
+◦ `load_state()` and `save_state()` methods for state management
+◦ State file created automatically on first run
+
+### 🐛 Bug Fixes
+
+• **refresh: Fixed user refresh button states**
+◦ Individual refresh buttons now show loading spinner during operation
+◦ Disabled state prevents multiple concurrent refreshes
+◦ Proper error handling with toast notifications
+◦ RefreshCw icon animates during refresh
+
+• **oauth: Improved Plex OAuth flow**
+◦ Better error messages for OAuth failures
+◦ Automatic email collection for new users
+◦ Fixed account mapping with Plex system accounts
+
+• **services: Service tab count accuracy**
+◦ Fixed service count badge showing incorrect numbers
+◦ Real-time updates when services added/removed
+◦ Proper filtering of active vs inactive services
+
+### 📚 Documentation
+
+• **localization: Updated translations**
+◦ Added German translations for User History page
+◦ English translations for watch history features
+◦ Filter labels, time periods, and content types
+◦ Statistics and analytics terminology
+
+### 🔄 Database Schema Updates
+
+• **models: New watch history schema**
+◦ WatchHistoryDB table with comprehensive metadata
+◦ Fields: user_id, email, username, type, title, viewed_at, duration, progress
+◦ Support for TV show hierarchy (grandparent_title, parent_index, index)
+◦ Rating, year, thumb, content_rating, studio, summary, genres
+◦ Unique constraint on rating_key + viewed_at for duplicate prevention
+◦ Indexed columns for fast queries (user_id, email, viewed_at, type)
+
+---
+
 # [2.3.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.2.0...v2.3.0) (2025-11-26)
 
 ### 🎭 Plex Invite Management System

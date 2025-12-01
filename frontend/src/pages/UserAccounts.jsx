@@ -88,6 +88,7 @@ const UserAccounts = () => {
     isOpen: false,
     user: null,
     expirationDate: "",
+    expirationTime: "00:00",
   });
   const [refreshingUsers, setRefreshingUsers] = useState(new Set());
 
@@ -161,20 +162,39 @@ const UserAccounts = () => {
   const handleEditUser = (user) => {
     // Get current expiration date from user
     const currentExpiration = user.expires_at || "";
+    let expirationDate = "";
+    let expirationTime = "00:00";
+
+    if (currentExpiration) {
+      const date = new Date(currentExpiration);
+      expirationDate = currentExpiration.split("T")[0];
+      expirationTime = `${String(date.getHours()).padStart(2, "0")}:${String(
+        date.getMinutes()
+      ).padStart(2, "0")}`;
+    }
 
     setEditModal({
       isOpen: true,
       user: user,
-      expirationDate: currentExpiration ? currentExpiration.split("T")[0] : "",
+      expirationDate: expirationDate,
+      expirationTime: expirationTime,
     });
   };
 
   const confirmEditUser = async () => {
     try {
+      let expiresAt = null;
+
+      if (editModal.expirationDate) {
+        // Combine date and time
+        const [hours, minutes] = editModal.expirationTime.split(":");
+        const dateTime = new Date(editModal.expirationDate);
+        dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        expiresAt = dateTime.toISOString();
+      }
+
       const updateData = {
-        expires_at: editModal.expirationDate
-          ? new Date(editModal.expirationDate).toISOString()
-          : null,
+        expires_at: expiresAt,
       };
 
       console.log("Updating user expiration:", {
@@ -189,7 +209,12 @@ const UserAccounts = () => {
       queryClient.invalidateQueries(["invites"]);
       queryClient.invalidateQueries(["inviteStats"]);
       toast.success(t("userAccounts.userUpdated"));
-      setEditModal({ isOpen: false, user: null, expirationDate: "" });
+      setEditModal({
+        isOpen: false,
+        user: null,
+        expirationDate: "",
+        expirationTime: "00:00",
+      });
     } catch (error) {
       console.error("Error updating user:", error);
       console.error("Error response:", error.response?.data);
@@ -268,19 +293,19 @@ const UserAccounts = () => {
 
         <button
           onClick={handleRefresh}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           disabled={loading || isFetching}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
         >
           <RefreshCw
             size={16}
-            className={`text-theme-primary ${
-              loading || isFetching ? "animate-spin" : ""
+            className={`text-theme-primary transition-transform duration-500 ${
+              isFetching ? "animate-spin" : ""
             }`}
           />
           <span className="text-xs sm:text-sm">
-            {loading || isFetching
+            {isFetching
               ? t("common.refreshing", "Refreshing")
-              : t("common.refresh", "Refresh")}
+              : t("common.refresh")}
           </span>
         </button>
       </div>
@@ -467,10 +492,18 @@ const UserAccounts = () => {
                       <h3 className="text-lg font-bold text-theme-text truncate">
                         {user.username || user.email}
                       </h3>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
-                        <Check className="w-3 h-3" />
-                        {t("userAccounts.status.active")}
-                      </span>
+                      {user.expires_at &&
+                      new Date(user.expires_at) < new Date() ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30 flex-shrink-0">
+                          <X className="w-3 h-3" />
+                          {t("userAccounts.status.expired")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
+                          <Check className="w-3 h-3" />
+                          {t("userAccounts.status.active")}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -685,24 +718,54 @@ const UserAccounts = () => {
                   })}
                 </p>
 
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("userAccounts.expirationDate")}
-                </label>
-                <input
-                  type="date"
-                  value={editModal.expirationDate}
-                  onChange={(e) =>
-                    setEditModal({
-                      ...editModal,
-                      expirationDate: e.target.value,
-                    })
-                  }
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary transition-colors"
-                />
-                <p className="text-xs text-theme-text-muted mt-2">
-                  {t("userAccounts.expirationHint")}
-                </p>
+                <div className="space-y-4">
+                  {/* Date Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("userAccounts.expirationDate")}
+                    </label>
+                    <input
+                      type="date"
+                      value={editModal.expirationDate}
+                      onChange={(e) =>
+                        setEditModal({
+                          ...editModal,
+                          expirationDate: e.target.value,
+                        })
+                      }
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary transition-colors"
+                    />
+                  </div>
+
+                  {/* Time Input */}
+                  {editModal.expirationDate && (
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("userAccounts.expirationTime") || "Expiration Time"}
+                      </label>
+                      <input
+                        type="time"
+                        value={editModal.expirationTime}
+                        onChange={(e) =>
+                          setEditModal({
+                            ...editModal,
+                            expirationTime: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary transition-colors"
+                      />
+                      <p className="text-xs text-theme-text-muted mt-2">
+                        {t("userAccounts.expirationTimeHint") ||
+                          "User access will expire at this time"}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-theme-text-muted">
+                    {t("userAccounts.expirationHint")}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -714,6 +777,7 @@ const UserAccounts = () => {
                     isOpen: false,
                     user: null,
                     expirationDate: "",
+                    expirationTime: "00:00",
                   })
                 }
                 className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-theme-text font-medium transition-all"

@@ -12,6 +12,7 @@
     "vodActivity": "VOD Aktivität",
     "invites": "Plex-Einladungen",
     "userAccounts": "Benutzerkonten",
+    "userHistory": "Wiedergabeverlauf",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -385,7 +386,9 @@
     "editUser": "Benutzerkonto bearbeiten",
     "editUserMessage": "Legen Sie ein Ablaufdatum für {{name}} fest. Wenn das Datum erreicht ist, wird der Benutzer automatisch von Ihrem Plex-Server entfernt.",
     "expirationDate": "Ablaufdatum",
+    "expirationTime": "Ablaufzeit",
     "expirationHint": "Leer lassen für kein Ablaufdatum. Der Benutzer wird am festgelegten Datum automatisch entfernt.",
+    "expirationTimeHint": "Der Benutzerzugriff läuft zu dieser Zeit ab",
     "stats": {
       "totalUsers": "Benutzer gesamt",
       "activeInvites": "Eingelöste Einladungen",
@@ -510,17 +513,22 @@
     "refreshed": "Erfolgreich aktualisiert!",
     "createInvite": "Einladung erstellen",
     "createNew": "Neue Einladung erstellen",
+    "editInvite": "Einladung bearbeiten",
     "inviteCreated": "Einladung erfolgreich erstellt!",
+    "inviteUpdated": "Einladung erfolgreich aktualisiert!",
     "inviteDeleted": "Einladung erfolgreich gelöscht!",
     "linkCopied": "Einladungslink in Zwischenablage kopiert!",
     "searchPlaceholder": "Einladungen durchsuchen...",
     "errorLoading": "Fehler beim Laden der Einladungen",
     "errorCreating": "Fehler beim Erstellen der Einladung",
+    "errorUpdating": "Fehler beim Aktualisieren der Einladung",
     "errorDeleting": "Fehler beim Löschen der Einladung",
     "errorDeletingWithUsers": "Einladung mit aktiven Benutzern kann nicht gelöscht werden. Entfernen Sie zuerst die Benutzer auf der Seite Benutzerkonten.",
     "confirmDelete": "Einladung löschen",
     "confirmDeleteMessage": "Möchten Sie diese Einladung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmDeleteWithUsers": "Diese Einladung hat {{count}} eingelöste Benutzer. Um diese Einladung zu löschen, müssen Sie zuerst die Benutzer auf der Seite Benutzerkonten entfernen. Das Löschen des Einladungscodes entfernt keine Benutzer von Plex.",
+    "currentUsage": "Aktuelle Nutzung",
+    "currentExpiry": "Aktuelles Ablaufdatum",
     "stats": {
       "totalInvites": "Einladungen gesamt",
       "activeInvites": "Aktive Einladungen",
@@ -547,6 +555,7 @@
       "active": "Aktiv"
     },
     "fields": {
+      "code": "Einladungscode",
       "created": "Erstellt",
       "by": "von",
       "expires": "Läuft ab",
@@ -567,9 +576,11 @@
     "buttons": {
       "copyLink": "Link kopieren",
       "copied": "Kopiert!",
+      "edit": "Bearbeiten",
       "delete": "Löschen",
       "cancel": "Abbrechen",
-      "create": "Einladung erstellen"
+      "create": "Einladung erstellen",
+      "save": "Änderungen speichern"
     },
     "form": {
       "customCode": "Benutzerdefinierter Einladungscode",
@@ -702,6 +713,36 @@
       "wan": "WAN",
       "movie": "Film",
       "episode": "Episode"
+    }
+  },
+  "userHistory": {
+    "title": "Benutzer-Wiedergabeverlauf",
+    "subtitle": "Detaillierte Wiedergabestatistiken und -verlauf für Plex-Benutzer anzeigen",
+    "selectUser": "Benutzer auswählen",
+    "searchPlaceholder": "Benutzer suchen...",
+    "noUsers": "Keine Benutzer gefunden",
+    "selectUserPrompt": "Wählen Sie einen Benutzer aus, um seinen Wiedergabeverlauf anzuzeigen",
+    "refreshed": "Wiedergabeverlauf aktualisiert",
+    "totalViews": "Gesamtansichten",
+    "totalWatched": "Gesamt angesehen",
+    "movies": "Filme",
+    "episodes": "Episoden",
+    "watchTime": "Wiedergabezeit",
+    "timeRange": "Zeitraum",
+    "mediaType": "Medientyp",
+    "watchHistory": "Wiedergabeverlauf",
+    "items": "Einträge",
+    "noHistory": "Kein Wiedergabeverlauf für diesen Benutzer gefunden",
+    "filter": {
+      "all": "Alle Zeit",
+      "today": "Heute",
+      "week": "Diese Woche",
+      "month": "Dieser Monat"
+    },
+    "type": {
+      "all": "Alle Typen",
+      "movie": "Filme",
+      "episode": "Episoden"
     }
   }
 }
