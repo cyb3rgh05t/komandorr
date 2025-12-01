@@ -409,6 +409,11 @@ const UserHistory = () => {
                     : "border-theme"
                 }`}
               >
+                {/* Plex Background */}
+                <div
+                  className="absolute inset-0 opacity-5 bg-center bg-no-repeat bg-contain pointer-events-none"
+                  style={{ backgroundImage: "url(/plex.png)" }}
+                />
                 <div className="flex items-start gap-3 mb-3">
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
