@@ -492,10 +492,18 @@ const UserAccounts = () => {
                       <h3 className="text-lg font-bold text-theme-text truncate">
                         {user.username || user.email}
                       </h3>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
-                        <Check className="w-3 h-3" />
-                        {t("userAccounts.status.active")}
-                      </span>
+                      {user.expires_at &&
+                      new Date(user.expires_at) < new Date() ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30 flex-shrink-0">
+                          <X className="w-3 h-3" />
+                          {t("userAccounts.status.expired")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
+                          <Check className="w-3 h-3" />
+                          {t("userAccounts.status.active")}
+                        </span>
+                      )}
                     </div>
                   </div>
 
