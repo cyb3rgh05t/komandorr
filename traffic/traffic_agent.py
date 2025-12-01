@@ -23,9 +23,11 @@ import requests
 import time
 import json
 import sys
+import os
 from datetime import datetime
 from typing import Dict
 from colorama import Fore, Back, Style, init
+from pathlib import Path
 
 # Initialize colorama for cross-platform colored output
 init(autoreset=True)
@@ -53,6 +55,11 @@ MAX_BANDWIDTH = 100.0
 # Optional: Basic auth credentials if enabled in Komandorr
 AUTH_USERNAME = None
 AUTH_PASSWORD = None
+
+# State file to persist total counters across restarts
+STATE_FILE = os.path.join(
+    os.path.dirname(__file__), f".traffic_state_{SERVICE_ID}.json"
+)
 
 # ============================================
 # LOGGING HELPERS
@@ -114,7 +121,39 @@ class TrafficMonitor:
         self.total_sent_gb = 0.0
         self.total_recv_gb = 0.0
         self.last_update = time.time()
+        self._load_state()
         self._initialize_counters()
+
+    def _load_state(self):
+        """Load persisted state from disk"""
+        try:
+            if os.path.exists(STATE_FILE):
+                with open(STATE_FILE, "r") as f:
+                    state = json.load(f)
+                    self.total_sent_gb = state.get("total_sent_gb", 0.0)
+                    self.total_recv_gb = state.get("total_recv_gb", 0.0)
+                    logger.info(
+                        f"Loaded state: {Fore.YELLOW}UP {self.total_sent_gb:.2f} GB, DOWN {self.total_recv_gb:.2f} GB{Style.RESET_ALL}"
+                    )
+            else:
+                logger.debug("No previous state found, starting fresh")
+        except Exception as e:
+            logger.warning(f"Could not load state file: {e}")
+            self.total_sent_gb = 0.0
+            self.total_recv_gb = 0.0
+
+    def _save_state(self):
+        """Persist current state to disk"""
+        try:
+            state = {
+                "total_sent_gb": self.total_sent_gb,
+                "total_recv_gb": self.total_recv_gb,
+                "last_updated": datetime.now().isoformat(),
+            }
+            with open(STATE_FILE, "w") as f:
+                json.dump(state, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not save state file: {e}")
 
     def _initialize_counters(self):
         """Initialize network counters"""
@@ -165,6 +204,9 @@ class TrafficMonitor:
         self.last_bytes_sent = current_stats["bytes_sent"]
         self.last_bytes_recv = current_stats["bytes_recv"]
         self.last_update = current_time
+
+        # Save state periodically
+        self._save_state()
 
         return {
             "service_id": SERVICE_ID,
@@ -233,7 +275,10 @@ class TrafficMonitor:
                 time.sleep(UPDATE_INTERVAL)
 
         except KeyboardInterrupt:
-            logger.info("\nStopping monitor... Goodbye!")
+            logger.info("\nStopping monitor...")
+            logger.info("Saving state...")
+            self._save_state()
+            logger.info("Goodbye!")
             sys.exit(0)
 
 
