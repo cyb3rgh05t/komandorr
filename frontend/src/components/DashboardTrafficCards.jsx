@@ -66,7 +66,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     trafficData.services.length === 0
   ) {
     return (
-      <div className="bg-theme-card border border-theme rounded-xl p-6 shadow-lg">
+      <div className="w-full bg-theme-card border border-theme rounded-xl p-6 shadow-lg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gradient-to-br from-theme-primary/20 to-theme-primary/10 rounded-xl shadow-inner">
@@ -169,10 +169,12 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     { primary: "#f59e0b", shadow: "rgba(245, 158, 11, 0.4)" }, // amber
   ];
 
-  // Get top 6 services by bandwidth, sorted alphabetically
-  const allServices = [...activeServices].sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  // Get services sorted by bandwidth (load) - highest to lowest
+  const allServices = [...activeServices].sort((a, b) => {
+    const loadA = (a.bandwidth_up || 0) + (a.bandwidth_down || 0);
+    const loadB = (b.bandwidth_up || 0) + (b.bandwidth_down || 0);
+    return loadB - loadA; // Descending order (highest load first)
+  });
 
   const itemsPerPage = 6;
   const hasMoreCards = allServices.length > itemsPerPage;

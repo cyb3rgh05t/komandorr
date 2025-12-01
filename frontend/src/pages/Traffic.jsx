@@ -524,7 +524,7 @@ export default function Traffic() {
           {/* Services Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {servicesInActiveGroup.length === 0 ? (
-              <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+              <div className="col-span-full bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
                 <Server
                   size={48}
                   className="mx-auto mb-4 text-theme-text-muted"
