@@ -59,6 +59,35 @@ const CircularProgress = ({ percentage, color, size = 120 }) => {
 const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   const { t } = useTranslation();
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [cardsPerPage, setCardsPerPage] = useState(6);
+
+  // Calculate how many cards can fit based on screen width
+  useState(() => {
+    const calculateCardsPerPage = () => {
+      const width = window.innerWidth;
+      // Each card is roughly 280px wide with gaps (32px gap between cards)
+      // Calculate maximum cards that can fit in the available width
+      const cardWidth = 280;
+      const gapWidth = 32;
+      const chevronWidth = 100; // Space for chevrons on sides
+      const availableWidth = width - chevronWidth;
+      const maxCards = Math.floor(
+        (availableWidth + gapWidth) / (cardWidth + gapWidth)
+      );
+
+      // Ensure at least 1 card, maximum based on screen width
+      return Math.max(1, maxCards);
+    };
+
+    setCardsPerPage(calculateCardsPerPage());
+
+    const handleResize = () => {
+      setCardsPerPage(calculateCardsPerPage());
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   if (
     !trafficData ||
@@ -176,7 +205,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     return loadB - loadA; // Descending order (highest load first)
   });
 
-  const itemsPerPage = 6;
+  const itemsPerPage = cardsPerPage;
   const hasMoreCards = allServices.length > itemsPerPage;
   const maxIndex = Math.ceil(allServices.length / itemsPerPage) - 1;
 
