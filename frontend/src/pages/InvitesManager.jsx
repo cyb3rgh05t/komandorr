@@ -18,6 +18,8 @@ import {
   RefreshCw,
   Clock,
   Search,
+  Edit,
+  Calendar,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -130,11 +132,21 @@ const InvitesManager = () => {
     userCount: 0,
   });
 
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingInvite, setEditingInvite] = useState(null);
+  const [editForm, setEditForm] = useState({
+    usage_limit: "",
+    expires_in_days: "",
+  });
+
   // Custom dropdown states
   const [usageDropdownOpen, setUsageDropdownOpen] = useState(false);
   const [expiryDropdownOpen, setExpiryDropdownOpen] = useState(false);
   const [serverDropdownOpen, setServerDropdownOpen] = useState(false);
   const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
+  const [editUsageDropdownOpen, setEditUsageDropdownOpen] = useState(false);
+  const [editExpiryDropdownOpen, setEditExpiryDropdownOpen] = useState(false);
 
   const [createForm, setCreateForm] = useState({
     custom_code: "",
@@ -205,6 +217,72 @@ const InvitesManager = () => {
     } catch (error) {
       console.error("Error creating invite:", error);
       toast.error(t("invites.errorCreating"));
+    }
+  };
+
+  const handleEditInvite = (invite) => {
+    setEditingInvite(invite);
+
+    // Calculate days until expiration
+    let expiresInDays = "";
+    if (invite.expires_at) {
+      const expiryDate = new Date(invite.expires_at);
+      const now = new Date();
+      const diffTime = expiryDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) {
+        expiresInDays = diffDays.toString();
+      }
+    }
+
+    setEditForm({
+      usage_limit: invite.usage_limit ? invite.usage_limit.toString() : "",
+      expires_in_days: expiresInDays,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateInvite = async (e) => {
+    e.preventDefault();
+
+    try {
+      const updateData = {};
+
+      // Update usage limit
+      if (editForm.usage_limit === "") {
+        updateData.usage_limit = null;
+      } else {
+        updateData.usage_limit = parseInt(editForm.usage_limit);
+      }
+
+      // Update expiration
+      if (editForm.expires_in_days === "") {
+        updateData.expires_at = null;
+      } else {
+        const expiryDate = new Date();
+        expiryDate.setDate(
+          expiryDate.getDate() + parseInt(editForm.expires_in_days)
+        );
+        updateData.expires_at = expiryDate.toISOString();
+      }
+
+      await api.put(`/invites/${editingInvite.id}`, updateData);
+
+      setShowEditModal(false);
+      setEditingInvite(null);
+      setEditForm({
+        usage_limit: "",
+        expires_in_days: "",
+      });
+
+      queryClient.invalidateQueries(["invites"]);
+      queryClient.invalidateQueries(["inviteStats"]);
+      toast.success(
+        t("invites.inviteUpdated") || "Invite updated successfully"
+      );
+    } catch (error) {
+      console.error("Error updating invite:", error);
+      toast.error(t("invites.errorUpdating") || "Failed to update invite");
     }
   };
 
@@ -1013,8 +1091,15 @@ const InvitesManager = () => {
                     )}
                   </div>
 
-                  {/* Right side - Delete button */}
-                  <div className="flex-shrink-0">
+                  {/* Right side - Action buttons */}
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditInvite(invite)}
+                      className="p-2.5 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 text-theme-primary hover:text-theme-primary/80 rounded-lg transition-all shadow-sm hover:shadow-md group/edit"
+                      title={t("invites.buttons.edit") || "Edit"}
+                    >
+                      <Edit className="w-4 h-4 group-hover/edit:scale-110 transition-transform" />
+                    </button>
                     <button
                       onClick={() => handleDeleteInvite(invite)}
                       className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-lg transition-all shadow-sm hover:shadow-md group/delete"
@@ -1581,6 +1666,198 @@ const InvitesManager = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingInvite && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-theme-card border border-theme rounded-lg shadow-2xl max-w-md w-full animate-scaleIn">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-theme">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-theme-primary/20 rounded-lg">
+                  <Calendar className="w-5 h-5 text-theme-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-theme-text">
+                  {t("invites.editInvite") || "Edit Invite"}
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingInvite(null);
+                }}
+                className="p-2 hover:bg-theme-hover rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-theme-text-muted" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleUpdateInvite} className="p-6 space-y-6">
+              {/* Invite Code Display */}
+              <div className="bg-theme-hover border border-theme rounded-lg p-4">
+                <p className="text-xs text-theme-text-muted uppercase tracking-wider mb-1">
+                  {t("invites.fields.code")}
+                </p>
+                <p className="text-lg font-mono font-semibold text-theme-text">
+                  {editingInvite.code}
+                </p>
+              </div>
+
+              {/* Usage Limit */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-theme-text">
+                  {t("invites.form.usageLimit")}
+                </label>
+                <div className="relative custom-dropdown">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditUsageDropdownOpen(!editUsageDropdownOpen)
+                    }
+                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary  cursor-pointer transition-all flex items-center justify-between"
+                  >
+                    <span>
+                      {editForm.usage_limit || t("invites.form.unlimited")}
+                      {editForm.usage_limit && ` ${t("invites.form.uses")}`}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${
+                        editUsageDropdownOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {editUsageDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-2 bg-theme-card border border-theme rounded-lg shadow-lg overflow-hidden">
+                      {["", "1", "5", "10", "25", "50", "100"].map((value) => (
+                        <div
+                          key={value || "unlimited"}
+                          onClick={() => {
+                            setEditForm({ ...editForm, usage_limit: value });
+                            setEditUsageDropdownOpen(false);
+                          }}
+                          className={`px-4 py-3 cursor-pointer transition-colors ${
+                            editForm.usage_limit === value
+                              ? "bg-theme-primary/20 text-theme-primary"
+                              : "hover:bg-theme-hover text-theme-text"
+                          }`}
+                        >
+                          {value || t("invites.form.unlimited")}
+                          {value && ` ${t("invites.form.uses")}`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-theme-text-muted">
+                  {t("invites.currentUsage") || "Current usage"}:{" "}
+                  {editingInvite.used_count || 0}
+                </p>
+              </div>
+
+              {/* Expiration */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-theme-text">
+                  {t("invites.form.expiresIn")}
+                </label>
+                <div className="relative custom-dropdown">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditExpiryDropdownOpen(!editExpiryDropdownOpen)
+                    }
+                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary  cursor-pointer transition-all flex items-center justify-between"
+                  >
+                    <span>
+                      {editForm.expires_in_days || t("invites.fields.never")}
+                      {editForm.expires_in_days && ` ${t("invites.form.days")}`}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${
+                        editExpiryDropdownOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {editExpiryDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-2 bg-theme-card border border-theme rounded-lg shadow-lg overflow-hidden">
+                      {["", "1", "7", "14", "30", "60", "90", "365"].map(
+                        (value) => (
+                          <div
+                            key={value || "never"}
+                            onClick={() => {
+                              setEditForm({
+                                ...editForm,
+                                expires_in_days: value,
+                              });
+                              setEditExpiryDropdownOpen(false);
+                            }}
+                            className={`px-4 py-3 cursor-pointer transition-colors ${
+                              editForm.expires_in_days === value
+                                ? "bg-theme-primary/20 text-theme-primary"
+                                : "hover:bg-theme-hover text-theme-text"
+                            }`}
+                          >
+                            {value || t("invites.fields.never")}
+                            {value && ` ${t("invites.form.days")}`}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+                {editingInvite.expires_at && (
+                  <p className="text-xs text-theme-text-muted">
+                    {t("invites.currentExpiry") || "Current expiry"}:{" "}
+                    <FormattedDate date={editingInvite.expires_at} />
+                  </p>
+                )}
+              </div>
+            </form>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-theme">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingInvite(null);
+                }}
+                className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-theme-text font-medium transition-all"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={handleUpdateInvite}
+                className="px-4 py-2 bg-theme-hover hover:bg-theme-primary/90 text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
+              >
+                {t("common.save")}
+              </button>
+            </div>
           </div>
         </div>
       )}

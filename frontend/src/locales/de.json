@@ -513,17 +513,22 @@
     "refreshed": "Erfolgreich aktualisiert!",
     "createInvite": "Einladung erstellen",
     "createNew": "Neue Einladung erstellen",
+    "editInvite": "Einladung bearbeiten",
     "inviteCreated": "Einladung erfolgreich erstellt!",
+    "inviteUpdated": "Einladung erfolgreich aktualisiert!",
     "inviteDeleted": "Einladung erfolgreich gelöscht!",
     "linkCopied": "Einladungslink in Zwischenablage kopiert!",
     "searchPlaceholder": "Einladungen durchsuchen...",
     "errorLoading": "Fehler beim Laden der Einladungen",
     "errorCreating": "Fehler beim Erstellen der Einladung",
+    "errorUpdating": "Fehler beim Aktualisieren der Einladung",
     "errorDeleting": "Fehler beim Löschen der Einladung",
     "errorDeletingWithUsers": "Einladung mit aktiven Benutzern kann nicht gelöscht werden. Entfernen Sie zuerst die Benutzer auf der Seite Benutzerkonten.",
     "confirmDelete": "Einladung löschen",
     "confirmDeleteMessage": "Möchten Sie diese Einladung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmDeleteWithUsers": "Diese Einladung hat {{count}} eingelöste Benutzer. Um diese Einladung zu löschen, müssen Sie zuerst die Benutzer auf der Seite Benutzerkonten entfernen. Das Löschen des Einladungscodes entfernt keine Benutzer von Plex.",
+    "currentUsage": "Aktuelle Nutzung",
+    "currentExpiry": "Aktuelles Ablaufdatum",
     "stats": {
       "totalInvites": "Einladungen gesamt",
       "activeInvites": "Aktive Einladungen",
@@ -550,6 +555,7 @@
       "active": "Aktiv"
     },
     "fields": {
+      "code": "Einladungscode",
       "created": "Erstellt",
       "by": "von",
       "expires": "Läuft ab",
@@ -570,9 +576,11 @@
     "buttons": {
       "copyLink": "Link kopieren",
       "copied": "Kopiert!",
+      "edit": "Bearbeiten",
       "delete": "Löschen",
       "cancel": "Abbrechen",
-      "create": "Einladung erstellen"
+      "create": "Einladung erstellen",
+      "save": "Änderungen speichern"
     },
     "form": {
       "customCode": "Benutzerdefinierter Einladungscode",
