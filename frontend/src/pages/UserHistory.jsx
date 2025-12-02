@@ -38,6 +38,48 @@ const FormattedDate = ({ date }) => {
   return <>{formattedDate}</>;
 };
 
+// Thumbnail component with proper React fallback (no innerHTML)
+const ThumbnailWithFallback = ({ item, Icon }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    // Show fallback icon
+    return (
+      <div
+        className={`w-20 h-28 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg ring-1 ring-black/10 ${
+          item.type === "movie"
+            ? "bg-blue-500/20"
+            : item.type === "episode"
+            ? "bg-purple-500/20"
+            : "bg-pink-500/20"
+        }`}
+      >
+        <Icon
+          size={28}
+          className={`${
+            item.type === "movie"
+              ? "text-blue-400"
+              : item.type === "episode"
+              ? "text-purple-400"
+              : "text-pink-400"
+          }`}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-black/10">
+      <img
+        src={item.thumb}
+        alt={item.title}
+        className="w-full h-full object-cover"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
+};
+
 const UserHistory = () => {
   const { t } = useTranslation();
   const toast = useToast();
@@ -409,6 +451,11 @@ const UserHistory = () => {
                     : "border-theme"
                 }`}
               >
+                {/* Plex Background */}
+                <div
+                  className="absolute inset-0 opacity-5 bg-center bg-no-repeat bg-contain pointer-events-none"
+                  style={{ backgroundImage: "url(/streamnet.png)" }}
+                />
                 <div className="flex items-start gap-3 mb-3">
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -692,39 +739,7 @@ const UserHistory = () => {
 
                         {/* Thumbnail */}
                         {item.thumb ? (
-                          <div className="relative w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-black/10">
-                            <img
-                              src={item.thumb}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                e.target.parentElement.innerHTML = `
-                                  <div class="w-full h-full flex items-center justify-center ${
-                                    item.type === "movie"
-                                      ? "bg-blue-500/20"
-                                      : item.type === "episode"
-                                      ? "bg-purple-500/20"
-                                      : "bg-pink-500/20"
-                                  }">
-                                    <svg class="${
-                                      item.type === "movie"
-                                        ? "text-blue-400"
-                                        : item.type === "episode"
-                                        ? "text-purple-400"
-                                        : "text-pink-400"
-                                    }" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                      ${
-                                        item.type === "movie"
-                                          ? '<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="7 2 12 7 17 2"/>'
-                                          : '<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>'
-                                      }
-                                    </svg>
-                                  </div>
-                                `;
-                              }}
-                            />
-                          </div>
+                          <ThumbnailWithFallback item={item} Icon={Icon} />
                         ) : (
                           <div
                             className={`w-20 h-28 rounded-lg flex items-center justify-center flex-shrink-0 ${

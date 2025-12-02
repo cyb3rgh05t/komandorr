@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     Boolean,
     ForeignKey,
+    UniqueConstraint,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -208,7 +209,11 @@ class WatchHistoryDB(Base):
 
     # Add unique constraint to prevent duplicate entries
     # This is based on user + rating_key + viewed_at
-    # Note: SQLite doesn't enforce this until we add indexes/constraints explicitly
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "rating_key", "viewed_at", name="_watch_history_uc"
+        ),
+    )
 
 
 class Database:

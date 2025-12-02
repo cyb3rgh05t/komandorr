@@ -27,7 +27,7 @@
 
 • **api: Watch history endpoints**
 ◦ `GET /api/plex/watch-history` - Retrieve all watch history from database
-◦ Background service automatically syncs every 5 minutes
+◦ Background service automatically syncs every 15 minutes
 ◦ Efficient database queries with indexed lookups
 ◦ Support for duplicate detection using rating_key + viewed_at
 

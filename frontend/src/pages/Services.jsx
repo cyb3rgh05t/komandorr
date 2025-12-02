@@ -125,11 +125,12 @@ export default function Services() {
     }
   };
 
-  const handleDeleteService = (service) => {
+  const handleDeleteService = (serviceId) => {
+    const service = services.find((s) => s.id === serviceId);
     setConfirmDialog({
       isOpen: true,
-      serviceId: service.id,
-      serviceName: service.name,
+      serviceId: serviceId,
+      serviceName: service?.name || "Unknown Service",
     });
   };
 

@@ -1277,13 +1277,15 @@ async def get_watch_history():
                 # Convert direct Plex thumbnail URL to proxy URL to avoid SSL issues
                 thumb_url = None
                 if item.thumb:
+                    # Ensure thumb is a string value, not a Column object
+                    thumb_value = str(item.thumb) if item.thumb else None
                     # If it's already a full URL with the Plex server, proxy it
-                    if item.thumb.startswith("http"):
+                    if thumb_value and thumb_value.startswith("http"):
                         from urllib.parse import quote
 
-                        thumb_url = f"/api/plex/proxy/image?url={quote(item.thumb)}"
+                        thumb_url = f"/api/plex/proxy/image?url={quote(thumb_value)}"
                     else:
-                        thumb_url = item.thumb
+                        thumb_url = thumb_value
 
                 watch_history.append(
                     {

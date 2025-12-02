@@ -49,8 +49,9 @@ UPDATE_INTERVAL = 5
 NETWORK_INTERFACE = None
 
 # Maximum bandwidth capacity of this server in MB/s (used for percentage calculations)
+# Set to None for auto-detection, or specify manually
 # Example: 125 MB/s = 1 Gbps, 1250 MB/s = 10 Gbps, 12.5 MB/s = 100 Mbps
-MAX_BANDWIDTH = 100.0
+MAX_BANDWIDTH = None  # Auto-detect from network interface
 
 # Optional: Basic auth credentials if enabled in Komandorr
 AUTH_USERNAME = None
@@ -121,8 +122,73 @@ class TrafficMonitor:
         self.total_sent_gb = 0.0
         self.total_recv_gb = 0.0
         self.last_update = time.time()
+        self.max_bandwidth = self._detect_max_bandwidth()
         self._load_state()
         self._initialize_counters()
+
+    def _detect_max_bandwidth(self) -> float:
+        """Auto-detect maximum bandwidth from network interface speed
+
+        Note: Network interfaces are full-duplex, meaning the speed applies to
+        both upload and download simultaneously. A 10 Gbps NIC can do 10 Gbps up
+        AND 10 Gbps down at the same time.
+        """
+        if MAX_BANDWIDTH is not None:
+            logger.info(
+                f"Using configured bandwidth: {Fore.YELLOW}{MAX_BANDWIDTH} MB/s{Style.RESET_ALL}"
+            )
+            return MAX_BANDWIDTH
+
+        try:
+            # Get network interface statistics with speed info
+            if NETWORK_INTERFACE:
+                # Check specific interface
+                stats = psutil.net_if_stats().get(NETWORK_INTERFACE)
+                if stats and stats.speed > 0:
+                    # Convert Mbps to MB/s (divide by 8)
+                    # This speed applies to both upload and download (full-duplex)
+                    bandwidth_mbs = stats.speed / 8
+                    logger.info(
+                        f"Auto-detected bandwidth on {Fore.MAGENTA}{NETWORK_INTERFACE}{Style.RESET_ALL}: "
+                        f"{Fore.YELLOW}{stats.speed} Mbps ({bandwidth_mbs:.2f} MB/s){Style.RESET_ALL}"
+                    )
+                    return bandwidth_mbs
+                else:
+                    logger.warning(
+                        f"Could not detect speed for interface {NETWORK_INTERFACE}"
+                    )
+            else:
+                # Find the fastest active interface
+                max_speed = 0
+                detected_interface = None
+
+                for iface_name, iface_stats in psutil.net_if_stats().items():
+                    # Skip loopback interfaces
+                    if iface_name.startswith("lo") or "loopback" in iface_name.lower():
+                        continue
+
+                    # Check if interface is up and has speed info
+                    if iface_stats.isup and iface_stats.speed > max_speed:
+                        max_speed = iface_stats.speed
+                        detected_interface = iface_name
+
+                if max_speed > 0:
+                    bandwidth_mbs = max_speed / 8
+                    logger.info(
+                        f"Auto-detected bandwidth from {Fore.MAGENTA}{detected_interface}{Style.RESET_ALL}: "
+                        f"{Fore.YELLOW}{max_speed} Mbps ({bandwidth_mbs:.2f} MB/s){Style.RESET_ALL}"
+                    )
+                    return bandwidth_mbs
+
+            # Fallback to a reasonable default
+            logger.warning(
+                "Could not auto-detect bandwidth, using default: 125 MB/s (1 Gbps)"
+            )
+            return 125.0
+
+        except Exception as e:
+            logger.warning(f"Error detecting bandwidth: {e}, using default: 125 MB/s")
+            return 125.0
 
     def _load_state(self):
         """Load persisted state from disk"""
@@ -214,7 +280,9 @@ class TrafficMonitor:
             "bandwidth_down": round(bandwidth_down, 2),
             "total_up": round(self.total_sent_gb, 3),
             "total_down": round(self.total_recv_gb, 3),
-            "max_bandwidth": MAX_BANDWIDTH,
+            # Double the max_bandwidth since UI calculates percentage on combined up+down
+            # Full-duplex NIC: 10 Gbps up + 10 Gbps down = 20 Gbps total capacity
+            "max_bandwidth": self.max_bandwidth * 2,
         }
 
     def send_to_komandorr(self, traffic_data: Dict) -> bool:
@@ -264,6 +332,9 @@ class TrafficMonitor:
         logger.info(f"Update Interval: {Fore.GREEN}{UPDATE_INTERVAL}s{Style.RESET_ALL}")
         logger.info(
             f"Network Interface: {Fore.MAGENTA}{NETWORK_INTERFACE or 'All interfaces'}{Style.RESET_ALL}"
+        )
+        logger.info(
+            f"Max Bandwidth: {Fore.YELLOW}{self.max_bandwidth:.2f} MB/s{Style.RESET_ALL}"
         )
         logger.separator()
         logger.info("Starting monitoring... (Press Ctrl+C to stop)\n")
