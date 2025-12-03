@@ -198,7 +198,10 @@ export default function Services() {
       activeTab && activeTab !== "ALL" ? serviceGroup === activeTab : true;
 
     const matchesStatus =
-      statusFilter === null || service.status === statusFilter;
+      statusFilter === null ||
+      (statusFilter === "problem"
+        ? service.status === "online" && service.response_time > 1000
+        : service.status === statusFilter);
 
     return matchesSearch && matchesTab && matchesStatus;
   });
@@ -211,7 +214,10 @@ export default function Services() {
       service.type.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === null || service.status === statusFilter;
+      statusFilter === null ||
+      (statusFilter === "problem"
+        ? service.status === "online" && service.response_time > 1000
+        : service.status === statusFilter);
 
     return matchesSearch && matchesStatus;
   }).length;
