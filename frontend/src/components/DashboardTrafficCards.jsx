@@ -69,7 +69,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
       // Calculate maximum cards that can fit in the available width
       const cardWidth = 280;
       const gapWidth = 32;
-      const chevronWidth = 100; // Space for chevrons on sides
+      const chevronWidth = 120; // Space for chevrons on sides (increased for better spacing)
       const availableWidth = width - chevronWidth;
       const maxCards = Math.floor(
         (availableWidth + gapWidth) / (cardWidth + gapWidth)
@@ -83,6 +83,8 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
     const handleResize = () => {
       setCardsPerPage(calculateCardsPerPage());
+      // Reset carousel index if it's out of bounds
+      setCarouselIndex(0);
     };
 
     window.addEventListener("resize", handleResize);
@@ -222,7 +224,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   };
 
   return topServices.length > 0 ? (
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex items-center justify-center gap-4 w-full">
       {/* Left Chevron */}
       {hasMoreCards && (
         <button
@@ -234,8 +236,8 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
         </button>
       )}
 
-      {/* Cards Container */}
-      <div className="flex flex-wrap justify-center gap-8">
+      {/* Cards Container - NO WRAPPING */}
+      <div className="flex justify-center gap-8 flex-1 overflow-hidden">
         {topServices.map((service, index) => {
           const serviceBandwidth =
             (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
