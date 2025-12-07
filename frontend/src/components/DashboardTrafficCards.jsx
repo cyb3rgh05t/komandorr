@@ -361,16 +361,6 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                   </div>
                 </div>
               </div>
-
-              {/* Activity indicator */}
-              {serviceBandwidth > 0 && (
-                <div className="absolute -top-1 -right-1">
-                  <div className="relative w-3 h-3">
-                    <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-                    <div className="relative w-3 h-3 bg-green-500 rounded-full"></div>
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}

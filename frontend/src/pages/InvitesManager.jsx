@@ -326,25 +326,63 @@ const InvitesManager = () => {
   };
 
   const getInviteStatus = (invite) => {
-    if (!invite.is_active)
-      return {
+    const badges = [];
+
+    // If manually disabled
+    if (!invite.is_active) {
+      badges.push({
         text: t("invites.status.disabled"),
         color: "bg-gray-500/20 text-gray-400",
-      };
-    if (invite.is_expired)
-      return {
+      });
+      return badges;
+    }
+
+    // If invite has been redeemed (has users), show as Redeemed
+    if (invite.users && invite.users.length > 0) {
+      badges.push({
+        text: t("invites.status.redeemed"),
+        color: "bg-green-500/20 text-green-400",
+      });
+
+      // Also add expired/used up badges if applicable
+      if (invite.is_expired) {
+        badges.push({
+          text: t("invites.status.expired"),
+          color: "bg-red-500/20 text-red-400",
+        });
+      }
+      if (invite.is_exhausted) {
+        badges.push({
+          text: t("invites.status.usedUp"),
+          color: "bg-orange-500/20 text-orange-400",
+        });
+      }
+
+      return badges;
+    }
+
+    // For unredeemed invites, check if expired or used up
+    if (invite.is_expired) {
+      badges.push({
         text: t("invites.status.expired"),
         color: "bg-red-500/20 text-red-400",
-      };
-    if (invite.is_exhausted)
-      return {
+      });
+      return badges;
+    }
+    if (invite.is_exhausted) {
+      badges.push({
         text: t("invites.status.usedUp"),
         color: "bg-orange-500/20 text-orange-400",
-      };
-    return {
+      });
+      return badges;
+    }
+
+    // Default: Active (not redeemed yet but still valid)
+    badges.push({
       text: t("invites.status.active"),
       color: "bg-green-500/20 text-green-400",
-    };
+    });
+    return badges;
   };
 
   if (loading) {
@@ -459,11 +497,85 @@ const InvitesManager = () => {
                     <Check className="w-3 h-3 text-green-500" />
                     {t("invites.stats.activeInvites")}
                   </p>
-                  <p className="text-2xl font-bold text-green-500 mt-1">
-                    {stats.active_invites || 0}
-                  </p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-2xl font-bold text-green-500">
+                      {stats.active_invites || 0}
+                    </p>
+                    {invites.filter(
+                      (inv) =>
+                        inv.users &&
+                        inv.users.length > 0 &&
+                        !inv.is_expired &&
+                        !inv.is_exhausted &&
+                        inv.is_active
+                    ).length > 0 && (
+                      <p className="text-sm text-theme-text-muted">
+                        (
+                        {
+                          invites.filter(
+                            (inv) =>
+                              inv.users &&
+                              inv.users.length > 0 &&
+                              !inv.is_expired &&
+                              !inv.is_exhausted &&
+                              inv.is_active
+                          ).length
+                        }{" "}
+                        redeemed)
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <Check className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+
+            <div
+              onClick={() => setFilter("redeemed")}
+              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-blue-500/10 ${
+                filter === "redeemed"
+                  ? "border-blue-500 ring-2 ring-blue-500/20"
+                  : "border-theme hover:border-blue-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3 text-blue-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    {t("invites.stats.redeemed")}
+                  </p>
+                  <p className="text-2xl font-bold text-blue-500 mt-1">
+                    {
+                      invites.filter((inv) => inv.users && inv.users.length > 0)
+                        .length
+                    }
+                  </p>
+                </div>
+                <svg
+                  className="w-8 h-8 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
               </div>
             </div>
 
@@ -508,45 +620,6 @@ const InvitesManager = () => {
                   </p>
                 </div>
                 <Clock className="w-8 h-8 text-red-500" />
-              </div>
-            </div>
-
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <svg
-                      className="w-3 h-3 text-purple-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    {t("invites.stats.totalRedemptions")}
-                  </p>
-                  <p className="text-2xl font-bold text-purple-500 mt-1">
-                    {stats.total_redemptions || 0}
-                  </p>
-                </div>
-                <svg
-                  className="w-8 h-8 text-purple-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
               </div>
             </div>
           </div>
@@ -708,6 +781,30 @@ const InvitesManager = () => {
             </span>
           </button>
           <button
+            onClick={() => setFilter("redeemed")}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              filter === "redeemed"
+                ? "bg-theme-hover text-white shadow-md"
+                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+            }`}
+          >
+            {t("invites.filter.redeemed")}
+            <span
+              className={`ml-2 text-xs ${
+                filter === "redeemed"
+                  ? "text-white/80"
+                  : "text-theme-text-muted"
+              }`}
+            >
+              (
+              {
+                invites.filter((inv) => inv.users && inv.users.length > 0)
+                  .length
+              }
+              )
+            </span>
+          </button>
+          <button
             onClick={() => setFilter("expired")}
             className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               filter === "expired"
@@ -754,6 +851,8 @@ const InvitesManager = () => {
               return (
                 !invite.is_expired && !invite.is_exhausted && invite.is_active
               );
+            if (filter === "redeemed")
+              return invite.users && invite.users.length > 0;
             if (filter === "expired") return invite.is_expired;
             if (filter === "used-up") return invite.is_exhausted;
             if (filter === "disabled") return !invite.is_active;
@@ -820,15 +919,18 @@ const InvitesManager = () => {
                   <div className="flex-1 min-w-0 space-y-2.5">
                     {/* Title row with code and status */}
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
                         <code className="font-mono text-lg font-bold text-theme-text tracking-wide truncate">
                           {invite.code}
                         </code>
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 ${status.color} border border-theme backdrop-blur-sm`}
-                        >
-                          {status.text}
-                        </span>
+                        {status.map((badge, index) => (
+                          <span
+                            key={index}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 ${badge.color} border border-theme backdrop-blur-sm`}
+                          >
+                            {badge.text}
+                          </span>
+                        ))}
                       </div>
                       {!invite.is_expired && !invite.is_exhausted && (
                         <button

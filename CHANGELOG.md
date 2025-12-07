@@ -1,5 +1,114 @@
 # CHANGELOG.md
 
+# [2.4.1](https://github.com/cyb3rgh05t/komandorr/compare/v2.4.0...v2.4.1) (2025-12-07)
+
+### 🎯 Invites Management Enhancements
+
+**New Features**
+
+• **invite-status: Multi-badge status system**
+◦ Invites can now display multiple status badges simultaneously
+◦ "Redeemed" badge (green) shows when invite has active users
+◦ Additional "Expired" (red) and "Used Up" (orange) badges appear when applicable
+◦ Badge priority: Disabled > Redeemed (+ expired/used) > Expired/Used > Active
+◦ Better visual clarity of invite states at a glance
+
+• **invite-filters: Redeemed filter tab**
+◦ New "Redeemed" filter tab in invites manager
+◦ Shows all invites that have been claimed by users
+◦ Filter positioned between "Active" and "Expired" tabs
+◦ Active invites stat card now shows redeemed count: "X (Y redeemed)"
+◦ Redeemed status card removed in favor of filter tab
+
+• **invite-redemption: Re-invitation support**
+◦ Users can now be re-invited after being removed from Plex
+◦ OAuth flow skips "already a member" check
+◦ Allows seamless user re-additions without errors
+◦ Improved invite redemption flow for previously removed users
+
+• **invite-cleanup: Automatic orphan deletion**
+◦ Invites automatically deleted when last associated user is removed
+◦ Prevents orphaned invite codes cluttering the dashboard
+◦ Delete user action now checks for remaining users on invite
+◦ Cascade deletion keeps invite database clean
+
+### 🎨 UI/UX Improvements
+
+**Navigation Updates**
+
+• **nav: Plex-specific naming**
+◦ "VOD Activity" renamed to "Plex Activity"
+◦ "User Accounts" renamed to "Plex User Accounts"
+◦ "User History" renamed to "Plex User Stats"
+◦ Clearer indication of Plex integration throughout UI
+
+**Dashboard Refinements**
+
+• **traffic-cards: Carousel improvements**
+◦ Removed green activity indicator dots from traffic cards
+◦ Fixed grid layout to prevent second row wrapping
+◦ Cards now properly overflow with horizontal scroll
+◦ Cleaner, more consistent visual presentation
+
+• **invite-stats: Refined counter logic**
+◦ Active invites counter properly filters expired/exhausted states
+◦ Stats endpoint returns accurate counts for dashboard
+◦ Redeemed count only includes active (non-expired, non-exhausted) invites
+
+### 📚 Documentation
+
+**API Documentation**
+
+• **swagger-ui: Dark mode with proper OpenAPI schema**
+◦ Custom OpenAPI schema generation ensures version field
+◦ Swagger UI accessible at `/docs` endpoint
+◦ Vite proxy configured for `/docs` and `/openapi.json`
+◦ Dark mode theme with inverted colors for readability
+◦ Fixed "Unable to render this definition" error
+
+• **about-page: Fixed API docs link**
+◦ API Documentation link in About section now works correctly
+◦ Links to `/docs` with proper proxy routing
+◦ Removed favicon 404 error from Swagger HTML
+
+### 🌐 Internationalization
+
+**Translation Updates**
+
+• **locales: New translation keys**
+◦ Added "redeemed" status translations (EN: "Redeemed", DE: "Eingelöst")
+◦ Added "redeemed" filter translations
+◦ Updated "totalRedemptions" to just "Redemptions" (EN/DE)
+◦ Plex-specific navigation labels updated in both languages
+
+### 🔧 Technical Improvements
+
+**Backend**
+
+• **openapi: Custom schema generation**
+◦ Explicit OpenAPI version "3.1.0" in schema
+◦ Custom `custom_openapi()` function ensures proper spec format
+◦ Swagger UI compatible with generated schema
+
+**Frontend**
+
+• **vite-config: Extended proxy configuration**
+◦ Added `/docs` proxy for Swagger UI
+◦ Added `/openapi.json` proxy for OpenAPI schema
+◦ Ensures dev environment works with backend documentation
+
+### 🐛 Bug Fixes
+
+• **invites: Fixed filter logic for redeemed invites**
+◦ Redeemed count in stats card now excludes expired/used invites
+◦ Only active redeemed invites counted in stat display
+◦ Filter logic matches display logic for consistency
+
+• **oauth: Fixed re-invitation blocking**
+◦ Previously removed users can now redeem invites again
+◦ OAuth flow simplified to allow duplicate invitations
+◦ Plex handles duplicate prevention automatically
+
 # [2.4.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.3.0...v2.4.0) (2025-12-01)
 
 ### 📊 Watch History & User Analytics

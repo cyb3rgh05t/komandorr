@@ -32,20 +32,34 @@
 
 - **Real-time Status Tracking**: Monitor websites, APIs, apps, and custom services
 - **Response Time Graphs**: Visual charts showing service performance over time
-- **Traffic Analytics**: Circular progress bandwidth monitoring with real-time speeds and cumulative data transfer
+- **Traffic Analytics**: Circular progress bandwidth monitoring with carousel navigation, real-time speeds, and cumulative data transfer
 - **Smart Health Checks**: Automatic detection of online/offline/problem states
 - **Grouped Services**: Organize services by category (Production, Development, Media, etc.)
 
-### 🎭 Plex Invite Management
+### 🎭 Plex Invite Management (v2.4.1)
 
 - **Custom Invite Codes**: Generate secure invite links with usage limits and expiration dates
+- **Multi-Badge Status System**: Visual indicators showing Active, Redeemed, Expired, Used Up, and Disabled states simultaneously
+- **Advanced Filtering**: Filter invites by All, Active, Redeemed, Expired, Used Up, or Disabled with real-time counts
+- **Re-invitation Support**: Previously removed users can be re-invited without conflicts
+- **Automatic Cleanup**: Orphaned invites are automatically deleted when the last user is removed
 - **Library-Specific Access**: Grant access to specific Plex libraries (Movies, TV Shows, Music) or all
 - **Permission Control**: Configure Sync, Live TV/Channels, and Plex Home access per invite
 - **OAuth Redemption**: Wizarr-style OAuth flow for seamless Plex account integration
 - **User Management**: View, edit, refresh, and remove Plex users from a dedicated management interface
 - **User Expiration**: Set individual expiration dates for users independent from invite expiration
 - **Automatic Provisioning**: Users are automatically added to your Plex server upon redemption
-- **Real-time Statistics**: Track invite usage, active users, and redemption rates
+- **Real-time Statistics**: Track invite usage, active users, and redemption rates with separate redeemed counts
+
+### 📊 Watch History & Analytics (v2.4.0)
+
+- **Complete Watch Tracking**: Monitor all Plex viewing activity per user
+- **Content Filtering**: Filter by content type (Movies, TV Episodes, Music)
+- **Time Period Filtering**: View history for All Time, Today, This Week, or This Month
+- **User Statistics**: Track total views, favorite content types, and last activity
+- **Detailed History**: View progress, duration, view count, and ratings
+- **Background Sync**: Automatic synchronization every 15 minutes
+- **Search Functionality**: Search across usernames, emails, and content titles
 
 ### 💾 Database & Storage
 
@@ -53,7 +67,7 @@
 - **Automatic Migration**: Seamless upgrade from JSON to SQLite
 - **Data Persistence**: All service configurations and history stored reliably
 - **Timezone Support**: Configurable timezone for logs and timestamps
-- **Invite Storage**: Comprehensive invite and user data with relational schema
+- **Relational Schema**: Comprehensive invite, user, and watch history data with proper relationships
 
 ### 🎨 Customization
 
@@ -75,7 +89,8 @@
 - **Backend**: Python 3.10+ with FastAPI and SQLAlchemy ORM
 - **Frontend**: React 18 with Vite, TailwindCSS, and Lucide Icons
 - **Database**: SQLite 3 for lightweight, serverless storage
-- **API**: RESTful API with automatic OpenAPI documentation
+- **API**: RESTful API with automatic OpenAPI/Swagger documentation (dark mode)
+- **Caching**: TanStack Query for optimized data fetching and real-time updates
 
 ## 🚀 Quick Start
 

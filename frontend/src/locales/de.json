@@ -6,13 +6,13 @@
   "nav": {
     "dashboard": "Dashboard",
     "services": "Server",
-    "monitor": "Response Monitor",
-    "traffic": "Traffic Monitor",
-    "vodStreams": "VOD Monitor",
-    "vodActivity": "VOD Aktivität",
+    "monitor": "Antwort-Monitor",
+    "traffic": "Traffic-Monitor",
+    "vodStreams": "VOD-Monitor",
+    "vodActivity": "Plex-Aktivität",
     "invites": "Plex-Einladungen",
-    "userAccounts": "Benutzerkonten",
-    "userHistory": "Wiedergabeverlauf",
+    "userAccounts": "Plex-Benutzerkonten",
+    "userHistory": "Plex-Benutzerstatistiken",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -532,7 +532,8 @@
     "stats": {
       "totalInvites": "Einladungen gesamt",
       "activeInvites": "Aktive Einladungen",
-      "totalRedemptions": "Einlösungen gesamt",
+      "redeemed": "Eingelöst",
+      "totalRedemptions": "Einlösungen",
       "usedUp": "Aufgebraucht",
       "expired": "Abgelaufen",
       "plexUsers": "Plex-Benutzer",
@@ -544,6 +545,7 @@
       "label": "Filter",
       "all": "Alle",
       "active": "Aktiv",
+      "redeemed": "Eingelöst",
       "expired": "Abgelaufen",
       "usedUp": "Aufgebraucht",
       "disabled": "Deaktiviert"
@@ -552,7 +554,8 @@
       "disabled": "Deaktiviert",
       "expired": "Abgelaufen",
       "usedUp": "Aufgebraucht",
-      "active": "Aktiv"
+      "active": "Aktiv",
+      "redeemed": "Eingelöst"
     },
     "fields": {
       "code": "Einladungscode",
