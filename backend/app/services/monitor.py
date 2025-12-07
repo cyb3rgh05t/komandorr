@@ -96,6 +96,7 @@ class ServiceMonitor:
 
         except Exception as e:
             service.status = "offline"
+            service.response_time = None  # Clear response time for offline services
             service.last_check = datetime.now(timezone.utc)
             logger.error(f"Service {service.name} check failed: {str(e)}")
 

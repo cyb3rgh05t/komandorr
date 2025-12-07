@@ -101,4 +101,4 @@ nav:
       - Docker Deployment: guides/docker.md
       - Troubleshooting: guides/troubleshooting.md
       - Contributing: guides/contributing.md
-  - Changelog: changelog.md
+  - Changelog: ../CHANGELOG.md

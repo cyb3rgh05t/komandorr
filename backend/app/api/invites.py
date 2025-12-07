@@ -410,8 +410,22 @@ async def get_invite_stats(username: str = Depends(require_auth)):
     try:
         session = db.get_session()
         try:
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+
             total_invites = session.query(InviteDB).count()
-            active_invites = session.query(InviteDB).filter_by(is_active=True).count()
+
+            # Active invites: is_active=True AND not expired AND not exhausted
+            active_invites = (
+                session.query(InviteDB)
+                .filter(
+                    InviteDB.is_active == True,
+                    (InviteDB.expires_at.is_(None)) | (InviteDB.expires_at > now),
+                    (InviteDB.usage_limit.is_(None))
+                    | (InviteDB.used_count < InviteDB.usage_limit),
+                )
+                .count()
+            )
+
             total_users = session.query(PlexUserDB).count()
             active_users = session.query(PlexUserDB).filter_by(is_active=True).count()
 
@@ -705,10 +719,10 @@ async def redeem_invite(request: RedeemInviteRequest):
             existing_user = (
                 session.query(PlexUserDB).filter_by(email=request.email.lower()).first()
             )
-            if existing_user:
+            if existing_user and existing_user.is_active:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="This email has already been invited",
+                    detail="This email has already been invited and is currently active",
                 )
 
             # Get Plex config from settings
@@ -736,15 +750,23 @@ async def redeem_invite(request: RedeemInviteRequest):
                     detail=f"Failed to invite user to Plex: {error}",
                 )
 
-            # Create user record first (user info will be populated when they accept the invite)
-            plex_user = PlexUserDB(
-                email=request.email.lower(),
-                invite_id=db_invite.id,
-                username=None,  # Will be populated when user accepts invite
-                plex_id=None,  # Will be populated when user accepts invite
-                thumb=None,  # Will be populated when user accepts invite
-            )
-            session.add(plex_user)
+            # If user previously existed but was inactive, reactivate them
+            if existing_user:
+                logger.info(f"Reactivating previously removed user: {request.email}")
+                existing_user.is_active = True  # type: ignore
+                existing_user.invite_id = db_invite.id  # type: ignore
+                existing_user.created_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
+                plex_user = existing_user
+            else:
+                # Create new user record
+                plex_user = PlexUserDB(
+                    email=request.email.lower(),
+                    invite_id=db_invite.id,
+                    username=None,  # Will be populated when user accepts invite
+                    plex_id=None,  # Will be populated when user accepts invite
+                    thumb=None,  # Will be populated when user accepts invite
+                )
+                session.add(plex_user)
 
             # Update invite usage
             db_invite.used_count += 1  # type: ignore
@@ -976,10 +998,28 @@ async def delete_user(user_id: int, username: str = Depends(require_auth)):
                     # Continue with database deletion even if Plex removal fails
 
             # Delete user from database
+            invite_id = db_user.invite_id
             session.delete(db_user)
             session.commit()
 
             logger.info(f"Deleted user {user_email} by {username}")
+
+            # Check if this was the last user for this invite
+            # If so, automatically delete the invite as well
+            if invite_id:
+                remaining_users = (
+                    session.query(PlexUserDB).filter_by(invite_id=invite_id).count()
+                )
+                if remaining_users == 0:
+                    # No more users for this invite, delete it
+                    invite = session.query(InviteDB).filter_by(id=invite_id).first()
+                    if invite:
+                        invite_code = invite.code
+                        session.delete(invite)
+                        session.commit()
+                        logger.info(
+                            f"Auto-deleted invite {invite_code} (no remaining users)"
+                        )
 
             return {
                 "success": True,

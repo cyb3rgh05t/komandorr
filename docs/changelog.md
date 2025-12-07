@@ -1,1 +1,0 @@
-C:/Users/cyb3r/Documents/GitHub/komandorr/CHANGELOG.md

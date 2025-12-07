@@ -2,7 +2,7 @@
 
 ## Overview
 
-Komandorr v2.3.0 includes a comprehensive Plex invite management system similar to Wizarr and Streamarr. This feature allows you to create and manage invite codes for inviting new users to your Plex server with granular control over permissions, library access, and user expiration dates.
+Komandorr v2.4.1 includes a comprehensive Plex invite management system similar to Wizarr and Streamarr. This feature allows you to create and manage invite codes for inviting new users to your Plex server with granular control over permissions, library access, and user expiration dates.
 
 ## Features
 
@@ -18,10 +18,43 @@ Komandorr v2.3.0 includes a comprehensive Plex invite management system similar 
 - **Library Access**: Control which Plex libraries users can access (Movies, TV Shows, Music, or All)
 - **User Management**: Comprehensive user account management with individual expiration dates
 - **OAuth Redemption**: Wizarr-style OAuth flow for seamless Plex account integration
+- **Re-invitation Support**: Users can be re-invited after removal without errors
 - **User Tracking**: Track all users who redeemed invites with profile pictures and metadata
+- **Multi-Badge Status System**: Visual status indicators showing multiple states simultaneously
 - **Statistics Dashboard**: View invite usage statistics and user metrics
 - **User Refresh**: Update user information from Plex server on-demand
 - **User Removal**: Remove users from Plex server directly from the dashboard
+- **Automatic Cleanup**: Orphaned invites are automatically deleted when last user is removed
+
+### 🎨 Status Badges
+
+Invites can display multiple status badges simultaneously for better clarity:
+
+- **Active** (Green): Invite is usable and not expired/exhausted
+- **Redeemed** (Green): Invite has been claimed by at least one user
+  - Can also show **Expired** (Red) or **Used Up** (Orange) when applicable
+- **Expired** (Red): Invite has passed its expiration date
+- **Used Up** (Orange): Invite has reached its maximum usage limit
+- **Disabled** (Gray): Invite has been manually disabled
+
+**Badge Priority**: Disabled > Redeemed (with additional badges) > Expired/Used Up > Active
+
+### 🔍 Filtering & Search
+
+The Invites Manager provides powerful filtering options:
+
+- **All**: Show all invites regardless of status
+- **Active**: Only active, non-expired, non-exhausted invites
+- **Redeemed**: Invites that have been claimed by users
+- **Expired**: Invites past their expiration date
+- **Used Up**: Invites that reached their usage limit
+- **Disabled**: Manually disabled invites
+
+Additional features:
+
+- **Search**: Filter by invite code, description, or user details
+- **Real-time Counts**: Each filter tab shows the number of matching invites
+- **Active Invites Card**: Displays redeemed count separately
 
 ### 🎯 Use Cases
 
@@ -31,6 +64,7 @@ Komandorr v2.3.0 includes a comprehensive Plex invite management system similar 
 - Set individual user expiration dates
 - Track server growth and user acquisition
 - Bulk user management with search and filtering
+- Re-invite previously removed users without conflicts
 
 ## Installation & Setup
 

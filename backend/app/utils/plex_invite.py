@@ -377,27 +377,9 @@ async def invite_plex_user_oauth(
             f"Inviting {email} to Plex (home={plex_home}) with {len(sections_to_share)} sections: {[s.title for s in sections_to_share]}"
         )
 
-        # Try to update existing share if user already exists
-        try:
-            existing_user = admin_account.user(email)
-            if existing_user:
-                logging.info(
-                    f"User {email} already exists in Plex, updating library access"
-                )
-                # Update the existing share with new library access
-                admin_account.updateFriend(
-                    user=existing_user,
-                    server=plex_server,
-                    sections=sections_to_share,
-                    allowSync=allow_sync,
-                    allowCameraUpload=getattr(invite, "allow_camera_upload", False),
-                    allowChannels=allow_channels,
-                )
-                logging.info(f"Updated library access for existing user {email}")
-                return True, None
-        except Exception as e:
-            logging.info(f"User {email} doesn't exist yet or update failed: {e}")
-            # Continue with new invitation
+        # Skip checking for existing users - always send fresh invitation
+        # This ensures proper workflow even if user was previously a friend
+        # Note: Plex will handle duplicate invitations gracefully
 
         # Step 1: Send invitation with correct library access
         if plex_home:

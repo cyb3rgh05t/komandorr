@@ -9,10 +9,10 @@
     "monitor": "Response Monitor",
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",
-    "vodActivity": "VOD Activity",
+    "vodActivity": "Plex Activity",
     "invites": "Plex Invites",
-    "userAccounts": "User Accounts",
-    "userHistory": "User History",
+    "userAccounts": "Plex User Accounts",
+    "userHistory": "Plex User Stats",
     "settings": "Settings",
     "about": "About"
   },
@@ -539,7 +539,8 @@
     "stats": {
       "totalInvites": "Total Invites",
       "activeInvites": "Active Invites",
-      "totalRedemptions": "Total Redemptions",
+      "redeemed": "Redeemed",
+      "totalRedemptions": "Redemptions",
       "usedUp": "Used Up",
       "expired": "Expired",
       "plexUsers": "Plex Users",
@@ -551,6 +552,7 @@
       "label": "Filter",
       "all": "All",
       "active": "Active",
+      "redeemed": "Redeemed",
       "expired": "Expired",
       "usedUp": "Used Up",
       "disabled": "Disabled"
@@ -559,7 +561,8 @@
       "disabled": "Disabled",
       "expired": "Expired",
       "usedUp": "Used Up",
-      "active": "Active"
+      "active": "Active",
+      "redeemed": "Redeemed"
     },
     "fields": {
       "code": "Invite Code",
