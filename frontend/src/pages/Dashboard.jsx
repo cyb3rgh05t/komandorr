@@ -598,8 +598,8 @@ export default function Dashboard() {
       {/* Stats Cards */}
       {dashboardVisibility.stats && (
         <div className="space-y-4">
-          {/* Enhanced Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-10 gap-3">
+          {/* Enhanced Stats Grid - Optimized for 1280x800 tablet */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-10 gap-3">
             {/* Total Services */}
             <button
               onClick={() => setStatusFilter(null)}
@@ -835,28 +835,28 @@ export default function Dashboard() {
         <>
           {loading ? (
             <div className="space-y-6">
-              {/* Service Cards Loading */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3">
+              {/* Service Cards Loading - Optimized for tablet */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {[...Array(8)].map((_, i) => (
                   <LoadingServiceCard key={i} />
                 ))}
               </div>
             </div>
           ) : services.length === 0 ? (
-            <div className="bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
+            <div className="bg-theme-card border border-theme rounded-lg p-6 md:p-8 text-center shadow-sm">
               <Server
                 size={48}
                 className="mx-auto mb-4 text-theme-text-muted"
               />
-              <h3 className="text-lg font-semibold text-theme-text mb-2">
+              <h3 className="text-base md:text-lg font-semibold text-theme-text mb-2">
                 {t("dashboard.noServices")}
               </h3>
-              <p className="text-theme-text-muted mb-6">
+              <p className="text-sm md:text-base text-theme-text-muted mb-6">
                 Get started by adding your first service to monitor
               </p>
               <button
                 onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
               >
                 <Plus size={20} className="text-theme-primary" />
                 <span className="text-sm">{t("dashboard.addService")}</span>
@@ -1006,7 +1006,7 @@ export default function Dashboard() {
                                 </h2>
                               </div>
                             )}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                               {groupServices.map((service) => (
                                 <DashboardServiceCard
                                   key={service.id}
@@ -1091,7 +1091,7 @@ export default function Dashboard() {
                       (activeTab === "ALL"
                         ? filteredServices
                         : grouped[activeTab]) && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                           {(activeTab === "ALL"
                             ? filteredServices
                             : grouped[activeTab]

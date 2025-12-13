@@ -388,7 +388,7 @@ const InvitesManager = () => {
   if (loading) {
     return (
       <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
@@ -464,7 +464,7 @@ const InvitesManager = () => {
       {stats && (
         <div className="space-y-3">
           {/* Invite Stats Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             <div
               onClick={() => setFilter("all")}
               className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
@@ -842,7 +842,7 @@ const InvitesManager = () => {
       </div>
 
       {/* Invites Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {invites
           .filter((invite) => {
             // Filter by status
