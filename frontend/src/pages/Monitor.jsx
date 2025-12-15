@@ -262,9 +262,7 @@ export default function Monitor() {
     total: services.length,
     online: services.filter((s) => s.status === "online").length,
     offline: services.filter((s) => s.status === "offline").length,
-    problem: services.filter(
-      (s) => s.status === "online" && s.response_time > 1000
-    ).length,
+    problem: services.filter((s) => s.status === "problem").length,
     avgResponseTime:
       services.length > 0
         ? Math.round(
@@ -287,9 +285,7 @@ export default function Monitor() {
       statusFilter === null ||
       (statusFilter === "online" && service.status === "online") ||
       (statusFilter === "offline" && service.status === "offline") ||
-      (statusFilter === "problem" &&
-        service.status === "online" &&
-        service.response_time > 1000);
+      (statusFilter === "problem" && service.status === "problem");
 
     return matchesSearch && matchesStatus;
   });
