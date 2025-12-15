@@ -41,3 +41,4 @@ wheels/
 .DS_Store
 Thumbs.db
 traffic/.traffic_state_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.json
+/project-docs

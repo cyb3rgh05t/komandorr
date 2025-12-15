@@ -5,13 +5,31 @@ import httpx
 import json
 import shutil
 from pathlib import Path
-from typing import Optional, cast
-from datetime import datetime, timezone
+from typing import Optional, cast, Dict, Any
+from datetime import datetime, timezone, timedelta
 
 from app.utils.logger import logger
 from app.database import db, PlexStatsDB
 
 router = APIRouter(prefix="/api/plex", tags=["plex"])
+
+# Module-level cache for Plex activities
+_activity_cache: Dict[str, Any] = {
+    "data": None,
+    "last_fetched": None,
+    "ttl_seconds": 5,
+    "hits": 0,
+    "misses": 0,
+}
+
+# Module-level cache for watch history
+_watch_history_cache: Dict[str, Any] = {
+    "data": None,
+    "last_fetched": None,
+    "ttl_seconds": 300,  # 5 minutes cache for watch history
+    "hits": 0,
+    "misses": 0,
+}
 
 
 class PlexConfig(BaseModel):
@@ -570,12 +588,32 @@ async def debug_raw_activities():
 
 @router.get("/activities")
 async def get_plex_activities():
-    """Get current Plex download/sync activities"""
+    """Get current Plex download/sync activities with caching"""
     config = load_plex_config()
 
     if not config:
         logger.warning("Plex not configured - no config file found")
         return {"error": True, "message": "Plex not configured", "activities": []}
+
+    # Check cache first
+    now = datetime.now()
+    if (
+        _activity_cache["data"] is not None
+        and _activity_cache["last_fetched"] is not None
+    ):
+
+        elapsed = (now - _activity_cache["last_fetched"]).total_seconds()
+        if elapsed < _activity_cache["ttl_seconds"]:
+            _activity_cache["hits"] += 1
+            logger.debug(f"Returning cached activities (age: {elapsed:.1f}s)")
+            cached_response = _activity_cache["data"].copy()
+            cached_response["cached"] = True
+            cached_response["cache_age"] = elapsed
+            return cached_response
+
+    # Cache miss - fetch fresh data
+    _activity_cache["misses"] += 1
+    logger.info("Fetching fresh Plex activities from server")
 
     try:
         url = config.get("url", "").rstrip("/")
@@ -680,10 +718,30 @@ async def get_plex_activities():
                 logger.error(f"Error fetching /status/sessions: {e}")
 
             logger.info(f"Total activities retrieved: {len(activities)}")
-            return {"error": False, "activities": activities}
+
+            # Build response
+            response = {
+                "error": False,
+                "activities": activities,
+                "cached": False,
+                "timestamp": now.isoformat(),
+            }
+
+            # Update cache
+            _activity_cache["data"] = response
+            _activity_cache["last_fetched"] = now
+
+            return response
 
     except Exception as e:
         logger.error(f"Error fetching Plex activities: {e}", exc_info=True)
+        # Return cached data if available, even if stale
+        if _activity_cache["data"]:
+            logger.warning("Returning stale cache due to fetch error")
+            stale_response = _activity_cache["data"].copy()
+            stale_response["cached"] = True
+            stale_response["stale"] = True
+            return stale_response
         return {"error": True, "message": str(e), "activities": []}
 
 
@@ -1248,8 +1306,25 @@ async def get_plex_sessions():
 
 @router.get("/watch-history")
 async def get_watch_history():
-    """Get watch history from database (fast) - synced by background task"""
+    """Get watch history from database (fast) with caching - synced by background task"""
     from app.database import db, WatchHistoryDB
+
+    # Check cache first
+    now = datetime.now()
+    if (
+        _watch_history_cache["data"] is not None
+        and _watch_history_cache["last_fetched"] is not None
+    ):
+
+        elapsed = (now - _watch_history_cache["last_fetched"]).total_seconds()
+        if elapsed < _watch_history_cache["ttl_seconds"]:
+            _watch_history_cache["hits"] += 1
+            logger.debug(f"Returning cached watch history (age: {elapsed:.1f}s)")
+            return _watch_history_cache["data"]
+
+    # Cache miss - fetch from database
+    _watch_history_cache["misses"] += 1
+    logger.info("Fetching watch history from database")
 
     try:
         session = db.get_session()
@@ -1317,6 +1392,11 @@ async def get_watch_history():
             logger.info(
                 f"Returned {len(watch_history)} watch history items from database"
             )
+
+            # Update cache
+            _watch_history_cache["data"] = watch_history
+            _watch_history_cache["last_fetched"] = now
+
             return watch_history
 
         finally:
@@ -1324,6 +1404,10 @@ async def get_watch_history():
 
     except Exception as e:
         logger.error(f"Error fetching watch history from database: {e}")
+        # Return cached data if available, even if stale
+        if _watch_history_cache["data"]:
+            logger.warning("Returning stale watch history cache due to error")
+            return _watch_history_cache["data"]
         return []
 
 
@@ -1334,7 +1418,147 @@ async def sync_watch_history_now():
 
     try:
         await watch_history_sync.sync_watch_history()
+        # Invalidate cache after sync
+        _watch_history_cache["data"] = None
+        _watch_history_cache["last_fetched"] = None
         return {"success": True, "message": "Watch history sync completed"}
     except Exception as e:
         logger.error(f"Error during manual sync: {e}")
         return {"success": False, "message": str(e)}
+
+
+@router.get("/cache/stats")
+async def get_cache_stats():
+    """Get cache statistics for monitoring performance"""
+    now = datetime.now()
+
+    def calculate_stats(cache: Dict[str, Any], name: str) -> dict:
+        """Calculate statistics for a cache"""
+        hits = cache.get("hits", 0)
+        misses = cache.get("misses", 0)
+        total = hits + misses
+        hit_rate = (hits / total * 100) if total > 0 else 0
+
+        cache_age = None
+        if cache.get("last_fetched"):
+            cache_age = (now - cache["last_fetched"]).total_seconds()
+
+        return {
+            "name": name,
+            "hits": hits,
+            "misses": misses,
+            "total_requests": total,
+            "hit_rate": f"{hit_rate:.1f}%",
+            "ttl_seconds": cache.get("ttl_seconds", 0),
+            "cached": cache.get("data") is not None,
+            "cache_age_seconds": round(cache_age, 1) if cache_age else None,
+        }
+
+    # Get stats cache info
+    from app.services.stats_cache import stats_cache
+
+    stats_cache_info = {
+        "name": "background_stats",
+        "enabled": stats_cache.running,
+        "last_update": (
+            stats_cache.last_update.isoformat() if stats_cache.last_update else None
+        ),
+        "update_interval": stats_cache.update_interval,
+    }
+
+    # Get Redis cache info if available
+    redis_info = None
+    try:
+        from app.services.redis_cache import redis_cache
+
+        redis_info = redis_cache.get_stats()
+    except Exception as e:
+        logger.debug(f"Redis cache not available: {e}")
+
+    response = {
+        "caches": [
+            calculate_stats(_activity_cache, "plex_activities"),
+            calculate_stats(_watch_history_cache, "watch_history"),
+            stats_cache_info,
+        ],
+        "timestamp": now.isoformat(),
+    }
+
+    if redis_info:
+        response["redis"] = redis_info
+
+    return response
+
+
+@router.post("/cache/clear")
+async def clear_caches():
+    """Clear all caches (admin only)"""
+    try:
+        # Clear in-memory caches
+        _activity_cache["data"] = None
+        _activity_cache["last_fetched"] = None
+        _activity_cache["hits"] = 0
+        _activity_cache["misses"] = 0
+
+        _watch_history_cache["data"] = None
+        _watch_history_cache["last_fetched"] = None
+        _watch_history_cache["hits"] = 0
+        _watch_history_cache["misses"] = 0
+
+        # Force refresh stats cache
+        from app.services.stats_cache import stats_cache
+
+        await stats_cache.force_refresh()
+
+        # Clear Redis cache if available
+        redis_cleared = False
+        try:
+            from app.services.redis_cache import cache_clear
+
+            redis_cleared = cache_clear()
+        except Exception as e:
+            logger.debug(f"Redis cache not available: {e}")
+
+        return {
+            "success": True,
+            "message": "All caches cleared successfully",
+            "redis_cleared": redis_cleared,
+        }
+
+    except Exception as e:
+        logger.error(f"Error clearing caches: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@router.post("/cache/warm")
+async def warm_caches():
+    """Manually trigger cache warming (admin only)"""
+    try:
+        # Warm activities cache
+        await get_plex_activities()
+
+        # Warm watch history cache
+        await get_watch_history()
+
+        # Force refresh stats cache
+        from app.services.stats_cache import stats_cache
+
+        await stats_cache.force_refresh()
+
+        return {
+            "success": True,
+            "message": "Caches warmed successfully",
+            "warmed": ["plex_activities", "watch_history", "background_stats"],
+        }
+
+    except Exception as e:
+        logger.error(f"Error warming caches: {e}")
+        return {"success": False, "message": str(e)}
+
+
+@router.get("/stats/dashboard")
+async def get_dashboard_stats():
+    """Get pre-calculated dashboard statistics from background cache"""
+    from app.services.stats_cache import stats_cache
+
+    return stats_cache.get_stats()

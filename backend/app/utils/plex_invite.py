@@ -4,7 +4,8 @@ Plex Invitation Helper - PlexAPI Integration
 This module provides helper functions for inviting users to Plex using the PlexAPI library.
 """
 
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Any
+from datetime import datetime, timedelta
 import logging
 
 try:
@@ -15,6 +16,9 @@ try:
 except ImportError:
     PLEXAPI_AVAILABLE = False
     logging.warning("PlexAPI not installed. Install with: pip install plexapi")
+
+# Module-level cache for Plex libraries
+_library_cache: Dict[str, Any] = {}
 
 
 class PlexInviteError(Exception):
@@ -30,7 +34,7 @@ def check_plexapi_available() -> bool:
 
 async def get_plex_libraries(server_url: str, token: str) -> List[dict]:
     """
-    Get available libraries from Plex server
+    Get available libraries from Plex server with caching
 
     Args:
         server_url: Plex server URL
@@ -45,6 +49,21 @@ async def get_plex_libraries(server_url: str, token: str) -> List[dict]:
     if not PLEXAPI_AVAILABLE:
         raise PlexInviteError("PlexAPI library not installed")
 
+    # Create cache key from server URL and token prefix
+    cache_key = f"{server_url}_{token[:8]}"
+
+    # Check cache (TTL: 5 minutes)
+    now = datetime.now()
+    if cache_key in _library_cache:
+        cached_data, cached_time = _library_cache[cache_key]
+        elapsed = (now - cached_time).total_seconds()
+        if elapsed < 300:  # 5 minutes
+            logging.debug(f"Returning cached Plex libraries (age: {elapsed:.1f}s)")
+            return cached_data
+
+    # Cache miss - fetch from Plex
+    logging.info("Fetching fresh Plex libraries from server")
+
     try:
         plex = PlexServer(server_url, token)
         libraries = []
@@ -54,10 +73,18 @@ async def get_plex_libraries(server_url: str, token: str) -> List[dict]:
                 {"id": str(section.key), "name": section.title, "type": section.type}
             )
 
+        # Update cache
+        _library_cache[cache_key] = (libraries, now)
+
         return libraries
 
     except Exception as e:
         logging.error(f"Error fetching Plex libraries: {e}")
+        # Return cached data if available, even if stale
+        if cache_key in _library_cache:
+            logging.warning("Returning stale library cache due to fetch error")
+            cached_data, _ = _library_cache[cache_key]
+            return cached_data
         raise PlexInviteError(f"Failed to fetch libraries: {str(e)}")
 
 
