@@ -3,6 +3,10 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      screens: {
+        tablet: "1280px",
+        // Custom breakpoint for 10.1" tablets at 1280x800
+      },
       colors: {
         "theme-primary": "var(--theme-primary)",
         "theme-primary-hover": "var(--theme-primary-hover)",

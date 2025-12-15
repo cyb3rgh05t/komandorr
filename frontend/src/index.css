@@ -923,6 +923,47 @@ select:-internal-autofill-selected {
   }
 }
 
+/* ========================================
+   TABLET OPTIMIZATIONS (1280x800)
+   ======================================== */
+
+/* Optimize for 10.1" tablets at 1280x800 resolution */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  /* Reduce padding on main containers for more content space */
+  .px-3,
+  .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Optimize card spacing */
+  .space-y-4 > * + *,
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  /* Optimize font sizes for better readability */
+  .text-2xl {
+    font-size: 1.375rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.75rem !important;
+  }
+
+  /* Optimize button padding */
+  button.px-4,
+  a.px-4 {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  /* Optimize modal sizes */
+  .modal-content {
+    max-width: 90vw !important;
+  }
+}
+
 /* Toast Notification Animations */
 @keyframes slideInRight {
   from {

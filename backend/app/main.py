@@ -68,15 +68,29 @@ async def lifespan(app: FastAPI):
         watch_history_sync.start_sync_loop(interval=900)
     )
 
+    # Start background stats cache (every 60 seconds)
+    from app.services.stats_cache import stats_cache
+
+    stats_cache_task = asyncio.create_task(stats_cache.start_background_refresh())
+
+    # Start cache warmer to prevent cold starts
+    from app.services.cache_warmer import cache_warmer
+
+    cache_warmer_task = asyncio.create_task(cache_warmer.start_warming())
+
     yield
 
     # Shutdown
     logger.info("Shutting down Komandorr Dashboard Backend")
     monitor.stop_monitoring()
     watch_history_sync.stop()
+    stats_cache.stop()
+    cache_warmer.stop()
     monitoring_task.cancel()
     expiration_task.cancel()
     watch_history_task.cancel()
+    stats_cache_task.cancel()
+    cache_warmer_task.cancel()
     try:
         await monitoring_task
     except asyncio.CancelledError:
@@ -89,12 +103,20 @@ async def lifespan(app: FastAPI):
         await watch_history_task
     except asyncio.CancelledError:
         pass
+    try:
+        await stats_cache_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await cache_warmer_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
     title="Komandorr Dashboard API",
     description="Backend API for monitoring apps, websites, panels, and projects",
-    version="2.4.1",
+    version="2.5.0",
     lifespan=lifespan,
     swagger_ui_parameters={
         "syntaxHighlight.theme": "monokai",

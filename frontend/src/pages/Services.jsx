@@ -257,7 +257,7 @@ export default function Services() {
       {loading ? (
         <>
           {/* Stats Cards Loading */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-5">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
@@ -270,8 +270,8 @@ export default function Services() {
               </div>
             ))}
           </div>
-          {/* Service Cards Loading */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Service Cards Loading - Optimized for tablet */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {[...Array(6)].map((_, i) => (
               <LoadingServiceCard key={i} />
             ))}
@@ -329,7 +329,7 @@ export default function Services() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
               className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10"
@@ -637,7 +637,7 @@ export default function Services() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredServices.map((service) => (
                 <ServiceCard
                   key={service.id}
