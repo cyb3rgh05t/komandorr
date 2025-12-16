@@ -1,0 +1,99 @@
+services:
+  # Redis for distributed caching (optional but recommended)
+  redis:
+    image: redis:7-alpine
+    container_name: komandorr-redis-dev
+    hostname: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - komandorr-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Main application
+  komandorr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: komandorr-dev
+    hostname: komandorr
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=true
+      - TZ=Europe/Berlin
+      - TERM=xterm
+
+      # CORS for development
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000,http://localhost:8010
+
+      # Logging Configuration
+      - LOG_LEVEL=DEBUG
+      - LOG_SHOW_TIMESTAMP_CONSOLE=true
+
+      # Redis Configuration (optional)
+      - REDIS_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=
+
+      # Optional API Keys (add your own)
+      # - GITHUB_TOKEN=your_github_token_here
+      # - TMDB_API_KEY=your_tmdb_key_here
+
+      # Optional Plex Configuration
+      # - PLEX_SERVER_URL=http://your-plex-server:32400
+      # - PLEX_SERVER_TOKEN=your_plex_token_here
+      # - PLEX_SERVER_NAME=My Plex Server
+
+    restart: unless-stopped
+    ports:
+      - "8010:8000"
+
+    volumes:
+      # Mount local directories for live development
+      - ./backend:/app:rw
+      - ./frontend/dist:/app/frontend/dist:rw
+      - ./data:/app/data:rw
+      - ./logs:/app/logs:rw
+
+    networks:
+      - komandorr-dev
+
+    # Override entrypoint for development with auto-reload
+    entrypoint: []
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+        "--reload-dir",
+        "/app/app",
+      ]
+
+networks:
+  komandorr-dev:
+    driver: bridge
+    name: komandorr-dev
+
+volumes:
+  redis-data:
+    name: komandorr-redis-dev-data

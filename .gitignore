@@ -42,3 +42,4 @@ wheels/
 Thumbs.db
 traffic/.traffic_state_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.json
 /project-docs
+*.db
