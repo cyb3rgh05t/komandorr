@@ -10,6 +10,7 @@
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",
     "vodActivity": "Plex Activity",
+    "vodPortal": "VOD Portal",
     "invites": "Plex Invites",
     "userAccounts": "Plex User Accounts",
     "userHistory": "Plex User Stats",
@@ -754,5 +755,10 @@
       "movie": "Movies",
       "episode": "Episodes"
     }
+  },
+  "vodPortal": {
+    "title": "VOD Portal",
+    "description": "Manage and browse your video on demand content",
+    "placeholder": "VOD Portal content will be added here"
   }
 }

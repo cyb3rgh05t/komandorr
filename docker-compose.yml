@@ -1,8 +1,27 @@
 version: "3"
 services:
+  # Redis for distributed caching
+  redis:
+    image: redis:7-alpine
+    container_name: komandorr-redis
+    hostname: redis
+    restart: unless-stopped
+    networks:
+      - proxy
+    volumes:
+      - /opt/appdata/komandorr/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   komandorr:
     hostname: "komandorr"
     container_name: "komandorr"
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
       - "PGID=1000"
       - "PUID=1000"
@@ -12,6 +31,12 @@ services:
       - "PORT=8000"
       - "DEBUG=false"
       - "CORS_ORIGINS=http://localhost,http://localhost:8000"
+      # Redis Configuration
+      - "REDIS_ENABLED=true"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+      - "REDIS_DB=0"
+      - "REDIS_PASSWORD="
     image: "ghcr.io/cyb3rgh05t/komandorr:latest"
     restart: "unless-stopped"
     ports:
