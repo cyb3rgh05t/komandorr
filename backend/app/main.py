@@ -23,6 +23,7 @@ from app.api.plex import router as plex_router
 from app.api.invites import router as invites_router
 from app.api.oauth import router as oauth_router
 from app.api.settings import router as settings_router
+from app.api.overseerr import router as overseerr_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -168,6 +169,7 @@ app.include_router(plex_router)
 app.include_router(invites_router)
 app.include_router(oauth_router)
 app.include_router(settings_router)
+app.include_router(overseerr_router)
 
 
 @app.get("/docs", include_in_schema=False)

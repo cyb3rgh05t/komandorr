@@ -145,10 +145,68 @@
     "all": "ALL"
   },
   "monitor": {
-    "title": "Real-time Monitor",
-    "description": "Live monitoring dashboard",
-    "totalServices": "Total",
-    "avgResponse": "Avg Response"
+    "title": "Response Monitor",
+    "searchPlaceholder": "Search services...",
+    "refresh": "Refresh",
+    "stats": {
+      "total": "TOTAL",
+      "online": "ONLINE",
+      "offline": "OFFLINE",
+      "problem": "PROBLEM",
+      "slowLabel": "Slow (>1s)",
+      "avgResponse": "AVG RESPONSE",
+      "ms": "ms"
+    },
+    "tabs": {
+      "all": "ALL"
+    },
+    "service": {
+      "lastCheck": {
+        "never": "Never",
+        "seconds": "{{count}}s ago",
+        "minutes": "{{count}}m ago",
+        "hours": "{{count}}h ago",
+        "days": "{{count}}d ago"
+      },
+      "slow": "Slow",
+      "currentResponseTime": "Current Response Time",
+      "responseTimeHistory": "Response Time History",
+      "responseTime": "Response Time",
+      "avg": "Avg",
+      "max": "Max",
+      "noDataYet": "No data yet - waiting for measurements"
+    },
+    "emptyStates": {
+      "noOnline": {
+        "title": "No online services",
+        "description": "Currently no services are online"
+      },
+      "noOffline": {
+        "title": "No offline services",
+        "description": "All services are operational!"
+      },
+      "noProblem": {
+        "title": "No services with problems",
+        "description": "Everything is running smoothly!"
+      },
+      "noServices": {
+        "title": "No services found",
+        "description": "No services have been added yet."
+      },
+      "noMatching": {
+        "title": "No matching services",
+        "description": "No services found matching \"{{searchTerm}}\""
+      },
+      "clearSearch": "Clear Search"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "services": "services",
+      "previous": "Previous page",
+      "next": "Next page"
+    }
   },
   "traffic": {
     "title": "Network Traffic",
@@ -339,6 +397,13 @@
     "githubTokenHelp": "Optional: Personal access token for higher GitHub API rate limits",
     "tmdbApiKey": "TMDB API Key",
     "tmdbApiKeyHelp": "API key for The Movie Database (used for invite redemption backgrounds)",
+    "overseerrSettings": "Overseerr Configuration",
+    "overseerrUrl": "Overseerr API URL",
+    "overseerrUrlHelp": "Full API endpoint URL for creating users",
+    "overseerrApiKey": "Overseerr API Key",
+    "overseerrApiKeyHelp": "API key from Overseerr settings",
+    "defaultEmailDomain": "Default Email Domain",
+    "defaultEmailDomainHelp": "Default domain for user emails (username@domain.com)",
     "saveSettings": "Save Settings",
     "saveNow": "Save Now",
     "saving": "Saving...",
@@ -627,70 +692,7 @@
       "music": "music"
     }
   },
-  "monitor": {
-    "title": "Response Monitor",
-    "searchPlaceholder": "Search services...",
-    "refresh": "Refresh",
-    "stats": {
-      "total": "TOTAL",
-      "online": "ONLINE",
-      "offline": "OFFLINE",
-      "problem": "PROBLEM",
-      "slowLabel": "Slow (>1s)",
-      "avgResponse": "AVG RESPONSE",
-      "ms": "ms"
-    },
-    "tabs": {
-      "all": "ALL"
-    },
-    "service": {
-      "lastCheck": {
-        "never": "Never",
-        "seconds": "{{count}}s ago",
-        "minutes": "{{count}}m ago",
-        "hours": "{{count}}h ago",
-        "days": "{{count}}d ago"
-      },
-      "slow": "Slow",
-      "currentResponseTime": "Current Response Time",
-      "responseTimeHistory": "Response Time History",
-      "responseTime": "Response Time",
-      "avg": "Avg",
-      "max": "Max",
-      "noDataYet": "No data yet - waiting for measurements"
-    },
-    "emptyStates": {
-      "noOnline": {
-        "title": "No online services",
-        "description": "Currently no services are online"
-      },
-      "noOffline": {
-        "title": "No offline services",
-        "description": "All services are operational!"
-      },
-      "noProblem": {
-        "title": "No services with problems",
-        "description": "Everything is running smoothly!"
-      },
-      "noServices": {
-        "title": "No services found",
-        "description": "No services have been added yet."
-      },
-      "noMatching": {
-        "title": "No matching services",
-        "description": "No services found matching \"{{searchTerm}}\""
-      },
-      "clearSearch": "Clear Search"
-    },
-    "pagination": {
-      "showing": "Showing",
-      "to": "to",
-      "of": "of",
-      "services": "services",
-      "previous": "Previous page",
-      "next": "Next page"
-    }
-  },
+
   "vodActivity": {
     "title": "VOD Activity",
     "subtitle": "Monitor live streaming activity from your Plex server",
@@ -758,7 +760,38 @@
   },
   "vodPortal": {
     "title": "VOD Portal",
-    "description": "Manage and browse your video on demand content",
-    "placeholder": "VOD Portal content will be added here"
+    "description": "Add users to Overseerr from the web interface",
+    "placeholder": "VOD Portal content will be added here",
+    "createUser": "Add User to StreamNet VOD",
+    "username": "Username",
+    "usernamePlaceholder": "Enter username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter password",
+    "emailDomain": "Email Domain",
+    "emailDomainPlaceholder": "example.com",
+    "emailDomainHelp": "Email will be: username@domain.com",
+    "optional": "optional",
+    "creating": "Creating...",
+    "success": "Success!",
+    "userCreated": "User has been added to Overseerr",
+    "error": "Failed to create user",
+    "errorTitle": "Error",
+    "existingUsers": "Existing Users",
+    "loadingUsers": "Loading users...",
+    "noUsers": "No users found",
+    "email": "Email",
+    "displayName": "Display Name",
+    "createdAt": "Created",
+    "fetchUsersError": "Failed to fetch users",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "users": "users",
+    "previous": "Previous",
+    "next": "Next",
+    "searchPlaceholder": "Search users...",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "noSearchResults": "No users match your search"
   }
 }

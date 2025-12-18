@@ -54,6 +54,12 @@ export default function Settings() {
   const [showPlexToken, setShowPlexToken] = useState(false);
   const [showGithubToken, setShowGithubToken] = useState(false);
   const [showTmdbKey, setShowTmdbKey] = useState(false);
+  const [showOverseerrKey, setShowOverseerrKey] = useState(false);
+
+  // Overseerr settings state
+  const [overseerrUrl, setOverseerrUrl] = useState("");
+  const [overseerrApiKey, setOverseerrApiKey] = useState("");
+  const [defaultEmailDomain, setDefaultEmailDomain] = useState("");
 
   // Auto-save state
   const [pendingChanges, setPendingChanges] = useState(false);
@@ -93,6 +99,9 @@ export default function Settings() {
     plexUrl,
     plexToken,
     plexServerName,
+    overseerrUrl,
+    overseerrApiKey,
+    defaultEmailDomain,
   ]);
 
   const loadSettings = async () => {
@@ -106,6 +115,11 @@ export default function Settings() {
       setPlexUrl(data.plex.server_url);
       setPlexToken(data.plex.server_token);
       setPlexServerName(data.plex.server_name);
+      if (data.overseerr) {
+        setOverseerrUrl(data.overseerr.url || "");
+        setOverseerrApiKey(data.overseerr.api_key || "");
+        setDefaultEmailDomain(data.overseerr.email_domain || "");
+      }
       if (data.plex.server_url && data.plex.server_token) {
         setPlexValid(true);
       }
@@ -265,6 +279,11 @@ export default function Settings() {
           server_url: plexUrl,
           server_token: plexToken,
           server_name: plexServerName,
+        },
+        overseerr: {
+          url: overseerrUrl,
+          api_key: overseerrApiKey,
+          email_domain: defaultEmailDomain,
         },
       });
 
@@ -765,6 +784,96 @@ export default function Settings() {
                 </div>
                 <p className="mt-2 text-xs text-theme-muted">
                   {t("settings.tmdbApiKeyHelp")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Overseerr Configuration */}
+        <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+          {/* Decorative gradient overlay */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+          <div className="relative">
+            <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
+                <Server className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
+              </div>
+              {t("settings.overseerrSettings") || "Overseerr Configuration"}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  {t("settings.overseerrUrl") || "Overseerr API URL"}
+                </label>
+                <input
+                  type="text"
+                  value={overseerrUrl}
+                  onChange={(e) => {
+                    setOverseerrUrl(e.target.value);
+                    setPendingChanges(true);
+                  }}
+                  className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                  placeholder="https://overseerr.example.com/api/v1/user"
+                />
+                <p className="mt-2 text-xs text-theme-muted">
+                  {t("settings.overseerrUrlHelp") ||
+                    "Full API endpoint URL for creating users"}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  {t("settings.overseerrApiKey") || "Overseerr API Key"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showOverseerrKey ? "text" : "password"}
+                    value={overseerrApiKey}
+                    onChange={(e) => {
+                      setOverseerrApiKey(e.target.value);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOverseerrKey(!showOverseerrKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                  >
+                    {showOverseerrKey ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-theme-muted">
+                  {t("settings.overseerrApiKeyHelp") ||
+                    "API key from Overseerr settings"}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  {t("settings.defaultEmailDomain") || "Default Email Domain"}
+                </label>
+                <input
+                  type="text"
+                  value={defaultEmailDomain}
+                  onChange={(e) => {
+                    setDefaultEmailDomain(e.target.value);
+                    setPendingChanges(true);
+                  }}
+                  className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                  placeholder="example.com"
+                />
+                <p className="mt-2 text-xs text-theme-muted">
+                  {t("settings.defaultEmailDomainHelp") ||
+                    "Default domain for user emails (username@domain.com)"}
                 </p>
               </div>
             </div>
