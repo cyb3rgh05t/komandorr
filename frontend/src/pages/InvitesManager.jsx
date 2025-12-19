@@ -24,6 +24,7 @@ import {
   Repeat,
   Home,
   Radio,
+  UploadCloud,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -1005,24 +1006,32 @@ const InvitesManager = () => {
                           {invite.allow_sync && (
                             <span className="inline-flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded text-xs text-blue-400 font-semibold">
                               <Repeat className="w-3 h-3" />
-                              {t("invites.permissions.sync")}
+                              {t("invites.permissions.sync") || "Sync"}
                             </span>
                           )}
-                          {invite.allow_live_tv && (
+                          {invite.allow_channels && (
                             <span className="inline-flex items-center gap-1 bg-purple-500/15 px-2 py-0.5 rounded text-xs text-purple-400 font-semibold">
                               <Radio className="w-3 h-3" />
-                              {t("invites.permissions.liveTV")}
+                              {t("invites.permissions.liveTV") || "Live TV"}
                             </span>
                           )}
-                          {invite.allow_home && (
+                          {invite.allow_camera_upload && (
+                            <span className="inline-flex items-center gap-1 bg-amber-500/15 px-2 py-0.5 rounded text-xs text-amber-400 font-semibold">
+                              <UploadCloud className="w-3 h-3" />
+                              {t("invites.permissions.cameraUpload") ||
+                                "Camera Upload"}
+                            </span>
+                          )}
+                          {invite.plex_home && (
                             <span className="inline-flex items-center gap-1 bg-green-500/15 px-2 py-0.5 rounded text-xs text-green-400 font-semibold">
                               <Home className="w-3 h-3" />
-                              {t("invites.permissions.home")}
+                              {t("invites.permissions.home") || "Plex Home"}
                             </span>
                           )}
                           {!invite.allow_sync &&
-                            !invite.allow_live_tv &&
-                            !invite.allow_home && (
+                            !invite.allow_channels &&
+                            !invite.allow_camera_upload &&
+                            !invite.plex_home && (
                               <span className="inline-flex items-center gap-1 bg-gray-500/15 px-2 py-0.5 rounded text-xs text-gray-400 font-semibold">
                                 {t("invites.fields.none")}
                               </span>

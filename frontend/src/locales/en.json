@@ -665,7 +665,8 @@
     "permissions": {
       "sync": "Sync",
       "liveTV": "Live TV",
-      "home": "Home"
+      "home": "Home",
+      "cameraUpload": "Camera Upload"
     },
     "buttons": {
       "copyLink": "Copy Link",
