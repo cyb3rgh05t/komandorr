@@ -2,6 +2,8 @@
 
 API endpoints for Plex integration, VOD streams, and cache management.
 
+For detailed implementation information, see [Caching System](../features/caching.md).
+
 ## Activity Endpoints
 
 ### Get Plex Activities
