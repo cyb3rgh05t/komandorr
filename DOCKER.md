@@ -11,7 +11,41 @@ Komandorr runs as a **single container** with both the frontend (React) and back
 
 ## Quick Start
 
-### Using Docker Compose (Recommended)
+### Local Development
+
+For local development with live code reloading:
+
+```bash
+# Build the frontend first
+cd frontend
+npm install
+npm run build
+cd ..
+
+# Start development environment with Redis
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access the application
+# - Web UI & API: http://localhost:8010
+# - API Documentation: http://localhost:8010/docs
+# - Redis: localhost:6379
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f komandorr
+
+# Stop
+docker-compose -f docker-compose.dev.yml down
+```
+
+**Features:**
+
+- Backend auto-reload on code changes (uvicorn --reload)
+- Redis cache for development testing
+- Debug logging enabled
+- Local volume mounts for data persistence
+- Custom ports to avoid conflicts
+
+### Using Docker Compose (Production/Testing)
 
 1. **Start the application:**
 

@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # TMDB Configuration (for invite redemption backgrounds)
     TMDB_API_KEY: str = ""
 
+    # Overseerr Configuration (optional)
+    OVERSEERR_URL: str = ""
+    OVERSEERR_API_KEY: str = ""
+    DEFAULT_EMAIL_DOMAIN: str = ""
+
     # Plex Configuration
     PLEX_SERVER_URL: str = ""
     PLEX_SERVER_TOKEN: str = ""
@@ -75,6 +80,15 @@ class Settings(BaseSettings):
             api_config = config_data["api"]
             self.GITHUB_TOKEN = api_config.get("github_token", self.GITHUB_TOKEN)
             self.TMDB_API_KEY = api_config.get("tmdb_api_key", self.TMDB_API_KEY)
+        if "overseerr" in config_data:
+            overseerr_config = config_data["overseerr"]
+            self.OVERSEERR_URL = overseerr_config.get("url", self.OVERSEERR_URL)
+            self.OVERSEERR_API_KEY = overseerr_config.get(
+                "api_key", self.OVERSEERR_API_KEY
+            )
+            self.DEFAULT_EMAIL_DOMAIN = overseerr_config.get(
+                "email_domain", self.DEFAULT_EMAIL_DOMAIN
+            )
         if "plex" in config_data:
             plex_config = config_data["plex"]
             self.PLEX_SERVER_URL = plex_config.get("server_url", self.PLEX_SERVER_URL)

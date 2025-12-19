@@ -20,6 +20,13 @@ import {
   Edit,
   X,
   Calendar,
+  Repeat,
+  Home,
+  Radio,
+  Eye,
+  BarChart3,
+  Activity,
+  Play,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -37,6 +44,47 @@ const FormattedDate = ({ date }) => {
   }, [date, t]);
 
   return <>{formattedDate}</>;
+};
+
+// Thumbnail component with fallback for watch history
+const ThumbnailWithFallback = ({ item, Icon }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    return (
+      <div
+        className={`w-20 h-28 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg ring-1 ring-black/10 ${
+          item.type === "movie"
+            ? "bg-blue-500/20"
+            : item.type === "episode"
+            ? "bg-purple-500/20"
+            : "bg-pink-500/20"
+        }`}
+      >
+        <Icon
+          size={28}
+          className={`${
+            item.type === "movie"
+              ? "text-blue-400"
+              : item.type === "episode"
+              ? "text-purple-400"
+              : "text-pink-400"
+          }`}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-20 h-28 rounded-lg overflow-hidden flex-shrink-0 shadow-lg ring-1 ring-black/10">
+      <img
+        src={item.thumb}
+        alt={item.title}
+        className="w-full h-full object-cover"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
 };
 
 const UserAccounts = () => {
@@ -75,8 +123,45 @@ const UserAccounts = () => {
     placeholderData: (previousData) => previousData,
   });
 
+  // Use React Query for Plex users count
+  const { data: plexUsersData } = useQuery({
+    queryKey: ["plexUsersCount"],
+    queryFn: async () => {
+      const data = await api.get("/plex/users/count");
+      return data;
+    },
+    staleTime: 10000,
+    refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const plexUsersCount = plexUsersData?.count || 0;
   const plexServerName = plexLiveStatsData?.server_name || "Plex Server";
+  const plexLiveStats = {
+    total_movies: plexLiveStatsData?.total_movies || 0,
+    total_tv_shows: plexLiveStatsData?.total_tv_shows || 0,
+    total_episodes: plexLiveStatsData?.total_episodes || 0,
+  };
   const isFetching = useIsFetching();
+
+  // Fetch Plex watch history
+  const { data: watchHistory = [] } = useQuery({
+    queryKey: ["plexWatchHistory"],
+    queryFn: async () => {
+      try {
+        return await api.get("/plex/watch-history");
+      } catch (error) {
+        console.warn("Watch history endpoint not available:", error);
+        return [];
+      }
+    },
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    placeholderData: (previousData) => previousData,
+    retry: false,
+  });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDialog, setConfirmDialog] = useState({
@@ -91,6 +176,12 @@ const UserAccounts = () => {
     expirationTime: "00:00",
   });
   const [refreshingUsers, setRefreshingUsers] = useState(new Set());
+
+  // Stats modal state
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   // Extract all users from redeemed invites
   const getAllUsers = () => {
@@ -140,6 +231,131 @@ const UserAccounts = () => {
   };
 
   const allUsers = getAllUsers();
+
+  // Calculate watch history stats
+  const watchHistoryStats = (() => {
+    // Get user IDs from all users
+    const userPlexIds = allUsers.map((u) => u.plex_id).filter(Boolean);
+    const userEmails = allUsers.map((u) => u.email);
+
+    // Filter watch history to only include current users
+    const userWatchHistory = watchHistory.filter(
+      (item) =>
+        userPlexIds.includes(item.user_id) || userEmails.includes(item.email)
+    );
+
+    const totalWatchTime = userWatchHistory.reduce(
+      (sum, item) => sum + (item.duration || 0),
+      0
+    );
+
+    return {
+      totalViews: userWatchHistory.length,
+      totalMovies: userWatchHistory.filter((item) => item.type === "movie")
+        .length,
+      totalEpisodes: userWatchHistory.filter((item) => item.type === "episode")
+        .length,
+      totalWatchTime,
+    };
+  })();
+
+  const formatWatchTime = (seconds) => {
+    const totalMinutes = Math.floor(seconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  // Helper functions for stats modal
+  const getFilteredHistory = () => {
+    if (!selectedUser) return [];
+
+    let filtered = watchHistory.filter(
+      (item) =>
+        item.user_id === selectedUser.plex_id ||
+        item.email === selectedUser.email
+    );
+
+    // Apply type filter
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((item) => item.type === typeFilter);
+    }
+
+    // Apply time filter
+    if (timeFilter !== "all") {
+      const now = new Date();
+      const filterDate = new Date();
+
+      if (timeFilter === "today") {
+        filterDate.setHours(0, 0, 0, 0);
+      } else if (timeFilter === "week") {
+        filterDate.setDate(now.getDate() - 7);
+      } else if (timeFilter === "month") {
+        filterDate.setMonth(now.getMonth() - 1);
+      }
+
+      filtered = filtered.filter(
+        (item) => new Date(item.viewed_at) >= filterDate
+      );
+    }
+
+    return filtered.sort(
+      (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+    );
+  };
+
+  const getUserStats = (user) => {
+    const userWatchData = watchHistory.filter(
+      (item) => item.user_id === user.plex_id || item.email === user.email
+    );
+
+    const totalWatched = userWatchData.length;
+    const movies = userWatchData.filter((item) => item.type === "movie").length;
+    const episodes = userWatchData.filter(
+      (item) => item.type === "episode"
+    ).length;
+    const totalSeconds = userWatchData.reduce(
+      (sum, item) => sum + (item.duration || 0),
+      0
+    );
+    const totalMinutes = Math.floor(totalSeconds / 60);
+
+    return {
+      totalWatched,
+      movies,
+      episodes,
+      totalHours: Math.floor(totalMinutes / 60),
+      totalMinutes: totalMinutes % 60,
+    };
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return "0m";
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  const getMediaIcon = (type) => {
+    switch (type) {
+      case "movie":
+        return Film;
+      case "episode":
+        return Tv;
+      case "track":
+        return Music;
+      default:
+        return Play;
+    }
+  };
 
   // Filter users by search term
   const filteredUsers = allUsers.filter((user) => {
@@ -311,38 +527,9 @@ const UserAccounts = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      {/* Row 1: 6 columns - Plex Server, Plex Users, Total Users, Redeemed Invites */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
         <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Users className="w-3 h-3 text-blue-500" />
-                {t("userAccounts.stats.totalUsers")}
-              </p>
-              <p className="text-2xl font-bold text-blue-500 mt-1">
-                {allUsers.length}
-              </p>
-            </div>
-            <Users className="w-8 h-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Mail className="w-3 h-3 text-green-500" />
-                {t("userAccounts.stats.redeemedInvites")}
-              </p>
-              <p className="text-2xl font-bold text-green-500 mt-1">
-                {invites.filter((i) => i.users && i.users.length > 0).length}
-              </p>
-            </div>
-            <Mail className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -380,306 +567,540 @@ const UserAccounts = () => {
             </svg>
           </div>
         </div>
+
+        {/* Plex Users Card */}
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <svg
+                  className="w-3 h-3 text-purple-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+                {t("invites.stats.plexUsers")}
+              </p>
+              <p className="text-2xl font-bold text-purple-500 mt-1">
+                {plexUsersCount}
+              </p>
+            </div>
+            <svg
+              className="w-8 h-8 text-purple-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Users className="w-3 h-3 text-blue-500" />
+                {t("userAccounts.stats.totalUsers")}
+              </p>
+              <p className="text-2xl font-bold text-blue-500 mt-1">
+                {allUsers.length}
+              </p>
+            </div>
+            <Users className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Mail className="w-3 h-3 text-green-500" />
+                {t("userAccounts.stats.redeemedInvites")}
+              </p>
+              <p className="text-2xl font-bold text-green-500 mt-1">
+                {invites.filter((i) => i.users && i.users.length > 0).length}
+              </p>
+            </div>
+            <Mail className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: 3 columns - Movies, TV Shows, Episodes */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Film className="w-3 h-3 text-amber-500" />
+                {t("invites.stats.movies")}
+              </p>
+              <p className="text-2xl font-bold text-amber-500 mt-1">
+                {plexLiveStats.total_movies}
+              </p>
+            </div>
+            <Film className="w-8 h-8 text-amber-500" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Tv className="w-3 h-3 text-indigo-500" />
+                {t("invites.stats.tvShows")}
+              </p>
+              <p className="text-2xl font-bold text-indigo-500 mt-1">
+                {plexLiveStats.total_tv_shows}
+              </p>
+            </div>
+            <Tv className="w-8 h-8 text-indigo-500" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <svg
+                  className="w-3 h-3 text-rose-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                  />
+                </svg>
+                {t("invites.stats.episodes")}
+              </p>
+              <p className="text-2xl font-bold text-rose-500 mt-1">
+                {plexLiveStats.total_episodes}
+              </p>
+            </div>
+            <svg
+              className="w-8 h-8 text-rose-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: 4 columns - Watch History Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10 col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Eye className="w-3 h-3 text-theme-primary" />
+                {t("userHistory.totalViews", "Total Views")}
+              </p>
+              <p className="text-2xl font-bold text-theme-text mt-1">
+                {watchHistoryStats.totalViews}
+              </p>
+            </div>
+            <Eye className="w-8 h-8 text-theme-primary opacity-60" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10 col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Film className="w-3 h-3 text-blue-400" />
+                {t("userHistory.moviesWatched", "Movies Watched")}
+              </p>
+              <p className="text-2xl font-bold text-blue-400 mt-1">
+                {watchHistoryStats.totalMovies}
+              </p>
+            </div>
+            <Film className="w-8 h-8 text-blue-400 opacity-60" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10 col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Tv className="w-3 h-3 text-purple-400" />
+                {t("userHistory.episodesWatched", "Episodes Watched")}
+              </p>
+              <p className="text-2xl font-bold text-purple-400 mt-1">
+                {watchHistoryStats.totalEpisodes}
+              </p>
+            </div>
+            <Tv className="w-8 h-8 text-purple-400 opacity-60" />
+          </div>
+        </div>
+
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10 col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3 h-3 text-green-400" />
+                {t("userHistory.watchTime", "Watch Time")}
+              </p>
+              <p className="text-2xl font-bold text-green-400 mt-1">
+                {formatWatchTime(watchHistoryStats.totalWatchTime)}
+              </p>
+            </div>
+            <Clock className="w-8 h-8 text-green-400 opacity-60" />
+          </div>
+        </div>
       </div>
 
       {/* Users List */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {[...Array(6)].map((_, index) => (
-            <div
-              key={index}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm animate-pulse"
-            >
-              <div className="flex items-start gap-4">
-                {/* Avatar Skeleton */}
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-theme-hover"></div>
-                </div>
-
-                {/* Content Skeleton */}
-                <div className="flex-1 min-w-0 space-y-2.5">
-                  {/* Name and Status */}
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-5 bg-theme-hover rounded w-32"></div>
-                    <div className="h-6 bg-theme-hover rounded-lg w-16"></div>
-                  </div>
-
-                  {/* Metadata Row */}
-                  <div className="flex flex-wrap gap-4">
-                    <div className="h-3 bg-theme-hover rounded w-24"></div>
-                    <div className="h-3 bg-theme-hover rounded w-28"></div>
-                  </div>
-
-                  {/* Libraries */}
-                  <div className="flex flex-wrap gap-2">
-                    <div className="h-6 bg-theme-hover rounded-md w-20"></div>
-                    <div className="h-6 bg-theme-hover rounded-md w-24"></div>
-                    <div className="h-6 bg-theme-hover rounded-md w-16"></div>
-                  </div>
-                </div>
-
-                {/* Action Buttons Skeleton */}
-                <div className="flex-shrink-0 flex items-center gap-2">
-                  <div className="w-9 h-9 bg-theme-hover rounded-lg"></div>
-                  <div className="w-9 h-9 bg-theme-hover rounded-lg"></div>
-                  <div className="w-9 h-9 bg-theme-hover rounded-lg"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : filteredUsers.length === 0 ? (
-        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center shadow-sm">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users size={32} className="text-theme-primary" />
-            </div>
-            <h3 className="text-xl font-bold text-theme-text mb-2">
-              {searchTerm
-                ? t("userAccounts.noResults")
-                : t("userAccounts.noUsers")}
-            </h3>
-            <p className="text-theme-text-muted">
-              {searchTerm
-                ? t("userAccounts.noResultsMessage")
-                : t("userAccounts.noUsersMessage")}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredUsers.map((user) => (
-            <div
-              key={user.id}
-              className="group bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary/50 transition-all duration-200 relative overflow-hidden"
-            >
-              {/* Plex Background */}
-              <div
-                className="absolute inset-0 opacity-5 bg-center bg-no-repeat bg-contain pointer-events-none"
-                style={{ backgroundImage: "url(/streamnet.png)" }}
-              />
-
-              {/* Main Content */}
-              <div className="flex items-start gap-4 relative z-10">
-                {/* User Avatar */}
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-green-500/20 border border-green-500/30">
-                    {user.thumb ? (
-                      <img
-                        src={`/api/plex/proxy/image?url=${encodeURIComponent(
-                          user.thumb
-                        )}`}
-                        alt={user.username || user.email}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-green-400" />
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-theme-hover border-b border-theme">
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.user") || "User"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.email") || "Email"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.status") || "Status"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.inviteCode") || "Invite Code"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.joined") || "Joined"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.expires") || "Expires"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.libraries") || "Libraries"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.permissions") || "Permissions"}
+                </th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.actions") || "Actions"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                [...Array(6)].map((_, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-theme animate-pulse"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-theme-hover"></div>
+                        <div className="h-4 bg-theme-hover rounded w-24"></div>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* User Info */}
-                <div className="flex-1 min-w-0 space-y-2.5">
-                  {/* User Name and Status */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <h3 className="text-lg font-bold text-theme-text truncate">
-                        {user.username || user.email}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="h-4 bg-theme-hover rounded w-32"></div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="h-6 bg-theme-hover rounded w-16"></div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="h-4 bg-theme-hover rounded w-20"></div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="h-4 bg-theme-hover rounded w-24"></div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="h-4 bg-theme-hover rounded w-24"></div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-1">
+                        <div className="h-6 bg-theme-hover rounded w-16"></div>
+                        <div className="h-6 bg-theme-hover rounded w-16"></div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-1">
+                        <div className="h-6 bg-theme-hover rounded w-16"></div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-end gap-2">
+                        <div className="w-9 h-9 bg-theme-hover rounded"></div>
+                        <div className="w-9 h-9 bg-theme-hover rounded"></div>
+                        <div className="w-9 h-9 bg-theme-hover rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Users size={32} className="text-theme-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold text-theme-text mb-2">
+                        {searchTerm
+                          ? t("userAccounts.noResults")
+                          : t("userAccounts.noUsers")}
                       </h3>
+                      <p className="text-theme-text-muted">
+                        {searchTerm
+                          ? t("userAccounts.noResultsMessage")
+                          : t("userAccounts.noUsersMessage")}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                  >
+                    {/* User Column (Avatar + Username) */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-green-500/20 border border-green-500/30 flex-shrink-0">
+                          {user.thumb ? (
+                            <img
+                              src={`/api/plex/proxy/image?url=${encodeURIComponent(
+                                user.thumb
+                              )}`}
+                              alt={user.username || user.email}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-green-400" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold text-theme-text truncate max-w-[150px]">
+                          {user.username || user.email}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Email Column */}
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-theme-text truncate max-w-[200px] block">
+                        {user.email}
+                      </span>
+                    </td>
+
+                    {/* Status Column */}
+                    <td className="py-3 px-4">
                       {user.expires_at &&
                       new Date(user.expires_at) < new Date() ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30 flex-shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
                           <X className="w-3 h-3" />
                           {t("userAccounts.status.expired")}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
                           <Check className="w-3 h-3" />
                           {t("userAccounts.status.active")}
                         </span>
                       )}
-                    </div>
-                  </div>
+                    </td>
 
-                  {/* Metadata Row */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-theme-text-muted">
-                    <div className="flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>{t("userAccounts.fields.inviteCode")}:</span>
-                      <code className="text-theme-text font-semibold font-mono">
+                    {/* Invite Code Column */}
+                    <td className="py-3 px-4">
+                      <code className="text-sm font-mono font-semibold text-theme-text">
                         {user.inviteCode}
                       </code>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>{t("userAccounts.fields.joined")}:</span>
-                      <span className="text-theme-text font-semibold">
+                    </td>
+
+                    {/* Joined Column */}
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-theme-text">
                         <FormattedDate date={user.created_at} />
                       </span>
-                    </div>
-                    {user.expires_at && (
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-orange-400" />
-                        <span>{t("userAccounts.fields.expires")}:</span>
-                        <span className="text-orange-400 font-semibold">
-                          <FormattedDate date={user.expires_at} />
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                    </td>
 
-                  {/* Libraries and Permissions */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Libraries */}
-                    {user.libraries.map((library, index) => {
-                      const LibraryIcon =
-                        library.type === "movie"
-                          ? Film
-                          : library.type === "show"
-                          ? Tv
-                          : library.type === "music"
-                          ? Music
-                          : null;
-
-                      return (
+                    {/* Expires Column */}
+                    <td className="py-3 px-4">
+                      {user.expires_at ? (
                         <span
-                          key={index}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
-                            library.type === "all"
-                              ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
-                              : library.type === "movie"
-                              ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
-                              : library.type === "show"
-                              ? "bg-purple-500/15 text-purple-400 border-purple-500/30"
-                              : library.type === "music"
-                              ? "bg-pink-500/15 text-pink-400 border-pink-500/30"
-                              : "bg-gray-500/15 text-gray-400 border-gray-500/30"
+                          className={`text-sm ${
+                            new Date(user.expires_at) < new Date()
+                              ? "text-red-400 font-semibold"
+                              : "text-orange-400"
                           }`}
                         >
-                          {LibraryIcon && (
-                            <LibraryIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                          )}
-                          <span className="truncate max-w-[120px]">
-                            {library.name}
-                          </span>
+                          <FormattedDate date={user.expires_at} />
                         </span>
-                      );
-                    })}
+                      ) : (
+                        <span className="text-sm text-theme-muted">-</span>
+                      )}
+                    </td>
 
-                    {/* Permissions */}
-                    {!user.permissions.allowSync &&
-                    !user.permissions.allowChannels &&
-                    !user.permissions.plexHome ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/30">
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                    {/* Libraries Column */}
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        {user.libraries.slice(0, 2).map((library, index) => {
+                          const LibraryIcon =
+                            library.type === "movie"
+                              ? Film
+                              : library.type === "show"
+                              ? Tv
+                              : library.type === "music"
+                              ? Music
+                              : null;
+
+                          return (
+                            <span
+                              key={index}
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold ${
+                                library.type === "all"
+                                  ? "bg-cyan-500/15 text-cyan-400"
+                                  : library.type === "movie"
+                                  ? "bg-blue-500/15 text-blue-400"
+                                  : library.type === "show"
+                                  ? "bg-purple-500/15 text-purple-400"
+                                  : library.type === "music"
+                                  ? "bg-pink-500/15 text-pink-400"
+                                  : "bg-gray-500/15 text-gray-400"
+                              }`}
+                              title={library.name}
+                            >
+                              {LibraryIcon && (
+                                <LibraryIcon className="w-3 h-3" />
+                              )}
+                              <span className="max-w-[80px] truncate">
+                                {library.name}
+                              </span>
+                            </span>
+                          );
+                        })}
+                        {user.libraries.length > 2 && (
+                          <span className="text-xs text-theme-muted">
+                            +{user.libraries.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Permissions Column */}
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1">
+                        {!user.permissions.allowSync &&
+                        !user.permissions.allowChannels &&
+                        !user.permissions.plexHome ? (
+                          <span className="inline-flex items-center gap-1 bg-gray-500/15 px-2 py-0.5 rounded text-xs text-gray-400 font-semibold">
+                            {t("invites.fields.none")}
+                          </span>
+                        ) : (
+                          <>
+                            {user.permissions.allowSync && (
+                              <span className="inline-flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded text-xs text-blue-400 font-semibold">
+                                <Repeat className="w-3 h-3" />
+                                {t("invites.permissions.sync")}
+                              </span>
+                            )}
+                            {user.permissions.allowChannels && (
+                              <span className="inline-flex items-center gap-1 bg-purple-500/15 px-2 py-0.5 rounded text-xs text-purple-400 font-semibold">
+                                <Radio className="w-3 h-3" />
+                                {t("invites.permissions.liveTV")}
+                              </span>
+                            )}
+                            {user.permissions.plexHome && (
+                              <span className="inline-flex items-center gap-1 bg-green-500/15 px-2 py-0.5 rounded text-xs text-green-400 font-semibold">
+                                <Home className="w-3 h-3" />
+                                {t("invites.permissions.home")}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Actions Column */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowStatsModal(true);
+                            setTimeFilter("all");
+                            setTypeFilter("all");
+                          }}
+                          className="p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded transition-all"
+                          title={
+                            t("userAccounts.buttons.viewStats") ||
+                            "View watch stats"
+                          }
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          <BarChart3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRefreshUser(user)}
+                          disabled={refreshingUsers.has(user.id)}
+                          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={
+                            t("userAccounts.buttons.refreshUser") ||
+                            "Refresh user info"
+                          }
+                        >
+                          <RefreshCw
+                            className={`w-4 h-4 transition-transform ${
+                              refreshingUsers.has(user.id) ? "animate-spin" : ""
+                            }`}
                           />
-                        </svg>
-                        Default Permissions
-                      </span>
-                    ) : (
-                      <>
-                        {user.permissions.allowSync && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
-                            {t("invites.permissions.sync")}
-                          </span>
-                        )}
-                        {user.permissions.allowChannels && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                            <Tv className="w-3.5 h-3.5" />
-                            {t("invites.permissions.liveTV")}
-                          </span>
-                        )}
-                        {user.permissions.plexHome && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-500/15 text-green-400 border border-green-500/30">
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                              />
-                            </svg>
-                            {t("invites.permissions.home")}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex-shrink-0 flex items-center gap-2">
-                  <button
-                    onClick={() => handleRefreshUser(user)}
-                    disabled={refreshingUsers.has(user.id)}
-                    className="p-2.5 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 text-theme-primary hover:text-theme-primary/80 rounded-lg transition-all shadow-sm hover:shadow-md group/refresh disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={
-                      t("userAccounts.buttons.refreshUser") ||
-                      "Refresh user info"
-                    }
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 transition-transform ${
-                        refreshingUsers.has(user.id)
-                          ? "animate-spin"
-                          : "group-hover/refresh:rotate-180"
-                      }`}
-                    />
-                  </button>
-                  <button
-                    onClick={() => handleEditUser(user)}
-                    className="p-2.5 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 text-theme-primary hover:text-theme-primary/80 rounded-lg transition-all shadow-sm hover:shadow-md group/edit"
-                    title={t("userAccounts.buttons.editUser")}
-                  >
-                    <Edit className="w-4 h-4 group-hover/edit:scale-110 transition-transform" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUser(user)}
-                    className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-lg transition-all shadow-sm hover:shadow-md group/delete"
-                    title={t("userAccounts.buttons.removeUser")}
-                  >
-                    <Trash2 className="w-4 h-4 group-hover/delete:scale-110 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+                        </button>
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+                          title={t("userAccounts.buttons.editUser")}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user)}
+                          className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
+                          title={t("userAccounts.buttons.removeUser")}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* Edit Modal */}
       {editModal.isOpen && (
@@ -790,6 +1211,331 @@ const UserAccounts = () => {
               >
                 {t("common.save")}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Watch Stats Modal */}
+      {showStatsModal && selectedUser && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowStatsModal(false)}
+        >
+          <div
+            className="bg-theme border border-theme rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex items-center justify-center">
+                  {selectedUser.thumb ? (
+                    <img
+                      src={selectedUser.thumb}
+                      alt={selectedUser.username || selectedUser.email}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User size={24} className="text-white" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-theme-text">
+                    {selectedUser.username || selectedUser.email}
+                  </h2>
+                  <p className="text-sm text-theme-text-muted">
+                    {selectedUser.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowStatsModal(false)}
+                className="text-theme-text-muted hover:text-theme-text transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {(() => {
+                const stats = getUserStats(selectedUser);
+                return (
+                  <>
+                    <div className="bg-theme-card border border-theme rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-theme-text-muted uppercase tracking-wider">
+                            {t("userHistory.stats.totalWatched") ||
+                              "Total Watched"}
+                          </p>
+                          <p className="text-3xl font-bold text-theme-text mt-2">
+                            {stats.totalWatched}
+                          </p>
+                        </div>
+                        <Eye className="text-theme-primary" size={32} />
+                      </div>
+                    </div>
+
+                    <div className="bg-theme-card border border-theme rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-theme-text-muted uppercase tracking-wider">
+                            {t("userHistory.stats.watchTime") || "Watch Time"}
+                          </p>
+                          <p className="text-3xl font-bold text-green-400 mt-2">
+                            {stats.totalHours}h {stats.totalMinutes}m
+                          </p>
+                        </div>
+                        <Clock className="text-green-400" size={32} />
+                      </div>
+                    </div>
+
+                    <div className="bg-theme-card border border-theme rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-theme-text-muted uppercase tracking-wider">
+                            {t("userHistory.stats.movies") || "Movies"}
+                          </p>
+                          <p className="text-3xl font-bold text-blue-400 mt-2">
+                            {stats.movies}
+                          </p>
+                        </div>
+                        <Film className="text-blue-400" size={32} />
+                      </div>
+                    </div>
+
+                    <div className="bg-theme-card border border-theme rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-theme-text-muted uppercase tracking-wider">
+                            {t("userHistory.stats.episodes") || "Episodes"}
+                          </p>
+                          <p className="text-3xl font-bold text-purple-400 mt-2">
+                            {stats.episodes}
+                          </p>
+                        </div>
+                        <Tv className="text-purple-400" size={32} />
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Filters */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("userHistory.filters.timeRange") || "Time Range"}
+                  </label>
+                  <div className="flex gap-2">
+                    {["all", "today", "week", "month"].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setTimeFilter(filter)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                          timeFilter === filter
+                            ? "bg-theme-hover text-white shadow-md"
+                            : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                        }`}
+                      >
+                        {t(`userHistory.filters.${filter}`) ||
+                          filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("userHistory.filters.mediaType") || "Media Type"}
+                  </label>
+                  <div className="flex gap-2">
+                    {["all", "movie", "episode"].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setTypeFilter(filter)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                          typeFilter === filter
+                            ? "bg-theme-hover text-white shadow-md"
+                            : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                        }`}
+                      >
+                        {t(`userHistory.filters.${filter}`) ||
+                          filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Watch History */}
+            <div className="bg-theme-card border border-theme rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="text-theme-primary" size={20} />
+                <h2 className="text-lg font-semibold text-theme-text">
+                  {t("userHistory.watchHistory") || "Watch History"}
+                </h2>
+                <span className="ml-auto text-sm text-theme-text-muted">
+                  {getFilteredHistory().length}{" "}
+                  {t("userHistory.items") || "items"}
+                </span>
+              </div>
+
+              {getFilteredHistory().length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
+                  {getFilteredHistory().map((item, index) => {
+                    const Icon = getMediaIcon(item.type);
+                    return (
+                      <div
+                        key={index}
+                        className="group relative flex gap-4 p-4 bg-theme-card border border-theme rounded-xl hover:border-theme-primary/50 hover:shadow-lg transition-all duration-200"
+                      >
+                        {/* Type Badge */}
+                        <div
+                          className={`absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold ${
+                            item.type === "movie"
+                              ? "bg-blue-500/20 border border-blue-500/40 text-blue-400"
+                              : item.type === "episode"
+                              ? "bg-purple-500/20 border border-purple-500/40 text-purple-400"
+                              : "bg-pink-500/20 border border-pink-500/40 text-pink-400"
+                          }`}
+                        >
+                          <Icon size={10} />
+                          {item.type === "movie"
+                            ? "MOVIE"
+                            : item.type === "episode"
+                            ? "TV"
+                            : "MUSIC"}
+                        </div>
+
+                        {/* Thumbnail */}
+                        {item.thumb ? (
+                          <ThumbnailWithFallback item={item} Icon={Icon} />
+                        ) : (
+                          <div
+                            className={`w-20 h-28 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              item.type === "movie"
+                                ? "bg-blue-500/20 border border-blue-500/30"
+                                : item.type === "episode"
+                                ? "bg-purple-500/20 border border-purple-500/30"
+                                : "bg-pink-500/20 border border-pink-500/30"
+                            }`}
+                          >
+                            <Icon
+                              className={`${
+                                item.type === "movie"
+                                  ? "text-blue-400"
+                                  : item.type === "episode"
+                                  ? "text-purple-400"
+                                  : "text-pink-400"
+                              }`}
+                              size={32}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          {/* Title Section */}
+                          <div className="mb-2">
+                            <h3 className="font-bold text-theme-text text-sm leading-tight mb-1 line-clamp-2">
+                              {item.title}
+                            </h3>
+                            {item.year && (
+                              <div className="text-[10px] text-theme-text-muted font-medium">
+                                {item.year}
+                              </div>
+                            )}
+                            {item.grandparent_title && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-theme-text-muted font-medium truncate">
+                                  {item.grandparent_title}
+                                </span>
+                                {item.parent_index && item.index && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 bg-theme-hover border border-theme rounded text-[10px] font-bold text-theme-text flex-shrink-0">
+                                    S{item.parent_index}E{item.index}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info badges */}
+                          <div className="space-y-1.5 mt-auto">
+                            <div className="flex flex-wrap items-center gap-1">
+                              {/* Date */}
+                              <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-theme-hover border border-theme rounded text-[10px] text-theme-text-muted">
+                                <Calendar size={9} />
+                                <FormattedDate date={item.viewed_at} />
+                              </div>
+
+                              {/* Duration */}
+                              {item.duration && (
+                                <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-500/20 border border-green-500/30 rounded text-[10px] font-bold text-green-400">
+                                  <Clock size={9} />
+                                  {formatDuration(item.duration)}
+                                </div>
+                              )}
+
+                              {/* Content Rating */}
+                              {item.content_rating && (
+                                <div className="inline-flex items-center px-1.5 py-0.5 bg-orange-500/20 border border-orange-500/40 rounded text-[10px] font-bold text-orange-400">
+                                  {item.content_rating}
+                                </div>
+                              )}
+
+                              {/* Rating */}
+                              {item.rating && (
+                                <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-yellow-500/20 border border-yellow-500/30 rounded text-[10px] font-bold text-yellow-400">
+                                  ⭐ {item.rating.toFixed(1)}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Genres */}
+                            {item.genres && item.genres.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1">
+                                {item.genres.slice(0, 2).map((genre, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="inline-flex items-center px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 rounded text-[9px] font-semibold text-cyan-400"
+                                  >
+                                    {genre}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-theme-text-muted">
+                  <Activity size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>
+                    {t("userHistory.noHistory") ||
+                      "No watch history found for this user"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

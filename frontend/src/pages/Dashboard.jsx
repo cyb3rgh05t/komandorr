@@ -291,9 +291,7 @@ export default function Dashboard() {
   const stats = {
     online: services.filter((s) => s.status === "online").length,
     offline: services.filter((s) => s.status === "offline").length,
-    problem: services.filter(
-      (s) => s.status === "online" && s.response_time > 1000
-    ).length,
+    problem: services.filter((s) => s.status === "problem").length,
     total: services.length,
     avgResponseTime:
       services.length > 0
@@ -877,11 +875,7 @@ export default function Dashboard() {
                       service.group.toLowerCase().includes(searchLower));
 
                   const matchesStatus =
-                    statusFilter === null ||
-                    service.status === statusFilter ||
-                    (statusFilter === "problem" &&
-                      service.status === "online" &&
-                      service.response_time > 1000);
+                    statusFilter === null || service.status === statusFilter;
 
                   return matchesSearch && matchesStatus;
                 });

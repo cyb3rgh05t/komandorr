@@ -17,9 +17,7 @@ from app.database import db, InviteDB, PlexUserDB
 
 router = APIRouter(prefix="/api/oauth", tags=["oauth"])
 
-logger.info(
-    "===== OAuth module loaded, routes will be: /api/oauth/plex/login, /api/oauth/plex/check, /api/oauth/plex/redeem ====="
-)
+logger.info("Plex OAuth module loaded")
 
 # Store OAuth states temporarily (in production, use Redis or database)
 oauth_states = {}

@@ -78,17 +78,17 @@ class StatsCache:
             services = monitor.get_all_services()
             online_count = sum(1 for s in services if s.status == "online")
             offline_count = sum(1 for s in services if s.status == "offline")
-            warning_count = sum(1 for s in services if s.status == "warning")
+            problem_count = sum(1 for s in services if s.status == "problem")
 
             return {
                 "total": len(services),
                 "online": online_count,
                 "offline": offline_count,
-                "warning": warning_count,
+                "problem": problem_count,
             }
         except Exception as e:
             logger.error(f"Error getting service stats: {e}")
-            return {"total": 0, "online": 0, "offline": 0, "warning": 0}
+            return {"total": 0, "online": 0, "offline": 0, "problem": 0}
 
     async def _get_plex_stats(self) -> Dict[str, Any]:
         """Get Plex statistics"""
@@ -154,10 +154,8 @@ class StatsCache:
 
                 result = (
                     session.query(
-                        func.sum(TrafficHistoryDB.download_bytes).label(
-                            "total_download"
-                        ),
-                        func.sum(TrafficHistoryDB.upload_bytes).label("total_upload"),
+                        func.sum(TrafficHistoryDB.total_down).label("total_download"),
+                        func.sum(TrafficHistoryDB.total_up).label("total_upload"),
                     )
                     .filter(TrafficHistoryDB.timestamp >= yesterday)
                     .first()
