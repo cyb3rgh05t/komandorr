@@ -270,4 +270,4 @@ REDIS_DB=0
 REDIS_PASSWORD=
 ```
 
-For detailed implementation information, see [CACHE_IMPLEMENTATION.md](../CACHE_IMPLEMENTATION.md) and [PHASE3_QUICKSTART.md](../PHASE3_QUICKSTART.md).
+For detailed caching information, see [Caching System](../features/caching.md).
