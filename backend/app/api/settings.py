@@ -31,11 +31,18 @@ class PlexSettings(BaseModel):
     server_name: str
 
 
+class OverseerrSettings(BaseModel):
+    url: str
+    api_key: str
+    email_domain: str
+
+
 class SettingsResponse(BaseModel):
     logging: LoggingSettings
     general: GeneralSettings
     api: APISettings
     plex: PlexSettings
+    overseerr: Optional[OverseerrSettings] = None
 
 
 class SettingsUpdate(BaseModel):
@@ -43,6 +50,7 @@ class SettingsUpdate(BaseModel):
     general: Optional[GeneralSettings] = None
     api: Optional[APISettings] = None
     plex: Optional[PlexSettings] = None
+    overseerr: Optional[OverseerrSettings] = None
 
 
 def get_config_path():
@@ -103,11 +111,24 @@ async def get_settings(username: str = Depends(require_auth)):
         server_name=plex_config.get("server_name", settings.PLEX_SERVER_NAME),
     )
 
+    # Get Overseerr settings from config or defaults
+    overseerr_config = config_data.get("overseerr", {})
+    overseerr_settings = None
+    if overseerr_config or settings.OVERSEERR_URL:
+        overseerr_settings = OverseerrSettings(
+            url=overseerr_config.get("url", settings.OVERSEERR_URL),
+            api_key=overseerr_config.get("api_key", settings.OVERSEERR_API_KEY),
+            email_domain=overseerr_config.get(
+                "email_domain", settings.DEFAULT_EMAIL_DOMAIN
+            ),
+        )
+
     return SettingsResponse(
         logging=logging_settings,
         general=general_settings,
         api=api_settings,
         plex=plex_settings,
+        overseerr=overseerr_settings,
     )
 
 
@@ -155,6 +176,18 @@ async def update_settings(
         settings.PLEX_SERVER_URL = updates.plex.server_url
         settings.PLEX_SERVER_TOKEN = updates.plex.server_token
         settings.PLEX_SERVER_NAME = updates.plex.server_name
+
+    # Update Overseerr settings
+    if updates.overseerr:
+        config_data["overseerr"] = {
+            "url": updates.overseerr.url,
+            "api_key": updates.overseerr.api_key,
+            "email_domain": updates.overseerr.email_domain,
+        }
+        # Update runtime settings
+        settings.OVERSEERR_URL = updates.overseerr.url
+        settings.OVERSEERR_API_KEY = updates.overseerr.api_key
+        settings.DEFAULT_EMAIL_DOMAIN = updates.overseerr.email_domain
 
     # Save to config.json
     save_config(config_data)

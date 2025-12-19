@@ -5,6 +5,9 @@ import {
   Clock,
   Zap,
   TrendingUp,
+  LayoutDashboard,
+  CheckCircle2,
+  Power,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -403,152 +406,105 @@ export default function Monitor() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10"
+              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-theme-primary/40"
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <LayoutDashboard className="w-3 h-3 text-theme-primary" />
                     {t("monitor.stats.total")}
-                  </div>
-                  <div className="text-3xl font-bold text-theme-text">
-                    {stats.total}
-                  </div>
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">{stats.total}</p>
                 </div>
-                <div className="text-theme-text-muted opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <rect x="3" y="4" width="18" height="4" rx="1" />
-                    <rect x="3" y="10" width="18" height="4" rx="1" />
-                    <rect x="3" y="16" width="18" height="4" rx="1" />
-                  </svg>
+                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
+                  <LayoutDashboard className="w-5 h-5" />
                 </div>
               </div>
             </button>
+
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 ${
+              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
                 statusFilter === "online"
-                  ? "border-green-500 ring-2 ring-green-500/20"
-                  : "border-theme hover:border-green-500/50"
+                  ? "border-green-500/70 ring-2 ring-green-500/15 bg-green-500/5"
+                  : "hover:border-green-500/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
                     {t("monitor.stats.online")}
-                  </div>
-                  <div className="text-3xl font-bold text-green-500">
-                    {stats.online}
-                  </div>
+                  </p>
+                  <p className="text-2xl font-bold text-green-500">{stats.online}</p>
                 </div>
-                <div className="text-green-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                    />
-                  </svg>
+                <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
               </div>
             </button>
+
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 ${
+              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
                 statusFilter === "offline"
-                  ? "border-red-500 ring-2 ring-red-500/20"
-                  : "border-theme hover:border-red-500/50"
+                  ? "border-red-500/70 ring-2 ring-red-500/15 bg-red-500/5"
+                  : "hover:border-red-500/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Power className="w-3 h-3 text-red-500" />
                     {t("monitor.stats.offline")}
-                  </div>
-                  <div className="text-3xl font-bold text-red-500">
-                    {stats.offline}
-                  </div>
+                  </p>
+                  <p className="text-2xl font-bold text-red-500">{stats.offline}</p>
                 </div>
-                <div className="text-red-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                    />
-                  </svg>
+                <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
+                  <Power className="w-5 h-5" />
                 </div>
               </div>
             </button>
+
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 ${
+              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
                 statusFilter === "problem"
-                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
-                  : "border-theme hover:border-yellow-500/50"
+                  ? "border-amber-500/70 ring-2 ring-amber-500/15 bg-amber-500/5"
+                  : "hover:border-amber-500/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-500" />
                     {t("monitor.stats.problem")}
-                    <div className="text-[9px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5 font-normal">
-                      {t("monitor.stats.slowLabel")}
-                    </div>
-                  </div>
-                  <div className="text-3xl font-bold text-yellow-500">
-                    {stats.problem}
-                  </div>
+                  </p>
+                  <p className="text-[11px] text-theme-text-muted">{t("monitor.stats.slowLabel")}</p>
+                  <p className="text-2xl font-bold text-amber-500">{stats.problem}</p>
                 </div>
-                <div className="text-yellow-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                  <AlertTriangle className="w-5 h-5" />
                 </div>
               </div>
             </button>
-            <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-blue-500/50">
+
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-blue-500" />
                     {t("monitor.stats.avgResponse")}
-                  </div>
-                  <div className="text-3xl font-bold text-blue-500">
+                  </p>
+                  <p className="text-2xl font-bold text-blue-500">
                     {stats.avgResponseTime}
                     <span className="text-sm text-blue-400 ml-1">
                       {t("monitor.stats.ms")}
                     </span>
-                  </div>
+                  </p>
                 </div>
-                <div className="text-blue-500 opacity-60">
-                  <Zap className="w-10 h-10" strokeWidth={1} />
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                  <Zap className="w-5 h-5" strokeWidth={1.5} />
                 </div>
               </div>
             </div>
@@ -904,7 +860,7 @@ export default function Monitor() {
 
           {/* Pagination */}
           {servicesInActiveGroup.length > itemsPerPage && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
               <div className="text-sm font-medium text-theme-text-muted">
                 {t("monitor.pagination.showing")}{" "}
                 <span className="text-theme-text font-semibold">
@@ -927,7 +883,7 @@ export default function Monitor() {
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={currentPage === 1}
-                  className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                  className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
                   title={t("monitor.pagination.previous")}
                 >
                   <ChevronLeft size={20} />
@@ -948,8 +904,8 @@ export default function Monitor() {
                           onClick={() => setCurrentPage(page)}
                           className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
                             currentPage === page
-                              ? "bg-theme-primary text-white shadow-md scale-105"
-                              : "bg-theme-hover hover:bg-theme-primary/20 border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary/50"
+                              ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                              : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
                           }`}
                         >
                           {page}
@@ -974,7 +930,7 @@ export default function Monitor() {
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="p-2.5 bg-theme-hover hover:bg-theme-primary border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                  className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
                   title={t("monitor.pagination.next")}
                 >
                   <ChevronRight size={20} />

@@ -5,14 +5,15 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "services": "Server",
-    "monitor": "Antwort-Monitor",
-    "traffic": "Traffic-Monitor",
-    "vodStreams": "VOD-Monitor",
-    "vodActivity": "Plex-Aktivität",
-    "invites": "Plex-Einladungen",
-    "userAccounts": "Plex-Benutzerkonten",
-    "userHistory": "Plex-Benutzerstatistiken",
+    "services": "Servers",
+    "monitor": "Antwort Monitor",
+    "traffic": "Traffic Monitor",
+    "vodStreams": "VOD Monitor",
+    "vodActivity": "Plex Aktivität",
+    "vodPortal": "VOD Portal",
+    "invites": "Plex Einladungen",
+    "userAccounts": "Plex Benutzerkonten",
+    "userHistory": "Plex Benutzerstatistiken",
     "settings": "Einstellungen",
     "about": "Über"
   },
@@ -283,7 +284,7 @@
     "tokenHelp": "Sie finden Ihr Plex Token in Ihren Plex-Kontoeinstellungen",
     "validate": "Verbindung validieren",
     "validating": "Wird validiert...",
-    "validated": "Verbindung gültig",
+    "validated": "Verbunden",
     "save": "Konfiguration speichern",
     "saving": "Wird gespeichert...",
     "fillAllFields": "Bitte füllen Sie alle Felder aus",
@@ -331,6 +332,20 @@
     "githubTokenHelp": "Optional: Persönlicher Zugriffstoken für höhere GitHub API-Ratenlimits",
     "tmdbApiKey": "TMDB API-Schlüssel",
     "tmdbApiKeyHelp": "API-Schlüssel für The Movie Database (wird für Einladungseinlösungs-Hintergründe verwendet)",
+    "overseerrSettings": "Overseerr-Konfiguration",
+    "overseerrUrl": "Overseerr API-URL",
+    "overseerrUrlHelp": "Vollständige API-Endpunkt-URL zum Erstellen von Benutzern",
+    "overseerrApiKey": "Overseerr API-Schlüssel",
+    "overseerrApiKeyHelp": "API-Schlüssel aus den Overseerr-Einstellungen",
+    "defaultEmailDomain": "Standard-E-Mail-Domain",
+    "defaultEmailDomainHelp": "Standarddomain für Benutzer-E-Mails (benutzername@domain.de)",
+    "overseerrFillAllFields": "Bitte URL und API-Schlüssel ausfüllen",
+    "overseerrValidationSuccess": "Overseerr-Verbindung erfolgreich",
+    "overseerrValidationFailed": "Verbindung zu Overseerr nicht möglich",
+    "overseerrValidationError": "Verbindungstest fehlgeschlagen",
+    "overseerrValidating": "Teste...",
+    "overseerrValidated": "Verbunden",
+    "overseerrValidate": "Verbindung testen",
     "saveSettings": "Einstellungen speichern",
     "saveNow": "Jetzt speichern",
     "saving": "Speichere...",
@@ -396,17 +411,25 @@
       "plexServer": "Plex-Server"
     },
     "fields": {
+      "user": "Benutzer",
+      "email": "E-Mail",
+      "status": "Status",
       "inviteCode": "Einladungscode",
       "joined": "Beigetreten",
-      "expires": "Läuft ab"
+      "expires": "L\u00e4uft ab",
+      "libraries": "Bibliotheken",
+      "permissions": "Berechtigungen",
+      "actions": "Aktionen"
     },
     "status": {
-      "active": "Aktiv"
+      "active": "Aktiv",
+      "expired": "Abgelaufen"
     },
     "buttons": {
       "refreshUser": "Benutzerinfo von Plex aktualisieren",
       "editUser": "Benutzer bearbeiten",
-      "removeUser": "Benutzer entfernen"
+      "removeUser": "Benutzer entfernen",
+      "viewStats": "Wiedergabestatistiken anzeigen"
     }
   },
   "versionBadge": {
@@ -564,6 +587,9 @@
       "expires": "Läuft ab",
       "never": "Niemals",
       "usage": "Nutzung",
+      "unlimited": "Unbegrenzt",
+      "status": "Status",
+      "actions": "Aktionen",
       "server": "Server",
       "libraries": "Bibliotheken",
       "allLibraries": "Alle Bibliotheken",
@@ -611,7 +637,8 @@
     },
     "empty": {
       "title": "Noch keine Einladungen",
-      "description": "Erstellen Sie Ihre erste Einladung, um loszulegen!"
+      "description": "Erstellen Sie Ihre erste Einladung, um loszulegen!",
+      "noResults": "Keine Einladungen gefunden, die Ihrem Filter entsprechen"
     },
     "libraryTypes": {
       "movie": "Film",
@@ -736,6 +763,22 @@
     "watchHistory": "Wiedergabeverlauf",
     "items": "Einträge",
     "noHistory": "Kein Wiedergabeverlauf für diesen Benutzer gefunden",
+    "stats": {
+      "totalWatched": "Gesamt angesehen",
+      "watchTime": "Wiedergabezeit",
+      "movies": "Filme",
+      "episodes": "Episoden"
+    },
+    "filters": {
+      "timeRange": "Zeitraum",
+      "mediaType": "Medientyp",
+      "all": "Alle Zeit",
+      "today": "Heute",
+      "week": "Diese Woche",
+      "month": "Dieser Monat",
+      "movie": "Filme",
+      "episode": "Episoden"
+    },
     "filter": {
       "all": "Alle Zeit",
       "today": "Heute",
@@ -747,5 +790,63 @@
       "movie": "Filme",
       "episode": "Episoden"
     }
+  },
+  "vodPortal": {
+    "title": "VOD-Portal",
+    "description": "Benutzer über die Web-Oberfläche zu Overseerr hinzufügen",
+    "placeholder": "VOD-Portal-Inhalte werden hier hinzugefügt",
+    "createUser": "Benutzer zu StreamNet VOD hinzufügen",
+    "username": "Benutzername",
+    "usernamePlaceholder": "Benutzername eingeben",
+    "password": "Passwort",
+    "passwordPlaceholder": "Passwort eingeben",
+    "emailDomain": "E-Mail-Domain",
+    "emailDomainPlaceholder": "beispiel.de",
+    "emailDomainHelp": "E-Mail wird: benutzername@domain.de",
+    "optional": "optional",
+    "creating": "Erstelle...",
+    "success": "Erfolg!",
+    "userCreated": "Benutzer wurde zu Overseerr hinzugefügt",
+    "error": "Fehler beim Erstellen des Benutzers",
+    "errorTitle": "Fehler",
+    "existingUsers": "Vorhandene Benutzer",
+    "loadingUsers": "Lade Benutzer...",
+    "noUsers": "Keine Benutzer gefunden",
+    "email": "E-Mail",
+    "displayName": "Anzeigename",
+    "userType": "Benutzertyp",
+    "plexId": "Plex-ID",
+    "createdAt": "Erstellt",
+    "fetchUsersError": "Fehler beim Laden der Benutzer",
+    "showing": "Zeige",
+    "to": "bis",
+    "of": "von",
+    "users": "Benutzern",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "searchPlaceholder": "Benutzer suchen...",
+    "refresh": "Aktualisieren",
+    "refreshing": "Wird aktualisiert...",
+    "noSearchResults": "Keine Benutzer gefunden",
+    "stats": {
+      "totalUsers": "Gesamt Benutzer",
+      "plexUsers": "Plex Benutzer",
+      "localUsers": "Lokale Benutzer",
+      "adminUsers": "Admin Benutzer"
+    },
+    "userTypes": {
+      "user": "Benutzer",
+      "admin": "Admin",
+      "owner": "Besitzer"
+    },
+    "userRole": "Benutzerrolle",
+    "noPlexId": "Keine Plex-ID",
+    "actions": "Aktionen",
+    "deleteUser": "Benutzer löschen",
+    "deleteUserTitle": "Benutzer löschen",
+    "deleteUserMessage": "Sind Sie sicher, dass Sie diesen Benutzer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "delete": "Löschen",
+    "userDeleted": "Benutzer wurde gelöscht",
+    "deleteError": "Fehler beim Löschen des Benutzers"
   }
 }

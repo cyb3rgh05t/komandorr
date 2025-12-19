@@ -1,6 +1,13 @@
 # Caching System
 
-Komandorr v2.5.0 introduces an enterprise-grade caching system that dramatically improves performance and reduces load on Plex servers and databases.
+Komandorr v3.0.0 extends the enterprise-grade caching system introduced in v2.5.0, further improving performance and reducing load on Plex servers and databases.
+
+## What's New in v3.0.0
+
+- Redis-backed cache for Plex sessions (10s TTL) to cut repeated `/status/sessions` calls
+- Redis caching for live stats (30s), standard stats (60s), and recent media (5m)
+- Cache warm/clear routines now cover the new Redis keys, and cache stats lists expected keys for quick verification
+- Watch-history sync also clears its Redis entry to prevent stale data
 
 ## Overview
 
@@ -465,6 +472,14 @@ Potential improvements for future versions:
 - [Configuration Guide](../configuration/index.md) - Environment setup
 
 ## Version History
+
+- **v3.0.0** - Redis-backed coverage expansion
+
+  - Sessions cache (10s TTL) to reduce `/status/sessions` calls
+  - Live stats cache (30s TTL) and stats cache (60s TTL)
+  - Recent media cache (5m TTL) for heavy library queries
+  - Cache warm/clear routines manage new Redis keys; cache stats lists expected keys
+  - Watch history sync clears Redis entry to avoid stale data
 
 - **v2.5.0** - Initial caching system release (Phase 1-3)
   - Plex activities cache (5s TTL)

@@ -516,23 +516,12 @@ async def update_invite(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found"
                 )
 
-            # Update fields
-            if invite_data.usage_limit is not None:
-                db_invite.usage_limit = invite_data.usage_limit  # type: ignore
-            if invite_data.expires_at is not None:
-                db_invite.expires_at = invite_data.expires_at  # type: ignore
-            if invite_data.allow_sync is not None:
-                db_invite.allow_sync = invite_data.allow_sync  # type: ignore
-            if invite_data.allow_camera_upload is not None:
-                db_invite.allow_camera_upload = invite_data.allow_camera_upload  # type: ignore
-            if invite_data.allow_channels is not None:
-                db_invite.allow_channels = invite_data.allow_channels  # type: ignore
-            if invite_data.plex_home is not None:
-                db_invite.plex_home = invite_data.plex_home  # type: ignore
-            if invite_data.libraries is not None:
-                db_invite.libraries = invite_data.libraries  # type: ignore
-            if invite_data.is_active is not None:
-                db_invite.is_active = invite_data.is_active  # type: ignore
+            # Update fields - use model_fields_set to detect explicitly provided fields
+            update_data = invite_data.model_dump(exclude_unset=True)
+
+            for field, value in update_data.items():
+                if hasattr(db_invite, field):
+                    setattr(db_invite, field, value)  # type: ignore
 
             session.commit()
             session.refresh(db_invite)

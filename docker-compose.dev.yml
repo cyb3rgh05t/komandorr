@@ -64,9 +64,10 @@ services:
 
     volumes:
       # Mount local directories for live development
-      - ./backend:/app:rw
+      - ./backend/app:/app/app:rw
+      - ./backend/requirements.txt:/app/requirements.txt:ro
       - ./frontend/dist:/app/frontend/dist:rw
-      - ./data:/app/data:rw
+      - ./backend/data:/app/data:rw
       - ./logs:/app/logs:rw
 
     networks:

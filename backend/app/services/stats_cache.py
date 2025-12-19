@@ -154,10 +154,8 @@ class StatsCache:
 
                 result = (
                     session.query(
-                        func.sum(TrafficHistoryDB.download_bytes).label(
-                            "total_download"
-                        ),
-                        func.sum(TrafficHistoryDB.upload_bytes).label("total_upload"),
+                        func.sum(TrafficHistoryDB.total_down).label("total_download"),
+                        func.sum(TrafficHistoryDB.total_up).label("total_upload"),
                     )
                     .filter(TrafficHistoryDB.timestamp >= yesterday)
                     .first()
