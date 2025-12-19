@@ -12,7 +12,7 @@
     "vodActivity": "Plex Activity",
     "vodPortal": "VOD Portal",
     "invites": "Plex Invites",
-    "userAccounts": "Plex User Accounts",
+    "userAccounts": "Plex Users",
     "userHistory": "Plex User Stats",
     "settings": "Settings",
     "about": "About"
@@ -348,7 +348,7 @@
     "tokenHelp": "You can find your Plex token in your Plex account settings",
     "validate": "Validate Connection",
     "validating": "Validating...",
-    "validated": "Connection Valid",
+    "validated": "Connected",
     "save": "Save Configuration",
     "saving": "Saving...",
     "fillAllFields": "Please fill in all fields",
@@ -404,6 +404,13 @@
     "overseerrApiKeyHelp": "API key from Overseerr settings",
     "defaultEmailDomain": "Default Email Domain",
     "defaultEmailDomainHelp": "Default domain for user emails (username@domain.com)",
+    "overseerrFillAllFields": "Please fill in URL and API Key",
+    "overseerrValidationSuccess": "Overseerr connection successful",
+    "overseerrValidationFailed": "Cannot connect to Overseerr",
+    "overseerrValidationError": "Failed to test connection",
+    "overseerrValidating": "Testing...",
+    "overseerrValidated": "Connected",
+    "overseerrValidate": "Test Connection",
     "saveSettings": "Save Settings",
     "saveNow": "Save Now",
     "saving": "Saving...",
@@ -457,17 +464,25 @@
       "plexServer": "Plex Server"
     },
     "fields": {
+      "user": "User",
+      "email": "Email",
+      "status": "Status",
       "inviteCode": "Invite Code",
       "joined": "Joined",
-      "expires": "Expires"
+      "expires": "Expires",
+      "libraries": "Libraries",
+      "permissions": "Permissions",
+      "actions": "Actions"
     },
     "status": {
-      "active": "Active"
+      "active": "Active",
+      "expired": "Expired"
     },
     "buttons": {
       "refreshUser": "Refresh user info from Plex",
       "editUser": "Edit User",
-      "removeUser": "Remove User"
+      "removeUser": "Remove User",
+      "viewStats": "View watch stats"
     }
   },
   "common": {
@@ -637,6 +652,9 @@
       "expires": "Expires",
       "never": "Never",
       "usage": "Usage",
+      "unlimited": "Unlimited",
+      "status": "Status",
+      "actions": "Actions",
       "server": "Server",
       "libraries": "Libraries",
       "allLibraries": "All Libraries",
@@ -684,7 +702,8 @@
     },
     "empty": {
       "title": "No invites yet",
-      "description": "Create your first invite to get started!"
+      "description": "Create your first invite to get started!",
+      "noResults": "No invites found matching your filter"
     },
     "libraryTypes": {
       "movie": "movie",
@@ -746,6 +765,22 @@
     "watchHistory": "Watch History",
     "items": "items",
     "noHistory": "No watch history found for this user",
+    "stats": {
+      "totalWatched": "Total Watched",
+      "watchTime": "Watch Time",
+      "movies": "Movies",
+      "episodes": "Episodes"
+    },
+    "filters": {
+      "timeRange": "Time Range",
+      "mediaType": "Media Type",
+      "all": "All Time",
+      "today": "Today",
+      "week": "This Week",
+      "month": "This Month",
+      "movie": "Movies",
+      "episode": "Episodes"
+    },
     "filter": {
       "all": "All Time",
       "today": "Today",
@@ -781,6 +816,8 @@
     "noUsers": "No users found",
     "email": "Email",
     "displayName": "Display Name",
+    "userType": "User Type",
+    "plexId": "Plex ID",
     "createdAt": "Created",
     "fetchUsersError": "Failed to fetch users",
     "showing": "Showing",
@@ -792,6 +829,26 @@
     "searchPlaceholder": "Search users...",
     "refresh": "Refresh",
     "refreshing": "Refreshing...",
-    "noSearchResults": "No users match your search"
+    "noSearchResults": "No users match your search",
+    "stats": {
+      "totalUsers": "Total Users",
+      "plexUsers": "Plex Users",
+      "localUsers": "Local Users",
+      "adminUsers": "Admin Users"
+    },
+    "userTypes": {
+      "user": "User",
+      "admin": "Admin",
+      "owner": "Owner"
+    },
+    "userRole": "User Role",
+    "noPlexId": "No Plex ID",
+    "actions": "Actions",
+    "deleteUser": "Delete user",
+    "deleteUserTitle": "Delete User",
+    "deleteUserMessage": "Are you sure you want to delete this user? This action cannot be undone.",
+    "delete": "Delete",
+    "userDeleted": "User has been deleted",
+    "deleteError": "Failed to delete user"
   }
 }

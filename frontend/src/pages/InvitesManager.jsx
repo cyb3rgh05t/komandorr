@@ -20,6 +20,10 @@ import {
   Search,
   Edit,
   Calendar,
+  Server,
+  Repeat,
+  Home,
+  Radio,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -464,7 +468,46 @@ const InvitesManager = () => {
       {stats && (
         <div className="space-y-3">
           {/* Invite Stats Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3 text-purple-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      />
+                    </svg>
+                    {t("invites.stats.plexUsers")}
+                  </p>
+                  <p className="text-2xl font-bold text-purple-500 mt-1">
+                    {plexUsersCount}
+                  </p>
+                </div>
+                <svg
+                  className="w-8 h-8 text-purple-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+
             <div
               onClick={() => setFilter("all")}
               className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
@@ -623,117 +666,6 @@ const InvitesManager = () => {
               </div>
             </div>
           </div>
-
-          {/* Plex Media Stats Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <svg
-                      className="w-3 h-3 text-purple-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    {t("invites.stats.plexUsers")}
-                  </p>
-                  <p className="text-2xl font-bold text-purple-500 mt-1">
-                    {plexUsersCount}
-                  </p>
-                </div>
-                <svg
-                  className="w-8 h-8 text-purple-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Film className="w-3 h-3 text-amber-500" />
-                    {t("invites.stats.movies")}
-                  </p>
-                  <p className="text-2xl font-bold text-amber-500 mt-1">
-                    {plexLiveStats.total_movies}
-                  </p>
-                </div>
-                <Film className="w-8 h-8 text-amber-500" />
-              </div>
-            </div>
-
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Tv className="w-3 h-3 text-indigo-500" />
-                    {t("invites.stats.tvShows")}
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-500 mt-1">
-                    {plexLiveStats.total_tv_shows}
-                  </p>
-                </div>
-                <Tv className="w-8 h-8 text-indigo-500" />
-              </div>
-            </div>
-
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <svg
-                      className="w-3 h-3 text-rose-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                      />
-                    </svg>
-                    {t("invites.stats.episodes")}
-                  </p>
-                  <p className="text-2xl font-bold text-rose-500 mt-1">
-                    {plexLiveStats.total_episodes}
-                  </p>
-                </div>
-                <svg
-                  className="w-8 h-8 text-rose-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -841,166 +773,143 @@ const InvitesManager = () => {
         </div>
       </div>
 
-      {/* Invites Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {invites
-          .filter((invite) => {
-            // Filter by status
-            if (filter === "all") return true;
-            if (filter === "active")
-              return (
-                !invite.is_expired && !invite.is_exhausted && invite.is_active
-              );
-            if (filter === "redeemed")
-              return invite.users && invite.users.length > 0;
-            if (filter === "expired") return invite.is_expired;
-            if (filter === "used-up") return invite.is_exhausted;
-            if (filter === "disabled") return !invite.is_active;
-            return true;
-          })
-          .filter((invite) => {
-            // Filter by search term
-            if (!searchTerm) return true;
-            const searchLower = searchTerm.toLowerCase();
-            return (
-              invite.code.toLowerCase().includes(searchLower) ||
-              (invite.custom_code &&
-                invite.custom_code.toLowerCase().includes(searchLower)) ||
-              (invite.created_by &&
-                invite.created_by.toLowerCase().includes(searchLower))
-            );
-          })
-          .map((invite) => {
-            const status = getInviteStatus(invite);
-            const usagePercentage = invite.usage_limit
-              ? (invite.used_count / invite.usage_limit) * 100
-              : 0;
+      {/* Invites Table */}
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-theme-hover border-b border-theme">
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.code") || "Code"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.status") || "Status"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.usage") || "Usage"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.expires") || "Expires"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.libraries") || "Libraries"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.server") || "Server"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.permissions") || "Permissions"}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.redeemedBy") || "Redeemed By"}
+                </th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("invites.fields.actions") || "Actions"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {invites
+                .filter((invite) => {
+                  // Filter by status
+                  if (filter === "all") return true;
+                  if (filter === "active")
+                    return (
+                      !invite.is_expired &&
+                      !invite.is_exhausted &&
+                      invite.is_active
+                    );
+                  if (filter === "redeemed")
+                    return invite.users && invite.users.length > 0;
+                  if (filter === "expired") return invite.is_expired;
+                  if (filter === "used-up") return invite.is_exhausted;
+                  if (filter === "disabled") return !invite.is_active;
+                  return true;
+                })
+                .filter((invite) => {
+                  // Filter by search term
+                  if (!searchTerm) return true;
+                  const searchLower = searchTerm.toLowerCase();
+                  return (
+                    invite.code.toLowerCase().includes(searchLower) ||
+                    (invite.custom_code &&
+                      invite.custom_code.toLowerCase().includes(searchLower)) ||
+                    (invite.created_by &&
+                      invite.created_by.toLowerCase().includes(searchLower))
+                  );
+                })
+                .map((invite) => {
+                  const status = getInviteStatus(invite);
+                  const usagePercentage = invite.usage_limit
+                    ? (invite.used_count / invite.usage_limit) * 100
+                    : 0;
 
-            // Get library names from IDs
-            const getLibraryNames = (librariesString) => {
-              if (librariesString === "all")
-                return [
-                  { name: t("invites.fields.allLibraries"), type: "all" },
-                ];
+                  // Get library names from IDs
+                  const getLibraryNames = (librariesString) => {
+                    if (librariesString === "all")
+                      return [
+                        { name: t("invites.fields.allLibraries"), type: "all" },
+                      ];
 
-              const libraryIds = librariesString
-                .split(",")
-                .map((id) => id.trim());
-              return libraryIds.map((id) => {
-                const lib = plexLibraries.find((l) => l.id.toString() === id);
-                return lib
-                  ? { name: lib.name, type: lib.type }
-                  : { name: id, type: "unknown" };
-              });
-            };
+                    const libraryIds = librariesString
+                      .split(",")
+                      .map((id) => id.trim());
+                    return libraryIds.map((id) => {
+                      const lib = plexLibraries.find(
+                        (l) => l.id.toString() === id
+                      );
+                      return lib
+                        ? { name: lib.name, type: lib.type }
+                        : { name: id, type: "unknown" };
+                    });
+                  };
 
-            const libraries = getLibraryNames(invite.libraries);
+                  const libraries = getLibraryNames(invite.libraries);
 
-            return (
-              <div
-                key={invite.id}
-                className={`group border border-theme rounded-xl p-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden ${
-                  invite.users && invite.users.length > 0
-                    ? "bg-theme-card/50"
-                    : "bg-theme-card"
-                }`}
-              >
-                {/* Background Image for Redeemed Invites */}
-                {invite.users && invite.users.length > 0 && (
-                  <div
-                    className="absolute inset-0 opacity-5 bg-center bg-no-repeat bg-contain pointer-events-none"
-                    style={{ backgroundImage: "url(/streamnet.png)" }}
-                  />
-                )}
-
-                {/* Main horizontal layout */}
-                <div className="flex items-start gap-4 relative z-10">
-                  {/* Middle - Main content */}
-                  <div className="flex-1 min-w-0 space-y-2.5">
-                    {/* Title row with code and status */}
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
-                        <code className="font-mono text-lg font-bold text-theme-text tracking-wide truncate">
-                          {invite.code}
-                        </code>
-                        {status.map((badge, index) => (
-                          <span
-                            key={index}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 ${badge.color} border border-theme backdrop-blur-sm`}
+                  return (
+                    <tr
+                      key={invite.id}
+                      className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                    >
+                      {/* Code Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <code className="font-mono text-sm font-bold text-theme-text">
+                            {invite.code}
+                          </code>
+                          <button
+                            onClick={() => handleCopyCode(invite.code)}
+                            className="p-1.5 hover:bg-theme-hover rounded transition-colors"
+                            title={t("invites.buttons.copyLink")}
                           >
-                            {badge.text}
-                          </span>
-                        ))}
-                      </div>
-                      {!invite.is_expired && !invite.is_exhausted && (
-                        <button
-                          onClick={() => handleCopyCode(invite.code)}
-                          className="p-2 hover:bg-theme-hover rounded-lg transition-colors group/btn flex-shrink-0"
-                          title={t("invites.buttons.copyLink")}
-                        >
-                          {copiedCode === invite.code ? (
-                            <Check className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <Clipboard className="w-4 h-4 text-theme-muted group-hover/btn:text-theme-primary transition-colors" />
-                          )}
-                        </button>
-                      )}
-                    </div>
+                            {copiedCode === invite.code ? (
+                              <Check className="w-3.5 h-3.5 text-green-500" />
+                            ) : (
+                              <Clipboard className="w-3.5 h-3.5 text-theme-muted hover:text-theme-primary" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
 
-                    {/* Info row - inline metadata */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-theme-muted">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>{t("invites.fields.created")}:</span>
-                        <span className="text-theme-text font-semibold">
-                          <FormattedDate date={invite.created_at} />
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <svg
-                          className="w-3.5 h-3.5 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <span>{t("invites.fields.expires")}:</span>
-                        <span
-                          className={`font-semibold ${
-                            invite.is_expired
-                              ? "text-red-400"
-                              : invite.expires_at
-                              ? "text-theme-text"
-                              : "text-theme-primary"
-                          }`}
-                        >
-                          <FormattedDate date={invite.expires_at} />
-                        </span>
-                      </div>
-                      {invite.usage_limit && (
-                        <div className="flex items-center gap-1.5">
-                          <svg
-                            className="w-3.5 h-3.5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          <span>{t("invites.fields.usage")}:</span>
+                      {/* Status Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {status.map((badge, index) => (
+                            <span
+                              key={index}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${badge.color}`}
+                            >
+                              {badge.text}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Usage Column */}
+                      <td className="py-3 px-4">
+                        {invite.usage_limit ? (
                           <span
-                            className={`font-semibold ${
+                            className={`text-sm font-semibold ${
                               usagePercentage >= 100
                                 ? "text-red-400"
                                 : usagePercentage >= 75
@@ -1010,334 +919,169 @@ const InvitesManager = () => {
                           >
                             {invite.used_count}/{invite.usage_limit}
                           </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Server, Libraries and Permissions badges */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* Server badge */}
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-                        <svg
-                          className="w-3.5 h-3.5 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
-                          />
-                        </svg>
-                        <span className="truncate max-w-[150px]">
-                          {plexServerName}
-                        </span>
-                      </span>
-
-                      {/* Libraries badges */}
-                      {libraries.map((library, index) => {
-                        const LibraryIcon =
-                          library.type === "movie"
-                            ? Film
-                            : library.type === "show"
-                            ? Tv
-                            : library.type === "music"
-                            ? Music
-                            : null;
-
-                        return (
-                          <span
-                            key={index}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
-                              library.type === "all"
-                                ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
-                                : library.type === "movie"
-                                ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
-                                : library.type === "show"
-                                ? "bg-purple-500/15 text-purple-400 border-purple-500/30"
-                                : library.type === "music"
-                                ? "bg-pink-500/15 text-pink-400 border-pink-500/30"
-                                : "bg-gray-500/15 text-gray-400 border-gray-500/30"
-                            }`}
-                          >
-                            {LibraryIcon && (
-                              <LibraryIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                            )}
-                            <span className="truncate max-w-[120px]">
-                              {library.name}
-                            </span>
+                        ) : (
+                          <span className="text-sm text-theme-muted">
+                            {t("invites.fields.unlimited") || "Unlimited"}
                           </span>
-                        );
-                      })}
+                        )}
+                      </td>
 
-                      {/* Permissions badges */}
-                      {!invite.allow_sync &&
-                      !invite.allow_channels &&
-                      !invite.plex_home ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/30">
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                            />
-                          </svg>
-                          Default Permissions
+                      {/* Expires Column */}
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-sm ${
+                            invite.is_expired
+                              ? "text-red-400 font-semibold"
+                              : invite.expires_at
+                              ? "text-theme-text"
+                              : "text-theme-primary"
+                          }`}
+                        >
+                          <FormattedDate date={invite.expires_at} />
                         </span>
-                      ) : (
-                        <>
-                          {invite.allow_sync && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                              <svg
-                                className="w-3.5 h-3.5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                      </td>
+
+                      {/* Libraries Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {libraries.slice(0, 2).map((library, index) => {
+                            const LibraryIcon =
+                              library.type === "movie"
+                                ? Film
+                                : library.type === "show"
+                                ? Tv
+                                : library.type === "music"
+                                ? Music
+                                : null;
+
+                            return (
+                              <span
+                                key={index}
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold ${
+                                  library.type === "all"
+                                    ? "bg-cyan-500/15 text-cyan-400"
+                                    : library.type === "movie"
+                                    ? "bg-blue-500/15 text-blue-400"
+                                    : library.type === "show"
+                                    ? "bg-purple-500/15 text-purple-400"
+                                    : library.type === "music"
+                                    ? "bg-pink-500/15 text-pink-400"
+                                    : "bg-gray-500/15 text-gray-400"
+                                }`}
+                                title={library.name}
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                              </svg>
+                                {LibraryIcon && (
+                                  <LibraryIcon className="w-3 h-3" />
+                                )}
+                                <span className="max-w-[80px] truncate">
+                                  {library.name}
+                                </span>
+                              </span>
+                            );
+                          })}
+                          {libraries.length > 2 && (
+                            <span className="text-xs text-theme-muted">
+                              +{libraries.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Server Column */}
+                      <td className="py-3 px-4">
+                        {invite.plex_server ? (
+                          <span className="inline-flex items-center gap-1 bg-emerald-500/15 px-2 py-0.5 rounded text-xs text-emerald-400 font-semibold">
+                            <Server className="w-3 h-3" />
+                            {invite.plex_server}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-theme-muted">-</span>
+                        )}
+                      </td>
+
+                      {/* Permissions Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {invite.allow_sync && (
+                            <span className="inline-flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded text-xs text-blue-400 font-semibold">
+                              <Repeat className="w-3 h-3" />
                               {t("invites.permissions.sync")}
                             </span>
                           )}
-                          {invite.allow_channels && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                              <Tv className="w-3.5 h-3.5" />
+                          {invite.allow_live_tv && (
+                            <span className="inline-flex items-center gap-1 bg-purple-500/15 px-2 py-0.5 rounded text-xs text-purple-400 font-semibold">
+                              <Radio className="w-3 h-3" />
                               {t("invites.permissions.liveTV")}
                             </span>
                           )}
-                          {invite.plex_home && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-500/15 text-green-400 border border-green-500/30">
-                              <svg
-                                className="w-3.5 h-3.5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                                />
-                              </svg>
+                          {invite.allow_home && (
+                            <span className="inline-flex items-center gap-1 bg-green-500/15 px-2 py-0.5 rounded text-xs text-green-400 font-semibold">
+                              <Home className="w-3 h-3" />
                               {t("invites.permissions.home")}
                             </span>
                           )}
-                        </>
-                      )}
-                    </div>
-
-                    {/* Redeemed Users */}
-                    {invite.users && invite.users.length > 0 && (
-                      <div className="pt-2 border-t border-theme-hover/50">
-                        <div className="flex items-center gap-1.5 text-theme-muted mb-2">
-                          <svg
-                            className="w-3.5 h-3.5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          <span className="text-xs font-medium uppercase tracking-wide">
-                            {t("invites.fields.redeemedBy")}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {invite.users.map((user) => (
-                            <div
-                              key={user.id}
-                              className="inline-flex items-center gap-2 bg-green-500/10 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-green-500/30"
-                            >
-                              <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center flex-shrink-0">
-                                <svg
-                                  className="w-3 h-3 text-green-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                  />
-                                </svg>
-                              </div>
-                              <span className="text-xs text-theme-text font-semibold">
-                                {user.username || user.email}
+                          {!invite.allow_sync &&
+                            !invite.allow_live_tv &&
+                            !invite.allow_home && (
+                              <span className="inline-flex items-center gap-1 bg-gray-500/15 px-2 py-0.5 rounded text-xs text-gray-400 font-semibold">
+                                {t("invites.fields.none")}
                               </span>
-                              <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
-                            </div>
-                          ))}
+                            )}
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      </td>
 
-                  {/* Right side - Action buttons */}
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditInvite(invite)}
-                      className="p-2.5 bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 text-theme-primary hover:text-theme-primary/80 rounded-lg transition-all shadow-sm hover:shadow-md group/edit"
-                      title={t("invites.buttons.edit") || "Edit"}
-                    >
-                      <Edit className="w-4 h-4 group-hover/edit:scale-110 transition-transform" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteInvite(invite)}
-                      className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 rounded-lg transition-all shadow-sm hover:shadow-md group/delete"
-                      title={t("invites.buttons.delete")}
-                    >
-                      <Trash2 className="w-4 h-4 group-hover/delete:scale-110 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        {invites.filter((invite) => {
-          if (filter === "all") return true;
-          if (filter === "active")
-            return (
-              !invite.is_expired && !invite.is_exhausted && invite.is_active
-            );
-          if (filter === "expired") return invite.is_expired;
-          if (filter === "used-up") return invite.is_exhausted;
-          if (filter === "disabled") return !invite.is_active;
-          return true;
-        }).length === 0 && (
-          <div className="col-span-full">
-            {filter === "all" ? (
-              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Mail size={32} className="text-theme-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    {t("invites.empty.title")}
-                  </h3>
-                  <p className="text-theme-muted mb-6">
-                    {t("invites.empty.description")}
-                  </p>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    <Plus size={20} />
-                    <span>{t("invites.createInvite")}</span>
-                  </button>
-                </div>
-              </div>
-            ) : filter === "active" ? (
-              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check size={32} className="text-green-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Active Invites
-                  </h3>
-                  <p className="text-theme-muted mb-6">
-                    You don't have any active invites at the moment. Create a
-                    new invite to get started.
-                  </p>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    <Plus size={20} />
-                    <span>Create Active Invite</span>
-                  </button>
-                </div>
-              </div>
-            ) : filter === "expired" ? (
-              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Clock size={32} className="text-red-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Expired Invites
-                  </h3>
-                  <p className="text-theme-muted mb-6">
-                    Great news! You don't have any expired invites. All your
-                    invites are either active or have been used.
-                  </p>
-                  <button
-                    onClick={() => setFilter("all")}
-                    className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
-                  >
-                    <Mail size={20} className="text-theme-primary" />
-                    <span>View All Invites</span>
-                  </button>
-                </div>
-              </div>
-            ) : filter === "used-up" ? (
-              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <X size={32} className="text-orange-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Used Up Invites
-                  </h3>
-                  <p className="text-theme-muted mb-6">
-                    None of your invites have reached their usage limit yet. All
-                    invites are still available for use.
-                  </p>
-                  <button
-                    onClick={() => setFilter("all")}
-                    className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
-                  >
-                    <Mail size={20} className="text-theme-primary" />
-                    <span>View All Invites</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Mail size={32} className="text-theme-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Invites Found
-                  </h3>
-                  <p className="text-theme-muted mb-6">
-                    No invites match the current filter. Try selecting a
-                    different filter or create a new invite.
-                  </p>
-                  <button
-                    onClick={() => setFilter("all")}
-                    className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
-                  >
-                    <Mail size={20} className="text-theme-primary" />
-                    <span>View All Invites</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+                      {/* Redeemed By Column */}
+                      <td className="py-3 px-4">
+                        {invite.users && invite.users.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {invite.users.slice(0, 2).map((user) => (
+                              <span
+                                key={user.id}
+                                className="inline-flex items-center gap-1 bg-green-500/10 px-2 py-0.5 rounded text-xs text-green-400 font-semibold"
+                                title={user.username || user.email}
+                              >
+                                <Check className="w-3 h-3" />
+                                <span className="max-w-[80px] truncate">
+                                  {user.username || user.email}
+                                </span>
+                              </span>
+                            ))}
+                            {invite.users.length > 2 && (
+                              <span className="text-xs text-theme-muted">
+                                +{invite.users.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-theme-muted">-</span>
+                        )}
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEditInvite(invite)}
+                            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+                            title={t("invites.buttons.edit") || "Edit"}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInvite(invite)}
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
+                            title={t("invites.buttons.delete")}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Create Invite Modal */}

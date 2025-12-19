@@ -3,6 +3,10 @@ import {
   Server,
   Activity,
   AlertCircle,
+  LayoutDashboard,
+  CheckCircle2,
+  Power,
+  AlertTriangle,
   Search,
   RefreshCw,
   Plus,
@@ -324,134 +328,95 @@ export default function Services() {
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10"
+              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-theme-primary/40"
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <LayoutDashboard className="w-3 h-3 text-theme-primary" />
                     {t("services.stats.total")}
-                  </div>
-                  <div className="text-3xl font-bold text-theme-text">
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text">
                     {stats.total}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-theme-text-muted opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <rect x="3" y="4" width="18" height="4" rx="1" />
-                    <rect x="3" y="10" width="18" height="4" rx="1" />
-                    <rect x="3" y="16" width="18" height="4" rx="1" />
-                  </svg>
+                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
+                  <LayoutDashboard className="w-5 h-5" />
                 </div>
               </div>
             </button>
+
             <button
               onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 ${
+              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
                 statusFilter === "online"
-                  ? "border-green-500 ring-2 ring-green-500/20"
-                  : "border-theme hover:border-green-500/50"
+                  ? "border-green-500/70 ring-2 ring-green-500/15 bg-green-500/5"
+                  : "hover:border-green-500/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
                     {t("services.stats.online")}
-                  </div>
-                  <div className="text-3xl font-bold text-green-500">
+                  </p>
+                  <p className="text-2xl font-bold text-green-500">
                     {stats.online}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-green-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                    />
-                  </svg>
+                <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
               </div>
             </button>
+
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 ${
+              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
                 statusFilter === "offline"
-                  ? "border-red-500 ring-2 ring-red-500/20"
-                  : "border-theme hover:border-red-500/50"
+                  ? "border-red-500/70 ring-2 ring-red-500/15 bg-red-500/5"
+                  : "hover:border-red-500/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Power className="w-3 h-3 text-red-500" />
                     {t("services.stats.offline")}
-                  </div>
-                  <div className="text-3xl font-bold text-red-500">
+                  </p>
+                  <p className="text-2xl font-bold text-red-500">
                     {stats.offline}
-                  </div>
+                  </p>
                 </div>
-                <div className="text-red-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                    />
-                  </svg>
+                <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
+                  <Power className="w-5 h-5" />
                 </div>
               </div>
             </button>
+
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 ${
+              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
                 statusFilter === "problem"
-                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
-                  : "border-theme hover:border-yellow-500/50"
+                  ? "border-amber-500/70 ring-2 ring-amber-500/15 bg-amber-500/5"
+                  : "hover:border-amber-500/40"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="text-left flex-1">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-muted font-semibold mb-1.5">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-500" />
                     {t("services.stats.problem")}
-                    <div className="text-[9px] normal-case tracking-normal text-theme-text-muted/70 mt-0.5 font-normal">
-                      {t("services.stats.slowResponse")}
-                    </div>
-                  </div>
-                  <div className="text-3xl font-bold text-yellow-500">
+                  </p>
+                  <p className="text-2xl font-bold text-amber-500">
                     {stats.problem}
-                  </div>
+                  </p>
+                  <p className="text-[11px] text-theme-text-muted">
+                    {t("services.stats.slowResponse")}
+                  </p>
                 </div>
-                <div className="text-yellow-500 opacity-60">
-                  <svg
-                    className="w-10 h-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                  <AlertTriangle className="w-5 h-5" />
                 </div>
               </div>
             </button>

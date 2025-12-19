@@ -290,3 +290,49 @@ async def get_overseerr_users(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch users: {str(e)}",
         )
+
+
+@router.delete("/users/{user_id}")
+async def delete_overseerr_user(user_id: int, username: str = Depends(require_auth)):
+    """Delete a user from Overseerr"""
+    try:
+        # Check if Overseerr is configured
+        if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Overseerr is not configured",
+            )
+
+        # Prepare request
+        base_url = settings.OVERSEERR_URL.rstrip("/api/v1/user")
+        delete_url = f"{base_url}/api/v1/user/{user_id}"
+
+        headers = {
+            "accept": "application/json",
+            "X-Api-Key": settings.OVERSEERR_API_KEY,
+        }
+
+        # Make delete request
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.delete(delete_url, headers=headers)
+
+            if response.status_code in [200, 204]:
+                logger.info(f"User {user_id} deleted from Overseerr by {username}")
+                return {
+                    "success": True,
+                    "message": "User deleted successfully",
+                }
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Overseerr returned status {response.status_code}",
+                )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting Overseerr user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user: {str(e)}",
+        )

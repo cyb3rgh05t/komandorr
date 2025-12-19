@@ -60,6 +60,8 @@ export default function Settings() {
   const [overseerrUrl, setOverseerrUrl] = useState("");
   const [overseerrApiKey, setOverseerrApiKey] = useState("");
   const [defaultEmailDomain, setDefaultEmailDomain] = useState("");
+  const [validatingOverseerr, setValidatingOverseerr] = useState(false);
+  const [overseerrValid, setOverseerrValid] = useState(null);
 
   // Auto-save state
   const [pendingChanges, setPendingChanges] = useState(false);
@@ -120,11 +122,45 @@ export default function Settings() {
         setOverseerrApiKey(data.overseerr.api_key || "");
         setDefaultEmailDomain(data.overseerr.email_domain || "");
       }
+
+      // Auto-validate connections if configured
       if (data.plex.server_url && data.plex.server_token) {
-        setPlexValid(true);
+        validatePlexOnLoad(data.plex.server_url, data.plex.server_token);
+      }
+      if (data.overseerr?.url && data.overseerr?.api_key) {
+        validateOverseerrOnLoad();
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
+    }
+  };
+
+  const validatePlexOnLoad = async (url, token) => {
+    try {
+      const result = await testPlexConnection(url, token);
+      if (result.valid) {
+        setPlexValid(true);
+        if (result.server_name) {
+          setPlexServerName(result.server_name);
+        }
+      } else {
+        setPlexValid(false);
+      }
+    } catch (error) {
+      setPlexValid(false);
+    }
+  };
+
+  const validateOverseerrOnLoad = async () => {
+    try {
+      const result = await api.get("/overseerr/status");
+      if (result.configured && result.reachable) {
+        setOverseerrValid(true);
+      } else {
+        setOverseerrValid(false);
+      }
+    } catch (error) {
+      setOverseerrValid(false);
     }
   };
 
@@ -257,6 +293,47 @@ export default function Settings() {
       toast.error(error.message || t("plex.validationError"));
     } finally {
       setValidating(false);
+    }
+  };
+
+  const handleValidateOverseerr = async () => {
+    if (!overseerrUrl || !overseerrApiKey) {
+      toast.error(
+        t("settings.overseerrFillAllFields") || "Please fill in URL and API Key"
+      );
+      return;
+    }
+
+    setValidatingOverseerr(true);
+    setOverseerrValid(null);
+
+    try {
+      const result = await api.get("/overseerr/status");
+
+      if (result.configured && result.reachable) {
+        setOverseerrValid(true);
+        toast.success(
+          t("settings.overseerrValidationSuccess") ||
+            "Overseerr connection successful"
+        );
+      } else {
+        setOverseerrValid(false);
+        toast.error(
+          result.message ||
+            t("settings.overseerrValidationFailed") ||
+            "Cannot connect to Overseerr"
+        );
+      }
+    } catch (error) {
+      console.error("Failed to validate Overseerr:", error);
+      setOverseerrValid(false);
+      toast.error(
+        error.message ||
+          t("settings.overseerrValidationError") ||
+          "Failed to test connection"
+      );
+    } finally {
+      setValidatingOverseerr(false);
     }
   };
 
@@ -813,6 +890,7 @@ export default function Settings() {
                   value={overseerrUrl}
                   onChange={(e) => {
                     setOverseerrUrl(e.target.value);
+                    setOverseerrValid(null);
                     setPendingChanges(true);
                   }}
                   className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -834,6 +912,7 @@ export default function Settings() {
                     value={overseerrApiKey}
                     onChange={(e) => {
                       setOverseerrApiKey(e.target.value);
+                      setOverseerrValid(null);
                       setPendingChanges(true);
                     }}
                     className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -875,6 +954,55 @@ export default function Settings() {
                   {t("settings.defaultEmailDomainHelp") ||
                     "Default domain for user emails (username@domain.com)"}
                 </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleValidateOverseerr}
+                  disabled={
+                    validatingOverseerr || !overseerrUrl || !overseerrApiKey
+                  }
+                  className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                    overseerrValid === true
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : overseerrValid === false
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                  }`}
+                >
+                  {validatingOverseerr ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      {t("settings.overseerrValidating") || "Testing..."}
+                    </span>
+                  ) : overseerrValid === true ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <CheckCircle size={16} />
+                      {t("settings.overseerrValidated") || "Connected"}
+                    </span>
+                  ) : (
+                    t("settings.overseerrValidate") || "Test Connection"
+                  )}
+                </button>
               </div>
             </div>
           </div>

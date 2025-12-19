@@ -1,5 +1,24 @@
 # CHANGELOG.md
 
+# [3.0.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.5.0...v3.0.0) (2025-12-19)
+
+### ⚡ Caching & Performance
+
+• **Redis coverage expanded**
+◦ Plex sessions cached with 10s TTL to reduce repeated `/status/sessions` calls
+◦ Live stats cached for 30s and standard stats cached for 60s to avoid redundant Plex hits
+◦ Recent media cached for 5 minutes to cut expensive library fetches
+◦ Cache warming now preloads sessions, stats, live stats, and recent media
+
+• **Cache transparency & control**
+◦ `/api/plex/cache/stats` reports the expected Redis keys for quick verification
+◦ Cache clear/warm endpoints now manage the new Redis keys alongside in-memory caches
+◦ Manual watch-history sync clears its Redis entry to prevent stale data
+
+### 🧭 Release & Versioning
+
+• Bumped project version to 3.0.0 across backend, frontend, and release metadata
+
 # [2.5.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.4.1...v2.5.0) (2025-12-15)
 
 ### 🚀 Performance: Enterprise-Grade Caching System

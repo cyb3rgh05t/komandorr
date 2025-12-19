@@ -91,7 +91,6 @@ export default function Sidebar() {
     { path: "/vod-activity", label: t("nav.vodActivity"), icon: Users },
     { path: "/invites", label: t("nav.invites"), icon: Mail },
     { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
-    { path: "/user-history", label: t("nav.userHistory"), icon: BarChart3 },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];

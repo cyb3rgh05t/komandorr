@@ -10,6 +10,7 @@ from datetime import datetime, timezone, timedelta
 
 from app.utils.logger import logger
 from app.database import db, PlexStatsDB
+from app.services.redis_cache import cache_get, cache_set, cache_delete
 
 router = APIRouter(prefix="/api/plex", tags=["plex"])
 
@@ -595,8 +596,17 @@ async def get_plex_activities():
         logger.warning("Plex not configured - no config file found")
         return {"error": True, "message": "Plex not configured", "activities": []}
 
-    # Check cache first
+    # Check Redis cache first
     now = datetime.now()
+    redis_cached = cache_get("plex:activities")
+    if redis_cached:
+        logger.debug("Returning cached activities from Redis")
+        _activity_cache["hits"] += 1
+        redis_copy = redis_cached.copy()
+        redis_copy["cached"] = True
+        return redis_copy
+
+    # Fallback to in-process cache
     if (
         _activity_cache["data"] is not None
         and _activity_cache["last_fetched"] is not None
@@ -727,9 +737,12 @@ async def get_plex_activities():
                 "timestamp": now.isoformat(),
             }
 
-            # Update cache
+            # Update caches
             _activity_cache["data"] = response
             _activity_cache["last_fetched"] = now
+            cache_set(
+                "plex:activities", response, ttl_seconds=_activity_cache["ttl_seconds"]
+            )
 
             return response
 
@@ -751,6 +764,11 @@ async def get_plex_stats():
     try:
         # Load config from config.json
         plex_config = load_plex_config()
+
+        # Check Redis cache (60s)
+        cached = cache_get("plex:stats")
+        if cached:
+            return cached
 
         session = db.get_session()
         try:
@@ -779,7 +797,7 @@ async def get_plex_stats():
                 except Exception as e:
                     logger.warning(f"Failed to fetch live Plex stats: {e}")
 
-            return PlexStats(
+            response = PlexStats(
                 peak_concurrent=stats.peak_concurrent,  # type: ignore
                 last_updated=stats.last_updated.isoformat() if stats.last_updated else None,  # type: ignore
                 server_url=plex_config.get("url", "") if plex_config else "",
@@ -795,6 +813,11 @@ async def get_plex_stats():
                 total_movies=total_movies,
                 total_tv_shows=total_tv_shows,
             )
+
+            # Cache as dict for serialization safety
+            cache_set("plex:stats", response.dict(), ttl_seconds=60)
+
+            return response
         finally:
             session.close()
     except Exception as e:
@@ -820,6 +843,12 @@ async def get_live_plex_stats():
                 "error": "Plex not configured",
             }
 
+        cached = cache_get("plex:stats_live")
+        if cached:
+            cached_copy = cached.copy()
+            cached_copy["cached"] = True
+            return cached_copy
+
         total_users, total_movies, total_tv_shows = await fetch_plex_statistics(
             config["url"], config["token"]
         )
@@ -830,13 +859,17 @@ async def get_live_plex_stats():
         # Get server name
         server_name = config.get("server_name", "Plex Server")
 
-        return {
+        response = {
             "total_users": total_users,
             "total_movies": total_movies,
             "total_tv_shows": total_tv_shows,
             "total_episodes": total_episodes,
             "server_name": server_name,
         }
+
+        cache_set("plex:stats_live", response, ttl_seconds=30)
+
+        return response
     except Exception as e:
         logger.error(f"Error getting live Plex stats: {e}")
         return {
@@ -931,6 +964,13 @@ async def get_recent_media():
         url = config["url"]
         token = config["token"]
 
+        # Cache recent media for a few minutes to avoid repeated heavy calls
+        cached = cache_get("plex:recent_media")
+        if cached:
+            cached_copy = cached.copy()
+            cached_copy["cached"] = True
+            return cached_copy
+
         async with httpx.AsyncClient() as client:
             headers = {"X-Plex-Token": token, "Accept": "application/json"}
 
@@ -991,7 +1031,12 @@ async def get_recent_media():
                         )
                         continue
 
-            return {"media": media_items[:30]}  # Return max 30 items
+            response = {"media": media_items[:30]}  # Return max 30 items
+
+            # Cache the payload (5 minutes)
+            cache_set("plex:recent_media", response, ttl_seconds=300)
+
+            return response
 
     except HTTPException:
         raise
@@ -1076,6 +1121,13 @@ async def get_plex_sessions():
 
         url = plex_config["url"]
         token = plex_config["token"]
+
+        # Short TTL cache to reduce repeated hits while keeping it fresh
+        redis_cached = cache_get("plex:sessions")
+        if redis_cached:
+            redis_copy = redis_cached.copy()
+            redis_copy["cached"] = True
+            return redis_copy
 
         async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
             headers = {"X-Plex-Token": token, "Accept": "application/json"}
@@ -1293,11 +1345,16 @@ async def get_plex_sessions():
 
                 processed_sessions.append(processed_session)
 
-            return {
+            response = {
                 "error": False,
                 "sessions": processed_sessions,
                 "total": len(processed_sessions),
             }
+
+            # Cache the result with a short TTL (10s)
+            cache_set("plex:sessions", response, ttl_seconds=10)
+
+            return response
 
     except Exception as e:
         logger.error(f"Error fetching Plex sessions: {e}")
@@ -1309,8 +1366,15 @@ async def get_watch_history():
     """Get watch history from database (fast) with caching - synced by background task"""
     from app.database import db, WatchHistoryDB
 
-    # Check cache first
+    # Check Redis cache first
     now = datetime.now()
+    redis_cached = cache_get("plex:watch_history")
+    if redis_cached is not None:
+        logger.debug("Returning cached watch history from Redis")
+        _watch_history_cache["hits"] += 1
+        return redis_cached
+
+    # Fallback to in-process cache
     if (
         _watch_history_cache["data"] is not None
         and _watch_history_cache["last_fetched"] is not None
@@ -1393,9 +1457,14 @@ async def get_watch_history():
                 f"Returned {len(watch_history)} watch history items from database"
             )
 
-            # Update cache
+            # Update caches
             _watch_history_cache["data"] = watch_history
             _watch_history_cache["last_fetched"] = now
+            cache_set(
+                "plex:watch_history",
+                watch_history,
+                ttl_seconds=_watch_history_cache["ttl_seconds"],
+            )
 
             return watch_history
 
@@ -1421,6 +1490,7 @@ async def sync_watch_history_now():
         # Invalidate cache after sync
         _watch_history_cache["data"] = None
         _watch_history_cache["last_fetched"] = None
+        cache_delete("plex:watch_history")
         return {"success": True, "message": "Watch history sync completed"}
     except Exception as e:
         logger.error(f"Error during manual sync: {e}")
@@ -1487,6 +1557,15 @@ async def get_cache_stats():
     if redis_info:
         response["redis"] = redis_info
 
+    response["redis_keys_expected"] = [
+        "plex:activities",
+        "plex:watch_history",
+        "plex:sessions",
+        "plex:stats",
+        "plex:stats_live",
+        "plex:recent_media",
+    ]
+
     return response
 
 
@@ -1540,6 +1619,16 @@ async def warm_caches():
         # Warm watch history cache
         await get_watch_history()
 
+        # Warm sessions cache
+        await get_plex_sessions()
+
+        # Warm stats caches
+        await get_plex_stats()
+        await get_live_plex_stats()
+
+        # Warm recent media cache
+        await get_recent_media()
+
         # Force refresh stats cache
         from app.services.stats_cache import stats_cache
 
@@ -1548,7 +1637,15 @@ async def warm_caches():
         return {
             "success": True,
             "message": "Caches warmed successfully",
-            "warmed": ["plex_activities", "watch_history", "background_stats"],
+            "warmed": [
+                "plex_activities",
+                "watch_history",
+                "plex_sessions",
+                "plex_stats",
+                "plex_stats_live",
+                "plex_recent_media",
+                "background_stats",
+            ],
         }
 
     except Exception as e:

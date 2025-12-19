@@ -16,9 +16,9 @@ Complete Plex invitation system with custom invite codes, multi-badge status ind
 
 [Learn more →](../INVITES.md){ .md-button }
 
-### :material-cached: Enterprise Caching System _(New in v2.5.0!)_
+### :material-cached: Enterprise Caching System _(Updated in v3.0.0!)_
 
-High-performance caching layer with 80%+ cache hit rates, reducing Plex API calls by 83% and database queries by 80%. Features background statistics aggregation, automatic cache warming, and optional Redis support for multi-instance deployments.
+High-performance caching layer with 80%+ cache hit rates, expanded Redis coverage (sessions, stats, recent media), reduced Plex API calls by 83% and database queries by 80%. Features background statistics aggregation, automatic cache warming, and optional Redis support for multi-instance deployments.
 
 [Learn more →](caching.md){ .md-button }
 
