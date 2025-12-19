@@ -472,6 +472,7 @@
       "expires": "Expires",
       "libraries": "Libraries",
       "permissions": "Permissions",
+      "watchTime": "Watch Time",
       "actions": "Actions"
     },
     "status": {
@@ -820,6 +821,7 @@
     "userType": "User Type",
     "plexId": "Plex ID",
     "createdAt": "Created",
+    "requests": "Requests",
     "fetchUsersError": "Failed to fetch users",
     "showing": "Showing",
     "to": "to",

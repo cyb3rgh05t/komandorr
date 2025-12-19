@@ -419,6 +419,7 @@
       "expires": "L\u00e4uft ab",
       "libraries": "Bibliotheken",
       "permissions": "Berechtigungen",
+      "watchTime": "Sehzeit",
       "actions": "Aktionen"
     },
     "status": {
@@ -817,6 +818,7 @@
     "userType": "Benutzertyp",
     "plexId": "Plex-ID",
     "createdAt": "Erstellt",
+    "requests": "Anfragen",
     "fetchUsersError": "Fehler beim Laden der Benutzer",
     "showing": "Zeige",
     "to": "bis",

@@ -292,6 +292,77 @@ async def get_overseerr_users(
         )
 
 
+@router.get("/requests")
+async def get_overseerr_requests(username: str = Depends(require_auth)):
+    """Get all requests from Overseerr"""
+    try:
+        # Check if Overseerr is configured
+        if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Overseerr is not configured",
+            )
+
+        # Prepare request
+        base_url = settings.OVERSEERR_URL.rstrip("/api/v1/user")
+        requests_url = f"{base_url}/api/v1/request"
+
+        headers = {
+            "accept": "application/json",
+            "X-Api-Key": settings.OVERSEERR_API_KEY,
+        }
+
+        # Fetch all requests with pagination
+        all_requests = []
+        page = 1
+        take = 50  # Number of requests per page
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            while True:
+                params = {"take": take, "skip": (page - 1) * take}
+                response = await client.get(
+                    requests_url, headers=headers, params=params
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    requests = data.get("results", [])
+
+                    if not requests:
+                        break
+
+                    all_requests.extend(requests)
+
+                    # Check if we've fetched all requests
+                    page_info = data.get("pageInfo", {})
+                    if page_info.get("pages", 1) <= page:
+                        break
+
+                    page += 1
+                else:
+                    logger.error(
+                        f"Overseerr returned status {response.status_code} for requests"
+                    )
+                    break
+
+        return {"requests": all_requests, "total": len(all_requests)}
+
+    except HTTPException:
+        raise
+    except httpx.RequestError as e:
+        logger.error(f"Network error fetching Overseerr requests: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Could not connect to Overseerr: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"Error fetching Overseerr requests: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch requests: {str(e)}",
+        )
+
+
 @router.delete("/users/{user_id}")
 async def delete_overseerr_user(user_id: int, username: str = Depends(require_auth)):
     """Delete a user from Overseerr"""
