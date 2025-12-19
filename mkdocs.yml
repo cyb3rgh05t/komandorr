@@ -81,6 +81,7 @@ nav:
   - Features:
       - features/index.md
       - Service Monitoring: features/services.md
+      - Caching System: features/caching.md
       - VOD Streams: features/vod-streams.md
       - Traffic Monitoring: features/traffic.md
       - Themes: features/themes.md
@@ -101,4 +102,5 @@ nav:
       - Docker Deployment: guides/docker.md
       - Troubleshooting: guides/troubleshooting.md
       - Contributing: guides/contributing.md
-  - Changelog: ../CHANGELOG.md
+  - Invites: INVITES.md
+  - Changelog: changelog.md
