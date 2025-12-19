@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://cyb3rgh05t.github.io/komandorr/changelog/">
       
       
-        <link rel="prev" href="../guides/contributing/">
+        <link rel="prev" href="../INVITES/">
       
       
       
@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -385,6 +385,25 @@
   
   
   
+  
+    <li class="md-tabs__item">
+      <a href="../INVITES/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Invites
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
     
   
   
@@ -659,6 +678,8 @@
       
         
       
+        
+      
     
     
     
@@ -728,6 +749,34 @@
     
   
     Service Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching System
   
 
     
@@ -1388,6 +1437,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../INVITES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invites
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -1465,6 +1541,289 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
+<h1 id="300-2025-12-19"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.5.0...v3.0.0">3.0.0</a> (2025-12-19)<a class="headerlink" href="#300-2025-12-19" title="Permanent link">&para;</a></h1>
+<h3 id="caching-performance">⚡ Caching &amp; Performance<a class="headerlink" href="#caching-performance" title="Permanent link">&para;</a></h3>
+<p>• <strong>Redis coverage expanded</strong>
+◦ Plex sessions cached with 10s TTL to reduce repeated <code>/status/sessions</code> calls
+◦ Live stats cached for 30s and standard stats cached for 60s to avoid redundant Plex hits
+◦ Recent media cached for 5 minutes to cut expensive library fetches
+◦ Cache warming now preloads sessions, stats, live stats, and recent media</p>
+<p>• <strong>Cache transparency &amp; control</strong>
+◦ <code>/api/plex/cache/stats</code> reports the expected Redis keys for quick verification
+◦ Cache clear/warm endpoints now manage the new Redis keys alongside in-memory caches
+◦ Manual watch-history sync clears its Redis entry to prevent stale data</p>
+<h3 id="release-versioning">🧭 Release &amp; Versioning<a class="headerlink" href="#release-versioning" title="Permanent link">&para;</a></h3>
+<p>• Bumped project version to 3.0.0 across backend, frontend, and release metadata</p>
+<h1 id="250-2025-12-15"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.4.1...v2.5.0">2.5.0</a> (2025-12-15)<a class="headerlink" href="#250-2025-12-15" title="Permanent link">&para;</a></h1>
+<h3 id="performance-enterprise-grade-caching-system">🚀 Performance: Enterprise-Grade Caching System<a class="headerlink" href="#performance-enterprise-grade-caching-system" title="Permanent link">&para;</a></h3>
+<p><strong>Phase 1: Plex Activities Cache</strong></p>
+<p>• <strong>activities-cache: In-memory caching with 5s TTL</strong>
+◦ Reduces Plex API calls by 83% during active monitoring
+◦ Module-level cache dictionary with timestamp-based expiry
+◦ Automatic stale cache fallback on API errors
+◦ Hit/miss tracking for cache performance monitoring
+◦ Cache age reporting for debugging</p>
+<p><strong>Phase 2: Watch History &amp; Library Caching</strong></p>
+<p>• <strong>watch-history-cache: 5-minute database query cache</strong>
+◦ Reduces database queries by 80% for watch history endpoint
+◦ Automatic invalidation on manual sync operations
+◦ Prevents redundant database scans during dashboard loads</p>
+<p>• <strong>library-cache: 5-minute library type cache</strong>
+◦ Caches Plex library sections by server URL + token
+◦ Eliminates repeated library API calls during invite workflows
+◦ Improves invite creation and library selection performance</p>
+<p><strong>Phase 3: Background Stats &amp; Cache Warming</strong></p>
+<p>• <strong>stats-aggregation: Background statistics service</strong>
+◦ Pre-calculates dashboard stats every 60 seconds
+◦ <code>/api/plex/stats/dashboard</code> returns instant cached results
+◦ Aggregates service health, Plex library counts, and traffic stats
+◦ Eliminates expensive multi-database queries on dashboard loads
+◦ Background asyncio task integrated into FastAPI lifespan</p>
+<p>• <strong>cache-warming: Automatic cache refresh service</strong>
+◦ Proactively refreshes caches at 80% TTL threshold
+◦ Prevents cold cache states during normal operation
+◦ Checks every 2 seconds for stale caches
+◦ Warms activities and watch history caches automatically
+◦ Ensures consistent sub-second response times</p>
+<p>• <strong>redis-support: Optional distributed cache layer</strong>
+◦ Redis integration for multi-instance deployments
+◦ Automatic fallback to in-memory cache if Redis unavailable
+◦ Graceful degradation maintains system reliability
+◦ Configurable via <code>REDIS_ENABLED</code> environment variable
+◦ Full CRUD operations: set, get, delete, clear</p>
+<p><strong>Cache Management Endpoints</strong></p>
+<p>• <strong>GET /api/plex/cache/stats</strong> - Enhanced cache statistics
+◦ Per-cache hit/miss rates and TTL information
+◦ Background stats service status and last update time
+◦ Redis connection status and key count
+◦ Cache age tracking for debugging</p>
+<p>• <strong>POST /api/plex/cache/clear</strong> - Clear all caches
+◦ Invalidates activities, watch history, and library caches
+◦ Resets hit/miss counters for fresh metrics
+◦ Useful for testing and troubleshooting</p>
+<p>• <strong>POST /api/plex/cache/warm</strong> - Manual cache warming
+◦ Force-refreshes all cache layers on demand
+◦ Useful after Plex server changes or updates
+◦ Ensures caches contain latest data</p>
+<p>• <strong>GET /api/plex/stats/dashboard</strong> - Pre-calculated stats
+◦ Returns dashboard stats from background aggregation
+◦ Sub-second response time vs 2-5s without caching
+◦ Services online/offline counts
+◦ Plex library totals (movies, shows, episodes, seasons)
+◦ Traffic statistics (30-day total)</p>
+<p><strong>Performance Impact</strong></p>
+<p>• Plex activities endpoint: 5s → sub-second response (80% hit rate)
+• Watch history endpoint: 2-3s → sub-second response (cached)
+• Dashboard stats: 3-5s → &lt;100ms response (pre-calculated)
+• API call reduction: 83% fewer Plex API requests
+• Database query reduction: 80% fewer watch history queries
+• Cache hit rates: 80% during normal operation with rapid requests</p>
+<h3 id="documentation-updates">📚 Documentation Updates<a class="headerlink" href="#documentation-updates" title="Permanent link">&para;</a></h3>
+<p>• <strong>CACHE_IMPLEMENTATION.md</strong> - Complete implementation details
+◦ All three phases documented with code examples
+◦ Architecture diagrams and data flow
+◦ Performance benchmarks and metrics</p>
+<p>• <strong>PHASE3_QUICKSTART.md</strong> - Quick start guide for Phase 3
+◦ Redis setup instructions (optional)
+◦ Environment variable configuration
+◦ Testing procedures with curl examples
+◦ Troubleshooting common issues</p>
+<p>• <strong>API Documentation</strong> - New cache endpoints documented
+◦ Complete endpoint reference in docs/api/plex.md
+◦ Request/response examples
+◦ Cache statistics interpretation guide</p>
+<h3 id="technical-details">🔧 Technical Details<a class="headerlink" href="#technical-details" title="Permanent link">&para;</a></h3>
+<p>• In-memory cache dictionaries at module level
+• Datetime-based TTL checking (no external dependencies)
+• Background asyncio tasks with proper lifecycle management
+• Graceful shutdown with task cancellation
+• Thread-safe cache operations
+• Comprehensive error handling with stale cache fallback
+• Optional Redis with automatic failover</p>
+<hr />
+<h1 id="241-2025-12-07"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.4.0...v2.4.1">2.4.1</a> (2025-12-07)<a class="headerlink" href="#241-2025-12-07" title="Permanent link">&para;</a></h1>
+<h3 id="invites-management-enhancements">🎯 Invites Management Enhancements<a class="headerlink" href="#invites-management-enhancements" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>invite-status: Multi-badge status system</strong>
+◦ Invites can now display multiple status badges simultaneously
+◦ "Redeemed" badge (green) shows when invite has active users
+◦ Additional "Expired" (red) and "Used Up" (orange) badges appear when applicable
+◦ Badge priority: Disabled &gt; Redeemed (+ expired/used) &gt; Expired/Used &gt; Active
+◦ Better visual clarity of invite states at a glance</p>
+<p>• <strong>invite-filters: Redeemed filter tab</strong>
+◦ New "Redeemed" filter tab in invites manager
+◦ Shows all invites that have been claimed by users
+◦ Filter positioned between "Active" and "Expired" tabs
+◦ Active invites stat card now shows redeemed count: "X (Y redeemed)"
+◦ Redeemed status card removed in favor of filter tab</p>
+<p>• <strong>invite-redemption: Re-invitation support</strong>
+◦ Users can now be re-invited after being removed from Plex
+◦ OAuth flow skips "already a member" check
+◦ Allows seamless user re-additions without errors
+◦ Improved invite redemption flow for previously removed users</p>
+<p>• <strong>invite-cleanup: Automatic orphan deletion</strong>
+◦ Invites automatically deleted when last associated user is removed
+◦ Prevents orphaned invite codes cluttering the dashboard
+◦ Delete user action now checks for remaining users on invite
+◦ Cascade deletion keeps invite database clean</p>
+<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>Navigation Updates</strong></p>
+<p>• <strong>nav: Plex-specific naming</strong>
+◦ "VOD Activity" renamed to "Plex Activity"
+◦ "User Accounts" renamed to "Plex User Accounts"
+◦ "User History" renamed to "Plex User Stats"
+◦ Clearer indication of Plex integration throughout UI</p>
+<p><strong>Dashboard Refinements</strong></p>
+<p>• <strong>traffic-cards: Carousel improvements</strong>
+◦ Removed green activity indicator dots from traffic cards
+◦ Fixed grid layout to prevent second row wrapping
+◦ Cards now properly overflow with horizontal scroll
+◦ Cleaner, more consistent visual presentation</p>
+<p>• <strong>invite-stats: Refined counter logic</strong>
+◦ Active invites counter properly filters expired/exhausted states
+◦ Stats endpoint returns accurate counts for dashboard
+◦ Redeemed count only includes active (non-expired, non-exhausted) invites</p>
+<h3 id="documentation">📚 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<p><strong>API Documentation</strong></p>
+<p>• <strong>swagger-ui: Dark mode with proper OpenAPI schema</strong>
+◦ Custom OpenAPI schema generation ensures version field
+◦ Swagger UI accessible at <code>/docs</code> endpoint
+◦ Vite proxy configured for <code>/docs</code> and <code>/openapi.json</code>
+◦ Dark mode theme with inverted colors for readability
+◦ Fixed "Unable to render this definition" error</p>
+<p>• <strong>about-page: Fixed API docs link</strong>
+◦ API Documentation link in About section now works correctly
+◦ Links to <code>/docs</code> with proper proxy routing
+◦ Removed favicon 404 error from Swagger HTML</p>
+<h3 id="internationalization">🌐 Internationalization<a class="headerlink" href="#internationalization" title="Permanent link">&para;</a></h3>
+<p><strong>Translation Updates</strong></p>
+<p>• <strong>locales: New translation keys</strong>
+◦ Added "redeemed" status translations (EN: "Redeemed", DE: "Eingelöst")
+◦ Added "redeemed" filter translations
+◦ Updated "totalRedemptions" to just "Redemptions" (EN/DE)
+◦ Plex-specific navigation labels updated in both languages</p>
+<h3 id="technical-improvements">🔧 Technical Improvements<a class="headerlink" href="#technical-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>Backend</strong></p>
+<p>• <strong>openapi: Custom schema generation</strong>
+◦ Explicit OpenAPI version "3.1.0" in schema
+◦ Custom <code>custom_openapi()</code> function ensures proper spec format
+◦ Swagger UI compatible with generated schema</p>
+<p><strong>Frontend</strong></p>
+<p>• <strong>vite-config: Extended proxy configuration</strong>
+◦ Added <code>/docs</code> proxy for Swagger UI
+◦ Added <code>/openapi.json</code> proxy for OpenAPI schema
+◦ Ensures dev environment works with backend documentation</p>
+<h3 id="bug-fixes">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<p>• <strong>invites: Fixed filter logic for redeemed invites</strong>
+◦ Redeemed count in stats card now excludes expired/used invites
+◦ Only active redeemed invites counted in stat display
+◦ Filter logic matches display logic for consistency</p>
+<p>• <strong>oauth: Fixed re-invitation blocking</strong>
+◦ Previously removed users can now redeem invites again
+◦ OAuth flow simplified to allow duplicate invitations
+◦ Plex handles duplicate prevention automatically</p>
+<h1 id="240-2025-12-01"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.3.0...v2.4.0">2.4.0</a> (2025-12-01)<a class="headerlink" href="#240-2025-12-01" title="Permanent link">&para;</a></h1>
+<h3 id="watch-history-user-analytics">📊 Watch History &amp; User Analytics<a class="headerlink" href="#watch-history-user-analytics" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>watch-history: Complete Plex watch history tracking</strong>
+◦ New User History page with comprehensive viewing analytics
+◦ Real-time sync of Plex watch history to local database
+◦ Track movies, TV episodes, and music playback per user
+◦ View progress, duration, view count, and ratings for all content
+◦ Background sync service fetches up to 200 most recent history items
+◦ Automatic account mapping with Plex system accounts
+◦ Persistent storage in SQLite database (WatchHistoryDB model)
+◦ Support for thumbnails, studio, genres, and content ratings</p>
+<p>• <strong>user-analytics: Advanced filtering and search</strong>
+◦ Filter by time period: All Time, Today, This Week, This Month
+◦ Filter by content type: All, Movies, TV Episodes, Music
+◦ Search across username, email, and content titles
+◦ User statistics with total views, favorite content type, and last activity
+◦ Per-user detailed history with play progress indicators
+◦ Responsive card layout with media type icons and badges
+◦ Real-time data refresh with optimized caching (15-minute stale time)</p>
+<p>• <strong>api: Watch history endpoints</strong>
+◦ <code>GET /api/plex/watch-history</code> - Retrieve all watch history from database
+◦ Background service automatically syncs every 15 minutes
+◦ Efficient database queries with indexed lookups
+◦ Support for duplicate detection using rating_key + viewed_at</p>
+<h3 id="uiux-enhancements">🎨 UI/UX Enhancements<a class="headerlink" href="#uiux-enhancements" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>carousel: Traffic and media carousel navigation</strong>
+◦ DashboardTrafficCards now displays traffic data in paginated carousel
+◦ Auto-scrolling carousel for top bandwidth consumers
+◦ Previous/Next navigation arrows with smooth transitions
+◦ Pagination dots showing current position
+◦ Configurable items per page (default: 5 services)
+◦ InviteRedemption page features auto-scrolling Plex media showcase
+◦ Horizontal scroll animation for poster images</p>
+<p>• <strong>badges: Enhanced visual indicators</strong>
+◦ Expiration badges on User Accounts cards showing time until expiry
+◦ "Expires in X days" display with color coding (red &lt; 7 days, yellow &lt; 30 days)
+◦ "Expired" badge for users past expiration date
+◦ Badge counters on Services tab showing active service count
+◦ User count badges in sidebar navigation</p>
+<p>• <strong>sidebar: Improved navigation</strong>
+◦ User History menu item with Activity icon
+◦ Dynamic badge counts for Services and User Accounts
+◦ Responsive collapsing on mobile devices
+◦ Active route highlighting with theme colors</p>
+<h3 id="invite-system-improvements">🔧 Invite System Improvements<a class="headerlink" href="#invite-system-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>invite-editing: Full CRUD operations for invites</strong>
+◦ Edit existing invites with modal dialog
+◦ Update usage limits, expiration dates, and permissions
+◦ Modify library access after invite creation
+◦ Real-time validation and error handling
+◦ Confirmation dialogs for destructive actions</p>
+<p>• <strong>library-selection: Enhanced library picker</strong>
+◦ Fixed individual library selection in multi-select dropdown
+◦ Support for Movies, TV Shows, Music, and All Libraries
+◦ Visual checkboxes for selected libraries
+◦ "All Libraries" option properly toggles individual selections</p>
+<p>• <strong>expiration-picker: Time selection for expiry dates</strong>
+◦ Added time picker to expiration date selector
+◦ Support for hour and minute precision on invite expiration
+◦ User expiration date editor with time selection
+◦ Default time set to end of day (23:59) for better UX</p>
+<h3 id="traffic-agent-improvements">🚀 Traffic Agent Improvements<a class="headerlink" href="#traffic-agent-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>New Features</strong></p>
+<p>• <strong>persistence: Traffic data persistence across restarts</strong>
+◦ State file saves total upload/download counters to disk
+◦ Automatic state restoration on agent startup
+◦ JSON-based state storage in <code>traffic_state.json</code>
+◦ Prevents data loss when agent restarts
+◦ <code>load_state()</code> and <code>save_state()</code> methods for state management
+◦ State file created automatically on first run</p>
+<h3 id="bug-fixes_1">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
+<p>• <strong>refresh: Fixed user refresh button states</strong>
+◦ Individual refresh buttons now show loading spinner during operation
+◦ Disabled state prevents multiple concurrent refreshes
+◦ Proper error handling with toast notifications
+◦ RefreshCw icon animates during refresh</p>
+<p>• <strong>oauth: Improved Plex OAuth flow</strong>
+◦ Better error messages for OAuth failures
+◦ Automatic email collection for new users
+◦ Fixed account mapping with Plex system accounts</p>
+<p>• <strong>services: Service tab count accuracy</strong>
+◦ Fixed service count badge showing incorrect numbers
+◦ Real-time updates when services added/removed
+◦ Proper filtering of active vs inactive services</p>
+<h3 id="documentation_1">📚 Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
+<p>• <strong>localization: Updated translations</strong>
+◦ Added German translations for User History page
+◦ English translations for watch history features
+◦ Filter labels, time periods, and content types
+◦ Statistics and analytics terminology</p>
+<h3 id="database-schema-updates">🔄 Database Schema Updates<a class="headerlink" href="#database-schema-updates" title="Permanent link">&para;</a></h3>
+<p>• <strong>models: New watch history schema</strong>
+◦ WatchHistoryDB table with comprehensive metadata
+◦ Fields: user_id, email, username, type, title, viewed_at, duration, progress
+◦ Support for TV show hierarchy (grandparent_title, parent_index, index)
+◦ Rating, year, thumb, content_rating, studio, summary, genres
+◦ Unique constraint on rating_key + viewed_at for duplicate prevention
+◦ Indexed columns for fast queries (user_id, email, viewed_at, type)</p>
+<hr />
 <h1 id="230-2025-11-26"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.2.0...v2.3.0">2.3.0</a> (2025-11-26)<a class="headerlink" href="#230-2025-11-26" title="Permanent link">&para;</a></h1>
 <h3 id="plex-invite-management-system">🎭 Plex Invite Management System<a class="headerlink" href="#plex-invite-management-system" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
@@ -1516,7 +1875,7 @@
 ◦ <code>POST /api/invites/users/{id}/refresh</code> - Refresh user info from Plex
 ◦ <code>DELETE /api/invites/users/{id}</code> - Remove user from Plex
 ◦ <code>PUT /api/invites/users/{id}/expiration</code> - Update user expiration</p>
-<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>skeleton-loading: Enhanced loading states</strong>
 ◦ Replaced spinner loaders with skeleton cards across UserAccounts page
 ◦ Skeleton cards match actual card layouts (avatar, text, badges, buttons)
@@ -1551,7 +1910,7 @@
 ◦ <code>refresh_plex_user()</code> - Update user info from Plex API
 ◦ Library access control via library IDs
 ◦ Permission flags (sync, channels, camera upload)</p>
-<h3 id="documentation">📚 Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_2">📚 Documentation<a class="headerlink" href="#documentation_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>invites: New invite system documentation</strong>
 ◦ Complete guide for creating and managing invites
 ◦ OAuth redemption flow explanation
@@ -1563,7 +1922,7 @@
 ◦ User Accounts management description
 ◦ OAuth flow documentation
 ◦ Updated technology stack</p>
-<h3 id="bug-fixes">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_2">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>user-refresh: Fixed concurrent refresh operations</strong>
 ◦ Added refreshingUsers state to track in-progress refreshes
 ◦ Disabled refresh button during operation
@@ -1606,7 +1965,7 @@
 ◦ handleCopyClick uses e.preventDefault() and e.stopPropagation()
 ◦ Prevents card link navigation when copying service ID
 ◦ Copy feedback shows Check icon for 2 seconds after successful copy</p>
-<h3 id="documentation_1">📚 Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_3">📚 Documentation<a class="headerlink" href="#documentation_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: Updated monitoring documentation</strong>
 ◦ Documented circular progress visualization approach
 ◦ Added MAX_BANDWIDTH configuration examples
@@ -1649,7 +2008,7 @@
 ◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
 ◦ CORS moved back to environment variables (deployment-level security setting)
 ◦ Simplified .env.example to server parameters only with migration comments</p>
-<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
 <p>• <strong>monitor: Clickable service cards</strong>
 ◦ Service cards now link directly to service URLs
@@ -1987,7 +2346,7 @@
 ◦ Settings class now includes LOG_TO_FILE, LOG_SHOW_TIMESTAMP, LOG_FILE_INCLUDE_LOCATION
 ◦ Logger singleton pattern ensures consistent configuration across application
 ◦ Backward compatible with existing logging code (100% compatibility)</p>
-<h3 id="technical-details">Technical Details<a class="headerlink" href="#technical-details" title="Permanent link">&para;</a></h3>
+<h3 id="technical-details_1">Technical Details<a class="headerlink" href="#technical-details_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>architecture: enhanced logger class</strong>
 ◦ ColoredConsoleFormatter class for terminal output with colorama
 ◦ DetailedFileFormatter class for structured file logging
@@ -2153,7 +2512,7 @@
 ◦ Fixed timer reset issues on page refresh with proper state management
 ◦ Added "Tracking..." state for activities waiting to start timing
 ◦ Real-time timer updates with live elapsed time display</p>
-<h3 id="bug-fixes_1">Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: fixed missing Search icon import</strong>
 ◦ Re-added Search icon to imports after cleanup
 ◦ Fixed ReferenceError when rendering search bar</p>
@@ -2165,7 +2524,7 @@
 ◦ Modified <code>/traffic/summary</code> endpoint to include <code>traffic_history</code> field
 ◦ Limited history to last 60 data points to optimize response size
 ◦ Fixed dashboard traffic chart showing no data</p>
-<h3 id="documentation_2">Documentation<a class="headerlink" href="#documentation_2" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_4">Documentation<a class="headerlink" href="#documentation_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>docs: improved styling and readability</strong>
 ◦ Darkened primary navbar color from <code>#e97b2e</code> to <code>#c05d1a</code> for better contrast
 ◦ Updated accent color from <code>#ff8c42</code> to <code>#d9681f</code> for more professional appearance
@@ -2173,7 +2532,7 @@
 ◦ Converted markdown badge syntax to proper HTML with alignment attributes
 ◦ Added CSS improvements for center-aligned content and badge spacing
 ◦ Better visual hierarchy and spacing throughout documentation</p>
-<h3 id="internationalization">Internationalization<a class="headerlink" href="#internationalization" title="Permanent link">&para;</a></h3>
+<h3 id="internationalization_1">Internationalization<a class="headerlink" href="#internationalization_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>locales: added new translation keys</strong>
 ◦ Added "documentation" key to English and German locales
 ◦ Added "viewAllReleases" key for release section button
@@ -2182,7 +2541,7 @@
 ◦ English: "Documentation", "View All Releases", "Traffic Overview", "No traffic data available", "No active traffic"
 ◦ German: "Dokumentation", "Alle Releases anzeigen", "Traffic-Übersicht", "Keine Traffic-Daten verfügbar", "Kein aktiver Traffic"</p>
 <h1 id="142-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.1...v1.4.2">1.4.2</a> (2025-11-08)<a class="headerlink" href="#142-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="bug-fixes_2">Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_4">Bug Fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: hardcoded fallback causing false update alerts</strong>
 ◦ Removed hardcoded version fallback from '1.4.0' to 'unknown'
 ◦ Fixed "Update Available" badge showing incorrectly when on latest version
@@ -2198,7 +2557,7 @@
 ◦ Added <code>/api/version/debug</code> endpoint for diagnosing version detection issues
 ◦ Shows environment type (docker/local), file paths, existence, and content
 ◦ Helps troubleshoot path issues in containerized deployments</p>
-<h3 id="documentation_3">Documentation<a class="headerlink" href="#documentation_3" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_5">Documentation<a class="headerlink" href="#documentation_5" title="Permanent link">&para;</a></h3>
 <p>• <strong>docs: cleaner appearance and proper branding</strong>
 ◦ Removed all emoji characters from documentation files
 ◦ Copied logo.png and favicon.png from frontend to docs/images
@@ -2206,7 +2565,7 @@
 ◦ Replaced emoji bullets with plain text throughout documentation
 ◦ Changed 'Made with ❤️' to 'Made with love'</p>
 <h1 id="141-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.0...v1.4.1">1.4.1</a> (2025-11-08)<a class="headerlink" href="#141-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_5">Bug Fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: timestamp display and timezone handling</strong>
 ◦ Fixed traffic <code>last_updated</code> timestamp not being loaded correctly from JSON storage
 ◦ Added proper datetime deserialization for traffic metrics and history on service load
@@ -2364,7 +2723,7 @@
 ◦ Enhanced badge styling for service descriptions and types
 ◦ Better visual hierarchy in service information display</p>
 <h1 id="122-2025-11-06"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.2.1...v1.2.2">1.2.2</a> (2025-11-06)<a class="headerlink" href="#122-2025-11-06" title="Permanent link">&para;</a></h1>
-<h3 id="documentation_4">Documentation<a class="headerlink" href="#documentation_4" title="Permanent link">&para;</a></h3>
+<h3 id="documentation_6">Documentation<a class="headerlink" href="#documentation_6" title="Permanent link">&para;</a></h3>
 <p>• <strong>changelog: adopt vodwisharr format</strong>
 ◦ Reformatted changelog to match vodwisharr style
 ◦ Added compare links in version headers
@@ -2412,7 +2771,7 @@
 ◦ Service ID display with copy-to-clipboard functionality in service cards
 ◦ Service ID visibility for easy agent configuration</p>
 <h2 id="111-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.1.0...v1.1.1">1.1.1</a> (2024-XX-XX)<a class="headerlink" href="#111-2024-xx-xx" title="Permanent link">&para;</a></h2>
-<h3 id="bug-fixes_4">Bug Fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_6">Bug Fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: version check improvements</strong> (<a href="https://github.com/cyb3rgh05t/komandorr/commit/">commit</a>)</p>
 <h2 id="110-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.0.0...v1.1.0">1.1.0</a> (2024-XX-XX)<a class="headerlink" href="#110-2024-xx-xx" title="Permanent link">&para;</a></h2>
 <h3 id="features_15">Features<a class="headerlink" href="#features_15" title="Permanent link">&para;</a></h3>
@@ -2495,10 +2854,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
