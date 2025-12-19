@@ -466,10 +466,10 @@ Potential improvements for future versions:
 
 ## Related Documentation
 
-- [CACHE_IMPLEMENTATION.md](../../CACHE_IMPLEMENTATION.md) - Full implementation details
-- [PHASE3_QUICKSTART.md](../../PHASE3_QUICKSTART.md) - Phase 3 quick start guide
 - [API Documentation](../api/plex.md) - Cache endpoint reference
+- [Plex Configuration](../configuration/plex.md) - Plex server setup guide
 - [Configuration Guide](../configuration/index.md) - Environment setup
+- [Quick Start Guide](../getting-started/quickstart.md) - Getting started with Komandorr
 
 ## Version History
 

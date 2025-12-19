@@ -9,6 +9,10 @@ Guide for contributing to Komandorr development.
 3. Make your changes
 4. Submit a pull request
 
+## Custom Themes
+
+To create custom themes, refer to the [Themes documentation](../features/themes.md).
+
 ## Development Setup
 
 ```bash
