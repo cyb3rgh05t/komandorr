@@ -35,6 +35,8 @@ export default function VODPortal() {
   const [overseerrStatus, setOverseerrStatus] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [userRequests, setUserRequests] = useState({});
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const usersPerPage = 10;
@@ -58,6 +60,7 @@ export default function VODPortal() {
     loadSettings();
     // Fetch fresh data (will use cache if recent, or fetch from API)
     fetchUsers(false, false); // skipCache=false, force=false
+    fetchUserRequests();
   }, []);
 
   // Debounced search effect - skip cache for searches
@@ -127,6 +130,30 @@ export default function VODPortal() {
       setOverseerrStatus(data);
     } catch (err) {
       console.error("Failed to check Overseerr status:", err);
+    }
+  };
+
+  const fetchUserRequests = async () => {
+    setRequestsLoading(true);
+    try {
+      const data = await api.get("/overseerr/requests");
+      const requests = data.requests || [];
+
+      // Count requests per user
+      const requestsMap = {};
+      requests.forEach((request) => {
+        const userId = request.requestedBy?.id || request.userId;
+        if (userId) {
+          requestsMap[userId] = (requestsMap[userId] || 0) + 1;
+        }
+      });
+
+      setUserRequests(requestsMap);
+    } catch (err) {
+      console.error("Failed to fetch user requests:", err);
+      // Don't show error toast as this is supplementary data
+    } finally {
+      setRequestsLoading(false);
     }
   };
 
@@ -213,6 +240,7 @@ export default function VODPortal() {
       // Clear cache and force refresh to get updated list
       clearUsersCache();
       fetchUsers(true, true); // skipCache=true, force=true
+      fetchUserRequests();
       setCurrentPage(1);
     } catch (err) {
       toast.error(
@@ -237,6 +265,7 @@ export default function VODPortal() {
       // Clear cache and refresh users
       clearUsersCache();
       fetchUsers(true, true);
+      fetchUserRequests();
 
       // Close dialog
       setDeleteDialog({ isOpen: false, userId: null, username: "" });
@@ -554,6 +583,9 @@ export default function VODPortal() {
                         {t("vodPortal.createdAt") || "Created"}
                       </th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                        {t("vodPortal.requests") || "Requests"}
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                         {t("vodPortal.actions") || "Actions"}
                       </th>
                     </tr>
@@ -690,6 +722,13 @@ export default function VODPortal() {
                               {user.createdAt
                                 ? new Date(user.createdAt).toLocaleDateString()
                                 : "-"}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 border border-sky-500/20">
+                                {requestsLoading
+                                  ? "..."
+                                  : userRequests[user.id] || 0}
+                              </span>
                             </td>
                             <td className="py-3 px-4">
                               <button
