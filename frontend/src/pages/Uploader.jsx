@@ -95,6 +95,13 @@ export default function Uploader() {
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: allCompletedData, refetch: refetchAllCompleted } = useQuery({
+    queryKey: ["uploader", "completed-all"],
+    queryFn: () => uploaderApi.getCompleted(1, 10000),
+    refetchInterval: 15000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const {
     data: completedData,
     isFetching: completedLoading,
@@ -208,6 +215,7 @@ export default function Uploader() {
     refetchQueue();
     refetchQueueStats();
     refetchInProgress();
+    refetchAllCompleted();
     refetchCompleted();
     refetchCompletedToday();
     refetchStatus();
@@ -236,14 +244,18 @@ export default function Uploader() {
   }, [normalizedSearch, queueFiles]);
 
   const filteredCompletedJobs = useMemo(() => {
+    // Use all completed jobs for search to include all history pages
+    const jobsToSearch = normalizedSearch
+      ? allCompletedData?.jobs || []
+      : completedJobs;
     if (!normalizedSearch) return completedJobs;
-    return completedJobs.filter((job) => {
+    return jobsToSearch.filter((job) => {
       const haystack = `${job.file_name || ""} ${job.drive || ""} ${
         job.file_directory || ""
       } ${job.gdsa || ""}`.toLowerCase();
       return haystack.includes(normalizedSearch);
     });
-  }, [completedJobs, normalizedSearch]);
+  }, [completedJobs, allCompletedData, normalizedSearch]);
 
   const onNextPage = () => {
     setPageNumber((prev) => Math.min(prev + 1, totalPages));
@@ -591,7 +603,7 @@ export default function Uploader() {
                           {normalizedDir || "-"}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          {file.filesize || "-"}
+                          {formatSize(file.filesize)}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">{added}</td>
                       </tr>
