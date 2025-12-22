@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -144,33 +144,65 @@ export default function Uploader() {
     [inProgressJobs]
   );
 
-  const statusLabel = uploaderStatus?.status || "UNKNOWN";
+  const rawStatus = uploaderStatus?.status || "UNKNOWN";
+  const activeUploads = inProgressJobs.length;
 
-  const statusTone = (() => {
-    const label = statusLabel.toLowerCase();
+  const { statusLabel, statusIcon, statusTone } = useMemo(() => {
+    const label = rawStatus.toLowerCase();
+
     if (label.includes("error") || label.includes("fail")) {
       return {
-        color: "text-red-500",
-        bg: "hover:bg-red-500/10 hover:border-red-500/50",
+        statusLabel: "Error",
+        statusIcon: Power,
+        statusTone: {
+          color: "text-red-500",
+          bg: "hover:bg-red-500/10 hover:border-red-500/50",
+        },
       };
     }
-    if (label.includes("upload")) {
+
+    if (label.includes("stopped")) {
       return {
-        color: "text-blue-500",
-        bg: "hover:bg-blue-500/10 hover:border-blue-500/50",
+        statusLabel: "Stopped",
+        statusIcon: Power,
+        statusTone: {
+          color: "text-orange-500",
+          bg: "hover:bg-orange-500/10 hover:border-orange-500/50",
+        },
       };
     }
-    if (label.includes("offline") || label.includes("stopped")) {
-      return {
-        color: "text-orange-500",
-        bg: "hover:bg-orange-500/10 hover:border-orange-500/50",
-      };
+
+    if (label.includes("started")) {
+      if (activeUploads > 0) {
+        return {
+          statusLabel: "Uploading",
+          statusIcon: Upload,
+          statusTone: {
+            color: "text-green-500",
+            bg: "hover:bg-green-500/10 hover:border-green-500/50",
+          },
+        };
+      } else {
+        return {
+          statusLabel: "Online",
+          statusIcon: CheckCircle,
+          statusTone: {
+            color: "text-green-500",
+            bg: "hover:bg-green-500/10 hover:border-green-500/50",
+          },
+        };
+      }
     }
+
     return {
-      color: "text-green-500",
-      bg: "hover:bg-green-500/10 hover:border-green-500/50",
+      statusLabel: rawStatus,
+      statusIcon: Power,
+      statusTone: {
+        color: "text-gray-500",
+        bg: "hover:bg-gray-500/10 hover:border-gray-500/50",
+      },
     };
-  })();
+  }, [rawStatus, activeUploads]);
 
   const refreshAll = () => {
     refetchQueue();
@@ -251,14 +283,18 @@ export default function Uploader() {
             <div className="flex items-center justify-between">
               <div className="text-left">
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Power className={`w-3 h-3 ${statusTone.color}`} />
+                  {React.createElement(statusIcon, {
+                    className: `w-3 h-3 ${statusTone.color}`,
+                  })}
                   {t("uploader.systemStatus", "System Status")}
                 </p>
                 <p className={`text-2xl font-bold mt-1 ${statusTone.color}`}>
                   {statusLabel}
                 </p>
               </div>
-              <Power className={`w-8 h-8 ${statusTone.color}`} />
+              {React.createElement(statusIcon, {
+                className: `w-8 h-8 ${statusTone.color}`,
+              })}
             </div>
           </div>
 
