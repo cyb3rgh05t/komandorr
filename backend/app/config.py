@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     PLEX_SERVER_TOKEN: str = ""
     PLEX_SERVER_NAME: str = "Plex Server"
 
+    # Uploader Configuration
+    UPLOADER_BASE_URL: str = ""
+
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
 
@@ -97,6 +100,11 @@ class Settings(BaseSettings):
             )
             self.PLEX_SERVER_NAME = plex_config.get(
                 "server_name", self.PLEX_SERVER_NAME
+            )
+        if "uploader" in config_data:
+            uploader_config = config_data["uploader"]
+            self.UPLOADER_BASE_URL = uploader_config.get(
+                "base_url", self.UPLOADER_BASE_URL
             )
 
     @property

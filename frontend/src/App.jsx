@@ -17,6 +17,7 @@ import InviteRedemption from "./pages/InviteRedemption";
 import InviteRedeem from "./pages/InviteRedeem";
 import InvitesManager from "./pages/InvitesManager";
 import UserAccounts from "./pages/UserAccounts";
+import Uploader from "./pages/Uploader";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -165,6 +166,7 @@ function App() {
                       <Route path="/vod-portal" element={<VODPortal />} />
                       <Route path="/invites" element={<InvitesManager />} />
                       <Route path="/user-accounts" element={<UserAccounts />} />
+                      <Route path="/uploader" element={<Uploader />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>

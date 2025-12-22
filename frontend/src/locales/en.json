@@ -11,6 +11,7 @@
     "vodStreams": "VOD Monitor",
     "vodActivity": "Plex Activity",
     "vodPortal": "VOD Portal",
+    "uploader": "Uploader",
     "invites": "Plex Invites",
     "userAccounts": "Plex Users",
     "userHistory": "Plex User Stats",
@@ -206,6 +207,43 @@
       "services": "services",
       "previous": "Previous page",
       "next": "Next page"
+    }
+  },
+  "uploader": {
+    "activeUploads": "Active Uploads",
+    "queue": "Queue",
+    "completedToday": "Completed Today",
+    "status": "Status",
+    "activeDescription": "Live transfers currently in progress",
+    "queueDescription": "Files waiting to upload",
+    "completed": "Completed Uploads",
+    "completedDescription": "Recently finished uploads",
+    "systemOverview": "System Overview",
+    "systemDescription": "High level uploader stats",
+    "table": {
+      "filename": "Filename",
+      "drive": "Folder",
+      "directory": "Directory",
+      "key": "Key",
+      "progress": "Progress",
+      "size": "Filesize",
+      "remaining": "Time Left",
+      "speed": "Speed",
+      "added": "Added",
+      "duration": "Duration",
+      "completedAt": "Completed"
+    },
+    "empty": {
+      "active": "No uploads in progress",
+      "queue": "No files in queue",
+      "completed": "No completed uploads yet"
+    },
+    "pagination": "Showing {{from}}-{{to}} of {{total}} uploads",
+    "mini": {
+      "rate": "Upload Rate",
+      "queueCount": "Queued Files",
+      "completedToday": "Completed Today",
+      "status": "Status"
     }
   },
   "traffic": {
@@ -472,6 +510,7 @@
       "expires": "Expires",
       "libraries": "Libraries",
       "permissions": "Permissions",
+      "watchTime": "Watch Time",
       "actions": "Actions"
     },
     "status": {
@@ -495,7 +534,9 @@
     "save": "Save",
     "close": "Close",
     "refresh": "Refresh",
-    "refreshing": "Refreshing"
+    "refreshing": "Refreshing",
+    "previous": "Previous",
+    "next": "Next"
   },
   "versionBadge": {
     "version": "Version",
@@ -665,7 +706,8 @@
     "permissions": {
       "sync": "Sync",
       "liveTV": "Live TV",
-      "home": "Home"
+      "home": "Home",
+      "cameraUpload": "Camera Upload"
     },
     "buttons": {
       "copyLink": "Copy Link",
@@ -819,6 +861,7 @@
     "userType": "User Type",
     "plexId": "Plex ID",
     "createdAt": "Created",
+    "requests": "Requests",
     "fetchUsersError": "Failed to fetch users",
     "showing": "Showing",
     "to": "to",

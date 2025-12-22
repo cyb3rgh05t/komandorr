@@ -804,6 +804,9 @@ const UserAccounts = () => {
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("userAccounts.fields.permissions") || "Permissions"}
                 </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.watchTime") || "Watch Time"}
+                </th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("userAccounts.fields.actions") || "Actions"}
                 </th>
@@ -849,6 +852,9 @@ const UserAccounts = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
+                      <div className="h-4 bg-theme-hover rounded w-20"></div>
+                    </td>
+                    <td className="py-3 px-4">
                       <div className="flex justify-end gap-2">
                         <div className="w-9 h-9 bg-theme-hover rounded"></div>
                         <div className="w-9 h-9 bg-theme-hover rounded"></div>
@@ -859,7 +865,7 @@ const UserAccounts = () => {
                 ))
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="py-12">
+                  <td colSpan="10" className="py-12">
                     <div className="text-center">
                       <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users size={32} className="text-theme-primary" />
@@ -1042,6 +1048,28 @@ const UserAccounts = () => {
                             )}
                           </>
                         )}
+                      </div>
+                    </td>
+
+                    {/* Watch Time Column */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-theme-text-muted" />
+                        <span className="text-sm text-theme-text font-medium">
+                          {(() => {
+                            const stats = getUserStats(user);
+                            if (
+                              stats.totalHours === 0 &&
+                              stats.totalMinutes === 0
+                            ) {
+                              return "0m";
+                            }
+                            if (stats.totalHours === 0) {
+                              return `${stats.totalMinutes}m`;
+                            }
+                            return `${stats.totalHours}h ${stats.totalMinutes}m`;
+                          })()}
+                        </span>
                       </div>
                     </td>
 

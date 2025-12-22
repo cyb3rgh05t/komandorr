@@ -35,6 +35,8 @@ export default function VODPortal() {
   const [overseerrStatus, setOverseerrStatus] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [userRequests, setUserRequests] = useState({});
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const usersPerPage = 10;
@@ -44,24 +46,56 @@ export default function VODPortal() {
     username: "",
   });
 
-  // Load cached users immediately for instant display
   useEffect(() => {
-    const cachedUsers = loadUsersFromCache();
-    if (cachedUsers) {
-      setUsers(cachedUsers);
-    }
-  }, []);
+    console.log("[VODPortal] Component mounted, users.length:", users.length);
 
-  useEffect(() => {
-    // Check Overseerr status and load settings
+    // Check Overseerr status and load settings first
     checkOverseerrStatus();
     loadSettings();
-    // Fetch fresh data (will use cache if recent, or fetch from API)
-    fetchUsers(false, false); // skipCache=false, force=false
+
+    // Load cached data immediately for instant display
+    const cache = loadUsersFromCache();
+    console.log("[VODPortal] Cache check:", {
+      hasCache: !!cache,
+      isFresh: cache?.isFresh,
+      dataLength: cache?.data?.length,
+      currentUsersLength: users.length,
+    });
+
+    if (cache && cache.data) {
+      // Only update state if we don't already have data (avoids unnecessary re-render)
+      if (users.length === 0) {
+        console.log("[VODPortal] Setting users from cache:", cache.data.length);
+        setUsers(cache.data);
+      } else {
+        console.log("[VODPortal] Skipping setUsers - already have data");
+      }
+
+      // If cache is fresh, don't fetch users
+      if (cache.isFresh) {
+        console.log("[VODPortal] Cache is fresh, only fetching requests");
+        fetchUserRequests();
+        return;
+      } else {
+        console.log("[VODPortal] Cache is stale, will fetch fresh data");
+      }
+    } else {
+      console.log("[VODPortal] No cache found");
+    }
+
+    // Cache is stale or doesn't exist, fetch fresh data
+    console.log("[VODPortal] Calling fetchUsers");
+    fetchUserRequests();
   }, []);
 
   // Debounced search effect - skip cache for searches
+  // Don't run on initial mount (searchTerm is empty)
   useEffect(() => {
+    // Skip on initial mount when searchTerm is empty
+    if (searchTerm === "") {
+      return;
+    }
+
     const timer = setTimeout(() => {
       fetchUsers(true, false, searchTerm); // skipCache=true for searches
       setCurrentPage(1); // Reset to first page on search
@@ -78,10 +112,11 @@ export default function VODPortal() {
 
       if (cached && timestamp) {
         const age = Date.now() - parseInt(timestamp);
-        // Return cached data if less than cache duration old
-        if (age < CACHE_DURATION) {
-          return JSON.parse(cached);
-        }
+        const isFresh = age < CACHE_DURATION;
+        return {
+          data: JSON.parse(cached),
+          isFresh: isFresh,
+        };
       }
     } catch (err) {
       console.error("Failed to load users from cache:", err);
@@ -130,17 +165,77 @@ export default function VODPortal() {
     }
   };
 
+  const fetchUserRequests = async () => {
+    setRequestsLoading(true);
+    try {
+      const data = await api.get("/overseerr/requests");
+      const requests = data.requests || [];
+
+      // Count requests per user
+      const requestsMap = {};
+      requests.forEach((request) => {
+        const userId = request.requestedBy?.id;
+        if (userId) {
+          requestsMap[userId] = (requestsMap[userId] || 0) + 1;
+        }
+      });
+
+      setUserRequests(requestsMap);
+    } catch (err) {
+      console.error("Failed to fetch user requests:", err);
+      // Don't show error toast as this is supplementary data
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
   const fetchUsers = async (skipCache = false, force = false, search = "") => {
-    // If not searching and not forcing, try to use cache
+    console.log("[fetchUsers] Called with:", {
+      skipCache,
+      force,
+      search,
+      currentUsersLength: users.length,
+    });
+
+    // Track if we should show loading state
+    let shouldShowLoading = false;
+
+    // If not searching and not forcing, check cache
     if (!skipCache && !force && !search) {
-      const cachedUsers = loadUsersFromCache();
-      if (cachedUsers) {
-        setUsers(cachedUsers);
-        return; // Use cached data, don't fetch
+      const cache = loadUsersFromCache();
+      console.log("[fetchUsers] Cache check inside function:", {
+        hasCache: !!cache,
+        isFresh: cache?.isFresh,
+      });
+
+      if (cache) {
+        // Always set cached data first (even if stale)
+        console.log("[fetchUsers] Setting users from cache");
+        setUsers(cache.data);
+
+        // If cache is fresh, don't fetch
+        if (cache.isFresh) {
+          console.log("[fetchUsers] Cache is fresh, returning early");
+          return;
+        }
+        // If cache is stale, continue to fetch but don't show loading state
+        console.log("[fetchUsers] Cache is stale, continuing to fetch");
       }
+    } else {
+      console.log(
+        "[fetchUsers] Skipping cache check (skipCache or force or search)"
+      );
     }
 
-    setUsersLoading(true);
+    // Only show loading state if we don't have any data to display
+    shouldShowLoading = users.length === 0;
+    console.log("[fetchUsers] shouldShowLoading:", shouldShowLoading);
+
+    if (shouldShowLoading) {
+      console.log("[fetchUsers] Setting usersLoading to true");
+      setUsersLoading(true);
+    }
+
     try {
       const params = search ? `?search=${encodeURIComponent(search)}` : "";
       const data = await api.get(`/overseerr/users${params}`);
@@ -167,6 +262,10 @@ export default function VODPortal() {
         );
       }
 
+      console.log(
+        "[fetchUsers] Setting users with fresh data:",
+        fetchedUsers.length
+      );
       setUsers(fetchedUsers);
 
       // Cache the results if not searching (full list only)
@@ -177,7 +276,11 @@ export default function VODPortal() {
       console.error("Failed to fetch Overseerr users:", err);
       toast.error(t("vodPortal.fetchUsersError") || "Failed to fetch users");
     } finally {
-      setUsersLoading(false);
+      // Only clear loading state if we set it
+      if (shouldShowLoading) {
+        console.log("[fetchUsers] Setting usersLoading to false");
+        setUsersLoading(false);
+      }
     }
   };
 
@@ -213,6 +316,7 @@ export default function VODPortal() {
       // Clear cache and force refresh to get updated list
       clearUsersCache();
       fetchUsers(true, true); // skipCache=true, force=true
+      fetchUserRequests();
       setCurrentPage(1);
     } catch (err) {
       toast.error(
@@ -237,6 +341,7 @@ export default function VODPortal() {
       // Clear cache and refresh users
       clearUsersCache();
       fetchUsers(true, true);
+      fetchUserRequests();
 
       // Close dialog
       setDeleteDialog({ isOpen: false, userId: null, username: "" });
@@ -554,6 +659,9 @@ export default function VODPortal() {
                         {t("vodPortal.createdAt") || "Created"}
                       </th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                        {t("vodPortal.requests") || "Requests"}
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
                         {t("vodPortal.actions") || "Actions"}
                       </th>
                     </tr>
@@ -692,6 +800,13 @@ export default function VODPortal() {
                                 : "-"}
                             </td>
                             <td className="py-3 px-4">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 border border-sky-500/20">
+                                {requestsLoading
+                                  ? "..."
+                                  : userRequests[user.id] || 0}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() =>
                                   setDeleteDialog({
