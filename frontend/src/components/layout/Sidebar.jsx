@@ -16,6 +16,7 @@ import {
   Mail,
   Users,
   BarChart3,
+  Upload,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -89,6 +90,7 @@ export default function Sidebar() {
     { path: "/vod-portal", label: t("nav.vodPortal"), icon: Video },
     { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
     { path: "/vod-activity", label: t("nav.vodActivity"), icon: Users },
+    { path: "/uploader", label: t("nav.uploader"), icon: Upload },
     { path: "/invites", label: t("nav.invites"), icon: Mail },
     { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
