@@ -1,4 +1,5 @@
-const DEFAULT_BASE_URL = "http://uploader:8080";
+// Use backend proxy endpoints to avoid browser DNS/HTTPS/CORS issues
+const DEFAULT_BASE_URL = "/api/uploader";
 
 const baseUrl =
   (typeof import.meta !== "undefined" &&
@@ -33,19 +34,14 @@ async function fetchJson(path, options = {}) {
 
 export const uploaderApi = {
   baseUrl,
-  getQueue: (signal) => fetchJson("/srv/api/jobs/queue.php", { signal }),
-  getInProgress: (signal) =>
-    fetchJson("/srv/api/jobs/inprogress.php", { signal }),
+  getQueue: (signal) => fetchJson("/queue", { signal }),
+  getInProgress: (signal) => fetchJson("/inprogress", { signal }),
   getCompleted: (pageNumber = 1, pageSize = 25, signal) =>
-    fetchJson(
-      `/srv/api/jobs/completed.php?pageNumber=${pageNumber}&pageSize=${pageSize}`,
-      {
-        signal,
-      }
-    ),
-  getQueueStats: (signal) =>
-    fetchJson("/srv/api/jobs/queue_stats.php", { signal }),
+    fetchJson(`/completed?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
+      signal,
+    }),
+  getQueueStats: (signal) => fetchJson("/queue_stats", { signal }),
   getCompletedTodayStats: (signal) =>
-    fetchJson("/srv/api/jobs/completed_today_stats.php", { signal }),
-  getStatus: (signal) => fetchJson("/srv/api/system/status.php", { signal }),
+    fetchJson("/completed_today_stats", { signal }),
+  getStatus: (signal) => fetchJson("/status", { signal }),
 };
