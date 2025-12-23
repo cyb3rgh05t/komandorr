@@ -530,7 +530,7 @@ def validate_config():
     """Validate configuration before starting"""
     issues = []
 
-    if KOMANDORR_URL == "https://komandorr.mystreamnet.club":
+    if KOMANDORR_URL == "https://mydomain.com":
         issues.append("⚠ KOMANDORR_URL is set to default - please update")
 
     if SERVICE_ID == "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx":
