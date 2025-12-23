@@ -488,14 +488,21 @@ const Storage = () => {
     queryFn: async () => {
       try {
         const response = await api.get("/services");
-        console.log("Services data:", response.data);
-        const filtered = response.data.filter(
-          (service) => service.storage !== null
-        );
+        console.log("Full response:", response);
+        console.log("Response data:", response.data);
+
+        // Handle case where response is an array directly
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data || [];
+        console.log("Services data:", data);
+
+        const filtered = data.filter((service) => service.storage !== null);
         console.log("Filtered services with storage:", filtered);
         return filtered;
       } catch (err) {
         console.error("Error fetching services:", err);
+        console.error("Error response:", err.response);
         throw err;
       }
     },
