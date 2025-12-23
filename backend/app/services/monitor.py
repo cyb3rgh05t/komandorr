@@ -248,16 +248,30 @@ class ServiceMonitor:
                         ),
                     )
 
-                # Build storage metrics (empty for now, will be populated by storage updates)
+                # Build storage metrics from latest history entry or current data
                 storage_metrics = None
-                if (
+                if storage_history:
+                    # Get the latest storage data point
+                    latest_storage = storage_data[0] if storage_data else None
+                    if latest_storage:
+                        storage_metrics = StorageMetrics(
+                            hostname=str(latest_storage.hostname),  # type: ignore
+                            storage_paths=[],
+                            raid_arrays=[],
+                            zfs_pools=[],
+                            disks=[],
+                            last_updated=latest_storage.timestamp,  # type: ignore
+                        )
+                elif (
                     hasattr(db_service, "storage_last_updated")
                     and db_service.storage_last_updated
                 ):
+                    # Fallback if no history but last_updated exists
                     storage_metrics = StorageMetrics(
                         hostname=str(db_service.storage_hostname) if hasattr(db_service, "storage_hostname") and db_service.storage_hostname else "unknown",  # type: ignore
                         storage_paths=[],
                         raid_arrays=[],
+                        zfs_pools=[],
                         disks=[],
                         last_updated=(
                             db_service.storage_last_updated.replace(tzinfo=timezone.utc)  # type: ignore
