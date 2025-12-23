@@ -258,11 +258,22 @@ class ServiceMonitor:
                         storage_dict = json.loads(db_service.storage_data)  # type: ignore
                         # Convert datetime strings back to datetime objects
                         if storage_dict.get("last_updated"):
-                            from dateutil import parser
-
-                            storage_dict["last_updated"] = parser.parse(
-                                storage_dict["last_updated"]
-                            ).replace(tzinfo=timezone.utc)
+                            # Parse ISO format datetime string
+                            last_updated_str = storage_dict["last_updated"]
+                            # Handle both formats: with and without milliseconds
+                            if "." in last_updated_str:
+                                # Has microseconds
+                                last_updated = datetime.fromisoformat(
+                                    last_updated_str.replace("Z", "+00:00")
+                                )
+                            else:
+                                # No microseconds
+                                last_updated = datetime.fromisoformat(
+                                    last_updated_str.replace("Z", "+00:00")
+                                )
+                            storage_dict["last_updated"] = last_updated.replace(
+                                tzinfo=timezone.utc
+                            )
                         storage_metrics = StorageMetrics(**storage_dict)
                     except Exception as e:
                         logger.warning(

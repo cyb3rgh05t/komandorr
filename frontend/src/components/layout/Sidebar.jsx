@@ -238,9 +238,9 @@ export default function Sidebar() {
                         />
                       </button>
 
-                      {/* Subtabs */}
-                      {isExpanded && isOpen && (
-                        <ul className="mt-1 ml-4 space-y-1 border-l border-theme-border">
+                      {/* Subtabs - Show when expanded on mobile/tablet, always show on 2xl */}
+                      {isExpanded && (
+                        <ul className={`transition-all origin-top ${isOpen ? "mt-1 ml-4 space-y-1 border-l border-theme-border" : "md:hidden 2xl:ml-4 2xl:mt-1 2xl:space-y-1 2xl:border-l 2xl:border-theme-border"}`}>
                           {item.items.map((subItem) => {
                             const SubIcon = subItem.icon;
                             const active = isActive(subItem.path);
