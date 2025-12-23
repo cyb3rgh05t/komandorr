@@ -18,12 +18,22 @@ import {
 import { api } from "../services/api";
 
 // Format storage size to appropriate unit (B, KB, MB, GB, TB)
-const formatStorageSize = (bytes) => {
-  if (bytes === 0) return "0 B";
+// Input is in GB (gigabytes)
+const formatStorageSize = (gb) => {
+  if (gb === 0) return "0 GB";
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
-  const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
-  return (bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 2) + " " + sizes[i];
+
+  // Convert GB to appropriate unit
+  if (gb >= k) {
+    // TB or PB
+    return (gb / k).toFixed(2) + " TB";
+  } else if (gb < 1) {
+    // MB
+    return (gb * k).toFixed(2) + " MB";
+  } else {
+    // GB
+    return gb.toFixed(2) + " GB";
+  }
 };
 
 // Storage Chart - Shows usage over time
@@ -184,34 +194,29 @@ const StorageServiceCard = ({ service, t }) => {
     <div className="bg-theme-card border border-theme-border rounded-lg p-4 hover:shadow-lg transition-all duration-200">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="p-2 bg-purple-500/10 rounded-lg">
-            <Server className="text-purple-400" size={20} />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-theme-text text-base">
-              {service.name}
-            </h3>
-            <p className="text-theme-text-muted text-xs mt-0.5">
-              {storage.hostname}
-            </p>
-            {/* Badges */}
-            <div className="flex gap-2 mt-2">
-              <span className="inline-block bg-blue-500/20 text-blue-400 text-xs font-medium px-2 py-1 rounded">
-                {service.type}
-              </span>
-              <span
-                className={`inline-block text-xs font-medium px-2 py-1 rounded ${
-                  service.status === "online"
-                    ? "bg-green-500/20 text-green-400"
-                    : service.status === "problem"
-                    ? "bg-yellow-500/20 text-yellow-400"
-                    : "bg-red-500/20 text-red-400"
-                }`}
-              >
-                {service.status}
-              </span>
-            </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-theme-text text-base">
+            {service.name}
+          </h3>
+          <p className="text-theme-text-muted text-xs mt-0.5">
+            {storage.hostname}
+          </p>
+          {/* Badges */}
+          <div className="flex gap-2 mt-2">
+            <span className="inline-block bg-blue-500/20 text-blue-400 text-xs font-medium px-2 py-1 rounded">
+              {service.type}
+            </span>
+            <span
+              className={`inline-block text-xs font-medium px-2 py-1 rounded ${
+                service.status === "online"
+                  ? "bg-green-500/20 text-green-400"
+                  : service.status === "problem"
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
+              {service.status}
+            </span>
           </div>
         </div>
         <button
@@ -229,7 +234,7 @@ const StorageServiceCard = ({ service, t }) => {
             {t("storage.total", "Total")}
           </div>
           <div className="text-theme-text font-semibold text-lg">
-            {formatStorageSize(totalCapacity * 1024 * 1024)}
+            {formatStorageSize(totalCapacity)}
           </div>
         </div>
         <div className="bg-theme-bg-primary/50 rounded-lg p-3">
@@ -237,7 +242,7 @@ const StorageServiceCard = ({ service, t }) => {
             {t("storage.used", "Used")}
           </div>
           <div className="text-theme-text font-semibold text-lg">
-            {formatStorageSize(totalUsed * 1024 * 1024)}
+            {formatStorageSize(totalUsed)}
           </div>
         </div>
         <div className="bg-theme-bg-primary/50 rounded-lg p-3">
@@ -245,7 +250,7 @@ const StorageServiceCard = ({ service, t }) => {
             {t("storage.free", "Free")}
           </div>
           <div className="text-green-400 font-semibold text-lg">
-            {formatStorageSize(totalFree * 1024 * 1024)}
+            {formatStorageSize(totalFree)}
           </div>
         </div>
       </div>
@@ -274,69 +279,77 @@ const StorageServiceCard = ({ service, t }) => {
         </div>
       </div>
 
-      {/* RAID Status - mdadm */}
-      {storage.raid_arrays.length > 0 && (
-        <div className="mb-3">
-          <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
-            {t("storage.mdadmRaid", "mdadm RAID Arrays")} (
-            {storage.raid_arrays.length})
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {storage.raid_arrays.map((raid, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text-muted font-mono">
-                  {raid.device}:
-                </span>
-                <RaidStatusBadge status={raid.status} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Storage Paths Label */}
-      {storage.storage_paths.length > 0 && (
-        <div className="mb-3">
-          <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
-            {t("storage.paths", "Storage Paths")} (
-            {storage.storage_paths.length})
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {storage.storage_paths.map((path, idx) => (
-              <span
-                key={idx}
-                className="bg-theme-bg-primary/50 px-2 py-1 rounded text-xs text-theme-text font-mono"
-              >
-                {path.path.split("/").pop() || path.path}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ZFS Pools */}
-      {zfsPools.length > 0 && (
-        <div className="mb-3">
-          <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
-            {t("storage.zfsPools", "ZFS Pools")} ({zfsPools.length})
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {zfsPools.map((pool, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text-muted font-mono">
-                  {pool.pool}:
-                </span>
-                <RaidStatusBadge status={pool.status} />
-                {pool.capacity && (
-                  <span className="text-theme-text-muted text-xs">
-                    ({pool.capacity}%)
+      {/* Arrays and Storage Info - Bordered Container */}
+      <div className="border border-theme-border rounded-lg p-3 space-y-3 mb-4">
+        {/* RAID Status - mdadm */}
+        {storage.raid_arrays.length > 0 && (
+          <div>
+            <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
+              {t("storage.mdadmRaid", "mdadm RAID Arrays")} (
+              {storage.raid_arrays.length})
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {storage.raid_arrays.map((raid, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs">
+                  <span className="text-theme-text-muted font-mono">
+                    {raid.device}:
                   </span>
-                )}
-              </div>
-            ))}
+                  <RaidStatusBadge status={raid.status} />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Storage Paths Label */}
+        {storage.storage_paths.length > 0 && (
+          <div>
+            <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
+              {t("storage.paths", "Storage Paths")} (
+              {storage.storage_paths.length})
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {storage.storage_paths.map((path, idx) => (
+                <div
+                  key={idx}
+                  className="inline-flex items-center gap-2 bg-theme-bg-primary/50 px-2.5 py-1.5 rounded text-xs"
+                >
+                  <span className="text-theme-text font-mono">
+                    {path.path.split("/").pop() || path.path}
+                  </span>
+                  <span className="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-medium">
+                    {formatStorageSize(path.total)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ZFS Pools */}
+        {zfsPools.length > 0 && (
+          <div>
+            <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
+              {t("storage.zfsPools", "ZFS Pools")} ({zfsPools.length})
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {zfsPools.map((pool, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs">
+                  <span className="text-theme-text-muted font-mono">
+                    {pool.pool}:
+                  </span>
+                  <RaidStatusBadge status={pool.status} />
+                  {pool.capacity && (
+                    <span className="text-theme-text-muted text-xs">
+                      ({pool.capacity}%)
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Detailed View */}
       {showDetails && (
@@ -361,9 +374,9 @@ const StorageServiceCard = ({ service, t }) => {
                     </span>
                   </div>
                   <div className="text-theme-text-muted">
-                    {formatStorageSize(path.used * 1024 * 1024)} /{" "}
-                    {formatStorageSize(path.total * 1024 * 1024)} (
-                    {formatStorageSize(path.free * 1024 * 1024)} free)
+                    {formatStorageSize(path.used)} /{" "}
+                    {formatStorageSize(path.total)} (
+                    {formatStorageSize(path.free)} free)
                   </div>
                 </div>
               ))}
@@ -600,24 +613,6 @@ const Storage = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Page Title */}
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-purple-500/10 rounded-lg">
-          <HardDrive size={24} className="text-purple-400" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-theme-text">
-            {t("storage.title", "Storage Monitoring")}
-          </h1>
-          <p className="text-sm text-theme-text-muted mt-0.5">
-            {t(
-              "storage.subtitle",
-              "Monitor your storage infrastructure and RAID arrays"
-            )}
-          </p>
-        </div>
-      </div>
-
       {/* Header with Search & Refresh */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
@@ -679,7 +674,7 @@ const Storage = () => {
                   {t("storage.totalCapacity", "Capacity")}
                 </p>
                 <p className="text-2xl font-bold text-purple-500 mt-1">
-                  {formatStorageSize(summary.total_capacity * 1024 * 1024)}
+                  {formatStorageSize(summary.total_capacity)}
                 </p>
               </div>
               <Database className="w-8 h-8 text-purple-500/50" />
@@ -695,7 +690,7 @@ const Storage = () => {
                   {t("storage.totalUsed", "Used")}
                 </p>
                 <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {formatStorageSize(summary.total_used * 1024 * 1024)}
+                  {formatStorageSize(summary.total_used)}
                 </p>
               </div>
               <HardDrive className="w-8 h-8 text-blue-500/50" />
@@ -711,7 +706,7 @@ const Storage = () => {
                   {t("storage.totalFree", "Free")}
                 </p>
                 <p className="text-2xl font-bold text-green-500 mt-1">
-                  {formatStorageSize(summary.total_free * 1024 * 1024)}
+                  {formatStorageSize(summary.total_free)}
                 </p>
               </div>
               <Activity className="w-8 h-8 text-green-500/50" />
@@ -721,33 +716,51 @@ const Storage = () => {
           {/* RAID Status */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="w-full">
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Disc3 className="w-3 h-3 text-yellow-500" />
-                  {t("storage.raidStatus", "RAID Status")}
+                  {t("storage.raidStatus", "Arrays Status")}
                 </p>
-                <div className="mt-2 flex gap-2 text-xs">
-                  {summary.healthy_raids > 0 && (
-                    <div className="bg-green-500/10 px-2 py-1 rounded text-green-400 font-medium">
-                      {summary.healthy_raids}✓
+                <div className="mt-2 space-y-1.5">
+                  {/* mdadm RAID Arrays */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="text-theme-text-muted min-w-[40px]">
+                      RAID:
+                    </span>
+                    <div className="flex gap-1.5">
+                      {summary.healthy_raids > 0 && (
+                        <div className="bg-green-500/10 px-2 py-0.5 rounded text-green-400 font-medium flex items-center gap-1">
+                          <span>{summary.healthy_raids}</span>
+                          <span>✓</span>
+                        </div>
+                      )}
+                      {summary.degraded_raids > 0 && (
+                        <div className="bg-yellow-500/10 px-2 py-0.5 rounded text-yellow-400 font-medium flex items-center gap-1">
+                          <span>{summary.degraded_raids}</span>
+                          <span>⚠</span>
+                        </div>
+                      )}
+                      {summary.failed_raids > 0 && (
+                        <div className="bg-red-500/10 px-2 py-0.5 rounded text-red-400 font-medium flex items-center gap-1">
+                          <span>{summary.failed_raids}</span>
+                          <span>✗</span>
+                        </div>
+                      )}
+                      {summary.total_raid_arrays === 0 && (
+                        <span className="text-theme-text-muted">-</span>
+                      )}
                     </div>
-                  )}
-                  {summary.degraded_raids > 0 && (
-                    <div className="bg-yellow-500/10 px-2 py-1 rounded text-yellow-400 font-medium">
-                      {summary.degraded_raids}⚠
-                    </div>
-                  )}
-                  {summary.failed_raids > 0 && (
-                    <div className="bg-red-500/10 px-2 py-1 rounded text-red-400 font-medium">
-                      {summary.failed_raids}✗
-                    </div>
-                  )}
-                  {summary.total_raid_arrays === 0 && (
+                  </div>
+                  {/* ZFS Pools - placeholder for now */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="text-theme-text-muted min-w-[40px]">
+                      ZFS:
+                    </span>
                     <span className="text-theme-text-muted">-</span>
-                  )}
+                  </div>
                 </div>
               </div>
-              <Disc3 className="w-8 h-8 text-yellow-500/50" />
+              <Disc3 className="w-8 h-8 text-yellow-500/50 flex-shrink-0" />
             </div>
           </div>
         </div>
