@@ -621,6 +621,22 @@ const Storage = () => {
     );
   }, 0);
 
+  // Calculate UnionFS only storage metrics
+  const unionfsStats = services.reduce(
+    (acc, svc) => {
+      const paths = svc.storage?.storage_paths || [];
+      paths.forEach((path) => {
+        if (path.path && path.path.toLowerCase().includes("unionfs")) {
+          acc.capacity += path.total;
+          acc.used += path.used;
+          acc.free += path.free;
+        }
+      });
+      return acc;
+    },
+    { capacity: 0, used: 0, free: 0 }
+  );
+
   const raidStats = services.reduce(
     (acc, svc) => {
       const raids = svc.storage?.raid_arrays || [];
@@ -703,7 +719,7 @@ const Storage = () => {
             </div>
           </div>
 
-          {/* Total Capacity */}
+          {/* Total Capacity (UnionFS only) */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
             <div className="flex items-center justify-between">
               <div>
@@ -712,14 +728,14 @@ const Storage = () => {
                   {t("storage.totalCapacity", "Capacity")}
                 </p>
                 <p className="text-2xl font-bold text-purple-500 mt-1">
-                  {formatStorageSize(summary.total_capacity)}
+                  {formatStorageSize(unionfsStats.capacity)}
                 </p>
               </div>
               <Database className="w-8 h-8 text-purple-500/50" />
             </div>
           </div>
 
-          {/* Total Used */}
+          {/* Total Used (UnionFS only) */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
             <div className="flex items-center justify-between">
               <div>
@@ -728,14 +744,14 @@ const Storage = () => {
                   {t("storage.totalUsed", "Used")}
                 </p>
                 <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {formatStorageSize(summary.total_used)}
+                  {formatStorageSize(unionfsStats.used)}
                 </p>
               </div>
               <HardDrive className="w-8 h-8 text-blue-500/50" />
             </div>
           </div>
 
-          {/* Total Free */}
+          {/* Total Free (UnionFS only) */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
             <div className="flex items-center justify-between">
               <div>
@@ -744,7 +760,7 @@ const Storage = () => {
                   {t("storage.totalFree", "Free")}
                 </p>
                 <p className="text-2xl font-bold text-green-500 mt-1">
-                  {formatStorageSize(summary.total_free)}
+                  {formatStorageSize(unionfsStats.free)}
                 </p>
               </div>
               <Activity className="w-8 h-8 text-green-500/50" />

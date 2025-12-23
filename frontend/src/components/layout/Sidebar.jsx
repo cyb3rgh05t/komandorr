@@ -99,7 +99,7 @@ export default function Sidebar() {
   const menuItems = [
     { path: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
     {
-      label: "Plex",
+      label: t("nav.plex"),
       icon: Users,
       isTab: true,
       tabName: "plex",
@@ -110,7 +110,7 @@ export default function Sidebar() {
       ],
     },
     {
-      label: "Services",
+      label: t("nav.services"),
       icon: Server,
       isTab: true,
       tabName: "services",
@@ -120,10 +120,10 @@ export default function Sidebar() {
         { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
       ],
     },
-    { path: "/vod-portal", label: t("nav.vodPortal"), icon: Video },
     { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
-    { path: "/uploader", label: t("nav.uploader"), icon: Upload },
+    { path: "/vod-portal", label: t("nav.vodPortal"), icon: Video },
     { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
+    { path: "/uploader", label: t("nav.uploader"), icon: Upload },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
