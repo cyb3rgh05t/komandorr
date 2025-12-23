@@ -17,6 +17,15 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 
+// Format storage size to appropriate unit (B, KB, MB, GB, TB)
+const formatStorageSize = (bytes) => {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
+  const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
+  return (bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 2) + " " + sizes[i];
+};
+
 // Storage Chart - Shows usage over time
 const StorageChart = ({ data = [], serviceId, t }) => {
   if (!data || data.length === 0) {
@@ -172,7 +181,7 @@ const StorageServiceCard = ({ service, t }) => {
   const totalArrays = storage.raid_arrays.length + zfsPools.length;
 
   return (
-    <div className="bg-theme-bg-secondary border border-theme-border rounded-lg p-4 hover:shadow-lg transition-all duration-200">
+    <div className="bg-theme-card border border-theme-border rounded-lg p-4 hover:shadow-lg transition-all duration-200">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 flex-1">
@@ -220,8 +229,7 @@ const StorageServiceCard = ({ service, t }) => {
             {t("storage.total", "Total")}
           </div>
           <div className="text-theme-text font-semibold text-lg">
-            {totalCapacity.toFixed(1)}{" "}
-            <span className="text-sm font-normal">GB</span>
+            {formatStorageSize(totalCapacity * 1024 * 1024)}
           </div>
         </div>
         <div className="bg-theme-bg-primary/50 rounded-lg p-3">
@@ -229,8 +237,7 @@ const StorageServiceCard = ({ service, t }) => {
             {t("storage.used", "Used")}
           </div>
           <div className="text-theme-text font-semibold text-lg">
-            {totalUsed.toFixed(1)}{" "}
-            <span className="text-sm font-normal">GB</span>
+            {formatStorageSize(totalUsed * 1024 * 1024)}
           </div>
         </div>
         <div className="bg-theme-bg-primary/50 rounded-lg p-3">
@@ -238,8 +245,7 @@ const StorageServiceCard = ({ service, t }) => {
             {t("storage.free", "Free")}
           </div>
           <div className="text-green-400 font-semibold text-lg">
-            {totalFree.toFixed(1)}{" "}
-            <span className="text-sm font-normal">GB</span>
+            {formatStorageSize(totalFree * 1024 * 1024)}
           </div>
         </div>
       </div>
@@ -355,8 +361,9 @@ const StorageServiceCard = ({ service, t }) => {
                     </span>
                   </div>
                   <div className="text-theme-text-muted">
-                    {path.used.toFixed(1)} GB / {path.total.toFixed(1)} GB (
-                    {path.free.toFixed(1)} GB free)
+                    {formatStorageSize(path.used * 1024 * 1024)} /{" "}
+                    {formatStorageSize(path.total * 1024 * 1024)} (
+                    {formatStorageSize(path.free * 1024 * 1024)} free)
                   </div>
                 </div>
               ))}
@@ -672,10 +679,7 @@ const Storage = () => {
                   {t("storage.totalCapacity", "Capacity")}
                 </p>
                 <p className="text-2xl font-bold text-purple-500 mt-1">
-                  {(summary.total_capacity / 1024).toFixed(1)}
-                  <span className="text-sm font-normal text-theme-text-muted ml-1">
-                    TB
-                  </span>
+                  {formatStorageSize(summary.total_capacity * 1024 * 1024)}
                 </p>
               </div>
               <Database className="w-8 h-8 text-purple-500/50" />
@@ -691,10 +695,7 @@ const Storage = () => {
                   {t("storage.totalUsed", "Used")}
                 </p>
                 <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {(summary.total_used / 1024).toFixed(1)}
-                  <span className="text-sm font-normal text-theme-text-muted ml-1">
-                    TB
-                  </span>
+                  {formatStorageSize(summary.total_used * 1024 * 1024)}
                 </p>
               </div>
               <HardDrive className="w-8 h-8 text-blue-500/50" />
@@ -710,10 +711,7 @@ const Storage = () => {
                   {t("storage.totalFree", "Free")}
                 </p>
                 <p className="text-2xl font-bold text-green-500 mt-1">
-                  {(summary.total_free / 1024).toFixed(1)}
-                  <span className="text-sm font-normal text-theme-text-muted ml-1">
-                    TB
-                  </span>
+                  {formatStorageSize(summary.total_free * 1024 * 1024)}
                 </p>
               </div>
               <Activity className="w-8 h-8 text-green-500/50" />
