@@ -1,13 +1,19 @@
 # Komandorr Storage Monitor Agent
 
-Monitor RAID arrays, disk usage, and UnionFS mounts with the Komandorr Storage Monitor Agent. This lightweight Python agent runs on your storage servers and reports health, capacity, and RAID status back to your Komandorr dashboard in real-time.
+Monitor mdadm RAID arrays, ZFS pools, disk usage, and UnionFS mounts with the Komandorr Storage Monitor Agent. This lightweight Python agent runs on your storage servers and reports health, capacity, and RAID status back to your Komandorr dashboard in real-time.
 
 ## ✨ Features
 
-- **RAID Monitoring**: Monitor Linux mdadm RAID arrays (RAID 0, 1, 5, 6, 10)
+- **mdadm RAID Monitoring**: Monitor Linux mdadm RAID arrays (RAID 0, 1, 5, 6, 10)
   - Real-time RAID status (healthy, degraded, recovering, failed)
   - Individual disk status within arrays
   - Active/failed/spare device counts
+- **ZFS Pool Monitoring**: Monitor ZFS storage pools
+  - Pool health status (ONLINE, DEGRADED, FAULTED)
+  - Individual disk status (online, degraded, faulted, offline)
+  - Resilver/scrub progress tracking
+  - Pool capacity and usage
+  - Read/write/checksum error counts per disk
 - **Disk Usage Tracking**: Monitor multiple mount points simultaneously
   - Total capacity, used space, and free space
   - Usage percentage tracking
@@ -24,7 +30,7 @@ Monitor RAID arrays, disk usage, and UnionFS mounts with the Komandorr Storage M
 
 - **Python**: 3.8 or higher
 - **Operating System**: Linux (tested on Ubuntu, Debian, CentOS)
-- **Privileges**: Root/sudo access for RAID monitoring (mdadm)
+- **Privileges**: Root/sudo access for RAID monitoring (mdadm, zpool)
 - **Network**: Access to your Komandorr dashboard URL
 
 ### Python Dependencies
@@ -41,6 +47,8 @@ pip install -r requirements.txt
 
 ### RAID Monitoring Requirements
 
+**For mdadm RAID:**
+
 - `mdadm` utility must be installed
 - For Ubuntu/Debian:
   ```bash
@@ -50,6 +58,15 @@ pip install -r requirements.txt
   ```bash
   sudo yum install mdadm
   ```
+
+**For ZFS pools:**
+
+- ZFS utilities must be installed
+- For Ubuntu:
+  ```bash
+  sudo apt-get install zfsutils-linux
+  ```
+- For other distributions, follow the [OpenZFS installation guide](https://openzfs.github.io/openzfs-docs/Getting%20Started/index.html)
 
 ## 🚀 Quick Start
 
@@ -98,10 +115,15 @@ STORAGE_PATHS = [
     "/mnt/unionfs",  # UnionFS mount point
 ]
 
-# RAID devices to monitor
+# mdadm RAID devices to monitor
 RAID_DEVICES = [
     "/dev/md0",
     "/dev/md1",
+]
+
+# ZFS pools to monitor
+ZFS_POOLS = [
+    "zfsraidpool",  # Your ZFS pool name
 ]
 
 # Update interval (in seconds)
@@ -261,6 +283,50 @@ To find your RAID devices:
 cat /proc/mdstat
 ```
 
+### Monitoring ZFS Pools
+
+To monitor ZFS pools:
+
+```python
+ZFS_POOLS = [
+    "tank",          # First ZFS pool
+    "backup",        # Backup pool
+    "zfsraidpool",   # Your main RAID pool
+]
+```
+
+To find your ZFS pool names:
+
+```bash
+zpool list
+```
+
+To see pool status:
+
+```bash
+zpool status
+```
+
+**ZFS Example Configuration:**
+
+```python
+# Monitor ZFS pool with 10 disks
+STORAGE_PATHS = [
+    "/mnt/raidpool",           # ZFS pool mount
+    "/mnt/raidpool/filesystem", # Specific dataset
+]
+
+ZFS_POOLS = [
+    "zfsraidpool",  # Your ZFS pool
+]
+
+# Also monitor system mdadm RAID (for boot/root)
+RAID_DEVICES = [
+    "/dev/md0",  # Boot RAID
+    "/dev/md1",  # Root RAID
+]
+```
+
 ### Adjusting Update Interval
 
 ```python
@@ -284,16 +350,24 @@ AUTH_PASSWORD = "your-secure-password"
 
 ## 🎯 Use Cases
 
-### Scenario 1: Two Remote Storage Servers + UnionFS
+### Scenario 1: Two Remote Storage Servers with ZFS + UnionFS
 
-Perfect for your setup!
+Perfect for your setup with ZFS pools!
 
-**Server 1** (`storage-server-1`):
+**Server 1** (`storage150` - ZFS RAID pool):
 
 ```python
 SERVICE_ID = "service-id-1"
-STORAGE_PATHS = ["/mnt/raid1"]
-RAID_DEVICES = ["/dev/md0"]
+STORAGE_PATHS = [
+    "/mnt/raidpool",            # ZFS pool mount point
+    "/mnt/raidpool/filesystem",  # Main filesystem
+]
+ZFS_POOLS = ["zfsraidpool"]     # 10-disk ZFS pool (sda-sdj)
+RAID_DEVICES = [
+    "/dev/md0",  # System swap (NVMe RAID)
+    "/dev/md1",  # Boot (NVMe RAID)
+    "/dev/md2",  # Root (NVMe RAID)
+]
 ```
 
 **Server 2** (`storage-server-2`):
