@@ -253,14 +253,14 @@ const StorageServiceCard = ({ service, t }) => {
 
       {/* RAID Status - mdadm */}
       {storage.raid_arrays.length > 0 && (
-        <div className="mb-4">
-          <div className="text-theme-text-muted text-xs mb-2">
-            {t("storage.mdadmRaid", "mdadm RAID Arrays")}
+        <div className="mb-3">
+          <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
+            {t("storage.mdadmRaid", "mdadm RAID Arrays")} ({storage.raid_arrays.length})
           </div>
           <div className="flex flex-wrap gap-2">
             {storage.raid_arrays.map((raid, idx) => (
               <div key={idx} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text-muted">{raid.device}:</span>
+                <span className="text-theme-text-muted font-mono">{raid.device}:</span>
                 <RaidStatusBadge status={raid.status} />
               </div>
             ))}
@@ -268,16 +268,32 @@ const StorageServiceCard = ({ service, t }) => {
         </div>
       )}
 
+      {/* Storage Paths Label */}
+      {storage.storage_paths.length > 0 && (
+        <div className="mb-3">
+          <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
+            {t("storage.paths", "Storage Paths")} ({storage.storage_paths.length})
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {storage.storage_paths.map((path, idx) => (
+              <span key={idx} className="bg-theme-bg-primary/50 px-2 py-1 rounded text-xs text-theme-text font-mono">
+                {path.path.split('/').pop() || path.path}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ZFS Pools */}
       {zfsPools.length > 0 && (
-        <div className="mb-4">
-          <div className="text-theme-text-muted text-xs mb-2">
-            {t("storage.zfsPools", "ZFS Pools")}
+        <div className="mb-3">
+          <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
+            {t("storage.zfsPools", "ZFS Pools")} ({zfsPools.length})
           </div>
           <div className="flex flex-wrap gap-2">
             {zfsPools.map((pool, idx) => (
               <div key={idx} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text-muted">{pool.pool}:</span>
+                <span className="text-theme-text-muted font-mono">{pool.pool}:</span>
                 <RaidStatusBadge status={pool.status} />
                 {pool.capacity && (
                   <span className="text-theme-text-muted text-xs">
@@ -290,15 +306,7 @@ const StorageServiceCard = ({ service, t }) => {
         </div>
       )}
 
-      {/* Usage Chart */}
-      {history.length > 0 && (
-        <div className="mb-3">
-          <div className="text-theme-text-muted text-xs mb-2">
-            {t("storage.usageHistory", "Usage History")}
-          </div>
-          <StorageChart data={history} serviceId={service.id} t={t} />
-        </div>
-      )}
+
 
       {/* Detailed View */}
       {showDetails && (
@@ -488,12 +496,9 @@ const Storage = () => {
     queryFn: async () => {
       try {
         const response = await api.get("/services/");
-        console.log("Services response:", response);
 
         // API returns data directly, not wrapped in { data: ... }
         const data = Array.isArray(response) ? response : [];
-        console.log("Services data:", data);
-        console.log("Services count:", data.length);
         return data;
       } catch (err) {
         console.error("Error fetching services:", err);
@@ -548,23 +553,13 @@ const Storage = () => {
   );
 
   const handleRefresh = async () => {
-    console.log("Refreshing storage data...");
     try {
       // Refetch both queries
-      const servicesResult = await refetch();
-      console.log("Services refetch result:", servicesResult);
-      console.log("Services data after refetch:", servicesResult.data);
-      console.log(
-        "Services length after refetch:",
-        servicesResult.data?.length
-      );
-
-      const summaryResult = await queryClient.refetchQueries({
+      await refetch();
+      await queryClient.refetchQueries({
         queryKey: ["storage-summary"],
         type: "active",
       });
-      console.log("Storage summary refetch result:", summaryResult);
-
       toast.success(t("storage.refreshed", "Storage data refreshed"));
     } catch (error) {
       console.error("Refresh error:", error);
@@ -607,9 +602,26 @@ const Storage = () => {
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Status Overview */}
       {summary && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Total Services with Storage */}
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Server className="w-3 h-3 text-theme-primary" />
+                  {t("storage.servers", "Servers")}
+                </p>
+                <p className="text-2xl font-bold text-theme-text mt-1">
+                  {summary.services_with_storage || 0}
+                </p>
+              </div>
+              <Server className="w-8 h-8 text-theme-primary/50" />
+            </div>
+          </div>
+
+          {/* Total Capacity */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
             <div className="flex items-center justify-between">
               <div>
@@ -617,17 +629,18 @@ const Storage = () => {
                   <Database className="w-3 h-3 text-purple-500" />
                   {t("storage.totalCapacity", "Capacity")}
                 </p>
-                <p className="text-2xl font-bold text-theme-text mt-1">
-                  {summary.total_capacity?.toFixed(0) || 0}
+                <p className="text-2xl font-bold text-purple-500 mt-1">
+                  {(summary.total_capacity / 1024).toFixed(1)}
                   <span className="text-sm font-normal text-theme-text-muted ml-1">
-                    GB
+                    TB
                   </span>
                 </p>
               </div>
-              <Database className="w-8 h-8 text-purple-500" />
+              <Database className="w-8 h-8 text-purple-500/50" />
             </div>
           </div>
 
+          {/* Total Used */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
             <div className="flex items-center justify-between">
               <div>
@@ -636,64 +649,65 @@ const Storage = () => {
                   {t("storage.totalUsed", "Used")}
                 </p>
                 <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {summary.total_used?.toFixed(0) || 0}
+                  {(summary.total_used / 1024).toFixed(1)}
                   <span className="text-sm font-normal text-theme-text-muted ml-1">
-                    GB
+                    TB
                   </span>
                 </p>
               </div>
-              <HardDrive className="w-8 h-8 text-blue-500" />
+              <HardDrive className="w-8 h-8 text-blue-500/50" />
             </div>
           </div>
 
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-yellow-500" />
-                  {t("storage.averageUsage", "Usage")}
-                </p>
-                <p className="text-2xl font-bold text-yellow-500 mt-1">
-                  {summary.average_usage_percent?.toFixed(1) || 0}%
-                </p>
-              </div>
-              <Activity className="w-8 h-8 text-yellow-500" />
-            </div>
-          </div>
-
+          {/* Total Free */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Disc3 className="w-3 h-3 text-green-500" />
-                  {t("storage.raidArrays", "RAID")}
+                  <Activity className="w-3 h-3 text-green-500" />
+                  {t("storage.totalFree", "Free")}
                 </p>
-                <p className="text-2xl font-bold text-theme-text mt-1">
-                  {summary.total_raid_arrays || 0}
+                <p className="text-2xl font-bold text-green-500 mt-1">
+                  {(summary.total_free / 1024).toFixed(1)}
+                  <span className="text-sm font-normal text-theme-text-muted ml-1">
+                    TB
+                  </span>
                 </p>
-                {(summary.healthy_raids > 0 ||
-                  summary.degraded_raids > 0 ||
-                  summary.failed_raids > 0) && (
-                  <div className="flex gap-2 mt-1 text-xs">
-                    {summary.healthy_raids > 0 && (
-                      <span className="text-green-400">
-                        ✓ {summary.healthy_raids}
-                      </span>
-                    )}
-                    {summary.degraded_raids > 0 && (
-                      <span className="text-yellow-400">
-                        ⚠ {summary.degraded_raids}
-                      </span>
-                    )}
-                    {summary.failed_raids > 0 && (
-                      <span className="text-red-400">
-                        ✗ {summary.failed_raids}
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
-              <Disc3 className="w-8 h-8 text-green-500" />
+              <Activity className="w-8 h-8 text-green-500/50" />
+            </div>
+          </div>
+
+          {/* RAID Status */}
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Disc3 className="w-3 h-3 text-yellow-500" />
+                  {t("storage.raidStatus", "RAID Status")}
+                </p>
+                <div className="mt-2 flex gap-2 text-xs">
+                  {summary.healthy_raids > 0 && (
+                    <div className="bg-green-500/10 px-2 py-1 rounded text-green-400 font-medium">
+                      {summary.healthy_raids}✓
+                    </div>
+                  )}
+                  {summary.degraded_raids > 0 && (
+                    <div className="bg-yellow-500/10 px-2 py-1 rounded text-yellow-400 font-medium">
+                      {summary.degraded_raids}⚠
+                    </div>
+                  )}
+                  {summary.failed_raids > 0 && (
+                    <div className="bg-red-500/10 px-2 py-1 rounded text-red-400 font-medium">
+                      {summary.failed_raids}✗
+                    </div>
+                  )}
+                  {summary.total_raid_arrays === 0 && (
+                    <span className="text-theme-text-muted">-</span>
+                  )}
+                </div>
+              </div>
+              <Disc3 className="w-8 h-8 text-yellow-500/50" />
             </div>
           </div>
         </div>
@@ -733,7 +747,7 @@ const Storage = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {filteredServices.map((service) => (
               <StorageServiceCard key={service.id} service={service} t={t} />
             ))}
