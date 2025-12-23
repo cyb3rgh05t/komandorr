@@ -99,17 +99,6 @@ export default function Sidebar() {
   const menuItems = [
     { path: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
     {
-      label: t("nav.plex"),
-      icon: Users,
-      isTab: true,
-      tabName: "plex",
-      items: [
-        { path: "/vod-activity", label: t("nav.vodActivity"), icon: Activity },
-        { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
-        { path: "/invites", label: t("nav.invites"), icon: Mail },
-      ],
-    },
-    {
       label: t("nav.services"),
       icon: Server,
       isTab: true,
@@ -118,6 +107,17 @@ export default function Sidebar() {
         { path: "/services", label: t("nav.services"), icon: Server },
         { path: "/monitor", label: t("nav.monitor"), icon: Activity },
         { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
+      ],
+    },
+    {
+      label: t("nav.plex"),
+      icon: Users,
+      isTab: true,
+      tabName: "plex",
+      items: [
+        { path: "/vod-activity", label: t("nav.vodActivity"), icon: Activity },
+        { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
+        { path: "/invites", label: t("nav.invites"), icon: Mail },
       ],
     },
     { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
@@ -238,9 +238,11 @@ export default function Sidebar() {
                         />
                       </button>
 
-                      {/* Subtabs - Show when expanded on mobile/tablet, always show on 2xl */}
+                      {/* Subtabs - Show when expanded AND sidebar is open (or on 2xl+ screens) */}
                       {isExpanded && (
-                        <ul className={`transition-all origin-top ${isOpen ? "mt-1 ml-4 space-y-1 border-l border-theme-border" : "md:hidden 2xl:ml-4 2xl:mt-1 2xl:space-y-1 2xl:border-l 2xl:border-theme-border"}`}>
+                        <ul className={`mt-1 ml-4 space-y-1 border-l border-theme-border transition-all ${
+                          isOpen ? "" : "hidden 2xl:block"
+                        }`}>
                           {item.items.map((subItem) => {
                             const SubIcon = subItem.icon;
                             const active = isActive(subItem.path);
