@@ -5,7 +5,8 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "services": "Servers",
+    "plex": "Plex",
+    "services": "Services",
     "monitor": "Response Monitor",
     "traffic": "Traffic Monitor",
     "vodStreams": "VOD Monitor",

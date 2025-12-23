@@ -229,7 +229,7 @@ const StorageServiceCard = ({ service, t }) => {
 
       {/* Storage Overview */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-theme-bg-primary/50 rounded-lg p-3">
+        <div className="bg-theme-bg-primary/50 rounded-lg p-3 border border-theme-border">
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.total", "Total")}
           </div>
@@ -237,7 +237,7 @@ const StorageServiceCard = ({ service, t }) => {
             {formatStorageSize(totalCapacity)}
           </div>
         </div>
-        <div className="bg-theme-bg-primary/50 rounded-lg p-3">
+        <div className="bg-theme-bg-primary/50 rounded-lg p-3 border border-theme-border">
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.used", "Used")}
           </div>
@@ -245,7 +245,7 @@ const StorageServiceCard = ({ service, t }) => {
             {formatStorageSize(totalUsed)}
           </div>
         </div>
-        <div className="bg-theme-bg-primary/50 rounded-lg p-3">
+        <div className="bg-theme-bg-primary/50 rounded-lg p-3 border border-theme-border">
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.free", "Free")}
           </div>
@@ -611,6 +611,44 @@ const Storage = () => {
     }
   };
 
+  // Derived counts for UI (frontend-only)
+  const unionfsCount = services.reduce((acc, svc) => {
+    const paths = svc.storage?.storage_paths || [];
+    return (
+      acc +
+      paths.filter((p) => p.path && p.path.toLowerCase().includes("unionfs"))
+        .length
+    );
+  }, 0);
+
+  const raidStats = services.reduce(
+    (acc, svc) => {
+      const raids = svc.storage?.raid_arrays || [];
+      raids.forEach((r) => {
+        acc.total += 1;
+        if (r.status === "healthy") acc.healthy += 1;
+        else if (r.status === "degraded") acc.degraded += 1;
+        else acc.failed += 1;
+      });
+      return acc;
+    },
+    { total: 0, healthy: 0, degraded: 0, failed: 0 }
+  );
+
+  const zfsStats = services.reduce(
+    (acc, svc) => {
+      const pools = svc.storage?.zfs_pools || [];
+      pools.forEach((p) => {
+        acc.total += 1;
+        if (p.status === "healthy") acc.healthy += 1;
+        else if (p.status === "degraded") acc.degraded += 1;
+        else acc.failed += 1;
+      });
+      return acc;
+    },
+    { total: 0, healthy: 0, degraded: 0, failed: 0 }
+  );
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header with Search & Refresh */}
@@ -649,19 +687,19 @@ const Storage = () => {
       {/* Summary Cards - Status Overview */}
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Total Services with Storage */}
+          {/* UnionFS paths count */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Server className="w-3 h-3 text-theme-primary" />
-                  {t("storage.servers", "Servers")}
+                  <HardDrive className="w-3 h-3 text-theme-primary" />
+                  UnionFS Paths
                 </p>
                 <p className="text-2xl font-bold text-theme-text mt-1">
-                  {summary.services_with_storage || 0}
+                  {unionfsCount}
                 </p>
               </div>
-              <Server className="w-8 h-8 text-theme-primary/50" />
+              <HardDrive className="w-8 h-8 text-theme-primary/50" />
             </div>
           </div>
 
@@ -713,7 +751,7 @@ const Storage = () => {
             </div>
           </div>
 
-          {/* RAID Status */}
+          {/* RAID/ZFS Status */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
             <div className="flex items-center justify-between">
               <div className="w-full">
@@ -728,35 +766,57 @@ const Storage = () => {
                       RAID:
                     </span>
                     <div className="flex gap-1.5">
-                      {summary.healthy_raids > 0 && (
+                      {raidStats.total === 0 && (
+                        <span className="text-theme-text-muted">-</span>
+                      )}
+                      {raidStats.healthy > 0 && (
                         <div className="bg-green-500/10 px-2 py-0.5 rounded text-green-400 font-medium flex items-center gap-1">
-                          <span>{summary.healthy_raids}</span>
+                          <span>{raidStats.healthy}</span>
                           <span>✓</span>
                         </div>
                       )}
-                      {summary.degraded_raids > 0 && (
+                      {raidStats.degraded > 0 && (
                         <div className="bg-yellow-500/10 px-2 py-0.5 rounded text-yellow-400 font-medium flex items-center gap-1">
-                          <span>{summary.degraded_raids}</span>
+                          <span>{raidStats.degraded}</span>
                           <span>⚠</span>
                         </div>
                       )}
-                      {summary.failed_raids > 0 && (
+                      {raidStats.failed > 0 && (
                         <div className="bg-red-500/10 px-2 py-0.5 rounded text-red-400 font-medium flex items-center gap-1">
-                          <span>{summary.failed_raids}</span>
+                          <span>{raidStats.failed}</span>
                           <span>✗</span>
                         </div>
                       )}
-                      {summary.total_raid_arrays === 0 && (
-                        <span className="text-theme-text-muted">-</span>
-                      )}
                     </div>
                   </div>
-                  {/* ZFS Pools - placeholder for now */}
+                  {/* ZFS Pools */}
                   <div className="flex items-center gap-1.5 text-xs">
                     <span className="text-theme-text-muted min-w-[40px]">
                       ZFS:
                     </span>
-                    <span className="text-theme-text-muted">-</span>
+                    <div className="flex gap-1.5">
+                      {zfsStats.total === 0 && (
+                        <span className="text-theme-text-muted">-</span>
+                      )}
+                      {zfsStats.healthy > 0 && (
+                        <div className="bg-green-500/10 px-2 py-0.5 rounded text-green-400 font-medium flex items-center gap-1">
+                          <span>{zfsStats.healthy}</span>
+                          <span>✓</span>
+                        </div>
+                      )}
+                      {zfsStats.degraded > 0 && (
+                        <div className="bg-yellow-500/10 px-2 py-0.5 rounded text-yellow-400 font-medium flex items-center gap-1">
+                          <span>{zfsStats.degraded}</span>
+                          <span>⚠</span>
+                        </div>
+                      )}
+                      {zfsStats.failed > 0 && (
+                        <div className="bg-red-500/10 px-2 py-0.5 rounded text-red-400 font-medium flex items-center gap-1">
+                          <span>{zfsStats.failed}</span>
+                          <span>✗</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
