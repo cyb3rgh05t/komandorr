@@ -305,6 +305,11 @@ class Database:
                     "ALTER TABLE services ADD COLUMN storage_last_updated DATETIME"
                 )
 
+            # Add storage_data column if it doesn't exist
+            if "storage_data" not in service_columns:
+                logger.info("Adding storage_data column to services table")
+                cursor.execute("ALTER TABLE services ADD COLUMN storage_data TEXT")
+
             # Check if new columns exist in plex_stats table
             cursor.execute("PRAGMA table_info(plex_stats)")
             columns = [row[1] for row in cursor.fetchall()]
