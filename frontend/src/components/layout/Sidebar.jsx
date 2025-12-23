@@ -240,9 +240,11 @@ export default function Sidebar() {
 
                       {/* Subtabs - Show when expanded AND sidebar is open (or on 2xl+ screens) */}
                       {isExpanded && (
-                        <ul className={`mt-1 ml-4 space-y-1 border-l border-theme-border transition-all ${
-                          isOpen ? "" : "hidden 2xl:block"
-                        }`}>
+                        <ul
+                          className={`mt-1 ml-4 space-y-1 border-l border-theme-border transition-all ${
+                            isOpen ? "" : "hidden 2xl:block"
+                          }`}
+                        >
                           {item.items.map((subItem) => {
                             const SubIcon = subItem.icon;
                             const active = isActive(subItem.path);
