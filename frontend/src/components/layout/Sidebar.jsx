@@ -27,8 +27,8 @@ export default function Sidebar() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedTabs, setExpandedTabs] = useState({
-    plex: true,
-    services: true,
+    plex: false,
+    services: false,
   });
 
   // Toggle tab expansion
