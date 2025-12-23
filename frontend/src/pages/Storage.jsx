@@ -551,12 +551,16 @@ const Storage = () => {
         .includes(searchTerm.toLowerCase())
   );
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     console.log("Refreshing storage data...");
     try {
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ["storage-summary"] });
-      queryClient.invalidateQueries({ queryKey: ["services"] });
+      // Refetch both queries
+      const servicesResult = await refetch();
+      console.log("Services refetch result:", servicesResult);
+
+      await queryClient.refetchQueries({ queryKey: ["storage-summary"] });
+      console.log("Storage summary refetched");
+
       toast.success(t("storage.refreshed", "Storage data refreshed"));
     } catch (error) {
       console.error("Refresh error:", error);
