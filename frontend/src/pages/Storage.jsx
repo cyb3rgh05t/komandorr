@@ -557,9 +557,17 @@ const Storage = () => {
       // Refetch both queries
       const servicesResult = await refetch();
       console.log("Services refetch result:", servicesResult);
+      console.log("Services data after refetch:", servicesResult.data);
+      console.log(
+        "Services length after refetch:",
+        servicesResult.data?.length
+      );
 
-      await queryClient.refetchQueries({ queryKey: ["storage-summary"] });
-      console.log("Storage summary refetched");
+      const summaryResult = await queryClient.refetchQueries({
+        queryKey: ["storage-summary"],
+        type: "active",
+      });
+      console.log("Storage summary refetch result:", summaryResult);
 
       toast.success(t("storage.refreshed", "Storage data refreshed"));
     } catch (error) {
