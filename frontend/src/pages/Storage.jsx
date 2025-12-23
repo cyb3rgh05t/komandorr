@@ -488,8 +488,7 @@ const Storage = () => {
     queryFn: async () => {
       try {
         const response = await api.get("/services");
-        console.log("Full response:", response);
-        console.log("Response data:", response.data);
+        console.log("Services response:", response);
 
         // Handle case where response is an array directly
         const data = Array.isArray(response.data)
@@ -502,11 +501,13 @@ const Storage = () => {
         return filtered;
       } catch (err) {
         console.error("Error fetching services:", err);
-        console.error("Error response:", err.response);
-        throw err;
+        // Return empty array instead of throwing to prevent breaking the page
+        return [];
       }
     },
     refetchInterval: autoRefresh ? 30000 : false,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Fetch storage summary
@@ -538,7 +539,7 @@ const Storage = () => {
   useEffect(() => {
     if (error) {
       console.error("Storage page error:", error);
-      toast.error(t("storage.errorLoading", "Error loading storage data"));
+      // Don't show error toast for services query since we handle errors gracefully
     }
   }, [error, t, toast]);
 
@@ -551,9 +552,16 @@ const Storage = () => {
   );
 
   const handleRefresh = () => {
-    refetch();
-    queryClient.invalidateQueries(["storage-summary"]);
-    toast.success(t("storage.refreshed", "Storage data refreshed"));
+    console.log("Refreshing storage data...");
+    try {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["storage-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast.success(t("storage.refreshed", "Storage data refreshed"));
+    } catch (error) {
+      console.error("Refresh error:", error);
+      toast.error(t("storage.refreshError", "Error refreshing storage data"));
+    }
   };
 
   return (
