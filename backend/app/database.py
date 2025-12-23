@@ -45,12 +45,19 @@ class ServiceDB(Base):
     max_bandwidth = Column(Float, nullable=True)  # Maximum bandwidth capacity in MB/s
     traffic_last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
 
+    # Storage metrics (current state)
+    storage_hostname = Column(String, nullable=True)
+    storage_last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
+
     # Relationships
     response_history = relationship(
         "ResponseHistoryDB", back_populates="service", cascade="all, delete-orphan"
     )
     traffic_history = relationship(
         "TrafficHistoryDB", back_populates="service", cascade="all, delete-orphan"
+    )
+    storage_history = relationship(
+        "StorageHistoryDB", back_populates="service", cascade="all, delete-orphan"
     )
 
 
@@ -83,6 +90,27 @@ class TrafficHistoryDB(Base):
 
     # Relationship
     service = relationship("ServiceDB", back_populates="traffic_history")
+
+
+class StorageHistoryDB(Base):
+    """SQLAlchemy model for Storage History"""
+
+    __tablename__ = "storage_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    service_id = Column(String, ForeignKey("services.id"), nullable=False)
+    timestamp = Column(DateTime, nullable=False)  # Store as naive UTC
+    hostname = Column(String, nullable=False)
+    total_capacity = Column(Float, nullable=False)  # Total GB
+    total_used = Column(Float, nullable=False)  # Used GB
+    total_free = Column(Float, nullable=False)  # Free GB
+    average_usage_percent = Column(Float, nullable=False)
+    raid_healthy = Column(Integer, default=0)
+    raid_degraded = Column(Integer, default=0)
+    raid_failed = Column(Integer, default=0)
+
+    # Relationship
+    service = relationship("ServiceDB", back_populates="storage_history")
 
 
 class PlexStatsDB(Base):
@@ -263,6 +291,18 @@ class Database:
             if "max_bandwidth" not in service_columns:
                 logger.info("Adding max_bandwidth column to services table")
                 cursor.execute("ALTER TABLE services ADD COLUMN max_bandwidth REAL")
+
+            # Add storage_hostname column if it doesn't exist
+            if "storage_hostname" not in service_columns:
+                logger.info("Adding storage_hostname column to services table")
+                cursor.execute("ALTER TABLE services ADD COLUMN storage_hostname TEXT")
+
+            # Add storage_last_updated column if it doesn't exist
+            if "storage_last_updated" not in service_columns:
+                logger.info("Adding storage_last_updated column to services table")
+                cursor.execute(
+                    "ALTER TABLE services ADD COLUMN storage_last_updated DATETIME"
+                )
 
             # Check if new columns exist in plex_stats table
             cursor.execute("PRAGMA table_info(plex_stats)")

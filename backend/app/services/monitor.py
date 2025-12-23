@@ -9,7 +9,14 @@ from app.models.service import (
     TrafficMetrics,
     TrafficDataPoint,
 )
-from app.database import db, ServiceDB, ResponseHistoryDB, TrafficHistoryDB
+from app.models.storage import StorageMetrics, StorageDataPoint
+from app.database import (
+    db,
+    ServiceDB,
+    ResponseHistoryDB,
+    TrafficHistoryDB,
+    StorageHistoryDB,
+)
 from app.utils.logger import logger
 
 if TYPE_CHECKING:
@@ -163,6 +170,15 @@ class ServiceMonitor:
                     .all()
                 )
 
+                # Load storage history (last 100 points)
+                storage_history = (
+                    session.query(StorageHistoryDB)
+                    .filter(StorageHistoryDB.service_id == db_service.id)
+                    .order_by(desc(StorageHistoryDB.timestamp))
+                    .limit(100)
+                    .all()
+                )
+
                 # Convert to Pydantic models
                 response_data = [
                     ResponseTimeDataPoint(
@@ -195,6 +211,27 @@ class ServiceMonitor:
                     )  # Reverse to get chronological order
                 ]
 
+                storage_data = [
+                    StorageDataPoint(
+                        timestamp=(
+                            s.timestamp.replace(tzinfo=timezone.utc)  # type: ignore
+                            if s.timestamp
+                            else datetime.now(timezone.utc)
+                        ),
+                        hostname=str(s.hostname),  # type: ignore
+                        total_capacity=float(s.total_capacity),  # type: ignore
+                        total_used=float(s.total_used),  # type: ignore
+                        total_free=float(s.total_free),  # type: ignore
+                        average_usage_percent=float(s.average_usage_percent),  # type: ignore
+                        raid_healthy=int(s.raid_healthy),  # type: ignore
+                        raid_degraded=int(s.raid_degraded),  # type: ignore
+                        raid_failed=int(s.raid_failed),  # type: ignore
+                    )
+                    for s in reversed(
+                        storage_history
+                    )  # Reverse to get chronological order
+                ]
+
                 # Build traffic metrics
                 traffic_metrics = None
                 if db_service.traffic_last_updated:
@@ -207,6 +244,24 @@ class ServiceMonitor:
                         last_updated=(
                             db_service.traffic_last_updated.replace(tzinfo=timezone.utc)  # type: ignore
                             if db_service.traffic_last_updated
+                            else None
+                        ),
+                    )
+
+                # Build storage metrics (empty for now, will be populated by storage updates)
+                storage_metrics = None
+                if (
+                    hasattr(db_service, "storage_last_updated")
+                    and db_service.storage_last_updated
+                ):
+                    storage_metrics = StorageMetrics(
+                        hostname=str(db_service.storage_hostname) if hasattr(db_service, "storage_hostname") and db_service.storage_hostname else "unknown",  # type: ignore
+                        storage_paths=[],
+                        raid_arrays=[],
+                        disks=[],
+                        last_updated=(
+                            db_service.storage_last_updated.replace(tzinfo=timezone.utc)  # type: ignore
+                            if db_service.storage_last_updated
                             else None
                         ),
                     )
@@ -230,6 +285,8 @@ class ServiceMonitor:
                     traffic=traffic_metrics,
                     traffic_history=traffic_data,
                     response_history=response_data,
+                    storage=storage_metrics,
+                    storage_history=storage_data,
                 )
 
                 self.services[service.id] = service
@@ -278,6 +335,13 @@ class ServiceMonitor:
                     db_service.max_bandwidth = service.traffic.max_bandwidth  # type: ignore
                     db_service.traffic_last_updated = to_naive_utc(  # type: ignore
                         service.traffic.last_updated
+                    )
+
+                # Update storage metrics
+                if service.storage:
+                    db_service.storage_hostname = service.storage.hostname  # type: ignore
+                    db_service.storage_last_updated = to_naive_utc(  # type: ignore
+                        service.storage.last_updated
                     )
             else:
                 # Create new service
@@ -389,6 +453,54 @@ class ServiceMonitor:
                     .all()
                 )
                 for entry in old_traffic:
+                    session.delete(entry)
+
+            # Save new storage history points
+            if service.storage_history:
+                # Get the last stored timestamp
+                last_stored_storage = (
+                    session.query(StorageHistoryDB)
+                    .filter(StorageHistoryDB.service_id == service.id)
+                    .order_by(desc(StorageHistoryDB.timestamp))
+                    .first()
+                )
+
+                # Get timestamp value, ensure it has timezone info for comparison
+                last_storage_timestamp = None
+                if last_stored_storage and last_stored_storage.timestamp:  # type: ignore
+                    last_storage_timestamp = last_stored_storage.timestamp.replace(  # type: ignore
+                        tzinfo=timezone.utc
+                    )
+
+                # Add only new points
+                for point in service.storage_history:
+                    if (
+                        not last_storage_timestamp
+                        or point.timestamp > last_storage_timestamp
+                    ):
+                        storage_entry = StorageHistoryDB(
+                            service_id=service.id,
+                            timestamp=to_naive_utc(point.timestamp),
+                            hostname=point.hostname,
+                            total_capacity=point.total_capacity,
+                            total_used=point.total_used,
+                            total_free=point.total_free,
+                            average_usage_percent=point.average_usage_percent,
+                            raid_healthy=point.raid_healthy,
+                            raid_degraded=point.raid_degraded,
+                            raid_failed=point.raid_failed,
+                        )
+                        session.add(storage_entry)
+
+                # Clean up old storage history (keep last 1000 points in DB)
+                old_storage = (
+                    session.query(StorageHistoryDB)
+                    .filter(StorageHistoryDB.service_id == service.id)
+                    .order_by(desc(StorageHistoryDB.timestamp))
+                    .offset(1000)
+                    .all()
+                )
+                for entry in old_storage:
                     session.delete(entry)
 
             session.commit()

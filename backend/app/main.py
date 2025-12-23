@@ -19,6 +19,7 @@ from app.api.services import router as services_router
 from app.api.auth import router as auth_router
 from app.api.releases import router as releases_router
 from app.api.traffic import router as traffic_router
+from app.api.storage import router as storage_router
 from app.api.plex import router as plex_router
 from app.api.invites import router as invites_router
 from app.api.oauth import router as oauth_router
@@ -166,6 +167,7 @@ app.include_router(services_router)
 app.include_router(auth_router)
 app.include_router(releases_router)
 app.include_router(traffic_router)
+app.include_router(storage_router)
 app.include_router(plex_router)
 app.include_router(invites_router)
 app.include_router(oauth_router)

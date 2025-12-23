@@ -12,6 +12,7 @@ import {
   Server,
   Activity,
   TrendingUp,
+  HardDrive,
   Video,
   Mail,
   Users,
@@ -93,6 +94,7 @@ export default function Sidebar() {
     { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
     { path: "/invites", label: t("nav.invites"), icon: Mail },
     { path: "/uploader", label: t("nav.uploader"), icon: Upload },
+    { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
