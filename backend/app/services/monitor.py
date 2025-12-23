@@ -248,25 +248,48 @@ class ServiceMonitor:
                         ),
                     )
 
-                # Build storage metrics from latest history entry or current data
+                # Build storage metrics from saved JSON data
                 storage_metrics = None
-                if storage_history:
-                    # Get the latest storage data point
-                    latest_storage = storage_data[0] if storage_data else None
-                    if latest_storage:
-                        storage_metrics = StorageMetrics(
-                            hostname=str(latest_storage.hostname),  # type: ignore
-                            storage_paths=[],
-                            raid_arrays=[],
-                            zfs_pools=[],
-                            disks=[],
-                            last_updated=latest_storage.timestamp,  # type: ignore
+                if hasattr(db_service, "storage_data") and db_service.storage_data:
+                    # Load full storage data from JSON
+                    import json
+
+                    try:
+                        storage_dict = json.loads(db_service.storage_data)  # type: ignore
+                        # Convert datetime strings back to datetime objects
+                        if storage_dict.get("last_updated"):
+                            from dateutil import parser
+
+                            storage_dict["last_updated"] = parser.parse(
+                                storage_dict["last_updated"]
+                            ).replace(tzinfo=timezone.utc)
+                        storage_metrics = StorageMetrics(**storage_dict)
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to load storage data for {db_service.name}: {e}"
                         )
+                        # Fallback to empty storage metrics
+                        if (
+                            hasattr(db_service, "storage_last_updated")
+                            and db_service.storage_last_updated
+                        ):
+                            storage_metrics = StorageMetrics(
+                                hostname=str(db_service.storage_hostname) if hasattr(db_service, "storage_hostname") and db_service.storage_hostname else "unknown",  # type: ignore
+                                storage_paths=[],
+                                raid_arrays=[],
+                                zfs_pools=[],
+                                disks=[],
+                                last_updated=(
+                                    db_service.storage_last_updated.replace(tzinfo=timezone.utc)  # type: ignore
+                                    if db_service.storage_last_updated
+                                    else None
+                                ),
+                            )
                 elif (
                     hasattr(db_service, "storage_last_updated")
                     and db_service.storage_last_updated
                 ):
-                    # Fallback if no history but last_updated exists
+                    # Fallback if no storage_data but last_updated exists
                     storage_metrics = StorageMetrics(
                         hostname=str(db_service.storage_hostname) if hasattr(db_service, "storage_hostname") and db_service.storage_hostname else "unknown",  # type: ignore
                         storage_paths=[],
@@ -353,7 +376,10 @@ class ServiceMonitor:
 
                 # Update storage metrics
                 if service.storage:
+                    import json
+
                     db_service.storage_hostname = service.storage.hostname  # type: ignore
+                    db_service.storage_data = json.dumps(service.storage.model_dump(mode="json"))  # type: ignore
                     db_service.storage_last_updated = to_naive_utc(  # type: ignore
                         service.storage.last_updated
                     )

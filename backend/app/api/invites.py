@@ -121,13 +121,18 @@ def db_invite_to_pydantic(
         result = InviteWithUsers(**base_data, users=users)
 
         # Log invite details in a readable format
+        usage_limit_str = result.usage_limit if result.usage_limit else "unlimited"
+        usage_info = (
+            "Exhausted"
+            if result.is_exhausted
+            else f"{result.used_count}/{usage_limit_str} uses"
+        )
         logger.info(
             f"Invite created successfully:\n"
             f"  Code: {result.code}\n"
             f"  Server: {result.plex_server}\n"
             f"  Created by: {result.created_by}\n"
-            f"  Status: {'Expired' if result.is_expired else 'Active'} | "
-            f"{'Exhausted' if result.is_exhausted else f'{result.used_count}/{result.usage_limit or "unlimited"} uses'}\n"
+            f"  Status: {'Expired' if result.is_expired else 'Active'} | {usage_info}\n"
             f"  Users: {len(users)} registered"
         )
 

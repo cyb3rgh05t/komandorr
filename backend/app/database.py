@@ -47,6 +47,7 @@ class ServiceDB(Base):
 
     # Storage metrics (current state)
     storage_hostname = Column(String, nullable=True)
+    storage_data = Column(String, nullable=True)  # JSON string of StorageMetrics
     storage_last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
 
     # Relationships
