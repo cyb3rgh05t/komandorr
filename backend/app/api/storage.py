@@ -158,12 +158,25 @@ async def get_storage_summary():
                 summary["total_used"] += path.used
                 summary["total_free"] += path.free
 
-            # Count RAID arrays
-            summary["total_raid_arrays"] += len(service.storage.raid_arrays)
+            # Count RAID arrays (mdadm + ZFS)
+            summary["total_raid_arrays"] += len(service.storage.raid_arrays) + len(
+                service.storage.zfs_pools
+            )
+
+            # Count mdadm RAID status
             for raid in service.storage.raid_arrays:
                 if raid.status == "healthy":
                     summary["healthy_raids"] += 1
                 elif raid.status == "degraded":
+                    summary["degraded_raids"] += 1
+                else:
+                    summary["failed_raids"] += 1
+
+            # Count ZFS pool status
+            for pool in service.storage.zfs_pools:
+                if pool.status == "healthy":
+                    summary["healthy_raids"] += 1
+                elif pool.status == "degraded":
                     summary["degraded_raids"] += 1
                 else:
                     summary["failed_raids"] += 1

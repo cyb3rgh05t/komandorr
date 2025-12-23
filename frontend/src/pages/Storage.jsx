@@ -486,8 +486,18 @@ const Storage = () => {
   } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
-      const response = await api.get("/services");
-      return response.data.filter((service) => service.storage !== null);
+      try {
+        const response = await api.get("/services");
+        console.log("Services data:", response.data);
+        const filtered = response.data.filter(
+          (service) => service.storage !== null
+        );
+        console.log("Filtered services with storage:", filtered);
+        return filtered;
+      } catch (err) {
+        console.error("Error fetching services:", err);
+        throw err;
+      }
     },
     refetchInterval: autoRefresh ? 30000 : false,
   });
@@ -520,9 +530,10 @@ const Storage = () => {
 
   useEffect(() => {
     if (error) {
+      console.error("Storage page error:", error);
       toast.error(t("storage.errorLoading", "Error loading storage data"));
     }
-  }, [error, t]);
+  }, [error, t, toast]);
 
   const filteredServices = services.filter(
     (service) =>
