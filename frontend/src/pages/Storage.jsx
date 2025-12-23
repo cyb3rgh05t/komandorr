@@ -487,7 +487,7 @@ const Storage = () => {
     queryKey: ["services"],
     queryFn: async () => {
       try {
-        const response = await api.get("/api/services");
+        const response = await api.get("/services");
         console.log("Full response:", response);
         console.log("Response data:", response.data);
 
