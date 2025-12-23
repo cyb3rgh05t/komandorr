@@ -62,6 +62,11 @@ RAID_DEVICES = [
     "/dev/md1",
 ]
 
+# ZFS pools to monitor (Linux ZFS)
+ZFS_POOLS = [
+    "zfsraidpool",
+]
+
 # Monitor individual disks in RAID arrays
 MONITOR_RAID_DISKS = True
 
@@ -244,6 +249,146 @@ class StorageMonitor:
             logger.error(f"Error getting RAID status for {device}: {e}")
             return None
 
+    def get_zfs_pool_status(self, pool_name: str) -> Optional[Dict[str, Any]]:
+        """Get ZFS pool status using zpool status"""
+        try:
+            # Get pool status
+            result = subprocess.run(
+                ["zpool", "status", pool_name],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+
+            if result.returncode != 0:
+                logger.warning(f"Could not get ZFS pool status for {pool_name}")
+                return None
+
+            output = result.stdout
+            pool_info = {
+                "pool": pool_name,
+                "status": "unknown",
+                "state": "unknown",
+                "scan": None,
+                "errors": "none",
+                "disks": [],
+                "type": "zfs",
+            }
+
+            current_section = None
+            vdev_type = None
+
+            # Parse zpool status output
+            for line in output.split("\n"):
+                line_stripped = line.strip()
+
+                # Pool state
+                if "state:" in line.lower():
+                    state = line.split(":")[1].strip().upper()
+                    pool_info["state"] = state
+                    if state == "ONLINE":
+                        pool_info["status"] = "healthy"
+                    elif state == "DEGRADED":
+                        pool_info["status"] = "degraded"
+                    elif state == "FAULTED" or state == "UNAVAIL":
+                        pool_info["status"] = "failed"
+                    else:
+                        pool_info["status"] = state.lower()
+
+                # Pool status/action
+                elif "status:" in line.lower() and "state:" not in line.lower():
+                    pool_info["action"] = line.split(":")[1].strip()
+
+                # Scan/resilver info
+                elif "scan:" in line.lower():
+                    scan_info = line.split(":")[1].strip()
+                    pool_info["scan"] = scan_info
+                    if (
+                        "resilver" in scan_info.lower()
+                        and "in progress" in scan_info.lower()
+                    ):
+                        pool_info["status"] = "recovering"
+
+                # Errors
+                elif "errors:" in line.lower():
+                    pool_info["errors"] = line.split(":")[1].strip()
+
+                # Config section
+                elif "config:" in line.lower():
+                    current_section = "config"
+                    continue
+
+                # Parse disk information in config section
+                if current_section == "config" and line_stripped:
+                    # Skip header lines
+                    if "NAME" in line or "STATE" in line:
+                        continue
+
+                    # Match disk lines (e.g., "  sda1  ONLINE  0  0  0")
+                    match = re.match(
+                        r"\s+(\S+)\s+(\S+)(?:\s+(\d+)\s+(\d+)\s+(\d+))?.*", line
+                    )
+                    if match:
+                        device = match.group(1)
+                        state = match.group(2)
+
+                        # Identify vdev type (raidz1, raidz2, mirror, etc.)
+                        if device == pool_name:
+                            continue
+                        elif device.startswith("raidz") or device in [
+                            "mirror",
+                            "spare",
+                            "cache",
+                            "log",
+                        ]:
+                            vdev_type = device
+                            continue
+
+                        # Add disk info
+                        disk_info = {
+                            "device": device,
+                            "state": state.lower(),
+                            "vdev_type": vdev_type,
+                        }
+
+                        # Add error counts if available
+                        if match.group(3):
+                            disk_info["read_errors"] = int(match.group(3))
+                            disk_info["write_errors"] = int(match.group(4))
+                            disk_info["cksum_errors"] = int(match.group(5))
+
+                        pool_info["disks"].append(disk_info)
+
+            # Get pool capacity
+            try:
+                cap_result = subprocess.run(
+                    ["zpool", "list", "-H", "-o", "size,alloc,free,cap", pool_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if cap_result.returncode == 0:
+                    parts = cap_result.stdout.strip().split()
+                    if len(parts) >= 4:
+                        pool_info["size"] = parts[0]
+                        pool_info["allocated"] = parts[1]
+                        pool_info["free"] = parts[2]
+                        pool_info["capacity"] = parts[3].rstrip("%")
+            except:
+                pass
+
+            return pool_info
+
+        except FileNotFoundError:
+            logger.warning("zpool not found. ZFS monitoring requires ZFS tools.")
+            return None
+        except subprocess.TimeoutExpired:
+            logger.error(f"Timeout getting ZFS pool status for {pool_name}")
+            return None
+        except Exception as e:
+            logger.error(f"Error getting ZFS pool status for {pool_name}: {e}")
+            return None
+
     def get_all_disks(self) -> List[Dict[str, Any]]:
         """Get information about all physical disks"""
         disks = []
@@ -289,6 +434,7 @@ class StorageMonitor:
             "timestamp": datetime.now().isoformat(),
             "storage_paths": [],
             "raid_arrays": [],
+            "zfs_pools": [],
             "disks": [],
         }
 
@@ -304,7 +450,7 @@ class StorageMonitor:
 
         # Get RAID status
         if RAID_DEVICES:
-            logger.info(f"Monitoring {len(RAID_DEVICES)} RAID arrays...")
+            logger.info(f"Monitoring {len(RAID_DEVICES)} mdadm RAID arrays...")
             for raid_device in RAID_DEVICES:
                 raid_status = self.get_raid_status(raid_device)
                 if raid_status:
@@ -315,6 +461,22 @@ class StorageMonitor:
                     logger.debug(
                         f"  {raid_device}: {status_color}{raid_status['status']}{Style.RESET_ALL} "
                         f"({raid_status['level']}, {raid_status['active_devices']}/{raid_status['devices']} active)"
+                    )
+
+        # Get ZFS pool status
+        if ZFS_POOLS:
+            logger.info(f"Monitoring {len(ZFS_POOLS)} ZFS pools...")
+            for pool_name in ZFS_POOLS:
+                pool_status = self.get_zfs_pool_status(pool_name)
+                if pool_status:
+                    data["zfs_pools"].append(pool_status)
+                    status_color = (
+                        Fore.GREEN if pool_status["status"] == "healthy" else Fore.RED
+                    )
+                    capacity = pool_status.get("capacity", "N/A")
+                    logger.debug(
+                        f"  {pool_name}: {status_color}{pool_status['status']}{Style.RESET_ALL} "
+                        f"({pool_status['state']}, {capacity}% capacity, {len(pool_status['disks'])} disks)"
                     )
 
         # Get disk information
@@ -377,6 +539,9 @@ def validate_config():
     if not STORAGE_PATHS:
         issues.append("⚠ No STORAGE_PATHS configured")
 
+    if not RAID_DEVICES and not ZFS_POOLS:
+        issues.append("⚠ No RAID_DEVICES or ZFS_POOLS configured")
+
     if issues:
         logger.warning("Configuration issues detected:")
         for issue in issues:
@@ -394,7 +559,8 @@ def print_banner():
     print(f"Service ID:      {SERVICE_ID}")
     print(f"Update Interval: {UPDATE_INTERVAL}s")
     print(f"Storage Paths:   {len(STORAGE_PATHS)} configured")
-    print(f"RAID Arrays:     {len(RAID_DEVICES)} configured")
+    print(f"mdadm RAID:      {len(RAID_DEVICES)} configured")
+    print(f"ZFS Pools:       {len(ZFS_POOLS)} configured")
     print()
 
 
