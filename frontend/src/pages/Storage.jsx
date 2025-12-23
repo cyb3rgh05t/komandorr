@@ -495,10 +495,8 @@ const Storage = () => {
           ? response.data
           : response.data?.data || [];
         console.log("Services data:", data);
-
-        const filtered = data.filter((service) => service.storage !== null);
-        console.log("Filtered services with storage:", filtered);
-        return filtered;
+        console.log("Services count:", data.length);
+        return data;
       } catch (err) {
         console.error("Error fetching services:", err);
         // Return empty array instead of throwing to prevent breaking the page
