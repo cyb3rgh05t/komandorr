@@ -175,22 +175,39 @@ const StorageServiceCard = ({ service, t }) => {
     <div className="bg-theme-bg-secondary border border-theme-border rounded-lg p-4 hover:shadow-lg transition-all duration-200">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <div className="p-2 bg-purple-500/10 rounded-lg">
             <Server className="text-purple-400" size={20} />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="font-semibold text-theme-text text-base">
               {service.name}
             </h3>
             <p className="text-theme-text-muted text-xs mt-0.5">
               {storage.hostname}
             </p>
+            {/* Badges */}
+            <div className="flex gap-2 mt-2">
+              <span className="inline-block bg-blue-500/20 text-blue-400 text-xs font-medium px-2 py-1 rounded">
+                {service.type}
+              </span>
+              <span
+                className={`inline-block text-xs font-medium px-2 py-1 rounded ${
+                  service.status === "online"
+                    ? "bg-green-500/20 text-green-400"
+                    : service.status === "problem"
+                    ? "bg-yellow-500/20 text-yellow-400"
+                    : "bg-red-500/20 text-red-400"
+                }`}
+              >
+                {service.status}
+              </span>
+            </div>
           </div>
         </div>
         <button
           onClick={() => setShowDetails(!showDetails)}
-          className="text-theme-text-muted hover:text-theme-text transition-colors"
+          className="text-theme-text-muted hover:text-theme-text transition-colors flex-shrink-0"
         >
           <Activity size={18} />
         </button>
@@ -255,12 +272,15 @@ const StorageServiceCard = ({ service, t }) => {
       {storage.raid_arrays.length > 0 && (
         <div className="mb-3">
           <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
-            {t("storage.mdadmRaid", "mdadm RAID Arrays")} ({storage.raid_arrays.length})
+            {t("storage.mdadmRaid", "mdadm RAID Arrays")} (
+            {storage.raid_arrays.length})
           </div>
           <div className="flex flex-wrap gap-2">
             {storage.raid_arrays.map((raid, idx) => (
               <div key={idx} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text-muted font-mono">{raid.device}:</span>
+                <span className="text-theme-text-muted font-mono">
+                  {raid.device}:
+                </span>
                 <RaidStatusBadge status={raid.status} />
               </div>
             ))}
@@ -272,12 +292,16 @@ const StorageServiceCard = ({ service, t }) => {
       {storage.storage_paths.length > 0 && (
         <div className="mb-3">
           <div className="text-theme-text-muted text-xs font-medium mb-2 uppercase tracking-wide">
-            {t("storage.paths", "Storage Paths")} ({storage.storage_paths.length})
+            {t("storage.paths", "Storage Paths")} (
+            {storage.storage_paths.length})
           </div>
           <div className="flex flex-wrap gap-2">
             {storage.storage_paths.map((path, idx) => (
-              <span key={idx} className="bg-theme-bg-primary/50 px-2 py-1 rounded text-xs text-theme-text font-mono">
-                {path.path.split('/').pop() || path.path}
+              <span
+                key={idx}
+                className="bg-theme-bg-primary/50 px-2 py-1 rounded text-xs text-theme-text font-mono"
+              >
+                {path.path.split("/").pop() || path.path}
               </span>
             ))}
           </div>
@@ -293,7 +317,9 @@ const StorageServiceCard = ({ service, t }) => {
           <div className="flex flex-wrap gap-2">
             {zfsPools.map((pool, idx) => (
               <div key={idx} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text-muted font-mono">{pool.pool}:</span>
+                <span className="text-theme-text-muted font-mono">
+                  {pool.pool}:
+                </span>
                 <RaidStatusBadge status={pool.status} />
                 {pool.capacity && (
                   <span className="text-theme-text-muted text-xs">
@@ -305,8 +331,6 @@ const StorageServiceCard = ({ service, t }) => {
           </div>
         </div>
       )}
-
-
 
       {/* Detailed View */}
       {showDetails && (
@@ -517,7 +541,7 @@ const Storage = () => {
     queryFn: async () => {
       try {
         const response = await api.get("/storage/summary");
-        return response.data;
+        return response;
       } catch (error) {
         console.error("Error fetching storage summary:", error);
         return {
@@ -569,6 +593,24 @@ const Storage = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Page Title */}
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-purple-500/10 rounded-lg">
+          <HardDrive size={24} className="text-purple-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-theme-text">
+            {t("storage.title", "Storage Monitoring")}
+          </h1>
+          <p className="text-sm text-theme-text-muted mt-0.5">
+            {t(
+              "storage.subtitle",
+              "Monitor your storage infrastructure and RAID arrays"
+            )}
+          </p>
+        </div>
+      </div>
+
       {/* Header with Search & Refresh */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
