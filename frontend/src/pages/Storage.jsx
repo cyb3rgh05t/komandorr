@@ -490,10 +490,8 @@ const Storage = () => {
         const response = await api.get("/services/");
         console.log("Services response:", response);
 
-        // Handle case where response is an array directly
-        const data = Array.isArray(response.data)
-          ? response.data
-          : response.data?.data || [];
+        // API returns data directly, not wrapped in { data: ... }
+        const data = Array.isArray(response) ? response : [];
         console.log("Services data:", data);
         console.log("Services count:", data.length);
         return data;
