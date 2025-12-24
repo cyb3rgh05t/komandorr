@@ -140,6 +140,14 @@ export default function Settings() {
       if (data.overseerr?.url && data.overseerr?.api_key) {
         validateOverseerrOnLoad();
       }
+      if (data.uploader?.base_url) {
+        validateUploaderOnLoad();
+      }
+      if (data.arr?.instances || data.instances) {
+        const instances =
+          (data.arr && data.arr.instances) || data.instances || [];
+        validateArrInstancesOnLoad(instances);
+      }
     } catch (error) {
       console.error("Failed to load settings:", error);
     }
@@ -171,6 +179,39 @@ export default function Settings() {
       }
     } catch (error) {
       setOverseerrValid(false);
+    }
+  };
+
+  const validateUploaderOnLoad = async () => {
+    try {
+      const result = await api.get("/uploader/status");
+      setUploaderTestStatus("ok");
+    } catch (error) {
+      setUploaderTestStatus("fail");
+    }
+  };
+
+  const validateArrInstancesOnLoad = async (instances) => {
+    for (const inst of instances) {
+      if (inst.url && inst.api_key) {
+        try {
+          const status = await api.get("/arr-activity/system/status");
+          const entry = status?.[inst.id];
+          const ok =
+            entry &&
+            entry.status &&
+            !entry.status.error &&
+            (entry.status.version ||
+              entry.status.buildTime ||
+              entry.status.branch);
+          setArrTestStatus((prev) => ({
+            ...prev,
+            [inst.id]: ok ? "ok" : "fail",
+          }));
+        } catch (e) {
+          setArrTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
+        }
+      }
     }
   };
 
@@ -925,92 +966,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* API Configuration */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Key className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("settings.apiConfiguration")}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-            <div className="relative">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.githubToken")}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showGithubToken ? "text" : "password"}
-                      value={githubToken}
-                      onChange={(e) => {
-                        setGithubToken(e.target.value);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowGithubToken(!showGithubToken)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                    >
-                      {showGithubToken ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.githubTokenHelp")}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.tmdbApiKey")}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showTmdbKey ? "text" : "password"}
-                      value={tmdbApiKey}
-                      onChange={(e) => {
-                        setTmdbApiKey(e.target.value);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowTmdbKey(!showTmdbKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                    >
-                      {showTmdbKey ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.tmdbApiKeyHelp")}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Overseerr Configuration */}
         <div>
           <div className="flex items-center gap-3 mb-4">
@@ -1593,6 +1548,92 @@ export default function Settings() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* API Configuration */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Key className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("settings.apiConfiguration")}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+            <div className="relative">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.githubToken")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showGithubToken ? "text" : "password"}
+                      value={githubToken}
+                      onChange={(e) => {
+                        setGithubToken(e.target.value);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGithubToken(!showGithubToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showGithubToken ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.githubTokenHelp")}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.tmdbApiKey")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showTmdbKey ? "text" : "password"}
+                      value={tmdbApiKey}
+                      onChange={(e) => {
+                        setTmdbApiKey(e.target.value);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTmdbKey(!showTmdbKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showTmdbKey ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.tmdbApiKeyHelp")}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
