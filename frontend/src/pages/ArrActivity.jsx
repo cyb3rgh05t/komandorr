@@ -13,8 +13,73 @@ import {
   Clock,
   HardDrive,
   Server,
+  Upload as UploadIcon,
+  Play,
 } from "lucide-react";
 import { arrActivityApi } from "../services/arrActivityApi";
+
+const ActivityBadge = ({ status, t }) => {
+  const statusLower = (status || "").toLowerCase();
+
+  const styles = {
+    downloading: {
+      icon: Download,
+      className: "bg-green-500/20 text-green-400 border border-green-500/30",
+      label: "Downloading",
+    },
+    importing: {
+      icon: UploadIcon,
+      className: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+      label: "Importing",
+    },
+    completed: {
+      icon: CheckCircle,
+      className: "bg-green-500/20 text-green-400 border border-green-500/30",
+      label: "Completed",
+    },
+    warning: {
+      icon: AlertCircle,
+      className: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
+      label: "Warning",
+    },
+    failed: {
+      icon: AlertCircle,
+      className: "bg-red-500/20 text-red-400 border border-red-500/30",
+      label: "Failed",
+    },
+    queued: {
+      icon: Clock,
+      className: "bg-theme-hover text-theme-text-muted border border-theme",
+      label: "Queued",
+    },
+  };
+
+  let style;
+  if (statusLower.includes("download")) {
+    style = styles.downloading;
+  } else if (statusLower.includes("import")) {
+    style = styles.importing;
+  } else if (statusLower.includes("complet")) {
+    style = styles.completed;
+  } else if (statusLower.includes("warn")) {
+    style = styles.warning;
+  } else if (statusLower.includes("fail") || statusLower.includes("error")) {
+    style = styles.failed;
+  } else {
+    style = styles.queued;
+  }
+
+  const Icon = style.icon;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${style.className}`}
+    >
+      <Icon size={14} />
+      <span className="text-xs font-medium">{style.label}</span>
+    </div>
+  );
+};
 
 const formatSize = (bytes) => {
   if (!bytes || Number.isNaN(bytes)) return "0 B";
@@ -161,6 +226,9 @@ export default function ArrActivity() {
                   {t("arrActivity.title", "Title")}
                 </th>
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                  {t("arrActivity.quality", "Quality")}
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.status", "Status")}
                 </th>
                 <th className="text-center py-3 px-4 font-medium text-theme-text-secondary">
@@ -171,6 +239,9 @@ export default function ArrActivity() {
                 </th>
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.timeLeft", "Time Left")}
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                  {t("arrActivity.protocol", "Protocol")}
                 </th>
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                   {t("arrActivity.client", "Client")}
@@ -190,30 +261,39 @@ export default function ArrActivity() {
                     className="border-b border-theme hover:bg-theme-hover transition-colors"
                   >
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <Icon
-                          className={`w-4 h-4 ${colorClass} flex-shrink-0`}
-                        />
-                        <div className="min-w-0">
-                          <div className="font-medium text-theme-text truncate">
-                            {item.title}
-                          </div>
-                          {item.indexer && (
-                            <div className="text-xs text-theme-text-muted">
-                              {item.indexer}
-                            </div>
-                          )}
+                      <div className="min-w-0">
+                        <div className="font-medium text-theme-text truncate">
+                          {item.title}
                         </div>
+                        {type === "sonarr" && item.episode && (
+                          <div className="text-xs text-theme-text-muted">
+                            S
+                            {String(item.episode.seasonNumber || 0).padStart(
+                              2,
+                              "0"
+                            )}
+                            E
+                            {String(item.episode.episodeNumber || 0).padStart(
+                              2,
+                              "0"
+                            )}
+                            {item.episode.title && ` - ${item.episode.title}`}
+                          </div>
+                        )}
+                        {item.indexer && (
+                          <div className="text-xs text-purple-400">
+                            {item.indexer}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`inline-block px-2 py-1 rounded text-xs font-medium border ${getStatusBadgeClass(
-                          item.status
-                        )}`}
-                      >
-                        {item.status}
-                      </span>
+                      <div className="text-sm text-theme-text">
+                        {item.quality?.quality?.name || "Unknown"}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <ActivityBadge status={item.status} t={t} />
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex flex-col items-center gap-1">
@@ -245,6 +325,11 @@ export default function ArrActivity() {
                         <Clock className="w-3 h-3" />
                         {formatTimeLeft(item.timeleft)}
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs px-2 py-1 rounded bg-theme-hover text-theme-text-muted border border-theme">
+                        {item.protocol || "—"}
+                      </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
