@@ -14,6 +14,10 @@ import {
   EyeOff,
   ChevronDown,
   Save,
+  Upload,
+  Film,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -62,6 +66,20 @@ export default function Settings() {
   const [defaultEmailDomain, setDefaultEmailDomain] = useState("");
   const [validatingOverseerr, setValidatingOverseerr] = useState(false);
   const [overseerrValid, setOverseerrValid] = useState(null);
+
+  // Uploader settings state
+  const [uploaderUrl, setUploaderUrl] = useState("");
+  const [uploaderTestStatus, setUploaderTestStatus] = useState(null);
+
+  // *arr instances state
+  const [arrInstances, setArrInstances] = useState([]);
+  const [showAddArr, setShowAddArr] = useState(false);
+  const [newArrName, setNewArrName] = useState("");
+  const [newArrType, setNewArrType] = useState("sonarr");
+  const [newArrUrl, setNewArrUrl] = useState("");
+  const [newArrApiKey, setNewArrApiKey] = useState("");
+  const [showArrKeys, setShowArrKeys] = useState({});
+  const [arrTestStatus, setArrTestStatus] = useState({});
 
   // Auto-save state
   const [pendingChanges, setPendingChanges] = useState(false);
@@ -121,6 +139,14 @@ export default function Settings() {
         setOverseerrUrl(data.overseerr.url || "");
         setOverseerrApiKey(data.overseerr.api_key || "");
         setDefaultEmailDomain(data.overseerr.email_domain || "");
+      }
+      if (data.uploader) {
+        setUploaderUrl(data.uploader.base_url || "");
+      }
+      if (data.arr || data.instances) {
+        setArrInstances(
+          (data.arr && data.arr.instances) || data.instances || []
+        );
       }
 
       // Auto-validate connections if configured
@@ -340,7 +366,26 @@ export default function Settings() {
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
-      await api.post("/settings", {
+      // Prepare *arr instances payload, including pending new instance (if filled)
+      let instancesPayload = arrInstances;
+      const hasPendingNew = newArrName && newArrUrl && newArrApiKey;
+      if (hasPendingNew) {
+        const pendingId = `${newArrType}-${newArrName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        instancesPayload = [
+          ...arrInstances,
+          {
+            id: pendingId,
+            name: newArrName,
+            type: newArrType,
+            url: newArrUrl,
+            api_key: newArrApiKey,
+          },
+        ];
+      }
+
+      const payload = {
         logging: {
           level: logLevel,
           enable_file: logEnableFile,
@@ -362,17 +407,97 @@ export default function Settings() {
           api_key: overseerrApiKey,
           email_domain: defaultEmailDomain,
         },
-      });
+        uploader: {
+          base_url: uploaderUrl || "",
+        },
+        arr: {
+          instances: instancesPayload || [],
+        },
+      };
+
+      console.log("Saving settings payload:", payload);
+      const result = await api.post("/settings", payload);
+      console.log("Settings saved successfully, response:", result);
 
       // Clear timezone cache so new timezone takes effect immediately
       clearTimezoneCache();
 
       toast.success(t("settings.settingsSaved"));
+
+      // If we auto-included a pending new instance, clear the add form
+      if (hasPendingNew) {
+        setNewArrName("");
+        setNewArrUrl("");
+        setNewArrApiKey("");
+        setNewArrType("sonarr");
+        setShowAddArr(false);
+      }
+      // Reload settings from backend to reflect persisted config/migrations
+      console.log("Reloading settings from backend...");
+      await loadSettings();
+      console.log("Settings reloaded successfully");
     } catch (error) {
       console.error("Failed to save settings:", error);
       toast.error(t("settings.saveError"));
     } finally {
       setSettingsLoading(false);
+    }
+  };
+
+  // *arr instance helpers
+  const updateArrInstanceField = (index, field, value) => {
+    setArrInstances((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+    setPendingChanges(true);
+  };
+
+  const removeArrInstance = (index) => {
+    setArrInstances((prev) => prev.filter((_, i) => i !== index));
+    setPendingChanges(true);
+  };
+
+  const addArrInstance = () => {
+    if (!newArrName || !newArrUrl || !newArrApiKey) return;
+    const id = `${newArrType}-${newArrName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+    const instance = {
+      id,
+      name: newArrName,
+      type: newArrType,
+      url: newArrUrl,
+      api_key: newArrApiKey,
+    };
+    setArrInstances((prev) => [...prev, instance]);
+    setNewArrName("");
+    setNewArrUrl("");
+    setNewArrApiKey("");
+    setNewArrType("sonarr");
+    setShowAddArr(false);
+    setPendingChanges(true);
+  };
+
+  const toggleShowInstanceKey = (id) => {
+    setShowArrKeys((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const testArrInstance = async (inst) => {
+    if (!inst?.id) return;
+    setArrTestStatus((prev) => ({ ...prev, [inst.id]: "loading" }));
+    try {
+      const status = await api.get("/arr-activity/system/status");
+      const entry = status?.[inst.id];
+      const ok =
+        entry &&
+        entry.status &&
+        !entry.status.error &&
+        (entry.status.version || entry.status.buildTime || entry.status.branch);
+      setArrTestStatus((prev) => ({ ...prev, [inst.id]: ok ? "ok" : "fail" }));
+    } catch (e) {
+      setArrTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
     }
   };
 
@@ -1027,6 +1152,355 @@ export default function Settings() {
                     )}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Uploader Settings */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Upload className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("uploader.settings", { defaultValue: "Uploader Settings" })}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+            <div className="relative">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("uploader.baseUrl", {
+                      defaultValue: "Uploader Base URL",
+                    })}
+                  </label>
+                  <input
+                    type="url"
+                    value={uploaderUrl}
+                    onChange={(e) => {
+                      setUploaderUrl(e.target.value);
+                      setUploaderTestStatus(null);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="http://uploader:8080"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("uploader.baseUrlHelp", {
+                      defaultValue:
+                        "Set the URL of your Uploader service (container or external).",
+                    })}
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setUploaderTestStatus("loading");
+                        try {
+                          await api.get("/uploader/status");
+                          setUploaderTestStatus("ok");
+                        } catch (e) {
+                          setUploaderTestStatus("fail");
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-xs text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
+                    >
+                      {uploaderTestStatus === "loading"
+                        ? t("uploader.testing", { defaultValue: "Testing..." })
+                        : t("uploader.testConnection", {
+                            defaultValue: "Test Connection",
+                          })}
+                    </button>
+                    {uploaderTestStatus === "ok" && (
+                      <span className="text-xs px-2 py-1 rounded bg-green-500/15 text-green-400 border border-green-500/30">
+                        {t("uploader.connectionOk", { defaultValue: "OK" })}
+                      </span>
+                    )}
+                    {uploaderTestStatus === "fail" && (
+                      <span className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-400 border border-red-500/30">
+                        {t("uploader.connectionFailed", {
+                          defaultValue: "Failed",
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sonarr/Radarr Instances */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Film className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("arr.instancesTitle", {
+                  defaultValue: "Sonarr/Radarr Instances",
+                })}
+              </h3>
+              <p className="text-sm text-theme-muted">
+                {t("arr.instancesSubtitle", {
+                  defaultValue:
+                    "Configure multiple Sonarr and Radarr instances (e.g., 1080p and 4K).",
+                })}
+              </p>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+            <div className="relative space-y-6">
+              {/* Existing instances */}
+              {arrInstances.length === 0 ? (
+                <div className="text-sm text-theme-muted">
+                  {t("arr.noInstances", {
+                    defaultValue: "No instances configured yet.",
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {arrInstances.map((inst, idx) => (
+                    <div
+                      key={inst.id || idx}
+                      className="p-4 bg-theme-hover/50 border border-theme rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 text-xs rounded bg-theme-hover border border-theme text-theme-text">
+                            {inst.type?.toUpperCase()}
+                          </span>
+                          <span className="text-sm text-theme-text font-medium">
+                            {inst.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeArrInstance(idx)}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title={t("arr.remove", { defaultValue: "Remove" })}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            {t("arr.instanceName", {
+                              defaultValue: "Instance Name",
+                            })}
+                          </label>
+                          <input
+                            type="text"
+                            value={inst.name || ""}
+                            onChange={(e) =>
+                              updateArrInstanceField(
+                                idx,
+                                "name",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="Sonarr 4K"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            {t("arr.instanceType", { defaultValue: "Type" })}
+                          </label>
+                          <select
+                            value={inst.type || "sonarr"}
+                            onChange={(e) =>
+                              updateArrInstanceField(
+                                idx,
+                                "type",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          >
+                            <option value="sonarr">Sonarr</option>
+                            <option value="radarr">Radarr</option>
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            {t("arr.instanceUrl", { defaultValue: "Base URL" })}
+                          </label>
+                          <input
+                            type="url"
+                            value={inst.url || ""}
+                            onChange={(e) =>
+                              updateArrInstanceField(idx, "url", e.target.value)
+                            }
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="http://localhost:8989"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            {t("arr.instanceApiKey", {
+                              defaultValue: "API Key",
+                            })}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showArrKeys[inst.id] ? "text" : "password"}
+                              value={inst.api_key || ""}
+                              onChange={(e) =>
+                                updateArrInstanceField(
+                                  idx,
+                                  "api_key",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="XXXXXXXXXXXXXXXXXXXX"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => toggleShowInstanceKey(inst.id)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                            >
+                              {showArrKeys[inst.id] ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => testArrInstance(inst)}
+                              className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-xs text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
+                            >
+                              {arrTestStatus[inst.id] === "loading"
+                                ? t("arr.testing", {
+                                    defaultValue: "Testing...",
+                                  })
+                                : t("arr.testConnection", {
+                                    defaultValue: "Test Connection",
+                                  })}
+                            </button>
+                            {arrTestStatus[inst.id] === "ok" && (
+                              <span className="text-xs px-2 py-1 rounded bg-green-500/15 text-green-400 border border-green-500/30">
+                                {t("arr.connectionOk", { defaultValue: "OK" })}
+                              </span>
+                            )}
+                            {arrTestStatus[inst.id] === "fail" && (
+                              <span className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-400 border border-red-500/30">
+                                {t("arr.connectionFailed", {
+                                  defaultValue: "Failed",
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new instance */}
+              <div className="pt-2">
+                {!showAddArr ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddArr(true)}
+                    className="flex items-center gap-2 px-3 py-2 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
+                  >
+                    <Plus className="w-4 h-4 text-theme-primary" />
+                    {t("arr.addInstance", { defaultValue: "Add Instance" })}
+                  </button>
+                ) : (
+                  <div className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("arr.instanceName", {
+                            defaultValue: "Instance Name",
+                          })}
+                        </label>
+                        <input
+                          type="text"
+                          value={newArrName}
+                          onChange={(e) => setNewArrName(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="Radarr 4K"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("arr.instanceType", { defaultValue: "Type" })}
+                        </label>
+                        <select
+                          value={newArrType}
+                          onChange={(e) => setNewArrType(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        >
+                          <option value="sonarr">Sonarr</option>
+                          <option value="radarr">Radarr</option>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("arr.instanceUrl", { defaultValue: "Base URL" })}
+                        </label>
+                        <input
+                          type="url"
+                          value={newArrUrl}
+                          onChange={(e) => setNewArrUrl(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="http://localhost:7878"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("arr.instanceApiKey", { defaultValue: "API Key" })}
+                        </label>
+                        <input
+                          type="text"
+                          value={newArrApiKey}
+                          onChange={(e) => setNewArrApiKey(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="XXXXXXXXXXXXXXXXXXXX"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={addArrInstance}
+                        className="px-3 py-2 bg-theme-primary text-white rounded-lg text-sm hover:bg-theme-primary/90 transition-colors"
+                      >
+                        {t("arr.add", { defaultValue: "Add" })}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddArr(false)}
+                        className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text"
+                      >
+                        {t("arr.cancel", { defaultValue: "Cancel" })}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -11,6 +11,7 @@
     "traffic": "Traffic",
     "vodStreams": "VOD Monitor",
     "vodActivity": "Aktivität",
+    "arrActivity": "Downloads",
     "vodPortal": "VOD Portal",
     "uploader": "Uploader",
     "invites": "Einladungen",
@@ -223,6 +224,13 @@
     }
   },
   "uploader": {
+    "settings": "Uploader Einstellungen",
+    "baseUrl": "Uploader Basis-URL",
+    "baseUrlHelp": "Legen Sie die URL Ihres Uploader-Dienstes fest (Container oder extern).",
+    "testConnection": "Verbindung testen",
+    "testing": "Teste...",
+    "connectionOk": "OK",
+    "connectionFailed": "Fehlgeschlagen",
     "activeUploads": "Aktive Uploads",
     "queue": "Warteschlange",
     "completedToday": "Heute abgeschlossen",
@@ -258,6 +266,23 @@
       "completedToday": "Heute abgeschlossen",
       "status": "Status"
     }
+  },
+  "arr": {
+    "instancesTitle": "Sonarr/Radarr Instanzen",
+    "instancesSubtitle": "Konfigurieren Sie mehrere Sonarr- und Radarr-Instanzen (z. B. 1080p und 4K).",
+    "noInstances": "Noch keine Instanzen konfiguriert.",
+    "remove": "Entfernen",
+    "instanceName": "Instanzname",
+    "instanceType": "Typ",
+    "instanceUrl": "Basis-URL",
+    "instanceApiKey": "API-Schlüssel",
+    "addInstance": "Instanz hinzufügen",
+    "add": "Hinzufügen",
+    "cancel": "Abbrechen",
+    "testConnection": "Verbindung testen",
+    "testing": "Teste...",
+    "connectionOk": "OK",
+    "connectionFailed": "Fehlgeschlagen"
   },
   "vodStreams": {
     "title": "Sync-Aktivitäten",

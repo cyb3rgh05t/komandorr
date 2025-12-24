@@ -22,6 +22,7 @@ import {
   TvIcon,
   Tv2Icon,
   FilmIcon,
+  Download,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -127,6 +128,11 @@ export default function Sidebar() {
     { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
     { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
     { path: "/uploader", label: t("nav.uploader"), icon: Upload },
+    {
+      path: "/arr-activity",
+      label: t("nav.arrActivity", "*arr Activity"),
+      icon: Download,
+    },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
