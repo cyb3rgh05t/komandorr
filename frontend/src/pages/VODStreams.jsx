@@ -861,7 +861,7 @@ export default function VODStreams() {
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("vodStreams.table.status", "Status")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("vodStreams.table.progress", "Progress")}
                 </th>
               </tr>
@@ -1039,8 +1039,8 @@ export default function VODStreams() {
                         </td>
 
                         {/* Progress Column */}
-                        <td className="py-3 px-4">
-                          <div className="space-y-1.5 min-w-[200px]">
+                        <td className="py-3 px-4 text-right">
+                          <div className="space-y-1.5 min-w-[200px] ml-auto">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-theme-text-muted">
                                 {t("vodStreams.progress")}

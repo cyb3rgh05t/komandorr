@@ -243,7 +243,7 @@ export default function ArrActivity() {
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.client", "Client")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                   {t("arrActivity.progress", "Progress")}
                 </th>
               </tr>
@@ -322,8 +322,8 @@ export default function ArrActivity() {
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="space-y-1.5 min-w-[200px]">
+                    <td className="py-3 px-4 text-right">
+                      <div className="space-y-1.5 min-w-[200px] ml-auto">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-theme-text-muted">
                             {t("arrActivity.progress", "Progress")}

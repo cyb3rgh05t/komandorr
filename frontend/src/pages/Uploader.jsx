@@ -458,7 +458,7 @@ export default function Uploader() {
                     <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.remaining")}
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                    <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                       {t("uploader.table.speed")}
                     </th>
                   </tr>
@@ -518,7 +518,7 @@ export default function Uploader() {
                         <td className="py-3 px-4 whitespace-nowrap">
                           {job.upload_remainingtime || "-"}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4 whitespace-nowrap text-right">
                           {job.upload_speed || "-"}
                         </td>
                       </tr>
@@ -566,7 +566,7 @@ export default function Uploader() {
                     <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.size")}
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                    <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                       {t("uploader.table.added")}
                     </th>
                   </tr>
@@ -612,7 +612,9 @@ export default function Uploader() {
                         <td className="py-3 px-4 whitespace-nowrap">
                           {formatSize(file.filesize)}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">{added}</td>
+                        <td className="py-3 px-4 whitespace-nowrap text-right">
+                          {added}
+                        </td>
                       </tr>
                     );
                   })}
@@ -661,7 +663,7 @@ export default function Uploader() {
                     <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.duration")}
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                    <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                       {t("uploader.table.completedAt")}
                     </th>
                   </tr>
@@ -710,7 +712,7 @@ export default function Uploader() {
                         <td className="py-3 px-4 whitespace-nowrap">
                           {job.time_elapsed || "-"}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4 whitespace-nowrap text-right">
                           {job.time_end_clean || job.time_end || "-"}
                         </td>
                       </tr>
