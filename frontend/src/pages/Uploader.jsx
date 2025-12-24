@@ -503,11 +503,11 @@ export default function Uploader() {
                           <div className="space-y-2">
                             <div className="relative h-2.5 bg-theme-hover rounded-full overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-theme-primary transition-all duration-300 ease-out"
+                                className="h-full rounded-full bg-green-500 transition-all duration-300 ease-out"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
-                            <div className="text-xs font-medium text-theme-text-muted">
+                            <div className="text-xs font-medium text-green-400">
                               {progress.toFixed(0)}%
                             </div>
                           </div>

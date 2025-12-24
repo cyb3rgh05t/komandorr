@@ -1045,23 +1045,13 @@ export default function VODStreams() {
                               <span className="text-xs text-theme-text-muted">
                                 {t("vodStreams.progress")}
                               </span>
-                              <span
-                                className={`text-xs font-medium ${
-                                  isCompleted
-                                    ? "text-green-400"
-                                    : "text-theme-primary"
-                                }`}
-                              >
+                              <span className="text-xs font-medium text-green-400">
                                 {percent.toFixed(1)}%
                               </span>
                             </div>
                             <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-300 ease-out ${
-                                  isCompleted
-                                    ? "bg-green-500"
-                                    : "bg-theme-primary"
-                                }`}
+                                className="h-full rounded-full transition-all duration-300 ease-out bg-green-500"
                                 style={{ width: `${percent}%` }}
                               />
                             </div>

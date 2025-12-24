@@ -231,9 +231,6 @@ export default function ArrActivity() {
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.status", "Status")}
                 </th>
-                <th className="text-center py-3 px-4 font-medium text-theme-text-secondary">
-                  {t("arrActivity.progress", "Progress")}
-                </th>
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.size", "Size")}
                 </th>
@@ -243,8 +240,11 @@ export default function ArrActivity() {
                 <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.protocol", "Protocol")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                   {t("arrActivity.client", "Client")}
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                  {t("arrActivity.progress", "Progress")}
                 </th>
               </tr>
             </thead>
@@ -296,23 +296,6 @@ export default function ArrActivity() {
                       <ActivityBadge status={item.status} t={t} />
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="w-full max-w-[120px] bg-theme-bg-primary rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              type === "sonarr"
-                                ? "bg-purple-500"
-                                : "bg-blue-500"
-                            }`}
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-theme-text-muted">
-                          {progress.toFixed(1)}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
                       <div className="text-theme-text">
                         {formatSize(item.size - item.sizeleft)}{" "}
                         <span className="text-theme-text-muted">
@@ -337,6 +320,24 @@ export default function ArrActivity() {
                         <span className="text-theme-text">
                           {item.downloadClient || "Unknown"}
                         </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="space-y-1.5 min-w-[200px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-theme-text-muted">
+                            {t("arrActivity.progress", "Progress")}
+                          </span>
+                          <span className="text-xs font-medium text-green-400">
+                            {progress.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-300 ease-out bg-green-500"
+                            style={{ width: `${Math.min(progress, 100)}%` }}
+                          />
+                        </div>
                       </div>
                     </td>
                   </tr>
