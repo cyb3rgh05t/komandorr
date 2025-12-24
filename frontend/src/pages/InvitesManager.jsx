@@ -25,6 +25,8 @@ import {
   Home,
   Radio,
   UploadCloud,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -127,6 +129,8 @@ const InvitesManager = () => {
   const isFetching = useIsFetching();
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState({
@@ -329,6 +333,11 @@ const InvitesManager = () => {
     setTimeout(() => setCopiedCode(null), 2000);
     toast.success(t("invites.linkCopied"));
   };
+
+  // Reset to page 1 when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm, itemsPerPage]);
 
   const getInviteStatus = (invite) => {
     const badges = [];
@@ -810,36 +819,62 @@ const InvitesManager = () => {
               </tr>
             </thead>
             <tbody>
-              {invites
-                .filter((invite) => {
-                  // Filter by status
-                  if (filter === "all") return true;
-                  if (filter === "active")
+              {(() => {
+                // Apply filters
+                const filteredInvites = invites
+                  .filter((invite) => {
+                    // Filter by status
+                    if (filter === "all") return true;
+                    if (filter === "active")
+                      return (
+                        !invite.is_expired &&
+                        !invite.is_exhausted &&
+                        invite.is_active
+                      );
+                    if (filter === "redeemed")
+                      return invite.users && invite.users.length > 0;
+                    if (filter === "expired") return invite.is_expired;
+                    if (filter === "used-up") return invite.is_exhausted;
+                    if (filter === "disabled") return !invite.is_active;
+                    return true;
+                  })
+                  .filter((invite) => {
+                    // Filter by search term
+                    if (!searchTerm) return true;
+                    const searchLower = searchTerm.toLowerCase();
                     return (
-                      !invite.is_expired &&
-                      !invite.is_exhausted &&
-                      invite.is_active
+                      invite.code.toLowerCase().includes(searchLower) ||
+                      (invite.custom_code &&
+                        invite.custom_code
+                          .toLowerCase()
+                          .includes(searchLower)) ||
+                      (invite.created_by &&
+                        invite.created_by.toLowerCase().includes(searchLower))
                     );
-                  if (filter === "redeemed")
-                    return invite.users && invite.users.length > 0;
-                  if (filter === "expired") return invite.is_expired;
-                  if (filter === "used-up") return invite.is_exhausted;
-                  if (filter === "disabled") return !invite.is_active;
-                  return true;
-                })
-                .filter((invite) => {
-                  // Filter by search term
-                  if (!searchTerm) return true;
-                  const searchLower = searchTerm.toLowerCase();
-                  return (
-                    invite.code.toLowerCase().includes(searchLower) ||
-                    (invite.custom_code &&
-                      invite.custom_code.toLowerCase().includes(searchLower)) ||
-                    (invite.created_by &&
-                      invite.created_by.toLowerCase().includes(searchLower))
-                  );
-                })
-                .map((invite) => {
+                  });
+
+                // Calculate pagination
+                const totalItems = filteredInvites.length;
+                const totalPages = Math.max(
+                  1,
+                  Math.ceil(totalItems / itemsPerPage)
+                );
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedInvites = filteredInvites.slice(
+                  startIndex,
+                  endIndex
+                );
+
+                // Store for use in pagination component below
+                window.__invitePaginationData = {
+                  totalItems,
+                  totalPages,
+                  startIndex,
+                  endIndex,
+                };
+
+                return paginatedInvites.map((invite) => {
                   const status = getInviteStatus(invite);
                   const usagePercentage = invite.usage_limit
                     ? (invite.used_count / invite.usage_limit) * 100
@@ -1050,7 +1085,7 @@ const InvitesManager = () => {
                                 title={user.username || user.email}
                               >
                                 <Check className="w-3 h-3" />
-                                <span className="max-w-[80px] truncate">
+                                <span className="max-w-[150px] truncate">
                                   {user.username || user.email}
                                 </span>
                               </span>
@@ -1087,11 +1122,120 @@ const InvitesManager = () => {
                       </td>
                     </tr>
                   );
-                })}
+                });
+              })()}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {(() => {
+        const paginationData = window.__invitePaginationData || {
+          totalItems: 0,
+          totalPages: 1,
+          startIndex: 0,
+          endIndex: 0,
+        };
+        if (paginationData.totalItems === 0) return null;
+
+        return (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-medium text-theme-text-muted">
+                {t("invites.pagination.showing", "Showing")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {paginationData.startIndex + 1}
+                </span>{" "}
+                {t("invites.pagination.to", "to")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {Math.min(paginationData.endIndex, paginationData.totalItems)}
+                </span>{" "}
+                {t("invites.pagination.of", "of")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {paginationData.totalItems}
+                </span>{" "}
+                {t("invites.pagination.invites", "invites")}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-theme-text-muted">
+                  {t("invites.pagination.itemsPerPage", "Items per page:")}
+                </span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("invites.pagination.previous", "Previous")}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {[...Array(paginationData.totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  if (
+                    page === 1 ||
+                    page === paginationData.totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                          currentPage === page
+                            ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                            : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="text-theme-text-muted px-2">
+                        •••
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage(
+                    Math.min(paginationData.totalPages, currentPage + 1)
+                  )
+                }
+                disabled={currentPage === paginationData.totalPages}
+                className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("invites.pagination.next", "Next")}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Create Invite Modal */}
       {showCreateModal && (

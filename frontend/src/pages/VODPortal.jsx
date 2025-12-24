@@ -39,7 +39,7 @@ export default function VODPortal() {
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const usersPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [deleteDialog, setDeleteDialog] = useState({
     isOpen: false,
     userId: null,
@@ -103,6 +103,11 @@ export default function VODPortal() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Reset to page 1 when items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
 
   // Cache helper functions
   const loadUsersFromCache = () => {
@@ -488,18 +493,21 @@ export default function VODPortal() {
       </div>
 
       {/* Create User Form */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+          <UserPlus className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-theme-text">
+            {t("vodPortal.createUser") || "Add User to StreamNet VOD"}
+          </h3>
+        </div>
+      </div>
       <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
         {/* Decorative gradient overlay */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
         <div className="relative">
-          <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-            <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-              <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-            </div>
-            {t("vodPortal.createUser") || "Add User to StreamNet VOD"}
-          </h2>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Username */}
@@ -610,270 +618,298 @@ export default function VODPortal() {
       </div>
 
       {/* Users List */}
-      <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-        <div className="p-4 sm:p-6 border-b border-theme">
-          <div className="flex items-center gap-3">
-            <Users className="w-5 h-5 text-theme-primary" />
-            <h2 className="text-lg sm:text-xl font-semibold text-theme-text">
-              {t("vodPortal.existingUsers") || "Existing Users"}
-            </h2>
-          </div>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+          <Users className="w-5 h-5" />
         </div>
-
-        <div className="p-4 sm:p-6">
-          {usersLoading ? (
-            <div className="text-center py-8 text-theme-text-secondary">
-              {t("vodPortal.loadingUsers") || "Loading users..."}
-            </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-theme-text-secondary">
-              {searchTerm
-                ? t("vodPortal.noSearchResults") || "No users match your search"
-                : t("vodPortal.noUsers") || "No users found"}
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <table className="w-full min-w-[900px]">
-                  <thead>
-                    <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.username") || "Username"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.email") || "Email"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.displayName") || "Display Name"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.userRole") || "User Role"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.userType") || "User Type"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.plexId") || "Plex ID"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.createdAt") || "Created"}
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.requests") || "Requests"}
-                      </th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                        {t("vodPortal.actions") || "Actions"}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers
-                      .slice(
-                        (currentPage - 1) * usersPerPage,
-                        currentPage * usersPerPage
-                      )
-                      .map((user) => {
-                        const getUserType = (user) => {
-                          // Check if admin bit (2) is set using bitwise AND
-                          if (
-                            user.permissions &&
-                            (user.permissions & 2) === 2
-                          ) {
-                            // Check if owner bit (1) is also set
-                            if ((user.permissions & 1) === 1) {
-                              return {
-                                label:
-                                  t("vodPortal.userTypes.owner") || "Owner",
-                                color: "text-red-500",
-                              };
-                            }
+        <div>
+          <h3 className="text-lg font-semibold text-theme-text">
+            {t("vodPortal.existingUsers") || "Existing Users"}
+          </h3>
+        </div>
+      </div>
+      <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+        <div className="overflow-hidden">
+          <div className="overflow-x-auto">
+            {usersLoading ? (
+              <div className="text-center py-8 text-theme-text-secondary">
+                {t("vodPortal.loadingUsers") || "Loading users..."}
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-theme-text-secondary">
+                {searchTerm
+                  ? t("vodPortal.noSearchResults") ||
+                    "No users match your search"
+                  : t("vodPortal.noUsers") || "No users found"}
+              </div>
+            ) : (
+              <table className="w-full min-w-[900px] text-sm">
+                <thead>
+                  <tr className="bg-theme-hover border-b border-theme">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary rounded-tl-xl">
+                      {t("vodPortal.username") || "Username"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.email") || "Email"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.displayName") || "Display Name"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.userRole") || "User Role"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.userType") || "User Type"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.plexId") || "Plex ID"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.createdAt") || "Created"}
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                      {t("vodPortal.requests") || "Requests"}
+                    </th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary rounded-tr-xl">
+                      {t("vodPortal.actions") || "Actions"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const totalItems = filteredUsers.length;
+                    const totalPages = Math.max(
+                      1,
+                      Math.ceil(totalItems / itemsPerPage)
+                    );
+                    const startIndex = (currentPage - 1) * itemsPerPage;
+                    const endIndex = startIndex + itemsPerPage;
+                    const paginatedUsers = filteredUsers.slice(
+                      startIndex,
+                      endIndex
+                    );
+                    window.__vodPaginationData = {
+                      totalItems,
+                      totalPages,
+                      startIndex,
+                      endIndex,
+                    };
+                    return paginatedUsers.map((user) => {
+                      const getUserType = (user) => {
+                        // Check if admin bit (2) is set using bitwise AND
+                        if (user.permissions && (user.permissions & 2) === 2) {
+                          // Check if owner bit (1) is also set
+                          if ((user.permissions & 1) === 1) {
                             return {
-                              label: t("vodPortal.userTypes.admin") || "Admin",
-                              color: "text-amber-500",
+                              label: t("vodPortal.userTypes.owner") || "Owner",
+                              color: "text-red-500",
                             };
                           }
-                          // Regular user
                           return {
-                            label: t("vodPortal.userTypes.user") || "User",
-                            color: "text-gray-500",
+                            label: t("vodPortal.userTypes.admin") || "Admin",
+                            color: "text-amber-500",
                           };
+                        }
+                        // Regular user
+                        return {
+                          label: t("vodPortal.userTypes.user") || "User",
+                          color: "text-gray-500",
                         };
-                        const roleInfo = getUserType(user);
+                      };
+                      const roleInfo = getUserType(user);
 
-                        return (
-                          <tr
-                            key={user.id}
-                            className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
-                          >
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                {user.avatar ? (
-                                  <img
-                                    src={user.avatar}
-                                    alt={user.username || user.email}
-                                    className="w-8 h-8 rounded-full"
-                                  />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-theme-primary/20 flex items-center justify-center">
-                                    <span className="text-xs font-medium text-theme-primary">
-                                      {(user.username || user.email || "?")
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                    </span>
-                                  </div>
-                                )}
-                                <span className="text-sm text-theme-text font-medium">
-                                  {user.username ||
-                                    user.displayName ||
-                                    user.email ||
-                                    "N/A"}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2 text-sm text-theme-text-secondary">
-                                <Mail className="w-4 h-4" />
-                                {user.email}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 text-sm text-theme-text">
-                              {user.displayName || "-"}
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex flex-wrap items-center gap-2">
-                                {/* Role Badge */}
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                    roleInfo.label ===
-                                    (t("vodPortal.userTypes.owner") || "Owner")
-                                      ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                                      : roleInfo.label ===
-                                        (t("vodPortal.userTypes.admin") ||
-                                          "Admin")
-                                      ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                                      : "bg-gray-500/10 text-gray-500 border border-gray-500/20"
-                                  }`}
-                                >
-                                  {roleInfo.label ===
-                                    (t("vodPortal.userTypes.owner") ||
-                                      "Owner") && <Crown className="w-3 h-3" />}
-                                  {roleInfo.label ===
-                                    (t("vodPortal.userTypes.admin") ||
-                                      "Admin") && (
-                                    <Shield className="w-3 h-3" />
-                                  )}
-                                  {roleInfo.label}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex flex-wrap items-center gap-2">
-                                {user.userType === 1 ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-500 border border-purple-500/20">
-                                    <Server className="w-3 h-3" />
-                                    Plex
+                      return (
+                        <tr
+                          key={user.id}
+                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              {user.avatar ? (
+                                <img
+                                  src={user.avatar}
+                                  alt={user.username || user.email}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-theme-primary/20 flex items-center justify-center">
+                                  <span className="text-xs font-medium text-theme-primary">
+                                    {(user.username || user.email || "?")
+                                      .charAt(0)
+                                      .toUpperCase()}
                                   </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                                    <UserCheck className="w-3 h-3" />
-                                    Local
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              {user.plexId ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                </div>
+                              )}
+                              <span className="text-sm text-theme-text font-medium">
+                                {user.username ||
+                                  user.displayName ||
+                                  user.email ||
+                                  "N/A"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2 text-sm text-theme-text-secondary">
+                              <Mail className="w-4 h-4" />
+                              {user.email}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-theme-text">
+                            {user.displayName || "-"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {/* Role Badge */}
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                  roleInfo.label ===
+                                  (t("vodPortal.userTypes.owner") || "Owner")
+                                    ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                                    : roleInfo.label ===
+                                      (t("vodPortal.userTypes.admin") ||
+                                        "Admin")
+                                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                    : "bg-gray-500/10 text-gray-500 border border-gray-500/20"
+                                }`}
+                              >
+                                {roleInfo.label ===
+                                  (t("vodPortal.userTypes.owner") ||
+                                    "Owner") && <Crown className="w-3 h-3" />}
+                                {roleInfo.label ===
+                                  (t("vodPortal.userTypes.admin") ||
+                                    "Admin") && <Shield className="w-3 h-3" />}
+                                {roleInfo.label}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {user.userType === 1 ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-500 border border-purple-500/20">
                                   <Server className="w-3 h-3" />
-                                  {user.plexId}
+                                  Plex
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-500 border border-slate-500/20">
-                                  <Server className="w-3 h-3" />
-                                  {t("vodPortal.noPlexId") || "No Plex ID"}
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                  <UserCheck className="w-3 h-3" />
+                                  Local
                                 </span>
                               )}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-theme-text-secondary">
-                              {user.createdAt
-                                ? new Date(user.createdAt).toLocaleDateString()
-                                : "-"}
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 border border-sky-500/20">
-                                {requestsLoading
-                                  ? "..."
-                                  : userRequests[user.id] || 0}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            {user.plexId ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                <Server className="w-3 h-3" />
+                                {user.plexId}
                               </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <button
-                                onClick={() =>
-                                  setDeleteDialog({
-                                    isOpen: true,
-                                    userId: user.id,
-                                    username: user.username || user.email,
-                                  })
-                                }
-                                className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:shadow-sm active:scale-95 transition-all"
-                                title={
-                                  t("vodPortal.deleteUser") || "Delete user"
-                                }
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-500 border border-slate-500/20">
+                                <Server className="w-3 h-3" />
+                                {t("vodPortal.noPlexId") || "No Plex ID"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-theme-text-secondary">
+                            {user.createdAt
+                              ? new Date(user.createdAt).toLocaleDateString()
+                              : "-"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-500 border border-sky-500/20">
+                              {requestsLoading
+                                ? "..."
+                                : userRequests[user.id] || 0}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() =>
+                                setDeleteDialog({
+                                  isOpen: true,
+                                  userId: user.id,
+                                  username: user.username || user.email,
+                                })
+                              }
+                              className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:border-red-500/50 hover:shadow-sm active:scale-95 transition-all"
+                              title={t("vodPortal.deleteUser") || "Delete user"}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Pagination Controls */}
-      {filteredUsers.length > usersPerPage && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
-          <div className="text-sm font-medium text-theme-text-muted">
-            {t("vodPortal.showing") || "Showing"}{" "}
-            <span className="text-theme-text font-semibold">
-              {(currentPage - 1) * usersPerPage + 1}
-            </span>{" "}
-            {t("vodPortal.to") || "to"}{" "}
-            <span className="text-theme-text font-semibold">
-              {Math.min(currentPage * usersPerPage, filteredUsers.length)}
-            </span>{" "}
-            {t("vodPortal.of") || "of"}{" "}
-            <span className="text-theme-text font-semibold">
-              {filteredUsers.length}
-            </span>{" "}
-            {t("vodPortal.users") || "users"}
-          </div>
+      {/* Pagination */}
+      {(() => {
+        const paginationData = window.__vodPaginationData || {
+          totalItems: 0,
+          totalPages: 1,
+          startIndex: 0,
+          endIndex: 0,
+        };
+        if (paginationData.totalItems === 0) return null;
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-              title={t("vodPortal.previous") || "Previous"}
-            >
-              <ChevronLeft size={20} />
-            </button>
+        return (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-medium text-theme-text-muted">
+                {t("vodPortal.showing") || "Showing"}{" "}
+                <span className="text-theme-text font-semibold">
+                  {paginationData.startIndex + 1}
+                </span>{" "}
+                {t("vodPortal.to") || "to"}{" "}
+                <span className="text-theme-text font-semibold">
+                  {Math.min(paginationData.endIndex, paginationData.totalItems)}
+                </span>{" "}
+                {t("vodPortal.of") || "of"}{" "}
+                <span className="text-theme-text font-semibold">
+                  {paginationData.totalItems}
+                </span>{" "}
+                {t("vodPortal.users") || "users"}
+              </div>
 
-            <div className="flex items-center gap-1.5">
-              {[...Array(Math.ceil(filteredUsers.length / usersPerPage))].map(
-                (_, index) => {
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-theme-text-muted">
+                  {t("vodPortal.pagination.itemsPerPage", "Items per page:")}
+                </span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("vodPortal.previous") || "Previous"}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {[...Array(paginationData.totalPages)].map((_, index) => {
                   const page = index + 1;
-                  const totalPages = Math.ceil(
-                    filteredUsers.length / usersPerPage
-                  );
-                  // Show first page, last page, current page, and pages around current
                   if (
                     page === 1 ||
-                    page === totalPages ||
+                    page === paginationData.totalPages ||
                     (page >= currentPage - 1 && page <= currentPage + 1)
                   ) {
                     return (
@@ -900,30 +936,25 @@ export default function VODPortal() {
                     );
                   }
                   return null;
-                }
-              )}
-            </div>
+                })}
+              </div>
 
-            <button
-              onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.min(
-                    Math.ceil(filteredUsers.length / usersPerPage),
-                    prev + 1
+              <button
+                onClick={() =>
+                  setCurrentPage(
+                    Math.min(paginationData.totalPages, currentPage + 1)
                   )
-                )
-              }
-              disabled={
-                currentPage === Math.ceil(filteredUsers.length / usersPerPage)
-              }
-              className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-              title={t("vodPortal.next") || "Next"}
-            >
-              <ChevronRight size={20} />
-            </button>
+                }
+                disabled={currentPage === paginationData.totalPages}
+                className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("vodPortal.next") || "Next"}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

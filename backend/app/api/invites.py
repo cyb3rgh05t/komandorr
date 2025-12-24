@@ -81,7 +81,7 @@ def db_invite_to_pydantic(
     if db_invite.usage_limit and db_invite.used_count >= db_invite.usage_limit:
         is_exhausted = True
 
-    logger.info(f"Creating invite model with plex_server: {plex_server}")
+    logger.info(f"Creating invite model for: {plex_server}")
 
     base_data = {
         "id": db_invite.id,
@@ -102,8 +102,6 @@ def db_invite_to_pydantic(
         "plex_server": plex_server,
     }
 
-    logger.info(f"base_data plex_server: {base_data['plex_server']}")
-
     if include_users:
         users = [
             PlexUser(
@@ -121,10 +119,33 @@ def db_invite_to_pydantic(
             for u in db_invite.users
         ]
         result = InviteWithUsers(**base_data, users=users)
-        logger.info(f"InviteWithUsers model plex_server: {result.plex_server}")
-        logger.info(f"InviteWithUsers model dict: {result.model_dump()}")
+
+        # Log invite details in a readable format
+        usage_limit_str = result.usage_limit if result.usage_limit else "unlimited"
+        usage_info = (
+            "Exhausted"
+            if result.is_exhausted
+            else f"{result.used_count}/{usage_limit_str} uses"
+        )
+        logger.info(
+            f"Invite created successfully:\n"
+            f"  Code: {result.code}\n"
+            f"  Server: {result.plex_server}\n"
+            f"  Created by: {result.created_by}\n"
+            f"  Status: {'Expired' if result.is_expired else 'Active'} | {usage_info}\n"
+            f"  Users: {len(users)} registered"
+        )
+
+        # Log user details if any
+        if users:
+            logger.info(f"  Registered users:")
+            for user in users:
+                status = "Active" if user.is_active else "Inactive"
+                logger.info(f"    - {user.username} ({user.email}) | {status}")
+
         return result
 
+    logger.info(f"✅ Invite '{db_invite.code}' created for {plex_server}")
     return Invite(**base_data)
 
 

@@ -48,6 +48,10 @@ class Service(BaseModel):
     traffic_history: List[TrafficDataPoint] = []
     response_history: List[ResponseTimeDataPoint] = []
 
+    # Storage monitoring
+    storage: "StorageMetrics | None" = None
+    storage_history: List["StorageDataPoint"] = []
+
     @property
     def is_traffic_active(self) -> bool:
         """Check if traffic agent is actively sending updates (within last 30 seconds)"""
@@ -56,6 +60,15 @@ class Service(BaseModel):
         # Consider traffic stale if no update in 30 seconds
         stale_threshold = datetime.now(timezone.utc) - timedelta(seconds=30)
         return self.traffic.last_updated > stale_threshold
+
+    @property
+    def is_storage_active(self) -> bool:
+        """Check if storage agent is actively sending updates (within last 2 minutes)"""
+        if not self.storage or not self.storage.last_updated:
+            return False
+        # Consider storage stale if no update in 2 minutes (storage updates less frequently)
+        stale_threshold = datetime.now(timezone.utc) - timedelta(seconds=120)
+        return self.storage.last_updated > stale_threshold
 
 
 class ServiceCreate(BaseModel):
@@ -96,3 +109,10 @@ class TrafficUpdate(BaseModel):
     total_up: float  # GB
     total_down: float  # GB
     max_bandwidth: float | None = None  # Maximum bandwidth capacity in MB/s
+
+
+# Import storage models for forward references
+from app.models.storage import StorageMetrics, StorageDataPoint
+
+# Update forward references
+Service.model_rebuild()

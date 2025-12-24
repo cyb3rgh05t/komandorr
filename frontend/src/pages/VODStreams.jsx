@@ -153,20 +153,42 @@ const Pagination = ({
   startIndex,
   endIndex,
   totalItems,
+  itemsPerPage,
+  onItemsPerPageChange,
   t,
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
-      <div className="text-sm font-medium text-theme-text-muted">
-        {t("vodStreams.pagination.showing")}{" "}
-        <span className="text-theme-text font-semibold">{startIndex + 1}</span>{" "}
-        {t("vodStreams.pagination.to")}{" "}
-        <span className="text-theme-text font-semibold">
-          {Math.min(endIndex, totalItems)}
-        </span>{" "}
-        {t("vodStreams.pagination.of")}{" "}
-        <span className="text-theme-text font-semibold">{totalItems}</span>{" "}
-        {t("vodStreams.pagination.activities")}
+      <div className="flex items-center gap-4">
+        <div className="text-sm font-medium text-theme-text-muted">
+          {t("vodStreams.pagination.showing")}{" "}
+          <span className="text-theme-text font-semibold">
+            {startIndex + 1}
+          </span>{" "}
+          {t("vodStreams.pagination.to")}{" "}
+          <span className="text-theme-text font-semibold">
+            {Math.min(endIndex, totalItems)}
+          </span>{" "}
+          {t("vodStreams.pagination.of")}{" "}
+          <span className="text-theme-text font-semibold">{totalItems}</span>{" "}
+          {t("vodStreams.pagination.activities")}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-theme-text-muted">
+            {t("vodStreams.pagination.itemsPerPage", "Items per page:")}
+          </span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+          >
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -252,7 +274,7 @@ export default function VODStreams() {
   const [activeFilter, setActiveFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Track activity timestamps and completion times
   const [activityTimestamps, setActivityTimestamps] = useState(() => {
@@ -494,7 +516,7 @@ export default function VODStreams() {
   // Reset to page 1 when search query or filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, activeFilter]);
+  }, [searchQuery, activeFilter, itemsPerPage]);
 
   const currentItems = filteredActivities
     ? filteredActivities.slice(startIndex, endIndex)
@@ -825,153 +847,231 @@ export default function VODStreams() {
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-        {loading ? (
-          <>
-            <LoadingItem />
-            <LoadingItem />
-            <LoadingItem />
-          </>
-        ) : !plexConfigured ? (
-          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Server size={32} className="text-theme-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-theme-text mb-2">
-                {t("vodStreams.plexNotConfigured.title")}
-              </h3>
-              <p className="text-theme-muted mb-6">
-                {t("vodStreams.plexNotConfigured.description")}
-              </p>
-              <Link
-                to="/settings"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
-              >
-                <Server size={20} />
-                {t("vodStreams.plexNotConfigured.goToSettings")}
-              </Link>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="lg:col-span-2 bg-theme-card border border-red-500/30 rounded-xl p-8 text-center shadow-lg">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle size={32} className="text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold text-red-400 mb-2">
-                {t("vodStreams.loadError")}
-              </h3>
-              <p className="text-theme-muted">{error}</p>
-            </div>
-          </div>
-        ) : !filteredActivities?.length ? (
-          <div className="lg:col-span-2 bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-            <div className="max-w-md mx-auto">
-              {searchQuery ? (
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-theme-hover border-b border-theme">
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("vodStreams.table.title", "Title")}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("vodStreams.table.user", "User")}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("vodStreams.table.status", "Status")}
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("vodStreams.table.progress", "Progress")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="py-12 text-center">
+                    <LoadingItem />
+                  </td>
+                </tr>
+              ) : !plexConfigured ? (
+                <tr>
+                  <td colSpan="4" className="py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Server size={32} className="text-theme-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold text-theme-text mb-2">
+                        {t("vodStreams.plexNotConfigured.title")}
+                      </h3>
+                      <p className="text-theme-muted mb-6">
+                        {t("vodStreams.plexNotConfigured.description")}
+                      </p>
+                      <Link
+                        to="/settings"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                      >
+                        <Server size={20} />
+                        {t("vodStreams.plexNotConfigured.goToSettings")}
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="4" className="py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle size={32} className="text-red-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-red-400 mb-2">
+                        {t("vodStreams.loadError")}
+                      </h3>
+                      <p className="text-theme-muted">{error}</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : !filteredActivities?.length ? (
+                <tr>
+                  <td colSpan="4" className="py-12">
+                    <div className="text-center">
+                      {searchQuery ? (
+                        <>
+                          <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Search size={32} className="text-theme-primary" />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            {t("vodStreams.noMatching")}
+                          </h3>
+                          <p className="text-theme-muted mb-6">
+                            {`${t(
+                              "vodStreams.noMatchingDescription"
+                            )} "${searchQuery}"`}
+                          </p>
+                          <button
+                            onClick={() => setSearchQuery("")}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                          >
+                            {t("vodStreams.clearSearch")}
+                          </button>
+                        </>
+                      ) : activeFilter === "all" ? (
+                        <>
+                          <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Server size={32} className="text-theme-primary" />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            {t("vodStreams.noActivities")}
+                          </h3>
+                          <p className="text-theme-muted">
+                            {t("vodStreams.noActivitiesDescription")}
+                          </p>
+                        </>
+                      ) : activeFilter === "downloading" ? (
+                        <>
+                          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Download size={32} className="text-green-500" />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            No Downloading Streams
+                          </h3>
+                          <p className="text-theme-muted">
+                            There are no active downloads at the moment
+                          </p>
+                        </>
+                      ) : activeFilter === "paused" ? (
+                        <>
+                          <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Pause size={32} className="text-orange-500" />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            No Paused Streams
+                          </h3>
+                          <p className="text-theme-muted">
+                            There are no paused streams at the moment
+                          </p>
+                        </>
+                      ) : activeFilter === "transcoding" ? (
+                        <>
+                          <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Video size={32} className="text-cyan-500" />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            No Transcoding Streams
+                          </h3>
+                          <p className="text-theme-muted">
+                            There are no active transcoding sessions at the
+                            moment
+                          </p>
+                        </>
+                      ) : activeFilter === "streaming" ? (
+                        <>
+                          <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Play size={32} className="text-blue-500" />
+                          </div>
+                          <h3 className="text-xl font-bold text-theme-text mb-2">
+                            No Streaming Sessions
+                          </h3>
+                          <p className="text-theme-muted">
+                            There are no active streaming sessions at the moment
+                          </p>
+                        </>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
                 <>
-                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search size={32} className="text-theme-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    {t("vodStreams.noMatching")}
-                  </h3>
-                  <p className="text-theme-muted mb-6">
-                    {`${t(
-                      "vodStreams.noMatchingDescription"
-                    )} "${searchQuery}"`}
-                  </p>
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
-                  >
-                    {t("vodStreams.clearSearch")}
-                  </button>
+                  {currentItems.map((activity) => {
+                    const percent =
+                      typeof activity.progress === "number"
+                        ? Math.min(activity.progress, 100)
+                        : 0;
+                    const isCompleted = percent >= 100;
+
+                    return (
+                      <tr
+                        key={activity.uuid || `activity-${Math.random()}`}
+                        className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                      >
+                        {/* Title Column */}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Video
+                              size={14}
+                              className="text-theme-primary flex-shrink-0"
+                            />
+                            <span className="text-sm font-medium text-theme-text truncate max-w-xs">
+                              {activity.title || "Unknown"}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* User Column */}
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-theme-text-muted truncate max-w-xs block">
+                            {activity.subtitle || "—"}
+                          </span>
+                        </td>
+
+                        {/* Status Column */}
+                        <td className="py-3 px-4">
+                          <ActivityBadge type={activity.type} t={t} />
+                        </td>
+
+                        {/* Progress Column */}
+                        <td className="py-3 px-4">
+                          <div className="space-y-1.5 min-w-[200px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-theme-text-muted">
+                                {t("vodStreams.progress")}
+                              </span>
+                              <span className="text-xs font-medium text-green-400">
+                                {percent.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-300 ease-out bg-green-500"
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </>
-              ) : activeFilter === "all" ? (
-                <>
-                  <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Server size={32} className="text-theme-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    {t("vodStreams.noActivities")}
-                  </h3>
-                  <p className="text-theme-muted">
-                    {t("vodStreams.noActivitiesDescription")}
-                  </p>
-                </>
-              ) : activeFilter === "downloading" ? (
-                <>
-                  <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Download size={32} className="text-green-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Downloading Streams
-                  </h3>
-                  <p className="text-theme-muted">
-                    There are no active downloads at the moment
-                  </p>
-                </>
-              ) : activeFilter === "paused" ? (
-                <>
-                  <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Pause size={32} className="text-orange-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Paused Streams
-                  </h3>
-                  <p className="text-theme-muted">
-                    There are no paused streams at the moment
-                  </p>
-                </>
-              ) : activeFilter === "transcoding" ? (
-                <>
-                  <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Video size={32} className="text-cyan-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Transcoding Streams
-                  </h3>
-                  <p className="text-theme-muted">
-                    There are no active transcoding sessions at the moment
-                  </p>
-                </>
-              ) : activeFilter === "streaming" ? (
-                <>
-                  <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Play size={32} className="text-blue-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-theme-text mb-2">
-                    No Streaming Sessions
-                  </h3>
-                  <p className="text-theme-muted">
-                    There are no active streaming sessions at the moment
-                  </p>
-                </>
-              ) : null}
-            </div>
-          </div>
-        ) : (
-          <>
-            {currentItems.map((activity) => (
-              <ActivityItem
-                key={activity.uuid || `activity-${Math.random()}`}
-                activity={activity}
-                startTime={activityTimestamps[activity.uuid]}
-                completedInfo={completedActivities[activity.uuid]}
-                t={t}
-              />
-            ))}
-          </>
-        )}
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination - Full Width */}
       {!loading &&
         !error &&
         plexConfigured &&
-        filteredActivities?.length > 0 &&
-        totalPages > 1 && (
+        filteredActivities?.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -979,6 +1079,8 @@ export default function VODStreams() {
             startIndex={startIndex}
             endIndex={endIndex}
             totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={setItemsPerPage}
             t={t}
           />
         )}

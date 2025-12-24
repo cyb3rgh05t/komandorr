@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +12,8 @@ import {
   HardDrive,
   Power,
   Clock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { uploaderApi } from "../services/uploaderApi";
 
@@ -72,7 +74,7 @@ export default function Uploader() {
   const { t } = useTranslation();
   const [pageNumber, setPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const pageSize = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data: queueData, refetch: refetchQueue } = useQuery({
     queryKey: ["uploader", "queue"],
@@ -95,13 +97,20 @@ export default function Uploader() {
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: allCompletedData, refetch: refetchAllCompleted } = useQuery({
+    queryKey: ["uploader", "completed-all"],
+    queryFn: () => uploaderApi.getCompleted(1, 10000),
+    refetchInterval: 15000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const {
     data: completedData,
     isFetching: completedLoading,
     refetch: refetchCompleted,
   } = useQuery({
-    queryKey: ["uploader", "completed", pageNumber, pageSize],
-    queryFn: () => uploaderApi.getCompleted(pageNumber, pageSize),
+    queryKey: ["uploader", "completed", pageNumber, itemsPerPage],
+    queryFn: () => uploaderApi.getCompleted(pageNumber, itemsPerPage),
     refetchInterval: 15000,
     keepPreviousData: true,
     placeholderData: (previousData) => previousData,
@@ -125,7 +134,12 @@ export default function Uploader() {
   const inProgressJobs = inProgressData?.jobs || [];
   const completedJobs = completedData?.jobs || [];
   const totalCompleted = completedData?.total_count || 0;
-  const totalPages = Math.max(1, Math.ceil(totalCompleted / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalCompleted / itemsPerPage));
+
+  // Reset to page 1 when items per page changes
+  React.useEffect(() => {
+    setPageNumber(1);
+  }, [itemsPerPage]);
 
   const queueTotalSize = useMemo(() => {
     if (queueStats?.total_size) return queueStats.total_size;
@@ -144,38 +158,71 @@ export default function Uploader() {
     [inProgressJobs]
   );
 
-  const statusLabel = uploaderStatus?.status || "UNKNOWN";
+  const rawStatus = uploaderStatus?.status || "UNKNOWN";
+  const activeUploads = inProgressJobs.length;
 
-  const statusTone = (() => {
-    const label = statusLabel.toLowerCase();
+  const { statusLabel, statusIcon, statusTone } = useMemo(() => {
+    const label = rawStatus.toLowerCase();
+
     if (label.includes("error") || label.includes("fail")) {
       return {
-        color: "text-red-500",
-        bg: "hover:bg-red-500/10 hover:border-red-500/50",
+        statusLabel: "Error",
+        statusIcon: Power,
+        statusTone: {
+          color: "text-red-500",
+          bg: "hover:bg-red-500/10 hover:border-red-500/50",
+        },
       };
     }
-    if (label.includes("upload")) {
+
+    if (label.includes("stopped")) {
       return {
-        color: "text-blue-500",
-        bg: "hover:bg-blue-500/10 hover:border-blue-500/50",
+        statusLabel: "Stopped",
+        statusIcon: Power,
+        statusTone: {
+          color: "text-orange-500",
+          bg: "hover:bg-orange-500/10 hover:border-orange-500/50",
+        },
       };
     }
-    if (label.includes("offline") || label.includes("stopped")) {
-      return {
-        color: "text-orange-500",
-        bg: "hover:bg-orange-500/10 hover:border-orange-500/50",
-      };
+
+    if (label.includes("started")) {
+      if (activeUploads > 0) {
+        return {
+          statusLabel: "Uploading",
+          statusIcon: Upload,
+          statusTone: {
+            color: "text-green-500",
+            bg: "hover:bg-green-500/10 hover:border-green-500/50",
+          },
+        };
+      } else {
+        return {
+          statusLabel: "Online",
+          statusIcon: CheckCircle,
+          statusTone: {
+            color: "text-green-500",
+            bg: "hover:bg-green-500/10 hover:border-green-500/50",
+          },
+        };
+      }
     }
+
     return {
-      color: "text-green-500",
-      bg: "hover:bg-green-500/10 hover:border-green-500/50",
+      statusLabel: rawStatus,
+      statusIcon: Power,
+      statusTone: {
+        color: "text-gray-500",
+        bg: "hover:bg-gray-500/10 hover:border-gray-500/50",
+      },
     };
-  })();
+  }, [rawStatus, activeUploads]);
 
   const refreshAll = () => {
     refetchQueue();
     refetchQueueStats();
     refetchInProgress();
+    refetchAllCompleted();
     refetchCompleted();
     refetchCompletedToday();
     refetchStatus();
@@ -204,14 +251,18 @@ export default function Uploader() {
   }, [normalizedSearch, queueFiles]);
 
   const filteredCompletedJobs = useMemo(() => {
+    // Use all completed jobs for search to include all history pages
+    const jobsToSearch = normalizedSearch
+      ? allCompletedData?.jobs || []
+      : completedJobs;
     if (!normalizedSearch) return completedJobs;
-    return completedJobs.filter((job) => {
+    return jobsToSearch.filter((job) => {
       const haystack = `${job.file_name || ""} ${job.drive || ""} ${
         job.file_directory || ""
       } ${job.gdsa || ""}`.toLowerCase();
       return haystack.includes(normalizedSearch);
     });
-  }, [completedJobs, normalizedSearch]);
+  }, [completedJobs, allCompletedData, normalizedSearch]);
 
   const onNextPage = () => {
     setPageNumber((prev) => Math.min(prev + 1, totalPages));
@@ -251,14 +302,18 @@ export default function Uploader() {
             <div className="flex items-center justify-between">
               <div className="text-left">
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Power className={`w-3 h-3 ${statusTone.color}`} />
+                  {React.createElement(statusIcon, {
+                    className: `w-3 h-3 ${statusTone.color}`,
+                  })}
                   {t("uploader.systemStatus", "System Status")}
                 </p>
                 <p className={`text-2xl font-bold mt-1 ${statusTone.color}`}>
                   {statusLabel}
                 </p>
               </div>
-              <Power className={`w-8 h-8 ${statusTone.color}`} />
+              {React.createElement(statusIcon, {
+                className: `w-8 h-8 ${statusTone.color}`,
+              })}
             </div>
           </div>
 
@@ -363,47 +418,47 @@ export default function Uploader() {
       </div>
 
       <Section>
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-          <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-theme">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Upload className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("uploader.activeUploads")}
-              </h3>
-              <p className="text-sm text-theme-text-muted">
-                {t("uploader.activeDescription")}
-              </p>
-            </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+            <Upload className="w-5 h-5" />
           </div>
-          <div className="p-4 sm:p-6">
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div>
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("uploader.activeUploads")}
+            </h3>
+            <p className="text-sm text-theme-text-muted">
+              {t("uploader.activeDescription")}
+            </p>
+          </div>
+        </div>
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
                       {t("uploader.table.filename")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.drive")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.directory")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.key")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.progress")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.size")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.remaining")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                       {t("uploader.table.speed")}
                     </th>
                   </tr>
@@ -448,11 +503,11 @@ export default function Uploader() {
                           <div className="space-y-2">
                             <div className="relative h-2.5 bg-theme-hover rounded-full overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-theme-primary transition-all duration-300 ease-out"
+                                className="h-full rounded-full bg-green-500 transition-all duration-300 ease-out"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
-                            <div className="text-xs font-medium text-theme-text-muted">
+                            <div className="text-xs font-medium text-green-400">
                               {progress.toFixed(0)}%
                             </div>
                           </div>
@@ -477,41 +532,41 @@ export default function Uploader() {
       </Section>
 
       <Section>
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-          <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-theme">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <ListOrdered className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("uploader.queue")}
-              </h3>
-              <p className="text-sm text-theme-text-muted">
-                {t("uploader.queueDescription")}
-              </p>
-            </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+            <ListOrdered className="w-5 h-5" />
           </div>
-          <div className="p-4 sm:p-6">
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div>
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("uploader.queue")}
+            </h3>
+            <p className="text-sm text-theme-text-muted">
+              {t("uploader.queueDescription")}
+            </p>
+          </div>
+        </div>
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
                       #
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.filename")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.drive")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.directory")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.size")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                       {t("uploader.table.added")}
                     </th>
                   </tr>
@@ -555,7 +610,7 @@ export default function Uploader() {
                           {normalizedDir || "-"}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          {file.filesize || "-"}
+                          {formatSize(file.filesize)}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">{added}</td>
                       </tr>
@@ -569,44 +624,44 @@ export default function Uploader() {
       </Section>
 
       <Section>
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-          <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-theme">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <CheckCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("uploader.completed")}
-              </h3>
-              <p className="text-sm text-theme-text-muted">
-                {t("uploader.completedDescription")}
-              </p>
-            </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+            <CheckCircle className="w-5 h-5" />
           </div>
-          <div className="p-4 sm:p-6">
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div>
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("uploader.completed")}
+            </h3>
+            <p className="text-sm text-theme-text-muted">
+              {t("uploader.completedDescription")}
+            </p>
+          </div>
+        </div>
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
                       {t("uploader.table.filename")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.drive")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.directory")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.key")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.size")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                       {t("uploader.table.duration")}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
                       {t("uploader.table.completedAt")}
                     </th>
                   </tr>
@@ -637,16 +692,16 @@ export default function Uploader() {
                         key={`${job.file_name}-${index}`}
                         className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
                       >
-                        <td className="py-3 px-4 font-medium truncate max-w-[220px]">
+                        <td className="py-3 px-4 font-medium truncate max-w-[300px]">
                           {job.file_name}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
                           {job.drive || "-"}
                         </td>
-                        <td className="py-3 px-4 truncate max-w-[220px]">
+                        <td className="py-3 px-4 truncate max-w-[280px]">
                           {normalizedDir || "-"}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4 truncate max-w-[120px]">
                           {job.gdsa || "-"}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
@@ -668,12 +723,38 @@ export default function Uploader() {
         </div>
         {/* Pagination - pill style like Plex pages, outside the card */}
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
-          <div className="text-sm font-medium text-theme-text-muted">
-            {t("uploader.pagination", {
-              from: (pageNumber - 1) * pageSize + 1,
-              to: Math.min(pageNumber * pageSize, totalCompleted),
-              total: totalCompleted,
-            })}
+          <div className="flex items-center gap-4">
+            <div className="text-sm font-medium text-theme-text-muted">
+              {t("uploader.pagination.showing", "Showing")}{" "}
+              <span className="text-theme-text font-semibold">
+                {(pageNumber - 1) * itemsPerPage + 1}
+              </span>{" "}
+              {t("uploader.pagination.to", "to")}{" "}
+              <span className="text-theme-text font-semibold">
+                {Math.min(pageNumber * itemsPerPage, totalCompleted)}
+              </span>{" "}
+              {t("uploader.pagination.of", "of")}{" "}
+              <span className="text-theme-text font-semibold">
+                {totalCompleted}
+              </span>{" "}
+              {t("uploader.pagination.jobs", "jobs")}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-theme-text-muted">
+                {t("uploader.pagination.itemsPerPage", "Items per page:")}
+              </span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -683,19 +764,7 @@ export default function Uploader() {
               className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
               title={t("common.previous")}
             >
-              {/* Left chevron */}
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
+              <ChevronLeft size={20} />
             </button>
 
             <div className="flex items-center gap-1.5">
@@ -736,19 +805,7 @@ export default function Uploader() {
               className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
               title={t("common.next")}
             >
-              {/* Right chevron */}
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>

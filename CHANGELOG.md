@@ -1,5 +1,49 @@
 # CHANGELOG.md
 
+# [3.1.0](https://github.com/cyb3rgh05t/komandorr/compare/v3.0.0...v3.1.0) (2025-12-24)
+
+### 🎨 UI/UX Improvements
+
+**ArrActivity Page Enhancements**
+• **Enhanced download table**
+◦ Added Quality and Protocol columns for better download visibility
+◦ Moved Progress column to end for consistent layout with VOD monitor
+◦ Added episode info display for Sonarr (S01E05 format with episode title)
+◦ Removed icons from title columns for cleaner appearance
+
+• **Activity status badges**
+◦ Replaced plain text status with colored badges matching VOD monitor style
+◦ Downloading (green), Importing (blue), Completed (green), Warning (yellow), Failed (red), Queued (gray)
+◦ First letter capitalized for consistent presentation
+
+• **Progress bar standardization**
+◦ Changed all progress bars to green across ArrActivity, VODStreams, and Uploader
+◦ Unified progress bar layout: label, percentage, and bar consistently styled
+◦ Protocol badge now uses blue color scheme for visual consistency
+
+**Settings Page Improvements**
+• **Section reorganization**
+◦ Reordered settings cards: Auth → General → Plex → Overseerr → \*arr → Uploader → API
+◦ Logical grouping for better user experience
+
+• **Auto-test on load**
+◦ Added automatic connection testing for Uploader service on settings page load
+◦ Added automatic connection testing for all \*arr instances on settings page load
+◦ Feature parity with Plex and Overseerr connection testing
+◦ Immediate feedback on service health without manual testing
+
+• **Unsaved changes warning**
+◦ Removed auto-save functionality for better user control
+◦ Added browser warning when leaving page with unsaved changes
+◦ Save button shows warning message and disabled state when no changes pending
+◦ Prevents accidental data loss
+
+### 🐛 Bug Fixes
+
+• Fixed icon mismatch in Settings page (\*arr and Uploader sections)
+• Fixed missing closing brace in validateArrInstancesOnLoad function
+• Resolved syntax errors preventing frontend compilation
+
 # [3.0.0](https://github.com/cyb3rgh05t/komandorr/compare/v2.5.0...v3.0.0) (2025-12-19)
 
 ### ⚡ Caching & Performance

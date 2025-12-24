@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Services from "./pages/Services";
 import Monitor from "./pages/Monitor";
 import Traffic from "./pages/Traffic";
+import Storage from "./pages/Storage";
 import VODStreams from "./pages/VODStreams";
 import VODActivity from "./pages/VODActivity";
 import VODPortal from "./pages/VODPortal";
@@ -18,6 +19,7 @@ import InviteRedeem from "./pages/InviteRedeem";
 import InvitesManager from "./pages/InvitesManager";
 import UserAccounts from "./pages/UserAccounts";
 import Uploader from "./pages/Uploader";
+import ArrActivity from "./pages/ArrActivity";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -161,12 +163,14 @@ function App() {
                       <Route path="/services" element={<Services />} />
                       <Route path="/monitor" element={<Monitor />} />
                       <Route path="/traffic" element={<Traffic />} />
+                      <Route path="/storage" element={<Storage />} />
                       <Route path="/vod-streams" element={<VODStreams />} />
                       <Route path="/vod-activity" element={<VODActivity />} />
                       <Route path="/vod-portal" element={<VODPortal />} />
                       <Route path="/invites" element={<InvitesManager />} />
                       <Route path="/user-accounts" element={<UserAccounts />} />
                       <Route path="/uploader" element={<Uploader />} />
+                      <Route path="/arr-activity" element={<ArrActivity />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>
