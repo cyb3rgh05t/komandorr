@@ -310,7 +310,7 @@ export default function ArrActivity() {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-xs px-2 py-1 rounded bg-theme-hover text-theme-text-muted border border-theme">
+                      <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         {item.protocol || "—"}
                       </span>
                     </td>

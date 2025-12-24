@@ -692,16 +692,16 @@ export default function Uploader() {
                         key={`${job.file_name}-${index}`}
                         className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
                       >
-                        <td className="py-3 px-4 font-medium truncate max-w-[220px]">
+                        <td className="py-3 px-4 font-medium truncate max-w-[300px]">
                           {job.file_name}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
                           {job.drive || "-"}
                         </td>
-                        <td className="py-3 px-4 truncate max-w-[220px]">
+                        <td className="py-3 px-4 truncate max-w-[280px]">
                           {normalizedDir || "-"}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4 truncate max-w-[120px]">
                           {job.gdsa || "-"}
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">

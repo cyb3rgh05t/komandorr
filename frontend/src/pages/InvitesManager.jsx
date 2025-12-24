@@ -1085,7 +1085,7 @@ const InvitesManager = () => {
                                 title={user.username || user.email}
                               >
                                 <Check className="w-3 h-3" />
-                                <span className="max-w-[80px] truncate">
+                                <span className="max-w-[150px] truncate">
                                   {user.username || user.email}
                                 </span>
                               </span>
