@@ -5,17 +5,46 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "services": "Servers",
-    "monitor": "Response Monitor",
-    "traffic": "Traffic Monitor",
+    "plex": "Plex",
+    "services": "Services",
+    "monitor": "Ping Response",
+    "traffic": "Traffic",
     "vodStreams": "VOD Monitor",
-    "vodActivity": "Plex Activity",
+    "vodActivity": "Activity",
     "vodPortal": "VOD Portal",
-    "invites": "Plex Invites",
-    "userAccounts": "Plex Users",
+    "uploader": "Uploader",
+    "arrActivity": "Downloads",
+    "invites": "Invites",
+    "userAccounts": "Users",
     "userHistory": "Plex User Stats",
     "settings": "Settings",
     "about": "About"
+  },
+  "uploader": {
+    "settings": "Uploader Settings",
+    "baseUrl": "Uploader Base URL",
+    "baseUrlHelp": "Set the URL of your Uploader service (container or external).",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "connectionOk": "OK",
+    "connectionFailed": "Failed"
+  },
+  "arr": {
+    "instancesTitle": "Sonarr/Radarr Instances",
+    "instancesSubtitle": "Configure multiple Sonarr and Radarr instances (e.g., 1080p and 4K).",
+    "noInstances": "No instances configured yet.",
+    "remove": "Remove",
+    "instanceName": "Instance Name",
+    "instanceType": "Type",
+    "instanceUrl": "Base URL",
+    "instanceApiKey": "API Key",
+    "addInstance": "Add Instance",
+    "add": "Add",
+    "cancel": "Cancel",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "connectionOk": "OK",
+    "connectionFailed": "Failed"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -207,6 +236,58 @@
       "previous": "Previous page",
       "next": "Next page"
     }
+  },
+  "uploader": {
+    "activeUploads": "Active Uploads",
+    "queue": "Queue",
+    "completedToday": "Completed Today",
+    "status": "Status",
+    "activeDescription": "Live transfers currently in progress",
+    "queueDescription": "Files waiting to upload",
+    "completed": "Completed Uploads",
+    "completedDescription": "Recently finished uploads",
+    "systemOverview": "System Overview",
+    "systemDescription": "High level uploader stats",
+    "table": {
+      "filename": "Filename",
+      "drive": "Folder",
+      "directory": "Directory",
+      "key": "Key",
+      "progress": "Progress",
+      "size": "Filesize",
+      "remaining": "Time Left",
+      "speed": "Speed",
+      "added": "Added",
+      "duration": "Duration",
+      "completedAt": "Completed"
+    },
+    "empty": {
+      "active": "No uploads in progress",
+      "queue": "No files in queue",
+      "completed": "No completed uploads yet"
+    },
+    "pagination": "Showing {{from}}-{{to}} of {{total}} uploads",
+    "mini": {
+      "rate": "Upload Rate",
+      "queueCount": "Queued Files",
+      "completedToday": "Completed Today",
+      "status": "Status"
+    }
+  },
+  "arrActivity": {
+    "title": "*arr Download Activity",
+    "subtitle": "Monitor Sonarr and Radarr download queues",
+    "noActiveDownloads": "No active downloads",
+    "noServicesConfigured": "No Services Configured",
+    "configureServices": "Configure Sonarr and Radarr in the settings to monitor download activity.",
+    "totalQueue": "Total Queue",
+    "services": "Services",
+    "title": "Title",
+    "status": "Status",
+    "progress": "Progress",
+    "size": "Size",
+    "timeLeft": "Time Left",
+    "client": "Client"
   },
   "traffic": {
     "title": "Network Traffic",
@@ -472,6 +553,7 @@
       "expires": "Expires",
       "libraries": "Libraries",
       "permissions": "Permissions",
+      "watchTime": "Watch Time",
       "actions": "Actions"
     },
     "status": {
@@ -495,7 +577,9 @@
     "save": "Save",
     "close": "Close",
     "refresh": "Refresh",
-    "refreshing": "Refreshing"
+    "refreshing": "Refreshing",
+    "previous": "Previous",
+    "next": "Next"
   },
   "versionBadge": {
     "version": "Version",
@@ -665,7 +749,8 @@
     "permissions": {
       "sync": "Sync",
       "liveTV": "Live TV",
-      "home": "Home"
+      "home": "Home",
+      "cameraUpload": "Camera Upload"
     },
     "buttons": {
       "copyLink": "Copy Link",
@@ -819,6 +904,7 @@
     "userType": "User Type",
     "plexId": "Plex ID",
     "createdAt": "Created",
+    "requests": "Requests",
     "fetchUsersError": "Failed to fetch users",
     "showing": "Showing",
     "to": "to",

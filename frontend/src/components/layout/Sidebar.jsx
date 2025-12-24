@@ -12,10 +12,17 @@ import {
   Server,
   Activity,
   TrendingUp,
+  HardDrive,
   Video,
   Mail,
   Users,
   BarChart3,
+  Upload,
+  ChevronDown,
+  TvIcon,
+  Tv2Icon,
+  FilmIcon,
+  Download,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -23,6 +30,18 @@ export default function Sidebar() {
   const { t } = useTranslation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedTabs, setExpandedTabs] = useState({
+    plex: false,
+    services: false,
+  });
+
+  // Toggle tab expansion
+  const toggleTab = (tabName) => {
+    setExpandedTabs((prev) => ({
+      ...prev,
+      [tabName]: !prev[tabName],
+    }));
+  };
 
   // Fetch invites to count expired/unused
   const { data: invites = [] } = useQuery({
@@ -50,6 +69,21 @@ export default function Sidebar() {
   });
 
   const activeSessions = sessionsData?.sessions || [];
+
+  // Fetch services for status badges
+  const { data: services = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 10000,
+    refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Count services by status
+  const offlineServices = services.filter((s) => s.status === "offline").length;
+  const problemServices = services.filter((s) => s.status === "problem").length;
+  const errorServices = services.filter((s) => s.status === "error").length;
+  const totalIssues = offlineServices + problemServices + errorServices;
 
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
@@ -83,14 +117,37 @@ export default function Sidebar() {
 
   const menuItems = [
     { path: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { path: "/services", label: t("nav.services"), icon: Server },
-    { path: "/monitor", label: t("nav.monitor"), icon: Activity },
-    { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
-    { path: "/vod-portal", label: t("nav.vodPortal"), icon: Video },
-    { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
-    { path: "/vod-activity", label: t("nav.vodActivity"), icon: Users },
-    { path: "/invites", label: t("nav.invites"), icon: Mail },
-    { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
+    {
+      label: t("nav.services"),
+      icon: Server,
+      isTab: true,
+      tabName: "services",
+      items: [
+        { path: "/services", label: t("nav.services"), icon: Server },
+        { path: "/monitor", label: t("nav.monitor"), icon: Activity },
+        { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
+      ],
+    },
+    {
+      label: t("nav.plex"),
+      icon: Tv2Icon,
+      isTab: true,
+      tabName: "plex",
+      items: [
+        { path: "/vod-activity", label: t("nav.vodActivity"), icon: Activity },
+        { path: "/user-accounts", label: t("nav.userAccounts"), icon: Users },
+        { path: "/invites", label: t("nav.invites"), icon: Mail },
+      ],
+    },
+    { path: "/vod-streams", label: t("nav.vodStreams"), icon: FilmIcon },
+    { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
+    { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
+    { path: "/uploader", label: t("nav.uploader"), icon: Upload },
+    {
+      path: "/arr-activity",
+      label: t("nav.arrActivity", "*arr Activity"),
+      icon: Download,
+    },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
@@ -161,79 +218,200 @@ export default function Sidebar() {
           >
             <ul className="space-y-2">
               {menuItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                const invitesExpiredBadge =
-                  item.path === "/invites" && expiredUnusedCount > 0;
-                const usersExpiredBadge =
-                  item.path === "/user-accounts" && expiredUsersCount > 0;
-                const vodActivityBadge =
-                  item.path === "/vod-activity" && activeSessions.length > 0;
-                const showBadge =
-                  invitesExpiredBadge || usersExpiredBadge || vodActivityBadge;
-                let badgeCount = 0;
-                let badgeColor = "bg-red-500";
+                if (item.isTab) {
+                  // Tab with subtabs
+                  const Icon = item.icon;
+                  const isExpanded = expandedTabs[item.tabName];
+                  const hasActiveSub = item.items.some((sub) =>
+                    isActive(sub.path)
+                  );
 
-                if (invitesExpiredBadge) {
-                  badgeCount = expiredUnusedCount;
-                  badgeColor = "bg-red-500";
-                } else if (usersExpiredBadge) {
-                  badgeCount = expiredUsersCount;
-                  badgeColor = "bg-red-500";
-                } else if (vodActivityBadge) {
-                  badgeCount = activeSessions.length;
-                  badgeColor = "bg-green-500";
-                }
+                  // Check if Plex tab has any subtabs with badges
+                  const hasPlexBadge =
+                    item.tabName === "plex" &&
+                    (expiredUnusedCount > 0 ||
+                      expiredUsersCount > 0 ||
+                      activeSessions.length > 0);
 
-                return (
-                  <li key={item.path} className="relative group">
-                    <Link
-                      to={item.path}
-                      onClick={() => setIsOpen(false)}
-                      className={`
-                        flex items-center gap-3 rounded-lg
-                        transition-all duration-200 relative
-                        ${
-                          isOpen
-                            ? "px-4 py-3"
-                            : "md:px-2 md:py-3 md:justify-center 2xl:px-4 2xl:justify-start"
-                        }
-                        ${
-                          active
-                            ? "bg-theme-hover text-white"
-                            : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
-                        }
-                      `}
-                      title={!isOpen ? item.label : ""}
-                    >
-                      <Icon size={20} className="flex-shrink-0" />
-                      <span
-                        className={`flex-1 transition-all overflow-hidden whitespace-nowrap ${
-                          isOpen ? "" : "md:hidden 2xl:block"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                      {showBadge && (
-                        <span
-                          className={`inline-flex items-center justify-center min-w-6 px-2 py-1 text-xs font-bold rounded-full ${badgeColor} text-white transition-all ${
+                  // Check if Services tab has any issues
+                  const hasServicesBadge =
+                    item.tabName === "services" && totalIssues > 0;
+
+                  return (
+                    <div key={item.label}>
+                      <button
+                        onClick={() => toggleTab(item.tabName)}
+                        className={`
+                          w-full flex items-center gap-3 rounded-lg
+                          transition-all duration-200
+                          ${
                             isOpen
-                              ? ""
-                              : "md:absolute md:top-1 md:right-1 md:min-w-4 md:px-1 2xl:relative 2xl:top-auto 2xl:right-auto 2xl:min-w-6 2xl:px-2"
+                              ? "px-4 py-3"
+                              : "md:px-2 md:py-3 md:justify-center 2xl:px-4 2xl:justify-start"
+                          }
+                          ${
+                            hasActiveSub
+                              ? "bg-theme-hover text-white"
+                              : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                          }
+                        `}
+                        title={!isOpen ? item.label : ""}
+                      >
+                        <Icon size={20} className="flex-shrink-0" />
+                        <span
+                          className={`flex-1 transition-all overflow-hidden whitespace-nowrap text-left ${
+                            isOpen ? "" : "md:hidden 2xl:block"
                           }`}
                         >
-                          {badgeCount}
+                          {item.label}
                         </span>
+                        {(hasPlexBadge || hasServicesBadge) && (
+                          <span
+                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full ${
+                              hasServicesBadge ? "bg-red-500" : "bg-orange-500"
+                            } text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            !
+                          </span>
+                        )}
+                        <ChevronDown
+                          size={16}
+                          className={`flex-shrink-0 transition-transform ${
+                            isExpanded ? "rotate-180" : ""
+                          } ${isOpen ? "" : "md:hidden 2xl:block"}`}
+                        />
+                      </button>
+
+                      {/* Subtabs - Show when expanded AND sidebar is open (or on 2xl+ screens) */}
+                      {isExpanded && (
+                        <ul
+                          className={`mt-1 ml-4 space-y-1 border-l border-theme-border transition-all ${
+                            isOpen ? "" : "hidden 2xl:block"
+                          }`}
+                        >
+                          {item.items.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            const active = isActive(subItem.path);
+                            const invitesExpiredBadge =
+                              subItem.path === "/invites" &&
+                              expiredUnusedCount > 0;
+                            const usersExpiredBadge =
+                              subItem.path === "/user-accounts" &&
+                              expiredUsersCount > 0;
+                            const vodActivityBadge =
+                              subItem.path === "/vod-activity" &&
+                              activeSessions.length > 0;
+                            const servicesBadge =
+                              subItem.path === "/services" && totalIssues > 0;
+                            const monitorBadge =
+                              subItem.path === "/monitor" && totalIssues > 0;
+                            const trafficBadge = subItem.path === "/traffic";
+                            const showBadge =
+                              invitesExpiredBadge ||
+                              usersExpiredBadge ||
+                              vodActivityBadge ||
+                              servicesBadge ||
+                              monitorBadge;
+                            let badgeCount = 0;
+                            let badgeColor = "bg-red-500";
+
+                            if (invitesExpiredBadge) {
+                              badgeCount = expiredUnusedCount;
+                              badgeColor = "bg-red-500";
+                            } else if (usersExpiredBadge) {
+                              badgeCount = expiredUsersCount;
+                              badgeColor = "bg-red-500";
+                            } else if (vodActivityBadge) {
+                              badgeCount = activeSessions.length;
+                              badgeColor = "bg-green-500";
+                            } else if (servicesBadge || monitorBadge) {
+                              badgeCount = totalIssues;
+                              badgeColor = "bg-red-500";
+                            }
+
+                            return (
+                              <li key={subItem.path}>
+                                <Link
+                                  to={subItem.path}
+                                  onClick={() => setIsOpen(false)}
+                                  className={`
+                                    flex items-center gap-3 rounded-lg px-3 py-2
+                                    transition-all duration-200 relative
+                                    ${
+                                      active
+                                        ? "bg-theme-hover text-white"
+                                        : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                                    }
+                                  `}
+                                >
+                                  <SubIcon
+                                    size={18}
+                                    className="flex-shrink-0"
+                                  />
+                                  <span className="flex-1 overflow-hidden whitespace-nowrap text-sm">
+                                    {subItem.label}
+                                  </span>
+                                  {showBadge && (
+                                    <span
+                                      className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full ${badgeColor} text-white`}
+                                    >
+                                      {badgeCount}
+                                    </span>
+                                  )}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       )}
-                    </Link>
-                    {/* Tooltip for collapsed state on tablets */}
-                    {!isOpen && (
-                      <div className="hidden md:group-hover:block 2xl:hidden absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 bg-theme-card border border-theme rounded-lg shadow-lg whitespace-nowrap text-sm">
-                        {item.label}
-                      </div>
-                    )}
-                  </li>
-                );
+                    </div>
+                  );
+                } else {
+                  // Regular menu item
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+
+                  return (
+                    <li key={item.path} className="relative group">
+                      <Link
+                        to={item.path}
+                        onClick={() => setIsOpen(false)}
+                        className={`
+                          flex items-center gap-3 rounded-lg
+                          transition-all duration-200 relative
+                          ${
+                            isOpen
+                              ? "px-4 py-3"
+                              : "md:px-2 md:py-3 md:justify-center 2xl:px-4 2xl:justify-start"
+                          }
+                          ${
+                            active
+                              ? "bg-theme-hover text-white"
+                              : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                          }
+                        `}
+                        title={!isOpen ? item.label : ""}
+                      >
+                        <Icon size={20} className="flex-shrink-0" />
+                        <span
+                          className={`flex-1 transition-all overflow-hidden whitespace-nowrap ${
+                            isOpen ? "" : "md:hidden 2xl:block"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      </Link>
+                      {/* Tooltip for collapsed state on tablets */}
+                      {!isOpen && (
+                        <div className="hidden md:group-hover:block 2xl:hidden absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 bg-theme-card border border-theme rounded-lg shadow-lg whitespace-nowrap text-sm">
+                          {item.label}
+                        </div>
+                      )}
+                    </li>
+                  );
+                }
               })}
             </ul>
           </nav>

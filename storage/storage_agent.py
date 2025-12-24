@@ -530,17 +530,13 @@ def validate_config():
     """Validate configuration before starting"""
     issues = []
 
-    if KOMANDORR_URL == "https://mydomain.com":
-        issues.append("⚠ KOMANDORR_URL is set to default - please update")
-
     if SERVICE_ID == "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx":
         issues.append("⚠ SERVICE_ID is set to default - please update")
 
-    if not STORAGE_PATHS:
-        issues.append("⚠ No STORAGE_PATHS configured")
-
-    if not RAID_DEVICES and not ZFS_POOLS:
-        issues.append("⚠ No RAID_DEVICES or ZFS_POOLS configured")
+    if not STORAGE_PATHS and not RAID_DEVICES and not ZFS_POOLS:
+        issues.append(
+            "⚠ Nothing configured to monitor - add STORAGE_PATHS, RAID_DEVICES, or ZFS_POOLS"
+        )
 
     if issues:
         logger.warning("Configuration issues detected:")

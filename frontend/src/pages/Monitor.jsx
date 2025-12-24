@@ -159,11 +159,9 @@ export default function Monitor() {
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
-  const itemsPerPage = 10;
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -172,11 +170,6 @@ export default function Monitor() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Reset to page 1 when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   // Manage active tab based on available groups
   useEffect(() => {
@@ -307,12 +300,6 @@ export default function Monitor() {
       ? groupedServices[activeTab] || []
       : filteredServices;
 
-  // Pagination
-  const totalPages = Math.ceil(servicesInActiveGroup.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedServices = servicesInActiveGroup.slice(startIndex, endIndex);
-
   // Helper functions for status styling
   const getStatusBg = (status) => {
     switch (status) {
@@ -414,7 +401,9 @@ export default function Monitor() {
                     <LayoutDashboard className="w-3 h-3 text-theme-primary" />
                     {t("monitor.stats.total")}
                   </p>
-                  <p className="text-2xl font-bold text-theme-text">{stats.total}</p>
+                  <p className="text-2xl font-bold text-theme-text">
+                    {stats.total}
+                  </p>
                 </div>
                 <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
                   <LayoutDashboard className="w-5 h-5" />
@@ -436,7 +425,9 @@ export default function Monitor() {
                     <CheckCircle2 className="w-3 h-3 text-green-500" />
                     {t("monitor.stats.online")}
                   </p>
-                  <p className="text-2xl font-bold text-green-500">{stats.online}</p>
+                  <p className="text-2xl font-bold text-green-500">
+                    {stats.online}
+                  </p>
                 </div>
                 <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
                   <CheckCircle2 className="w-5 h-5" />
@@ -458,7 +449,9 @@ export default function Monitor() {
                     <Power className="w-3 h-3 text-red-500" />
                     {t("monitor.stats.offline")}
                   </p>
-                  <p className="text-2xl font-bold text-red-500">{stats.offline}</p>
+                  <p className="text-2xl font-bold text-red-500">
+                    {stats.offline}
+                  </p>
                 </div>
                 <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
                   <Power className="w-5 h-5" />
@@ -480,8 +473,12 @@ export default function Monitor() {
                     <AlertTriangle className="w-3 h-3 text-amber-500" />
                     {t("monitor.stats.problem")}
                   </p>
-                  <p className="text-[11px] text-theme-text-muted">{t("monitor.stats.slowLabel")}</p>
-                  <p className="text-2xl font-bold text-amber-500">{stats.problem}</p>
+                  <p className="text-[11px] text-theme-text-muted">
+                    {t("monitor.stats.slowLabel")}
+                  </p>
+                  <p className="text-2xl font-bold text-amber-500">
+                    {stats.problem}
+                  </p>
                 </div>
                 <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
                   <AlertTriangle className="w-5 h-5" />
@@ -570,7 +567,7 @@ export default function Monitor() {
 
           {/* Service Cards - Optimized for tablet */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {paginatedServices.length === 0 ? (
+            {servicesInActiveGroup.length === 0 ? (
               <div className="sm:col-span-2 md:col-span-2 lg:col-span-3 xl:col-span-4">
                 {statusFilter !== null ? (
                   (() => {
@@ -669,7 +666,10 @@ export default function Monitor() {
                   <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
                     <div className="max-w-md mx-auto">
                       <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Server size={32} className="text-theme-primary" />
+                        <Server
+                          size={48}
+                          className="mx-auto mb-4 text-theme-text-muted"
+                        />
                       </div>
                       <h3 className="text-xl font-bold text-theme-text mb-2">
                         {searchTerm
@@ -697,7 +697,7 @@ export default function Monitor() {
               </div>
             ) : (
               <>
-                {paginatedServices.map((service) => (
+                {servicesInActiveGroup.map((service) => (
                   <a
                     key={service.id}
                     href={service.url}
@@ -857,87 +857,6 @@ export default function Monitor() {
               </>
             )}
           </div>
-
-          {/* Pagination */}
-          {servicesInActiveGroup.length > itemsPerPage && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
-              <div className="text-sm font-medium text-theme-text-muted">
-                {t("monitor.pagination.showing")}{" "}
-                <span className="text-theme-text font-semibold">
-                  {startIndex + 1}
-                </span>{" "}
-                {t("monitor.pagination.to")}{" "}
-                <span className="text-theme-text font-semibold">
-                  {Math.min(endIndex, servicesInActiveGroup.length)}
-                </span>{" "}
-                {t("monitor.pagination.of")}{" "}
-                <span className="text-theme-text font-semibold">
-                  {servicesInActiveGroup.length}
-                </span>{" "}
-                {t("monitor.pagination.services")}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-                  title={t("monitor.pagination.previous")}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-
-                <div className="flex items-center gap-1.5">
-                  {[...Array(totalPages)].map((_, index) => {
-                    const page = index + 1;
-                    // Show first page, last page, current page, and pages around current
-                    if (
-                      page === 1 ||
-                      page === totalPages ||
-                      (page >= currentPage - 1 && page <= currentPage + 1)
-                    ) {
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
-                            currentPage === page
-                              ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
-                              : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    } else if (
-                      page === currentPage - 2 ||
-                      page === currentPage + 2
-                    ) {
-                      return (
-                        <span key={page} className="text-theme-text-muted px-2">
-                          •••
-                        </span>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-                  title={t("monitor.pagination.next")}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

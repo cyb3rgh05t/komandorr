@@ -27,6 +27,8 @@ import {
   BarChart3,
   Activity,
   Play,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // Helper component to format dates with timezone support
@@ -164,6 +166,8 @@ const UserAccounts = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     userId: null,
@@ -182,6 +186,11 @@ const UserAccounts = () => {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [timeFilter, setTimeFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+
+  // Reset to page 1 when search term or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage]);
 
   // Extract all users from redeemed invites
   const getAllUsers = () => {
@@ -804,6 +813,9 @@ const UserAccounts = () => {
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("userAccounts.fields.permissions") || "Permissions"}
                 </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  {t("userAccounts.fields.watchTime") || "Watch Time"}
+                </th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("userAccounts.fields.actions") || "Actions"}
                 </th>
@@ -849,6 +861,9 @@ const UserAccounts = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
+                      <div className="h-4 bg-theme-hover rounded w-20"></div>
+                    </td>
+                    <td className="py-3 px-4">
                       <div className="flex justify-end gap-2">
                         <div className="w-9 h-9 bg-theme-hover rounded"></div>
                         <div className="w-9 h-9 bg-theme-hover rounded"></div>
@@ -859,7 +874,7 @@ const UserAccounts = () => {
                 ))
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="py-12">
+                  <td colSpan="10" className="py-12">
                     <div className="text-center">
                       <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users size={32} className="text-theme-primary" />
@@ -878,229 +893,380 @@ const UserAccounts = () => {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
-                  >
-                    {/* User Column (Avatar + Username) */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-green-500/20 border border-green-500/30 flex-shrink-0">
-                          {user.thumb ? (
-                            <img
-                              src={`/api/plex/proxy/image?url=${encodeURIComponent(
-                                user.thumb
-                              )}`}
-                              alt={user.username || user.email}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-green-400" />
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-sm font-semibold text-theme-text truncate max-w-[150px]">
-                          {user.username || user.email}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Email Column */}
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-theme-text truncate max-w-[200px] block">
-                        {user.email}
-                      </span>
-                    </td>
-
-                    {/* Status Column */}
-                    <td className="py-3 px-4">
-                      {user.expires_at &&
-                      new Date(user.expires_at) < new Date() ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
-                          <X className="w-3 h-3" />
-                          {t("userAccounts.status.expired")}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-                          <Check className="w-3 h-3" />
-                          {t("userAccounts.status.active")}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Invite Code Column */}
-                    <td className="py-3 px-4">
-                      <code className="text-sm font-mono font-semibold text-theme-text">
-                        {user.inviteCode}
-                      </code>
-                    </td>
-
-                    {/* Joined Column */}
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-theme-text">
-                        <FormattedDate date={user.created_at} />
-                      </span>
-                    </td>
-
-                    {/* Expires Column */}
-                    <td className="py-3 px-4">
-                      {user.expires_at ? (
-                        <span
-                          className={`text-sm ${
-                            new Date(user.expires_at) < new Date()
-                              ? "text-red-400 font-semibold"
-                              : "text-orange-400"
-                          }`}
-                        >
-                          <FormattedDate date={user.expires_at} />
-                        </span>
-                      ) : (
-                        <span className="text-sm text-theme-muted">-</span>
-                      )}
-                    </td>
-
-                    {/* Libraries Column */}
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {user.libraries.slice(0, 2).map((library, index) => {
-                          const LibraryIcon =
-                            library.type === "movie"
-                              ? Film
-                              : library.type === "show"
-                              ? Tv
-                              : library.type === "music"
-                              ? Music
-                              : null;
-
-                          return (
-                            <span
-                              key={index}
-                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold ${
-                                library.type === "all"
-                                  ? "bg-cyan-500/15 text-cyan-400"
-                                  : library.type === "movie"
-                                  ? "bg-blue-500/15 text-blue-400"
-                                  : library.type === "show"
-                                  ? "bg-purple-500/15 text-purple-400"
-                                  : library.type === "music"
-                                  ? "bg-pink-500/15 text-pink-400"
-                                  : "bg-gray-500/15 text-gray-400"
-                              }`}
-                              title={library.name}
-                            >
-                              {LibraryIcon && (
-                                <LibraryIcon className="w-3 h-3" />
-                              )}
-                              <span className="max-w-[80px] truncate">
-                                {library.name}
-                              </span>
-                            </span>
-                          );
-                        })}
-                        {user.libraries.length > 2 && (
-                          <span className="text-xs text-theme-muted">
-                            +{user.libraries.length - 2}
+                (() => {
+                  const totalItems = filteredUsers.length;
+                  const totalPages = Math.max(
+                    1,
+                    Math.ceil(totalItems / itemsPerPage)
+                  );
+                  const startIndex = (currentPage - 1) * itemsPerPage;
+                  const endIndex = startIndex + itemsPerPage;
+                  const paginatedUsers = filteredUsers.slice(
+                    startIndex,
+                    endIndex
+                  );
+                  window.__userPaginationData = {
+                    totalItems,
+                    totalPages,
+                    startIndex,
+                    endIndex,
+                  };
+                  return paginatedUsers.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                    >
+                      {/* User Column (Avatar + Username) */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-green-500/20 border border-green-500/30 flex-shrink-0">
+                            {user.thumb ? (
+                              <img
+                                src={`/api/plex/proxy/image?url=${encodeURIComponent(
+                                  user.thumb
+                                )}`}
+                                alt={user.username || user.email}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-green-400" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-theme-text truncate max-w-[150px]">
+                            {user.username || user.email}
                           </span>
-                        )}
-                      </div>
-                    </td>
+                        </div>
+                      </td>
 
-                    {/* Permissions Column */}
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {!user.permissions.allowSync &&
-                        !user.permissions.allowChannels &&
-                        !user.permissions.plexHome ? (
-                          <span className="inline-flex items-center gap-1 bg-gray-500/15 px-2 py-0.5 rounded text-xs text-gray-400 font-semibold">
-                            {t("invites.fields.none")}
+                      {/* Email Column */}
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-theme-text truncate max-w-[200px] block">
+                          {user.email}
+                        </span>
+                      </td>
+
+                      {/* Status Column */}
+                      <td className="py-3 px-4">
+                        {user.expires_at &&
+                        new Date(user.expires_at) < new Date() ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                            <X className="w-3 h-3" />
+                            {t("userAccounts.status.expired")}
                           </span>
                         ) : (
-                          <>
-                            {user.permissions.allowSync && (
-                              <span className="inline-flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded text-xs text-blue-400 font-semibold">
-                                <Repeat className="w-3 h-3" />
-                                {t("invites.permissions.sync")}
-                              </span>
-                            )}
-                            {user.permissions.allowChannels && (
-                              <span className="inline-flex items-center gap-1 bg-purple-500/15 px-2 py-0.5 rounded text-xs text-purple-400 font-semibold">
-                                <Radio className="w-3 h-3" />
-                                {t("invites.permissions.liveTV")}
-                              </span>
-                            )}
-                            {user.permissions.plexHome && (
-                              <span className="inline-flex items-center gap-1 bg-green-500/15 px-2 py-0.5 rounded text-xs text-green-400 font-semibold">
-                                <Home className="w-3 h-3" />
-                                {t("invites.permissions.home")}
-                              </span>
-                            )}
-                          </>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                            <Check className="w-3 h-3" />
+                            {t("userAccounts.status.active")}
+                          </span>
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Actions Column */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowStatsModal(true);
-                            setTimeFilter("all");
-                            setTypeFilter("all");
-                          }}
-                          className="p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded transition-all"
-                          title={
-                            t("userAccounts.buttons.viewStats") ||
-                            "View watch stats"
-                          }
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleRefreshUser(user)}
-                          disabled={refreshingUsers.has(user.id)}
-                          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={
-                            t("userAccounts.buttons.refreshUser") ||
-                            "Refresh user info"
-                          }
-                        >
-                          <RefreshCw
-                            className={`w-4 h-4 transition-transform ${
-                              refreshingUsers.has(user.id) ? "animate-spin" : ""
+                      {/* Invite Code Column */}
+                      <td className="py-3 px-4">
+                        <code className="text-sm font-mono font-semibold text-theme-text">
+                          {user.inviteCode}
+                        </code>
+                      </td>
+
+                      {/* Joined Column */}
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-theme-text">
+                          <FormattedDate date={user.created_at} />
+                        </span>
+                      </td>
+
+                      {/* Expires Column */}
+                      <td className="py-3 px-4">
+                        {user.expires_at ? (
+                          <span
+                            className={`text-sm ${
+                              new Date(user.expires_at) < new Date()
+                                ? "text-red-400 font-semibold"
+                                : "text-orange-400"
                             }`}
-                          />
-                        </button>
-                        <button
-                          onClick={() => handleEditUser(user)}
-                          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
-                          title={t("userAccounts.buttons.editUser")}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user)}
-                          className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
-                          title={t("userAccounts.buttons.removeUser")}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          >
+                            <FormattedDate date={user.expires_at} />
+                          </span>
+                        ) : (
+                          <span className="text-sm text-theme-muted">-</span>
+                        )}
+                      </td>
+
+                      {/* Libraries Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {user.libraries.slice(0, 2).map((library, index) => {
+                            const LibraryIcon =
+                              library.type === "movie"
+                                ? Film
+                                : library.type === "show"
+                                ? Tv
+                                : library.type === "music"
+                                ? Music
+                                : null;
+
+                            return (
+                              <span
+                                key={index}
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold ${
+                                  library.type === "all"
+                                    ? "bg-cyan-500/15 text-cyan-400"
+                                    : library.type === "movie"
+                                    ? "bg-blue-500/15 text-blue-400"
+                                    : library.type === "show"
+                                    ? "bg-purple-500/15 text-purple-400"
+                                    : library.type === "music"
+                                    ? "bg-pink-500/15 text-pink-400"
+                                    : "bg-gray-500/15 text-gray-400"
+                                }`}
+                                title={library.name}
+                              >
+                                {LibraryIcon && (
+                                  <LibraryIcon className="w-3 h-3" />
+                                )}
+                                <span className="max-w-[80px] truncate">
+                                  {library.name}
+                                </span>
+                              </span>
+                            );
+                          })}
+                          {user.libraries.length > 2 && (
+                            <span className="text-xs text-theme-muted">
+                              +{user.libraries.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Permissions Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {!user.permissions.allowSync &&
+                          !user.permissions.allowChannels &&
+                          !user.permissions.plexHome ? (
+                            <span className="inline-flex items-center gap-1 bg-gray-500/15 px-2 py-0.5 rounded text-xs text-gray-400 font-semibold">
+                              {t("invites.fields.none")}
+                            </span>
+                          ) : (
+                            <>
+                              {user.permissions.allowSync && (
+                                <span className="inline-flex items-center gap-1 bg-blue-500/15 px-2 py-0.5 rounded text-xs text-blue-400 font-semibold">
+                                  <Repeat className="w-3 h-3" />
+                                  {t("invites.permissions.sync")}
+                                </span>
+                              )}
+                              {user.permissions.allowChannels && (
+                                <span className="inline-flex items-center gap-1 bg-purple-500/15 px-2 py-0.5 rounded text-xs text-purple-400 font-semibold">
+                                  <Radio className="w-3 h-3" />
+                                  {t("invites.permissions.liveTV")}
+                                </span>
+                              )}
+                              {user.permissions.plexHome && (
+                                <span className="inline-flex items-center gap-1 bg-green-500/15 px-2 py-0.5 rounded text-xs text-green-400 font-semibold">
+                                  <Home className="w-3 h-3" />
+                                  {t("invites.permissions.home")}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Watch Time Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-theme-text-muted" />
+                          <span className="text-sm text-theme-text font-medium">
+                            {(() => {
+                              const stats = getUserStats(user);
+                              if (
+                                stats.totalHours === 0 &&
+                                stats.totalMinutes === 0
+                              ) {
+                                return "0m";
+                              }
+                              if (stats.totalHours === 0) {
+                                return `${stats.totalMinutes}m`;
+                              }
+                              return `${stats.totalHours}h ${stats.totalMinutes}m`;
+                            })()}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowStatsModal(true);
+                              setTimeFilter("all");
+                              setTypeFilter("all");
+                            }}
+                            className="p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded transition-all"
+                            title={
+                              t("userAccounts.buttons.viewStats") ||
+                              "View watch stats"
+                            }
+                          >
+                            <BarChart3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRefreshUser(user)}
+                            disabled={refreshingUsers.has(user.id)}
+                            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={
+                              t("userAccounts.buttons.refreshUser") ||
+                              "Refresh user info"
+                            }
+                          >
+                            <RefreshCw
+                              className={`w-4 h-4 transition-transform ${
+                                refreshingUsers.has(user.id)
+                                  ? "animate-spin"
+                                  : ""
+                              }`}
+                            />
+                          </button>
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+                            title={t("userAccounts.buttons.editUser")}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user)}
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
+                            title={t("userAccounts.buttons.removeUser")}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ));
+                })()
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {(() => {
+        const paginationData = window.__userPaginationData || {
+          totalItems: 0,
+          totalPages: 1,
+          startIndex: 0,
+          endIndex: 0,
+        };
+        if (paginationData.totalItems === 0) return null;
+
+        return (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-medium text-theme-text-muted">
+                {t("userAccounts.pagination.showing", "Showing")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {paginationData.startIndex + 1}
+                </span>{" "}
+                {t("userAccounts.pagination.to", "to")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {Math.min(paginationData.endIndex, paginationData.totalItems)}
+                </span>{" "}
+                {t("userAccounts.pagination.of", "of")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {paginationData.totalItems}
+                </span>{" "}
+                {t("userAccounts.pagination.users", "users")}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-theme-text-muted">
+                  {t("userAccounts.pagination.itemsPerPage", "Items per page:")}
+                </span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("userAccounts.pagination.previous", "Previous")}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {[...Array(paginationData.totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  if (
+                    page === 1 ||
+                    page === paginationData.totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                          currentPage === page
+                            ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                            : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="text-theme-text-muted px-2">
+                        •••
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage(
+                    Math.min(paginationData.totalPages, currentPage + 1)
+                  )
+                }
+                disabled={currentPage === paginationData.totalPages}
+                className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("userAccounts.pagination.next", "Next")}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Edit Modal */}
       {editModal.isOpen && (

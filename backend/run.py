@@ -68,5 +68,5 @@ if __name__ == "__main__":
         port=8000,
         reload=True,
         log_config=log_config,
-        access_log=True,
+        access_log=False,
     )

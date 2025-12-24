@@ -5,14 +5,17 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "services": "Servers",
-    "monitor": "Antwort Monitor",
-    "traffic": "Traffic Monitor",
+    "plex": "Plex",
+    "services": "Dienste",
+    "monitor": "Ping Antwort",
+    "traffic": "Traffic",
     "vodStreams": "VOD Monitor",
-    "vodActivity": "Plex Aktivität",
+    "vodActivity": "Aktivität",
+    "arrActivity": "Downloads",
     "vodPortal": "VOD Portal",
-    "invites": "Plex Einladungen",
-    "userAccounts": "Plex Benutzerkonten",
+    "uploader": "Uploader",
+    "invites": "Einladungen",
+    "userAccounts": "Benutzerkonten",
     "userHistory": "Plex Benutzerstatistiken",
     "settings": "Einstellungen",
     "about": "Über"
@@ -220,6 +223,67 @@
       }
     }
   },
+  "uploader": {
+    "settings": "Uploader Einstellungen",
+    "baseUrl": "Uploader Basis-URL",
+    "baseUrlHelp": "Legen Sie die URL Ihres Uploader-Dienstes fest (Container oder extern).",
+    "testConnection": "Verbindung testen",
+    "testing": "Teste...",
+    "connectionOk": "OK",
+    "connectionFailed": "Fehlgeschlagen",
+    "activeUploads": "Aktive Uploads",
+    "queue": "Warteschlange",
+    "completedToday": "Heute abgeschlossen",
+    "status": "Status",
+    "activeDescription": "Laufende Übertragungen in Echtzeit",
+    "queueDescription": "Dateien, die auf den Upload warten",
+    "completed": "Abgeschlossene Uploads",
+    "completedDescription": "Kürzlich fertiggestellte Uploads",
+    "systemOverview": "Systemübersicht",
+    "systemDescription": "Überblick über Uploader-Statistiken",
+    "table": {
+      "filename": "Dateiname",
+      "drive": "Ordner",
+      "directory": "Verzeichnis",
+      "key": "Key",
+      "progress": "Fortschritt",
+      "size": "Dateigröße",
+      "remaining": "Restzeit",
+      "speed": "Geschwindigkeit",
+      "added": "Hinzugefügt",
+      "duration": "Dauer",
+      "completedAt": "Abgeschlossen"
+    },
+    "empty": {
+      "active": "Keine Uploads aktiv",
+      "queue": "Keine Dateien in der Warteschlange",
+      "completed": "Noch keine abgeschlossenen Uploads"
+    },
+    "pagination": "Zeige {{from}}-{{to}} von {{total}} Uploads",
+    "mini": {
+      "rate": "Upload-Rate",
+      "queueCount": "Dateien in Queue",
+      "completedToday": "Heute abgeschlossen",
+      "status": "Status"
+    }
+  },
+  "arr": {
+    "instancesTitle": "Sonarr/Radarr Instanzen",
+    "instancesSubtitle": "Konfigurieren Sie mehrere Sonarr- und Radarr-Instanzen (z. B. 1080p und 4K).",
+    "noInstances": "Noch keine Instanzen konfiguriert.",
+    "remove": "Entfernen",
+    "instanceName": "Instanzname",
+    "instanceType": "Typ",
+    "instanceUrl": "Basis-URL",
+    "instanceApiKey": "API-Schlüssel",
+    "addInstance": "Instanz hinzufügen",
+    "add": "Hinzufügen",
+    "cancel": "Abbrechen",
+    "testConnection": "Verbindung testen",
+    "testing": "Teste...",
+    "connectionOk": "OK",
+    "connectionFailed": "Fehlgeschlagen"
+  },
   "vodStreams": {
     "title": "Sync-Aktivitäten",
     "description": "Überwachen Sie Ihre Plex-Download- und Sync-Aktivitäten",
@@ -379,7 +443,9 @@
     "save": "Speichern",
     "close": "Schließen",
     "refresh": "Aktualisieren",
-    "refreshing": "Aktualisiere"
+    "refreshing": "Aktualisiere",
+    "previous": "Zurück",
+    "next": "Weiter"
   },
   "userAccounts": {
     "title": "Benutzerkonten",
@@ -419,6 +485,7 @@
       "expires": "L\u00e4uft ab",
       "libraries": "Bibliotheken",
       "permissions": "Berechtigungen",
+      "watchTime": "Sehzeit",
       "actions": "Aktionen"
     },
     "status": {
@@ -817,6 +884,7 @@
     "userType": "Benutzertyp",
     "plexId": "Plex-ID",
     "createdAt": "Erstellt",
+    "requests": "Anfragen",
     "fetchUsersError": "Fehler beim Laden der Benutzer",
     "showing": "Zeige",
     "to": "bis",
