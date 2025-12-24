@@ -60,22 +60,35 @@ const getStatusBadgeClass = (status) => {
 export default function ArrActivity() {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: queueData, refetch: refetchQueue } = useQuery({
+  const {
+    data: queueData,
+    refetch: refetchQueue,
+    isFetching: isFetchingQueue,
+  } = useQuery({
     queryKey: ["arr-activity", "queue"],
     queryFn: () => arrActivityApi.getQueue(),
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: queueStatus, refetch: refetchQueueStatus } = useQuery({
+  const {
+    data: queueStatus,
+    refetch: refetchQueueStatus,
+    isFetching: isFetchingStatus,
+  } = useQuery({
     queryKey: ["arr-activity", "queue-status"],
     queryFn: () => arrActivityApi.getQueueStatus(),
     refetchInterval: 10000,
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: systemStatus, refetch: refetchSystemStatus } = useQuery({
+  const {
+    data: systemStatus,
+    refetch: refetchSystemStatus,
+    isFetching: isFetchingSystem,
+  } = useQuery({
     queryKey: ["arr-activity", "system-status"],
     queryFn: () => arrActivityApi.getSystemStatus(),
     refetchInterval: 60000, // Check system status every minute
@@ -97,10 +110,17 @@ export default function ArrActivity() {
     .filter((i) => i.type === "radarr")
     .reduce((sum, i) => sum + (i.records?.length || 0), 0);
 
-  const refreshAll = () => {
-    refetchQueue();
-    refetchQueueStatus();
-    refetchSystemStatus();
+  const refreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetchQueue(),
+        refetchQueueStatus(),
+        refetchSystemStatus(),
+      ]);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -260,10 +280,30 @@ export default function ArrActivity() {
         </div>
         <button
           onClick={refreshAll}
-          className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm"
+          disabled={
+            isRefreshing ||
+            isFetchingQueue ||
+            isFetchingStatus ||
+            isFetchingSystem
+          }
+          className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RefreshCcw className="w-4 h-4" />
-          {t("common.refresh", "Refresh")}
+          <RefreshCcw
+            className={`w-4 h-4 ${
+              isRefreshing ||
+              isFetchingQueue ||
+              isFetchingStatus ||
+              isFetchingSystem
+                ? "animate-spin"
+                : ""
+            }`}
+          />
+          {isRefreshing ||
+          isFetchingQueue ||
+          isFetchingStatus ||
+          isFetchingSystem
+            ? t("common.refreshing", "Refreshing")
+            : t("common.refresh", "Refresh")}
         </button>
       </div>
 

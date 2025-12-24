@@ -70,6 +70,21 @@ export default function Sidebar() {
 
   const activeSessions = sessionsData?.sessions || [];
 
+  // Fetch services for status badges
+  const { data: services = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: () => api.getServices(),
+    staleTime: 10000,
+    refetchInterval: 10000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Count services by status
+  const offlineServices = services.filter((s) => s.status === "offline").length;
+  const problemServices = services.filter((s) => s.status === "problem").length;
+  const errorServices = services.filter((s) => s.status === "error").length;
+  const totalIssues = offlineServices + problemServices + errorServices;
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
@@ -218,6 +233,10 @@ export default function Sidebar() {
                       expiredUsersCount > 0 ||
                       activeSessions.length > 0);
 
+                  // Check if Services tab has any issues
+                  const hasServicesBadge =
+                    item.tabName === "services" && totalIssues > 0;
+
                   return (
                     <div key={item.label}>
                       <button
@@ -246,9 +265,11 @@ export default function Sidebar() {
                         >
                           {item.label}
                         </span>
-                        {hasPlexBadge && (
+                        {(hasPlexBadge || hasServicesBadge) && (
                           <span
-                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-orange-500 text-white ${
+                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full ${
+                              hasServicesBadge ? "bg-red-500" : "bg-orange-500"
+                            } text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -282,10 +303,17 @@ export default function Sidebar() {
                             const vodActivityBadge =
                               subItem.path === "/vod-activity" &&
                               activeSessions.length > 0;
+                            const servicesBadge =
+                              subItem.path === "/services" && totalIssues > 0;
+                            const monitorBadge =
+                              subItem.path === "/monitor" && totalIssues > 0;
+                            const trafficBadge = subItem.path === "/traffic";
                             const showBadge =
                               invitesExpiredBadge ||
                               usersExpiredBadge ||
-                              vodActivityBadge;
+                              vodActivityBadge ||
+                              servicesBadge ||
+                              monitorBadge;
                             let badgeCount = 0;
                             let badgeColor = "bg-red-500";
 
@@ -298,6 +326,9 @@ export default function Sidebar() {
                             } else if (vodActivityBadge) {
                               badgeCount = activeSessions.length;
                               badgeColor = "bg-green-500";
+                            } else if (servicesBadge || monitorBadge) {
+                              badgeCount = totalIssues;
+                              badgeColor = "bg-red-500";
                             }
 
                             return (

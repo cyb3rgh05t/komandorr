@@ -486,7 +486,15 @@ export default function Settings() {
 
   const testArrInstance = async (inst) => {
     if (!inst?.id) return;
+    if (!inst.url || !inst.api_key) {
+      toast.error(`Please enter URL and API key for ${inst.name}`);
+      return;
+    }
     setArrTestStatus((prev) => ({ ...prev, [inst.id]: "loading" }));
+    console.log(`Testing ${inst.name} connection...`, {
+      url: inst.url,
+      type: inst.type,
+    });
     try {
       const status = await api.get("/arr-activity/system/status");
       const entry = status?.[inst.id];
@@ -495,8 +503,17 @@ export default function Settings() {
         entry.status &&
         !entry.status.error &&
         (entry.status.version || entry.status.buildTime || entry.status.branch);
+      if (ok) {
+        console.log(`${inst.name} connection successful`, entry.status);
+        toast.success(`${inst.name} connection successful`);
+      } else {
+        console.error(`${inst.name} connection failed:`, entry);
+        toast.error(`Cannot connect to ${inst.name}`);
+      }
       setArrTestStatus((prev) => ({ ...prev, [inst.id]: ok ? "ok" : "fail" }));
     } catch (e) {
+      console.error(`${inst.name} connection error:`, e);
+      toast.error(e.message || `Cannot connect to ${inst.name}`);
       setArrTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
     }
   };
@@ -1197,39 +1214,92 @@ export default function Settings() {
                         "Set the URL of your Uploader service (container or external).",
                     })}
                   </p>
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="flex gap-3 mt-3">
                     <button
                       type="button"
                       onClick={async () => {
+                        if (!uploaderUrl) {
+                          toast.error("Please enter Uploader URL");
+                          return;
+                        }
                         setUploaderTestStatus("loading");
+                        console.log("Testing Uploader connection...", {
+                          url: uploaderUrl,
+                        });
                         try {
-                          await api.get("/uploader/status");
+                          const result = await api.get("/uploader/status");
+                          console.log("Uploader connection successful", result);
                           setUploaderTestStatus("ok");
+                          toast.success("Uploader connection successful");
                         } catch (e) {
+                          console.error("Uploader connection failed:", e);
                           setUploaderTestStatus("fail");
+                          toast.error(
+                            e.message || "Cannot connect to Uploader"
+                          );
                         }
                       }}
-                      className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-xs text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
+                      disabled={
+                        uploaderTestStatus === "loading" || !uploaderUrl
+                      }
+                      className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                        uploaderTestStatus === "ok"
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : uploaderTestStatus === "fail"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                      }`}
                     >
-                      {uploaderTestStatus === "loading"
-                        ? t("uploader.testing", { defaultValue: "Testing..." })
-                        : t("uploader.testConnection", {
-                            defaultValue: "Test Connection",
+                      {uploaderTestStatus === "loading" ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg
+                            className="animate-spin h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          {t("uploader.testing", {
+                            defaultValue: "Testing...",
                           })}
+                        </span>
+                      ) : uploaderTestStatus === "ok" ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <CheckCircle size={16} />
+                          {t("uploader.connectionOk", {
+                            defaultValue: "Connected",
+                          })}
+                        </span>
+                      ) : (
+                        t("uploader.testConnection", {
+                          defaultValue: "Test Connection",
+                        })
+                      )}
                     </button>
-                    {uploaderTestStatus === "ok" && (
-                      <span className="text-xs px-2 py-1 rounded bg-green-500/15 text-green-400 border border-green-500/30">
-                        {t("uploader.connectionOk", { defaultValue: "OK" })}
-                      </span>
-                    )}
-                    {uploaderTestStatus === "fail" && (
-                      <span className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-400 border border-red-500/30">
-                        {t("uploader.connectionFailed", {
-                          defaultValue: "Failed",
-                        })}
-                      </span>
-                    )}
                   </div>
+
+                  {uploaderTestStatus === "fail" && (
+                    <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <p>
+                        Cannot connect to Uploader. Check the URL is correct and
+                        the service is running.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1382,33 +1452,72 @@ export default function Settings() {
                               )}
                             </button>
                           </div>
-                          <div className="mt-3 flex items-center gap-2">
+                          <div className="flex gap-3 mt-3">
                             <button
                               type="button"
                               onClick={() => testArrInstance(inst)}
-                              className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-xs text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
+                              disabled={
+                                arrTestStatus[inst.id] === "loading" ||
+                                !inst.url ||
+                                !inst.api_key
+                              }
+                              className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                                arrTestStatus[inst.id] === "ok"
+                                  ? "bg-green-600 hover:bg-green-700 text-white"
+                                  : arrTestStatus[inst.id] === "fail"
+                                  ? "bg-red-600 hover:bg-red-700 text-white"
+                                  : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                              }`}
                             >
-                              {arrTestStatus[inst.id] === "loading"
-                                ? t("arr.testing", {
+                              {arrTestStatus[inst.id] === "loading" ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  <svg
+                                    className="animate-spin h-4 w-4"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  {t("arr.testing", {
                                     defaultValue: "Testing...",
-                                  })
-                                : t("arr.testConnection", {
-                                    defaultValue: "Test Connection",
                                   })}
+                                </span>
+                              ) : arrTestStatus[inst.id] === "ok" ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  <CheckCircle size={16} />
+                                  {t("arr.connectionOk", {
+                                    defaultValue: "Connected",
+                                  })}
+                                </span>
+                              ) : (
+                                t("arr.testConnection", {
+                                  defaultValue: "Test Connection",
+                                })
+                              )}
                             </button>
-                            {arrTestStatus[inst.id] === "ok" && (
-                              <span className="text-xs px-2 py-1 rounded bg-green-500/15 text-green-400 border border-green-500/30">
-                                {t("arr.connectionOk", { defaultValue: "OK" })}
-                              </span>
-                            )}
-                            {arrTestStatus[inst.id] === "fail" && (
-                              <span className="text-xs px-2 py-1 rounded bg-red-500/15 text-red-400 border border-red-500/30">
-                                {t("arr.connectionFailed", {
-                                  defaultValue: "Failed",
-                                })}
-                              </span>
-                            )}
                           </div>
+                          {arrTestStatus[inst.id] === "fail" && (
+                            <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
+                              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                              <p>
+                                Cannot connect to {inst.name}. Check the URL and
+                                API key are correct.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
