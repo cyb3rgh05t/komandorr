@@ -379,18 +379,7 @@ export default function Settings() {
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Save Settings Button - Top */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
-            <Save className="w-5 h-5 text-theme-primary" />
-            {t("settings.settings")}
-          </h2>
-          <p className="text-sm text-theme-muted mt-1">
-            {pendingChanges
-              ? "Auto-saving in 5 seconds..."
-              : "Changes saved automatically"}
-          </p>
-        </div>
+      <div className="flex flex-col items-end">
         <button
           onClick={() => {
             handleSaveSettings();
@@ -403,57 +392,67 @@ export default function Settings() {
           <Save className="text-theme-primary w-4 h-4" />
           {settingsLoading ? t("settings.saving") : t("settings.saveNow")}
         </button>
+        <p className="text-sm text-theme-text-muted mt-2">
+          {pendingChanges
+            ? "Auto-saving in 5 seconds..."
+            : "Changes saved automatically"}
+        </p>
       </div>
 
       {/* Authentication Settings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="space-y-6">
         {/* Auth Toggle */}
-        <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("auth.authSettings")}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-          <div className="relative">
-            <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-              </div>
-              {t("auth.authSettings")}
-            </h2>
-
-            {/* Enable/Disable Auth */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
-                <div>
-                  <h3 className="font-medium text-theme-text mb-1">
-                    {t("auth.enableAuth")}
-                  </h3>
-                  <p className="text-sm text-theme-muted">
+            <div className="relative">
+              {/* Enable/Disable Auth */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                  <div>
+                    <h3 className="font-medium text-theme-text mb-1">
+                      {t("auth.enableAuth")}
+                    </h3>
+                    <p className="text-sm text-theme-muted">
+                      {authEnabled
+                        ? t("auth.authEnabled")
+                        : t("auth.authDisabled")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleToggleAuth}
+                    disabled={loading}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      authEnabled ? "bg-green-500" : "bg-gray-600"
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        authEnabled ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-orange-400 bg-orange-500/10 backdrop-blur-sm border border-orange-500/30 rounded-lg p-3">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <p>
                     {authEnabled
-                      ? t("auth.authEnabled")
-                      : t("auth.authDisabled")}
+                      ? "Disabling authentication will allow unrestricted access to your dashboard."
+                      : "Enable this for an additional security layer on top of Authelia/Traefik."}
                   </p>
                 </div>
-                <button
-                  onClick={handleToggleAuth}
-                  disabled={loading}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    authEnabled ? "bg-green-500" : "bg-gray-600"
-                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      authEnabled ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-orange-400 bg-orange-500/10 backdrop-blur-sm border border-orange-500/30 rounded-lg p-3">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <p>
-                  {authEnabled
-                    ? "Disabling authentication will allow unrestricted access to your dashboard."
-                    : "Enable this for an additional security layer on top of Authelia/Traefik."}
-                </p>
               </div>
             </div>
           </div>
@@ -461,548 +460,573 @@ export default function Settings() {
 
         {/* Change Credentials Form */}
         {authEnabled && (
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("auth.changeCredentials")}
+                </h3>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              {/* Decorative gradient overlay */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-            <div className="relative">
-              <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-                <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-                </div>
-                {t("auth.changeCredentials")}
-              </h2>
+              <div className="relative">
+                <form onSubmit={handleUpdateCredentials} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("auth.username")}
+                    </label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder={t("auth.enterUsername")}
+                      required
+                    />
+                  </div>
 
-              <form onSubmit={handleUpdateCredentials} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("auth.username")}
-                  </label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder={t("auth.enterUsername")}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("auth.currentPassword")}
+                    </label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder={t("auth.enterPassword")}
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("auth.currentPassword")}
-                  </label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder={t("auth.enterPassword")}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("auth.newPassword")}
+                    </label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder={t("auth.enterPassword")}
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("auth.newPassword")}
-                  </label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder={t("auth.enterPassword")}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("auth.confirmPassword")}
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder={t("auth.enterPassword")}
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("auth.confirmPassword")}
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder={t("auth.enterPassword")}
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                >
-                  {loading ? t("auth.updating") : t("auth.updateCredentials")}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  >
+                    {loading ? t("auth.updating") : t("auth.updateCredentials")}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}
 
         {/* General Settings */}
-        <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("settings.generalSettings")}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-          <div className="relative">
-            <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-                <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-              </div>
-              {t("settings.generalSettings")}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.timezone")}
-                </label>
-                <CustomDropdown
-                  value={timezone}
-                  onChange={(val) => {
-                    setTimezone(val);
-                    setPendingChanges(true);
-                  }}
-                  options={[
-                    { value: "UTC", label: "UTC" },
-                    {
-                      value: "America/New_York",
-                      label: "America/New_York (EST/EDT)",
-                    },
-                    {
-                      value: "America/Chicago",
-                      label: "America/Chicago (CST/CDT)",
-                    },
-                    {
-                      value: "America/Denver",
-                      label: "America/Denver (MST/MDT)",
-                    },
-                    {
-                      value: "America/Los_Angeles",
-                      label: "America/Los_Angeles (PST/PDT)",
-                    },
-                    {
-                      value: "Europe/London",
-                      label: "Europe/London (GMT/BST)",
-                    },
-                    { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
-                    {
-                      value: "Europe/Berlin",
-                      label: "Europe/Berlin (CET/CEST)",
-                    },
-                    {
-                      value: "Europe/Amsterdam",
-                      label: "Europe/Amsterdam (CET/CEST)",
-                    },
-                    { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
-                    { value: "Asia/Shanghai", label: "Asia/Shanghai (CST)" },
-                    {
-                      value: "Australia/Sydney",
-                      label: "Australia/Sydney (AEST/AEDT)",
-                    },
-                  ]}
-                />
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.timezoneHelp")}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.logLevel")}
-                </label>
-                <CustomDropdown
-                  value={logLevel}
-                  onChange={(val) => {
-                    setLogLevel(val);
-                    setPendingChanges(true);
-                  }}
-                  options={[
-                    { value: "DEBUG", label: "DEBUG" },
-                    { value: "INFO", label: "INFO" },
-                    { value: "WARNING", label: "WARNING" },
-                    { value: "ERROR", label: "ERROR" },
-                    { value: "CRITICAL", label: "CRITICAL" },
-                  ]}
-                />
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.logLevelHelp")}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+            <div className="relative">
+              <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium text-theme-text mb-1">
-                    {t("settings.enableFileLogging")}
-                  </h3>
-                  <p className="text-sm text-theme-muted">
-                    {t("settings.enableFileLoggingHelp")}
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.timezone")}
+                  </label>
+                  <CustomDropdown
+                    value={timezone}
+                    onChange={(val) => {
+                      setTimezone(val);
+                      setPendingChanges(true);
+                    }}
+                    options={[
+                      { value: "UTC", label: "UTC" },
+                      {
+                        value: "America/New_York",
+                        label: "America/New_York (EST/EDT)",
+                      },
+                      {
+                        value: "America/Chicago",
+                        label: "America/Chicago (CST/CDT)",
+                      },
+                      {
+                        value: "America/Denver",
+                        label: "America/Denver (MST/MDT)",
+                      },
+                      {
+                        value: "America/Los_Angeles",
+                        label: "America/Los_Angeles (PST/PDT)",
+                      },
+                      {
+                        value: "Europe/London",
+                        label: "Europe/London (GMT/BST)",
+                      },
+                      {
+                        value: "Europe/Paris",
+                        label: "Europe/Paris (CET/CEST)",
+                      },
+                      {
+                        value: "Europe/Berlin",
+                        label: "Europe/Berlin (CET/CEST)",
+                      },
+                      {
+                        value: "Europe/Amsterdam",
+                        label: "Europe/Amsterdam (CET/CEST)",
+                      },
+                      { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
+                      { value: "Asia/Shanghai", label: "Asia/Shanghai (CST)" },
+                      {
+                        value: "Australia/Sydney",
+                        label: "Australia/Sydney (AEST/AEDT)",
+                      },
+                    ]}
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.timezoneHelp")}
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setLogEnableFile(!logEnableFile);
-                    setPendingChanges(true);
-                  }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    logEnableFile ? "bg-green-500" : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      logEnableFile ? "translate-x-6" : "translate-x-1"
-                    }`}
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.logLevel")}
+                  </label>
+                  <CustomDropdown
+                    value={logLevel}
+                    onChange={(val) => {
+                      setLogLevel(val);
+                      setPendingChanges(true);
+                    }}
+                    options={[
+                      { value: "DEBUG", label: "DEBUG" },
+                      { value: "INFO", label: "INFO" },
+                      { value: "WARNING", label: "WARNING" },
+                      { value: "ERROR", label: "ERROR" },
+                      { value: "CRITICAL", label: "CRITICAL" },
+                    ]}
                   />
-                </button>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.logLevelHelp")}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                  <div>
+                    <h3 className="font-medium text-theme-text mb-1">
+                      {t("settings.enableFileLogging")}
+                    </h3>
+                    <p className="text-sm text-theme-muted">
+                      {t("settings.enableFileLoggingHelp")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setLogEnableFile(!logEnableFile);
+                      setPendingChanges(true);
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      logEnableFile ? "bg-green-500" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        logEnableFile ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Plex Server Settings & API Configuration Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Plex Server Settings */}
-        <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Server className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("plex.serverSettings")}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-          <div className="relative">
-            <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-                <Server className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-              </div>
-              {t("plex.serverSettings")}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("plex.serverUrl")}
-                </label>
-                <input
-                  type="url"
-                  value={plexUrl}
-                  onChange={(e) => {
-                    setPlexUrl(e.target.value);
-                    setPlexValid(null);
-                    setPendingChanges(true);
-                  }}
-                  className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                  placeholder="http://192.168.1.100:32400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("plex.token")}
-                </label>
-                <div className="relative">
+            <div className="relative">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("plex.serverUrl")}
+                  </label>
                   <input
-                    type={showPlexToken ? "text" : "password"}
-                    value={plexToken}
+                    type="url"
+                    value={plexUrl}
                     onChange={(e) => {
-                      setPlexToken(e.target.value);
+                      setPlexUrl(e.target.value);
                       setPlexValid(null);
                       setPendingChanges(true);
                     }}
-                    className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="XXXXXXXXXXXXXXXXXXXX"
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="http://192.168.1.100:32400"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("plex.token")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPlexToken ? "text" : "password"}
+                      value={plexToken}
+                      onChange={(e) => {
+                        setPlexToken(e.target.value);
+                        setPlexValid(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="XXXXXXXXXXXXXXXXXXXX"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPlexToken(!showPlexToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showPlexToken ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("plex.tokenHelp")}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
                   <button
-                    type="button"
-                    onClick={() => setShowPlexToken(!showPlexToken)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    onClick={handleValidatePlex}
+                    disabled={validating || !plexUrl || !plexToken}
+                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      plexValid === true
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : plexValid === false
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                    }`}
                   >
-                    {showPlexToken ? (
-                      <EyeOff className="w-4 h-4" />
+                    {validating ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t("plex.validating")}
+                      </span>
+                    ) : plexValid === true ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        {t("plex.validated")}
+                      </span>
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      t("plex.validate")
                     )}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("plex.tokenHelp")}
-                </p>
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={handleValidatePlex}
-                  disabled={validating || !plexUrl || !plexToken}
-                  className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
-                    plexValid === true
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : plexValid === false
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
-                  }`}
-                >
-                  {validating ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {t("plex.validating")}
-                    </span>
-                  ) : plexValid === true ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <CheckCircle size={16} />
-                      {t("plex.validated")}
-                    </span>
-                  ) : (
-                    t("plex.validate")
-                  )}
-                </button>
+                {plexValid === false && (
+                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>{t("plex.validationFailedMessage")}</p>
+                  </div>
+                )}
               </div>
-
-              {plexValid === false && (
-                <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <p>{t("plex.validationFailedMessage")}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
         {/* API Configuration */}
-        <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300\" />
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Key className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("settings.apiConfiguration")}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-          <div className="relative">
-            <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-                <Key className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-              </div>
-              {t("settings.apiConfiguration")}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.githubToken")}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showGithubToken ? "text" : "password"}
-                    value={githubToken}
-                    onChange={(e) => {
-                      setGithubToken(e.target.value);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGithubToken(!showGithubToken)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                  >
-                    {showGithubToken ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
+            <div className="relative">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.githubToken")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showGithubToken ? "text" : "password"}
+                      value={githubToken}
+                      onChange={(e) => {
+                        setGithubToken(e.target.value);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGithubToken(!showGithubToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showGithubToken ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.githubTokenHelp")}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.githubTokenHelp")}
-                </p>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.tmdbApiKey")}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showTmdbKey ? "text" : "password"}
-                    value={tmdbApiKey}
-                    onChange={(e) => {
-                      setTmdbApiKey(e.target.value);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowTmdbKey(!showTmdbKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                  >
-                    {showTmdbKey ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.tmdbApiKey")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showTmdbKey ? "text" : "password"}
+                      value={tmdbApiKey}
+                      onChange={(e) => {
+                        setTmdbApiKey(e.target.value);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTmdbKey(!showTmdbKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showTmdbKey ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.tmdbApiKeyHelp")}
+                  </p>
                 </div>
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.tmdbApiKeyHelp")}
-                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Overseerr Configuration */}
-        <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Server className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("settings.overseerrSettings") || "Overseerr Configuration"}
+              </h3>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            {/* Decorative gradient overlay */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-          <div className="relative">
-            <h2 className="text-xl sm:text-2xl font-bold text-theme-text flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-theme-primary/10 backdrop-blur-sm">
-                <Server className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
-              </div>
-              {t("settings.overseerrSettings") || "Overseerr Configuration"}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.overseerrUrl") || "Overseerr API URL"}
-                </label>
-                <input
-                  type="text"
-                  value={overseerrUrl}
-                  onChange={(e) => {
-                    setOverseerrUrl(e.target.value);
-                    setOverseerrValid(null);
-                    setPendingChanges(true);
-                  }}
-                  className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                  placeholder="https://overseerr.example.com/api/v1/user"
-                />
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.overseerrUrlHelp") ||
-                    "Full API endpoint URL for creating users"}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.overseerrApiKey") || "Overseerr API Key"}
-                </label>
-                <div className="relative">
+            <div className="relative">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.overseerrUrl") || "Overseerr API URL"}
+                  </label>
                   <input
-                    type={showOverseerrKey ? "text" : "password"}
-                    value={overseerrApiKey}
+                    type="text"
+                    value={overseerrUrl}
                     onChange={(e) => {
-                      setOverseerrApiKey(e.target.value);
+                      setOverseerrUrl(e.target.value);
                       setOverseerrValid(null);
                       setPendingChanges(true);
                     }}
-                    className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="https://overseerr.example.com/api/v1/user"
                   />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.overseerrUrlHelp") ||
+                      "Full API endpoint URL for creating users"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.overseerrApiKey") || "Overseerr API Key"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showOverseerrKey ? "text" : "password"}
+                      value={overseerrApiKey}
+                      onChange={(e) => {
+                        setOverseerrApiKey(e.target.value);
+                        setOverseerrValid(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOverseerrKey(!showOverseerrKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showOverseerrKey ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.overseerrApiKeyHelp") ||
+                      "API key from Overseerr settings"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.defaultEmailDomain") || "Default Email Domain"}
+                  </label>
+                  <input
+                    type="text"
+                    value={defaultEmailDomain}
+                    onChange={(e) => {
+                      setDefaultEmailDomain(e.target.value);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="example.com"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.defaultEmailDomainHelp") ||
+                      "Default domain for user emails (username@domain.com)"}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
                   <button
-                    type="button"
-                    onClick={() => setShowOverseerrKey(!showOverseerrKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    onClick={handleValidateOverseerr}
+                    disabled={
+                      validatingOverseerr || !overseerrUrl || !overseerrApiKey
+                    }
+                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      overseerrValid === true
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : overseerrValid === false
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                    }`}
                   >
-                    {showOverseerrKey ? (
-                      <EyeOff className="w-4 h-4" />
+                    {validatingOverseerr ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t("settings.overseerrValidating") || "Testing..."}
+                      </span>
+                    ) : overseerrValid === true ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        {t("settings.overseerrValidated") || "Connected"}
+                      </span>
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      t("settings.overseerrValidate") || "Test Connection"
                     )}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.overseerrApiKeyHelp") ||
-                    "API key from Overseerr settings"}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-2">
-                  {t("settings.defaultEmailDomain") || "Default Email Domain"}
-                </label>
-                <input
-                  type="text"
-                  value={defaultEmailDomain}
-                  onChange={(e) => {
-                    setDefaultEmailDomain(e.target.value);
-                    setPendingChanges(true);
-                  }}
-                  className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                  placeholder="example.com"
-                />
-                <p className="mt-2 text-xs text-theme-muted">
-                  {t("settings.defaultEmailDomainHelp") ||
-                    "Default domain for user emails (username@domain.com)"}
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleValidateOverseerr}
-                  disabled={
-                    validatingOverseerr || !overseerrUrl || !overseerrApiKey
-                  }
-                  className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
-                    overseerrValid === true
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : overseerrValid === false
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
-                  }`}
-                >
-                  {validatingOverseerr ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {t("settings.overseerrValidating") || "Testing..."}
-                    </span>
-                  ) : overseerrValid === true ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <CheckCircle size={16} />
-                      {t("settings.overseerrValidated") || "Connected"}
-                    </span>
-                  ) : (
-                    t("settings.overseerrValidate") || "Test Connection"
-                  )}
-                </button>
               </div>
             </div>
           </div>

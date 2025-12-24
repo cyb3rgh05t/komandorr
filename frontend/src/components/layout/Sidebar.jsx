@@ -19,6 +19,9 @@ import {
   BarChart3,
   Upload,
   ChevronDown,
+  TvIcon,
+  Tv2Icon,
+  FilmIcon,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -111,7 +114,7 @@ export default function Sidebar() {
     },
     {
       label: t("nav.plex"),
-      icon: Users,
+      icon: Tv2Icon,
       isTab: true,
       tabName: "plex",
       items: [
@@ -120,8 +123,8 @@ export default function Sidebar() {
         { path: "/invites", label: t("nav.invites"), icon: Mail },
       ],
     },
-    { path: "/vod-streams", label: t("nav.vodStreams"), icon: Video },
-    { path: "/vod-portal", label: t("nav.vodPortal"), icon: Video },
+    { path: "/vod-streams", label: t("nav.vodStreams"), icon: FilmIcon },
+    { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
     { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
     { path: "/uploader", label: t("nav.uploader"), icon: Upload },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
@@ -202,6 +205,13 @@ export default function Sidebar() {
                     isActive(sub.path)
                   );
 
+                  // Check if Plex tab has any subtabs with badges
+                  const hasPlexBadge =
+                    item.tabName === "plex" &&
+                    (expiredUnusedCount > 0 ||
+                      expiredUsersCount > 0 ||
+                      activeSessions.length > 0);
+
                   return (
                     <div key={item.label}>
                       <button
@@ -230,6 +240,15 @@ export default function Sidebar() {
                         >
                           {item.label}
                         </span>
+                        {hasPlexBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-orange-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            !
+                          </span>
+                        )}
                         <ChevronDown
                           size={16}
                           className={`flex-shrink-0 transition-transform ${

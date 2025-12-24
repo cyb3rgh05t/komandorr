@@ -528,6 +528,7 @@ const Storage = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch services with storage data
   const {
@@ -535,6 +536,7 @@ const Storage = () => {
     isLoading,
     error,
     refetch,
+    isFetching,
   } = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
@@ -556,7 +558,7 @@ const Storage = () => {
   });
 
   // Fetch storage summary
-  const { data: summary } = useQuery({
+  const { data: summary, isFetching: isFetchingSummary } = useQuery({
     queryKey: ["storage-summary"],
     queryFn: async () => {
       try {
@@ -597,6 +599,7 @@ const Storage = () => {
   );
 
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
       // Refetch both queries
       await refetch();
@@ -608,6 +611,8 @@ const Storage = () => {
     } catch (error) {
       console.error("Refresh error:", error);
       toast.error(t("storage.refreshError", "Error refreshing storage data"));
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   };
 
@@ -685,15 +690,19 @@ const Storage = () => {
 
         <button
           onClick={handleRefresh}
-          disabled={isLoading}
+          disabled={isRefreshing || isFetching || isFetchingSummary}
           className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
         >
           <RefreshCw
             size={16}
-            className={`text-theme-primary ${isLoading ? "animate-spin" : ""}`}
+            className={`text-theme-primary ${
+              isRefreshing || isFetching || isFetchingSummary
+                ? "animate-spin"
+                : ""
+            }`}
           />
           <span className="text-xs sm:text-sm">
-            {isLoading
+            {isRefreshing || isFetching || isFetchingSummary
               ? t("common.refreshing", "Refreshing")
               : t("storage.refresh", "Refresh")}
           </span>
@@ -844,13 +853,19 @@ const Storage = () => {
 
       {/* Monitored Servers Section */}
       <div>
-        <h2 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
-          <Server size={20} className="text-theme-primary" />
-          {t("storage.monitoredServers", "Monitored Servers")}
-          <span className="text-sm font-normal text-theme-text-muted">
-            ({filteredServices.length})
-          </span>
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+            <Server className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("storage.monitoredServers", "Monitored Servers")}
+              <span className="text-sm font-normal text-theme-text-muted ml-2">
+                ({filteredServices.length})
+              </span>
+            </h3>
+          </div>
+        </div>
 
         {/* Services Grid */}
         {isLoading ? (
@@ -876,7 +891,7 @@ const Storage = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredServices.map((service) => (
               <StorageServiceCard key={service.id} service={service} t={t} />
             ))}

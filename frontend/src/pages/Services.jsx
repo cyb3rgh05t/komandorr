@@ -569,7 +569,10 @@ export default function Services() {
               ) : (
                 <div className="max-w-md mx-auto">
                   <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Server size={32} className="text-theme-primary" />
+                    <Server
+                      size={48}
+                      className="mx-auto mb-4 text-theme-text-muted"
+                    />
                   </div>
                   <h3 className="text-xl font-bold text-theme-text mb-2">
                     {searchTerm
@@ -584,10 +587,12 @@ export default function Services() {
                   {!searchTerm && (
                     <button
                       onClick={() => setShowModal(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
                     >
-                      <Plus size={20} />
-                      <span>{t("dashboard.addService")}</span>
+                      <Plus size={20} className="text-theme-primary" />
+                      <span className="text-sm">
+                        {t("dashboard.addService")}
+                      </span>
                     </button>
                   )}
                 </div>

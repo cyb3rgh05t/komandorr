@@ -524,7 +524,7 @@ const VODActivity = () => {
           <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
             <div className="max-w-md mx-auto space-y-4">
               <div className="w-16 h-16 rounded-full bg-theme-primary/20 flex items-center justify-center mx-auto">
-                <Activity size={32} className="text-theme-primary" />
+                <Activity size={48} className="text-theme-primary" />
               </div>
               <h3 className="text-xl font-semibold text-theme-text">
                 {t("vodActivity.noSessions", "No Active Sessions")}
