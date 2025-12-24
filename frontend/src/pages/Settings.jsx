@@ -81,9 +81,8 @@ export default function Settings() {
   const [showArrKeys, setShowArrKeys] = useState({});
   const [arrTestStatus, setArrTestStatus] = useState({});
 
-  // Auto-save state
+  // Unsaved changes state
   const [pendingChanges, setPendingChanges] = useState(false);
-  const [autoSaveTimer, setAutoSaveTimer] = useState(null);
 
   useEffect(() => {
     // Check auth status
@@ -92,37 +91,22 @@ export default function Settings() {
     loadSettings();
   }, []);
 
-  // Auto-save effect
+  // Warn before leaving with unsaved changes
   useEffect(() => {
-    if (pendingChanges) {
-      if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
-      }
-      const timer = setTimeout(() => {
-        handleSaveSettings();
-        setPendingChanges(false);
-      }, 5000);
-      setAutoSaveTimer(timer);
-    }
-    return () => {
-      if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
+    const handleBeforeUnload = (e) => {
+      if (pendingChanges) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+        return e.returnValue;
       }
     };
-  }, [
-    pendingChanges,
-    logLevel,
-    logEnableFile,
-    timezone,
-    githubToken,
-    tmdbApiKey,
-    plexUrl,
-    plexToken,
-    plexServerName,
-    overseerrUrl,
-    overseerrApiKey,
-    defaultEmailDomain,
-  ]);
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [pendingChanges]);
 
   const loadSettings = async () => {
     try {
@@ -526,19 +510,18 @@ export default function Settings() {
           onClick={() => {
             handleSaveSettings();
             setPendingChanges(false);
-            if (autoSaveTimer) clearTimeout(autoSaveTimer);
           }}
-          disabled={settingsLoading}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+          disabled={settingsLoading || !pendingChanges}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           <Save className="text-theme-primary w-4 h-4" />
           {settingsLoading ? t("settings.saving") : t("settings.saveNow")}
         </button>
-        <p className="text-sm text-theme-text-muted mt-2">
-          {pendingChanges
-            ? "Auto-saving in 5 seconds..."
-            : "Changes saved automatically"}
-        </p>
+        {pendingChanges && (
+          <p className="text-sm text-orange-500 mt-2 font-medium">
+            ⚠️ {t("settings.unsavedChanges", "You have unsaved changes")}
+          </p>
+        )}
       </div>
 
       {/* Authentication Settings */}
