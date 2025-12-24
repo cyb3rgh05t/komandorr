@@ -1541,6 +1541,40 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
+<h1 id="310-2025-12-24"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.0.0...v3.1.0">3.1.0</a> (2025-12-24)<a class="headerlink" href="#310-2025-12-24" title="Permanent link">&para;</a></h1>
+<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>ArrActivity Page Enhancements</strong>
+• <strong>Enhanced download table</strong>
+◦ Added Quality and Protocol columns for better download visibility
+◦ Moved Progress column to end for consistent layout with VOD monitor
+◦ Added episode info display for Sonarr (S01E05 format with episode title)
+◦ Removed icons from title columns for cleaner appearance</p>
+<p>• <strong>Activity status badges</strong>
+◦ Replaced plain text status with colored badges matching VOD monitor style
+◦ Downloading (green), Importing (blue), Completed (green), Warning (yellow), Failed (red), Queued (gray)
+◦ First letter capitalized for consistent presentation</p>
+<p>• <strong>Progress bar standardization</strong>
+◦ Changed all progress bars to green across ArrActivity, VODStreams, and Uploader
+◦ Unified progress bar layout: label, percentage, and bar consistently styled
+◦ Protocol badge now uses blue color scheme for visual consistency</p>
+<p><strong>Settings Page Improvements</strong>
+• <strong>Section reorganization</strong>
+◦ Reordered settings cards: Auth → General → Plex → Overseerr → *arr → Uploader → API
+◦ Logical grouping for better user experience</p>
+<p>• <strong>Auto-test on load</strong>
+◦ Added automatic connection testing for Uploader service on settings page load
+◦ Added automatic connection testing for all *arr instances on settings page load
+◦ Feature parity with Plex and Overseerr connection testing
+◦ Immediate feedback on service health without manual testing</p>
+<p>• <strong>Unsaved changes warning</strong>
+◦ Removed auto-save functionality for better user control
+◦ Added browser warning when leaving page with unsaved changes
+◦ Save button shows warning message and disabled state when no changes pending
+◦ Prevents accidental data loss</p>
+<h3 id="bug-fixes">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<p>• Fixed icon mismatch in Settings page (*arr and Uploader sections)
+• Fixed missing closing brace in validateArrInstancesOnLoad function
+• Resolved syntax errors preventing frontend compilation</p>
 <h1 id="300-2025-12-19"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v2.5.0...v3.0.0">3.0.0</a> (2025-12-19)<a class="headerlink" href="#300-2025-12-19" title="Permanent link">&para;</a></h1>
 <h3 id="caching-performance">⚡ Caching &amp; Performance<a class="headerlink" href="#caching-performance" title="Permanent link">&para;</a></h3>
 <p>• <strong>Redis coverage expanded</strong>
@@ -1666,7 +1700,7 @@
 ◦ Prevents orphaned invite codes cluttering the dashboard
 ◦ Delete user action now checks for remaining users on invite
 ◦ Cascade deletion keeps invite database clean</p>
-<h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
 <p><strong>Navigation Updates</strong></p>
 <p>• <strong>nav: Plex-specific naming</strong>
 ◦ "VOD Activity" renamed to "Plex Activity"
@@ -1713,7 +1747,7 @@
 ◦ Added <code>/docs</code> proxy for Swagger UI
 ◦ Added <code>/openapi.json</code> proxy for OpenAPI schema
 ◦ Ensures dev environment works with backend documentation</p>
-<h3 id="bug-fixes">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_1">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
 <p>• <strong>invites: Fixed filter logic for redeemed invites</strong>
 ◦ Redeemed count in stats card now excludes expired/used invites
 ◦ Only active redeemed invites counted in stat display
@@ -1795,7 +1829,7 @@
 ◦ Prevents data loss when agent restarts
 ◦ <code>load_state()</code> and <code>save_state()</code> methods for state management
 ◦ State file created automatically on first run</p>
-<h3 id="bug-fixes_1">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_2">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>refresh: Fixed user refresh button states</strong>
 ◦ Individual refresh buttons now show loading spinner during operation
 ◦ Disabled state prevents multiple concurrent refreshes
@@ -1875,7 +1909,7 @@
 ◦ <code>POST /api/invites/users/{id}/refresh</code> - Refresh user info from Plex
 ◦ <code>DELETE /api/invites/users/{id}</code> - Remove user from Plex
 ◦ <code>PUT /api/invites/users/{id}/expiration</code> - Update user expiration</p>
-<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
 <p>• <strong>skeleton-loading: Enhanced loading states</strong>
 ◦ Replaced spinner loaders with skeleton cards across UserAccounts page
 ◦ Skeleton cards match actual card layouts (avatar, text, badges, buttons)
@@ -1922,7 +1956,7 @@
 ◦ User Accounts management description
 ◦ OAuth flow documentation
 ◦ Updated technology stack</p>
-<h3 id="bug-fixes_2">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_3">🐛 Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>user-refresh: Fixed concurrent refresh operations</strong>
 ◦ Added refreshingUsers state to track in-progress refreshes
 ◦ Disabled refresh button during operation
@@ -2008,7 +2042,7 @@
 ◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
 ◦ CORS moved back to environment variables (deployment-level security setting)
 ◦ Simplified .env.example to server parameters only with migration comments</p>
-<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_3">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_3" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
 <p>• <strong>monitor: Clickable service cards</strong>
 ◦ Service cards now link directly to service URLs
@@ -2512,7 +2546,7 @@
 ◦ Fixed timer reset issues on page refresh with proper state management
 ◦ Added "Tracking..." state for activities waiting to start timing
 ◦ Real-time timer updates with live elapsed time display</p>
-<h3 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_4">Bug Fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>dashboard: fixed missing Search icon import</strong>
 ◦ Re-added Search icon to imports after cleanup
 ◦ Fixed ReferenceError when rendering search bar</p>
@@ -2541,7 +2575,7 @@
 ◦ English: "Documentation", "View All Releases", "Traffic Overview", "No traffic data available", "No active traffic"
 ◦ German: "Dokumentation", "Alle Releases anzeigen", "Traffic-Übersicht", "Keine Traffic-Daten verfügbar", "Kein aktiver Traffic"</p>
 <h1 id="142-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.1...v1.4.2">1.4.2</a> (2025-11-08)<a class="headerlink" href="#142-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="bug-fixes_4">Bug Fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_5">Bug Fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: hardcoded fallback causing false update alerts</strong>
 ◦ Removed hardcoded version fallback from '1.4.0' to 'unknown'
 ◦ Fixed "Update Available" badge showing incorrectly when on latest version
@@ -2565,7 +2599,7 @@
 ◦ Replaced emoji bullets with plain text throughout documentation
 ◦ Changed 'Made with ❤️' to 'Made with love'</p>
 <h1 id="141-2025-11-08"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.4.0...v1.4.1">1.4.1</a> (2025-11-08)<a class="headerlink" href="#141-2025-11-08" title="Permanent link">&para;</a></h1>
-<h3 id="bug-fixes_5">Bug Fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_6">Bug Fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">&para;</a></h3>
 <p>• <strong>traffic: timestamp display and timezone handling</strong>
 ◦ Fixed traffic <code>last_updated</code> timestamp not being loaded correctly from JSON storage
 ◦ Added proper datetime deserialization for traffic metrics and history on service load
@@ -2771,7 +2805,7 @@
 ◦ Service ID display with copy-to-clipboard functionality in service cards
 ◦ Service ID visibility for easy agent configuration</p>
 <h2 id="111-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.1.0...v1.1.1">1.1.1</a> (2024-XX-XX)<a class="headerlink" href="#111-2024-xx-xx" title="Permanent link">&para;</a></h2>
-<h3 id="bug-fixes_6">Bug Fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">&para;</a></h3>
+<h3 id="bug-fixes_7">Bug Fixes<a class="headerlink" href="#bug-fixes_7" title="Permanent link">&para;</a></h3>
 <p>• <strong>version: version check improvements</strong> (<a href="https://github.com/cyb3rgh05t/komandorr/commit/">commit</a>)</p>
 <h2 id="110-2024-xx-xx"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v1.0.0...v1.1.0">1.1.0</a> (2024-XX-XX)<a class="headerlink" href="#110-2024-xx-xx" title="Permanent link">&para;</a></h2>
 <h3 id="features_15">Features<a class="headerlink" href="#features_15" title="Permanent link">&para;</a></h3>
