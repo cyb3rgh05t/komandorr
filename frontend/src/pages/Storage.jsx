@@ -265,7 +265,7 @@ const StorageServiceCard = ({ service, t }) => {
             {averageUsage.toFixed(1)}%
           </span>
         </div>
-        <div className="h-2 bg-theme-bg-primary rounded-full overflow-hidden">
+        <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               averageUsage > 90
