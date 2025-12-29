@@ -64,3 +64,16 @@ async def get_completed_today_stats(username: str = Depends(require_auth)):
 @router.get("/status")
 async def get_status(username: str = Depends(require_auth)):
     return await proxy_get("/srv/api/system/status.php")
+
+
+@router.get("/failed")
+async def get_failed(
+    pageNumber: int = 1, pageSize: int = 25, username: str = Depends(require_auth)
+):
+    params = {"pageNumber": pageNumber, "pageSize": pageSize}
+    return await proxy_get("/srv/api/jobs/failed.php", params=params)
+
+
+@router.get("/failed_count")
+async def get_failed_count(username: str = Depends(require_auth)):
+    return await proxy_get("/srv/api/jobs/failed_count.php")

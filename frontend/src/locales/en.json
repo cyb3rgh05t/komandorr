@@ -12,7 +12,7 @@
     "vodStreams": "VOD Monitor",
     "vodActivity": "Activity",
     "vodPortal": "VOD Portal",
-    "uploader": "Uploader",
+    "uploader": "Uploads",
     "arrActivity": "Downloads",
     "invites": "Invites",
     "userAccounts": "Users",
@@ -20,7 +20,7 @@
     "settings": "Settings",
     "about": "About"
   },
-  "uploader": {
+  "uploaderSettings": {
     "settings": "Uploader Settings",
     "baseUrl": "Uploader Base URL",
     "baseUrlHelp": "Set the URL of your Uploader service (container or external).",
@@ -238,6 +238,12 @@
     }
   },
   "uploader": {
+    "tabs": {
+      "active": "Active Uploads",
+      "queue": "Queue",
+      "history": "History",
+      "failedItems": "Failed Items"
+    },
     "activeUploads": "Active Uploads",
     "queue": "Queue",
     "completedToday": "Completed Today",
@@ -246,6 +252,8 @@
     "queueDescription": "Files waiting to upload",
     "completed": "Completed Uploads",
     "completedDescription": "Recently finished uploads",
+    "failedItems": "Failed Items",
+    "failedDescription": "Uploads that failed to complete",
     "systemOverview": "System Overview",
     "systemDescription": "High level uploader stats",
     "table": {
@@ -259,14 +267,26 @@
       "speed": "Speed",
       "added": "Added",
       "duration": "Duration",
-      "completedAt": "Completed"
+      "completedAt": "Completed",
+      "error": "Error",
+      "failedAt": "Failed At"
     },
     "empty": {
       "active": "No uploads in progress",
       "queue": "No files in queue",
-      "completed": "No completed uploads yet"
+      "completed": "No completed uploads yet",
+      "failed": "No failed uploads"
     },
-    "pagination": "Showing {{from}}-{{to}} of {{total}} uploads",
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "jobs": "jobs",
+      "files": "files",
+      "itemsPerPage": "Items per page:",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
     "mini": {
       "rate": "Upload Rate",
       "queueCount": "Queued Files",
@@ -282,12 +302,17 @@
     "configureServices": "Configure Sonarr and Radarr in the settings to monitor download activity.",
     "totalQueue": "Total Queue",
     "services": "Services",
-    "title": "Title",
+    "titleColumn": "Title",
     "status": "Status",
     "progress": "Progress",
     "size": "Size",
     "timeLeft": "Time Left",
-    "client": "Client"
+    "client": "Client",
+    "tabs": {
+      "all": "All",
+      "tvShows": "TV Shows",
+      "movies": "Movies"
+    }
   },
   "traffic": {
     "title": "Network Traffic",

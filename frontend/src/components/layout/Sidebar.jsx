@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../services/api";
+import { uploaderApi } from "../../services/uploaderApi";
 import {
   LayoutDashboard,
   Settings,
@@ -23,6 +24,11 @@ import {
   Tv2Icon,
   FilmIcon,
   Download,
+  Tv,
+  Film,
+  AlertCircle,
+  Clock,
+  ListOrdered,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -33,6 +39,8 @@ export default function Sidebar() {
   const [expandedTabs, setExpandedTabs] = useState({
     plex: false,
     services: false,
+    downloads: false,
+    uploader: false,
   });
 
   // Toggle tab expansion
@@ -69,6 +77,116 @@ export default function Sidebar() {
   });
 
   const activeSessions = sessionsData?.sessions || [];
+
+  // Fetch Plex activities for VOD Streams badge
+  const { data: plexActivities = [] } = useQuery({
+    queryKey: ["plexActivities"],
+    queryFn: async () => {
+      try {
+        const response = await api.get("/plex/activities");
+        return response?.activities || [];
+      } catch {
+        return [];
+      }
+    },
+    refetchInterval: 5000,
+    staleTime: 3000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const vodStreamsCount = Array.isArray(plexActivities)
+    ? plexActivities.length
+    : 0;
+
+  // Fetch arr-activity queue for Downloads badges
+  const { data: arrQueueData = {} } = useQuery({
+    queryKey: ["arr-activity", "queue"],
+    queryFn: async () => {
+      try {
+        const response = await api.get("/arr-activity/queue");
+        return response || {};
+      } catch {
+        return {};
+      }
+    },
+    refetchInterval: 5000,
+    staleTime: 3000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Calculate download counts for Sonarr and Radarr
+  const downloadCounts = useMemo(() => {
+    const instances = Object.values(arrQueueData);
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+    let sonarrActive = 0;
+    let sonarrStuck = 0;
+    let radarrActive = 0;
+    let radarrStuck = 0;
+
+    instances.forEach((inst) => {
+      if (!inst.enabled || !inst.records) return;
+      const isSonarr = inst.type === "sonarr";
+
+      inst.records.forEach((record) => {
+        const statusLower = (record.status || "").toLowerCase();
+        const isActive =
+          statusLower.includes("download") || statusLower.includes("import");
+        const isCompleted =
+          statusLower.includes("complet") && record.sizeleft === 0;
+
+        if (isActive) {
+          if (isSonarr) sonarrActive++;
+          else radarrActive++;
+        }
+
+        if (isCompleted) {
+          // Check if stuck (completed for more than 5 minutes)
+          const addedTime = record.added ? new Date(record.added).getTime() : 0;
+          if (addedTime && addedTime < fiveMinutesAgo) {
+            if (isSonarr) sonarrStuck++;
+            else radarrStuck++;
+          }
+        }
+      });
+    });
+
+    return { sonarrActive, sonarrStuck, radarrActive, radarrStuck };
+  }, [arrQueueData]);
+
+  // Fetch uploader in-progress for Active Uploads badge
+  const { data: uploaderInProgress } = useQuery({
+    queryKey: ["uploader", "inprogress-sidebar"],
+    queryFn: async () => {
+      try {
+        return await uploaderApi.getInProgress();
+      } catch {
+        return { jobs: [] };
+      }
+    },
+    refetchInterval: 5000,
+    staleTime: 3000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const activeUploadsCount = uploaderInProgress?.jobs?.length || 0;
+
+  // Fetch uploader failed count for Failed Items badge
+  const { data: uploaderFailedCount } = useQuery({
+    queryKey: ["uploader", "failed-count-sidebar"],
+    queryFn: async () => {
+      try {
+        return await uploaderApi.getFailedCount();
+      } catch {
+        return { count: 0 };
+      }
+    },
+    refetchInterval: 15000,
+    staleTime: 10000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const failedUploadsCount = uploaderFailedCount?.count || 0;
 
   // Fetch services for status badges
   const { data: services = [] } = useQuery({
@@ -142,17 +260,63 @@ export default function Sidebar() {
     { path: "/vod-streams", label: t("nav.vodStreams"), icon: FilmIcon },
     { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
     { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
-    { path: "/uploader", label: t("nav.uploader"), icon: Upload },
     {
-      path: "/arr-activity",
-      label: t("nav.arrActivity", "*arr Activity"),
+      label: t("nav.uploader"),
+      icon: Upload,
+      isTab: true,
+      tabName: "uploader",
+      items: [
+        {
+          path: "/uploader?tab=active",
+          label: t("uploader.tabs.active", "Active Uploads"),
+          icon: Upload,
+        },
+        {
+          path: "/uploader?tab=queue",
+          label: t("uploader.tabs.queue", "Queue"),
+          icon: ListOrdered,
+        },
+        {
+          path: "/uploader?tab=history",
+          label: t("uploader.tabs.history", "History"),
+          icon: Clock,
+        },
+        {
+          path: "/uploader?tab=failed",
+          label: t("uploader.tabs.failedItems", "Failed Items"),
+          icon: AlertCircle,
+        },
+      ],
+    },
+    {
+      label: t("nav.arrActivity", "Downloads"),
       icon: Download,
+      isTab: true,
+      tabName: "downloads",
+      items: [
+        {
+          path: "/arr-activity?tab=tvshows",
+          label: t("arrActivity.tabs.tvShows", "TV Shows"),
+          icon: Tv,
+        },
+        {
+          path: "/arr-activity?tab=movies",
+          label: t("arrActivity.tabs.movies", "Movies"),
+          icon: Film,
+        },
+      ],
     },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    // Handle paths with query params
+    if (path.includes("?")) {
+      return location.pathname + location.search === path;
+    }
+    return location.pathname === path;
+  };
 
   return (
     <>
@@ -226,16 +390,28 @@ export default function Sidebar() {
                     isActive(sub.path)
                   );
 
-                  // Check if Plex tab has any subtabs with badges
+                  // Check if Plex tab has any subtabs with warning badges (expired invites/users)
                   const hasPlexBadge =
                     item.tabName === "plex" &&
-                    (expiredUnusedCount > 0 ||
-                      expiredUsersCount > 0 ||
-                      activeSessions.length > 0);
+                    (expiredUnusedCount > 0 || expiredUsersCount > 0);
+
+                  // Check if Plex tab has active streams
+                  const hasPlexActivityBadge =
+                    item.tabName === "plex" && activeSessions.length > 0;
 
                   // Check if Services tab has any issues
                   const hasServicesBadge =
                     item.tabName === "services" && totalIssues > 0;
+
+                  // Check if Uploader tab has active or failed uploads
+                  const hasUploaderBadge =
+                    item.tabName === "uploader" &&
+                    (activeUploadsCount > 0 || failedUploadsCount > 0);
+                  const uploaderBadgeCount =
+                    activeUploadsCount + failedUploadsCount;
+                  // Green if only active, red if any failed
+                  const uploaderBadgeColor =
+                    failedUploadsCount > 0 ? "bg-red-500" : "bg-green-500";
 
                   return (
                     <div key={item.label}>
@@ -267,13 +443,29 @@ export default function Sidebar() {
                         </span>
                         {(hasPlexBadge || hasServicesBadge) && (
                           <span
-                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full ${
-                              hasServicesBadge ? "bg-red-500" : "bg-orange-500"
-                            } text-white ${
+                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-yellow-500 text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
                             !
+                          </span>
+                        )}
+                        {hasPlexActivityBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {activeSessions.length}
+                          </span>
+                        )}
+                        {hasUploaderBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${uploaderBadgeColor} text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {uploaderBadgeCount}
                           </span>
                         )}
                         <ChevronDown
@@ -308,12 +500,45 @@ export default function Sidebar() {
                             const monitorBadge =
                               subItem.path === "/monitor" && totalIssues > 0;
                             const trafficBadge = subItem.path === "/traffic";
+
+                            // Downloads subtab badges
+                            const isTvShows =
+                              subItem.path === "/arr-activity?tab=tvshows";
+                            const isMovies =
+                              subItem.path === "/arr-activity?tab=movies";
+                            const tvShowsActiveBadge =
+                              isTvShows && downloadCounts.sonarrActive > 0;
+                            const tvShowsStuckBadge =
+                              isTvShows && downloadCounts.sonarrStuck > 0;
+                            const moviesActiveBadge =
+                              isMovies && downloadCounts.radarrActive > 0;
+                            const moviesStuckBadge =
+                              isMovies && downloadCounts.radarrStuck > 0;
+
+                            // Uploader Active Uploads badge
+                            const isActiveUploads =
+                              subItem.path === "/uploader?tab=active";
+                            const activeUploadsBadge =
+                              isActiveUploads && activeUploadsCount > 0;
+
+                            // Uploader Failed Items badge
+                            const isFailedItems =
+                              subItem.path === "/uploader?tab=failed";
+                            const failedUploadsBadge =
+                              isFailedItems && failedUploadsCount > 0;
+
                             const showBadge =
                               invitesExpiredBadge ||
                               usersExpiredBadge ||
                               vodActivityBadge ||
                               servicesBadge ||
-                              monitorBadge;
+                              monitorBadge ||
+                              tvShowsActiveBadge ||
+                              tvShowsStuckBadge ||
+                              moviesActiveBadge ||
+                              moviesStuckBadge ||
+                              activeUploadsBadge ||
+                              failedUploadsBadge;
                             let badgeCount = 0;
                             let badgeColor = "bg-red-500";
 
@@ -328,6 +553,24 @@ export default function Sidebar() {
                               badgeColor = "bg-green-500";
                             } else if (servicesBadge || monitorBadge) {
                               badgeCount = totalIssues;
+                              badgeColor = "bg-red-500";
+                            } else if (tvShowsActiveBadge) {
+                              badgeCount = downloadCounts.sonarrActive;
+                              badgeColor = "bg-green-500";
+                            } else if (tvShowsStuckBadge) {
+                              badgeCount = downloadCounts.sonarrStuck;
+                              badgeColor = "bg-yellow-500";
+                            } else if (moviesActiveBadge) {
+                              badgeCount = downloadCounts.radarrActive;
+                              badgeColor = "bg-green-500";
+                            } else if (moviesStuckBadge) {
+                              badgeCount = downloadCounts.radarrStuck;
+                              badgeColor = "bg-yellow-500";
+                            } else if (activeUploadsBadge) {
+                              badgeCount = activeUploadsCount;
+                              badgeColor = "bg-green-500";
+                            } else if (failedUploadsBadge) {
+                              badgeCount = failedUploadsCount;
                               badgeColor = "bg-red-500";
                             }
 
@@ -373,6 +616,11 @@ export default function Sidebar() {
                   const Icon = item.icon;
                   const active = isActive(item.path);
 
+                  // Check for VOD Streams badge
+                  const isVodStreams = item.path === "/vod-streams";
+                  const showVodStreamsBadge =
+                    isVodStreams && vodStreamsCount > 0;
+
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -402,6 +650,15 @@ export default function Sidebar() {
                         >
                           {item.label}
                         </span>
+                        {showVodStreamsBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vodStreamsCount}
+                          </span>
+                        )}
                       </Link>
                       {/* Tooltip for collapsed state on tablets */}
                       {!isOpen && (

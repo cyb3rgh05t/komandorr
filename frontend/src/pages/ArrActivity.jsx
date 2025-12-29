@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import {
   Activity,
   Download,
@@ -124,8 +125,12 @@ const getStatusBadgeClass = (status) => {
 
 export default function ArrActivity() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Get tab from URL params - defaults to "tvshows"
+  const activeTab = searchParams.get("tab") || "tvshows";
 
   const {
     data: queueData,
@@ -456,9 +461,14 @@ export default function ArrActivity() {
         </div>
       </div>
 
-      {/* Instance Queues */}
+      {/* Instance Queues - Filtered by Tab */}
       {filteredInstances
-        .filter((inst) => inst.enabled)
+        .filter((inst) => {
+          if (!inst.enabled) return false;
+          if (activeTab === "tvshows") return inst.type === "sonarr";
+          if (activeTab === "movies") return inst.type === "radarr";
+          return true;
+        })
         .map((inst) => (
           <div key={inst.id}>
             <div className="flex items-center gap-3 mb-4">
@@ -501,7 +511,51 @@ export default function ArrActivity() {
           </div>
         ))}
 
-      {/* No Services Configured */}
+      {/* No Sonarr Services Configured (TV Shows tab) */}
+      {activeTab === "tvshows" &&
+        filteredInstances.filter(
+          (inst) => inst.enabled && inst.type === "sonarr"
+        ).length === 0 && (
+          <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+            <Tv className="w-16 h-16 mx-auto text-purple-500/50 mb-4" />
+            <h3 className="text-lg font-semibold text-theme-text mb-2">
+              {t(
+                "arrActivity.noSonarrConfigured",
+                "No Sonarr Services Configured"
+              )}
+            </h3>
+            <p className="text-theme-text-muted max-w-md mx-auto">
+              {t(
+                "arrActivity.configureSonarr",
+                "Configure Sonarr instances in settings to monitor TV show downloads."
+              )}
+            </p>
+          </div>
+        )}
+
+      {/* No Radarr Services Configured (Movies tab) */}
+      {activeTab === "movies" &&
+        filteredInstances.filter(
+          (inst) => inst.enabled && inst.type === "radarr"
+        ).length === 0 && (
+          <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+            <Film className="w-16 h-16 mx-auto text-blue-500/50 mb-4" />
+            <h3 className="text-lg font-semibold text-theme-text mb-2">
+              {t(
+                "arrActivity.noRadarrConfigured",
+                "No Radarr Services Configured"
+              )}
+            </h3>
+            <p className="text-theme-text-muted max-w-md mx-auto">
+              {t(
+                "arrActivity.configureRadarr",
+                "Configure Radarr instances in settings to monitor movie downloads."
+              )}
+            </p>
+          </div>
+        )}
+
+      {/* No Services Configured (fallback) */}
       {enabledCount === 0 && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
           <Server className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />

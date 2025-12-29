@@ -1120,7 +1120,9 @@ export default function Settings() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-theme-text">
-                {t("uploader.settings", { defaultValue: "Uploader Settings" })}
+                {t("uploaderSettings.settings", {
+                  defaultValue: "Uploader Settings",
+                })}
               </h3>
             </div>
           </div>
@@ -1131,7 +1133,7 @@ export default function Settings() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("uploader.baseUrl", {
+                    {t("uploaderSettings.baseUrl", {
                       defaultValue: "Uploader Base URL",
                     })}
                   </label>
@@ -1147,7 +1149,7 @@ export default function Settings() {
                     placeholder="http://uploader:8080"
                   />
                   <p className="mt-2 text-xs text-theme-muted">
-                    {t("uploader.baseUrlHelp", {
+                    {t("uploaderSettings.baseUrlHelp", {
                       defaultValue:
                         "Set the URL of your Uploader service (container or external).",
                     })}
@@ -1210,19 +1212,19 @@ export default function Settings() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          {t("uploader.testing", {
+                          {t("uploaderSettings.testing", {
                             defaultValue: "Testing...",
                           })}
                         </span>
                       ) : uploaderTestStatus === "ok" ? (
                         <span className="flex items-center justify-center gap-2">
                           <CheckCircle size={16} />
-                          {t("uploader.connectionOk", {
+                          {t("uploaderSettings.connectionOk", {
                             defaultValue: "Connected",
                           })}
                         </span>
                       ) : (
-                        t("uploader.testConnection", {
+                        t("uploaderSettings.testConnection", {
                           defaultValue: "Test Connection",
                         })
                       )}
