@@ -18,6 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { uploaderApi } from "../services/uploaderApi";
+import { useToast } from "../context/ToastContext";
 
 const formatSize = (valueBytes) => {
   if (!valueBytes || Number.isNaN(valueBytes)) return "0 B";
@@ -74,6 +75,7 @@ const percentageToNumber = (value) => {
 
 export default function Uploader() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "uploader";
   const [pageNumber, setPageNumber] = useState(1);
@@ -82,21 +84,33 @@ export default function Uploader() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [queueItemsPerPage, setQueueItemsPerPage] = useState(10);
 
-  const { data: queueData, refetch: refetchQueue } = useQuery({
+  const {
+    data: queueData,
+    isFetching: queueFetching,
+    refetch: refetchQueue,
+  } = useQuery({
     queryKey: ["uploader", "queue"],
     queryFn: () => uploaderApi.getQueue(),
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: queueStats, refetch: refetchQueueStats } = useQuery({
+  const {
+    data: queueStats,
+    isFetching: queueStatsFetching,
+    refetch: refetchQueueStats,
+  } = useQuery({
     queryKey: ["uploader", "queue-stats"],
     queryFn: () => uploaderApi.getQueueStats(),
     refetchInterval: 10000,
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: inProgressData, refetch: refetchInProgress } = useQuery({
+  const {
+    data: inProgressData,
+    isFetching: inProgressFetching,
+    refetch: refetchInProgress,
+  } = useQuery({
     queryKey: ["uploader", "inprogress"],
     queryFn: () => uploaderApi.getInProgress(),
     refetchInterval: 2000,
@@ -153,6 +167,14 @@ export default function Uploader() {
   const failedJobs = failedData?.jobs || [];
   const totalCompleted = completedData?.total_count || 0;
   const totalPages = Math.max(1, Math.ceil(totalCompleted / itemsPerPage));
+
+  // Combined refreshing state for animation
+  const isRefreshing =
+    queueFetching ||
+    queueStatsFetching ||
+    inProgressFetching ||
+    completedLoading ||
+    failedLoading;
 
   // Reset to page 1 when items per page changes
   React.useEffect(() => {
@@ -250,6 +272,7 @@ export default function Uploader() {
     refetchCompletedToday();
     refetchStatus();
     refetchFailed();
+    toast.success(t("uploader.refreshSuccess", "Data refreshed successfully"));
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -334,10 +357,17 @@ export default function Uploader() {
           </div>
           <button
             onClick={refreshAll}
-            className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm"
+            disabled={isRefreshing}
+            className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCcw className="w-4 h-4" />
-            {t("common.refresh", "Refresh")}
+            <RefreshCcw
+              className={`w-4 h-4 transition-transform duration-500 ${
+                isRefreshing ? "animate-spin" : ""
+              }`}
+            />
+            {isRefreshing
+              ? t("common.refreshing", "Refreshing...")
+              : t("common.refresh", "Refresh")}
           </button>
         </div>
 

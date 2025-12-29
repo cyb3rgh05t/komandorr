@@ -277,6 +277,13 @@ export default function VODPortal() {
       if (!search) {
         saveUsersToCache(fetchedUsers);
       }
+
+      // Show success toast on manual refresh (when force is true)
+      if (force) {
+        toast.success(
+          t("vodPortal.refreshSuccess", "Users refreshed successfully")
+        );
+      }
     } catch (err) {
       console.error("Failed to fetch Overseerr users:", err);
       toast.error(t("vodPortal.fetchUsersError") || "Failed to fetch users");

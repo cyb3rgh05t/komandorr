@@ -244,6 +244,7 @@
       "history": "History",
       "failedItems": "Failed Items"
     },
+    "refreshSuccess": "Data refreshed successfully",
     "activeUploads": "Active Uploads",
     "queue": "Queue",
     "completedToday": "Completed Today",
@@ -295,7 +296,7 @@
     }
   },
   "arrActivity": {
-    "title": "*arr Download Activity",
+    "title": "Download",
     "subtitle": "Monitor Sonarr and Radarr download queues",
     "noActiveDownloads": "No active downloads",
     "noServicesConfigured": "No Services Configured",
@@ -940,6 +941,7 @@
     "searchPlaceholder": "Search users...",
     "refresh": "Refresh",
     "refreshing": "Refreshing...",
+    "refreshSuccess": "Users refreshed successfully",
     "noSearchResults": "No users match your search",
     "stats": {
       "totalUsers": "Total Users",

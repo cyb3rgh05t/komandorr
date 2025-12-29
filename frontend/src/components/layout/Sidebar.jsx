@@ -353,8 +353,8 @@ export default function Sidebar() {
           transition-all duration-300 ease-in-out
           ${
             isOpen
-              ? "w-64 translate-x-0"
-              : "-translate-x-full md:translate-x-0 md:w-16 2xl:w-64"
+              ? "w-72 translate-x-0"
+              : "-translate-x-full md:translate-x-0 md:w-16 2xl:w-72"
           }
         `}
       >
