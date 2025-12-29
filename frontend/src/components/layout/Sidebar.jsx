@@ -413,6 +413,20 @@ export default function Sidebar() {
                   const uploaderBadgeColor =
                     failedUploadsCount > 0 ? "bg-red-500" : "bg-green-500";
 
+                  // Check if Downloads tab has active or stuck downloads
+                  const totalActiveDownloads =
+                    downloadCounts.sonarrActive + downloadCounts.radarrActive;
+                  const totalStuckDownloads =
+                    downloadCounts.sonarrStuck + downloadCounts.radarrStuck;
+                  const hasDownloadsBadge =
+                    item.tabName === "downloads" &&
+                    (totalActiveDownloads > 0 || totalStuckDownloads > 0);
+                  const downloadsBadgeCount =
+                    totalActiveDownloads + totalStuckDownloads;
+                  // Green if only active, yellow if any stuck
+                  const downloadsBadgeColor =
+                    totalStuckDownloads > 0 ? "bg-yellow-500" : "bg-green-500";
+
                   return (
                     <div key={item.label}>
                       <button
@@ -466,6 +480,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {uploaderBadgeCount}
+                          </span>
+                        )}
+                        {hasDownloadsBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${downloadsBadgeColor} text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {downloadsBadgeCount}
                           </span>
                         )}
                         <ChevronDown

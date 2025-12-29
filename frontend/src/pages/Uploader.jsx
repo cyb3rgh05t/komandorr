@@ -994,7 +994,10 @@ export default function Uploader() {
                           <td className="py-3 px-4 whitespace-nowrap">
                             {job.file_size || "-"}
                           </td>
-                          <td className="py-3 px-4 truncate max-w-[200px] text-red-400">
+                          <td
+                            className="py-3 px-4 truncate max-w-[200px] text-red-400 cursor-help"
+                            title={job.error_message || ""}
+                          >
                             {job.error_message || "-"}
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap text-right">
