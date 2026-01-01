@@ -582,55 +582,77 @@ export default function Sidebar() {
                             const failedUploadsBadge =
                               isFailedItems && failedUploadsCount > 0;
 
-                            const showBadge =
-                              invitesExpiredBadge ||
-                              usersExpiredBadge ||
-                              vodActivityBadge ||
-                              servicesBadge ||
-                              monitorBadge ||
-                              tvShowsActiveBadge ||
-                              tvShowsStuckBadge ||
-                              moviesActiveBadge ||
-                              moviesStuckBadge ||
-                              activeUploadsBadge ||
-                              queueBadge ||
-                              failedUploadsBadge;
-                            let badgeCount = 0;
-                            let badgeColor = "bg-red-500";
+                            // Build array of badges to show
+                            const badges = [];
 
                             if (invitesExpiredBadge) {
-                              badgeCount = expiredUnusedCount;
-                              badgeColor = "bg-red-500";
-                            } else if (usersExpiredBadge) {
-                              badgeCount = expiredUsersCount;
-                              badgeColor = "bg-red-500";
-                            } else if (vodActivityBadge) {
-                              badgeCount = activeSessions.length;
-                              badgeColor = "bg-green-500";
-                            } else if (servicesBadge || monitorBadge) {
-                              badgeCount = totalIssues;
-                              badgeColor = "bg-red-500";
-                            } else if (tvShowsActiveBadge) {
-                              badgeCount = downloadCounts.sonarrActive;
-                              badgeColor = "bg-green-500";
-                            } else if (tvShowsStuckBadge) {
-                              badgeCount = downloadCounts.sonarrStuck;
-                              badgeColor = "bg-yellow-500";
-                            } else if (moviesActiveBadge) {
-                              badgeCount = downloadCounts.radarrActive;
-                              badgeColor = "bg-green-500";
-                            } else if (moviesStuckBadge) {
-                              badgeCount = downloadCounts.radarrStuck;
-                              badgeColor = "bg-yellow-500";
-                            } else if (activeUploadsBadge) {
-                              badgeCount = activeUploadsCount;
-                              badgeColor = "bg-green-500";
-                            } else if (queueBadge) {
-                              badgeCount = queueCount;
-                              badgeColor = "bg-blue-500";
-                            } else if (failedUploadsBadge) {
-                              badgeCount = failedUploadsCount;
-                              badgeColor = "bg-red-500";
+                              badges.push({
+                                count: expiredUnusedCount,
+                                color: "bg-red-500",
+                              });
+                            }
+                            if (usersExpiredBadge) {
+                              badges.push({
+                                count: expiredUsersCount,
+                                color: "bg-red-500",
+                              });
+                            }
+                            if (vodActivityBadge) {
+                              badges.push({
+                                count: activeSessions.length,
+                                color: "bg-green-500",
+                              });
+                            }
+                            if (servicesBadge || monitorBadge) {
+                              badges.push({
+                                count: totalIssues,
+                                color: "bg-red-500",
+                              });
+                            }
+                            // TV Shows: separate badges for active and stuck
+                            if (tvShowsActiveBadge) {
+                              badges.push({
+                                count: downloadCounts.sonarrActive,
+                                color: "bg-green-500",
+                              });
+                            }
+                            if (tvShowsStuckBadge) {
+                              badges.push({
+                                count: downloadCounts.sonarrStuck,
+                                color: "bg-yellow-500",
+                              });
+                            }
+                            // Movies: separate badges for active and stuck
+                            if (moviesActiveBadge) {
+                              badges.push({
+                                count: downloadCounts.radarrActive,
+                                color: "bg-green-500",
+                              });
+                            }
+                            if (moviesStuckBadge) {
+                              badges.push({
+                                count: downloadCounts.radarrStuck,
+                                color: "bg-yellow-500",
+                              });
+                            }
+                            // Uploader: separate badges for active, queue, and failed
+                            if (activeUploadsBadge) {
+                              badges.push({
+                                count: activeUploadsCount,
+                                color: "bg-green-500",
+                              });
+                            }
+                            if (queueBadge) {
+                              badges.push({
+                                count: queueCount,
+                                color: "bg-blue-500",
+                              });
+                            }
+                            if (failedUploadsBadge) {
+                              badges.push({
+                                count: failedUploadsCount,
+                                color: "bg-red-500",
+                              });
                             }
 
                             return (
@@ -655,13 +677,14 @@ export default function Sidebar() {
                                   <span className="flex-1 overflow-hidden whitespace-nowrap text-sm">
                                     {subItem.label}
                                   </span>
-                                  {showBadge && (
+                                  {badges.map((badge, index) => (
                                     <span
-                                      className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full ${badgeColor} text-white`}
+                                      key={index}
+                                      className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full ${badge.color} text-white`}
                                     >
-                                      {badgeCount}
+                                      {badge.count}
                                     </span>
-                                  )}
+                                  ))}
                                 </Link>
                               </li>
                             );
