@@ -188,6 +188,23 @@ export default function Sidebar() {
 
   const failedUploadsCount = uploaderFailedCount?.count || 0;
 
+  // Fetch uploader queue for Queue badge
+  const { data: uploaderQueue } = useQuery({
+    queryKey: ["uploader", "queue-sidebar"],
+    queryFn: async () => {
+      try {
+        return await uploaderApi.getQueue();
+      } catch {
+        return { files: [] };
+      }
+    },
+    refetchInterval: 10000,
+    staleTime: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const queueCount = uploaderQueue?.files?.length || 0;
+
   // Fetch services for status badges
   const { data: services = [] } = useQuery({
     queryKey: ["services"],
@@ -403,29 +420,21 @@ export default function Sidebar() {
                   const hasServicesBadge =
                     item.tabName === "services" && totalIssues > 0;
 
-                  // Check if Uploader tab has active or failed uploads
-                  const hasUploaderBadge =
-                    item.tabName === "uploader" &&
-                    (activeUploadsCount > 0 || failedUploadsCount > 0);
-                  const uploaderBadgeCount =
-                    activeUploadsCount + failedUploadsCount;
-                  // Green if only active, red if any failed
-                  const uploaderBadgeColor =
-                    failedUploadsCount > 0 ? "bg-red-500" : "bg-green-500";
+                  // Check if Uploader tab has active or failed uploads (show separate badges)
+                  const hasActiveUploadsBadge =
+                    item.tabName === "uploader" && activeUploadsCount > 0;
+                  const hasFailedUploadsBadge =
+                    item.tabName === "uploader" && failedUploadsCount > 0;
 
-                  // Check if Downloads tab has active or stuck downloads
+                  // Check if Downloads tab has active or stuck downloads (show separate badges)
                   const totalActiveDownloads =
                     downloadCounts.sonarrActive + downloadCounts.radarrActive;
                   const totalStuckDownloads =
                     downloadCounts.sonarrStuck + downloadCounts.radarrStuck;
-                  const hasDownloadsBadge =
-                    item.tabName === "downloads" &&
-                    (totalActiveDownloads > 0 || totalStuckDownloads > 0);
-                  const downloadsBadgeCount =
-                    totalActiveDownloads + totalStuckDownloads;
-                  // Green if only active, yellow if any stuck
-                  const downloadsBadgeColor =
-                    totalStuckDownloads > 0 ? "bg-yellow-500" : "bg-green-500";
+                  const hasActiveDownloadsBadge =
+                    item.tabName === "downloads" && totalActiveDownloads > 0;
+                  const hasStuckDownloadsBadge =
+                    item.tabName === "downloads" && totalStuckDownloads > 0;
 
                   return (
                     <div key={item.label}>
@@ -473,22 +482,40 @@ export default function Sidebar() {
                             {activeSessions.length}
                           </span>
                         )}
-                        {hasUploaderBadge && (
+                        {hasActiveUploadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${uploaderBadgeColor} text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
-                            {uploaderBadgeCount}
+                            {activeUploadsCount}
                           </span>
                         )}
-                        {hasDownloadsBadge && (
+                        {hasFailedUploadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${downloadsBadgeColor} text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
-                            {downloadsBadgeCount}
+                            {failedUploadsCount}
+                          </span>
+                        )}
+                        {hasActiveDownloadsBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {totalActiveDownloads}
+                          </span>
+                        )}
+                        {hasStuckDownloadsBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-yellow-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {totalStuckDownloads}
                           </span>
                         )}
                         <ChevronDown
@@ -544,6 +571,11 @@ export default function Sidebar() {
                             const activeUploadsBadge =
                               isActiveUploads && activeUploadsCount > 0;
 
+                            // Uploader Queue badge
+                            const isQueue =
+                              subItem.path === "/uploader?tab=queue";
+                            const queueBadge = isQueue && queueCount > 0;
+
                             // Uploader Failed Items badge
                             const isFailedItems =
                               subItem.path === "/uploader?tab=failed";
@@ -561,6 +593,7 @@ export default function Sidebar() {
                               moviesActiveBadge ||
                               moviesStuckBadge ||
                               activeUploadsBadge ||
+                              queueBadge ||
                               failedUploadsBadge;
                             let badgeCount = 0;
                             let badgeColor = "bg-red-500";
@@ -592,6 +625,9 @@ export default function Sidebar() {
                             } else if (activeUploadsBadge) {
                               badgeCount = activeUploadsCount;
                               badgeColor = "bg-green-500";
+                            } else if (queueBadge) {
+                              badgeCount = queueCount;
+                              badgeColor = "bg-blue-500";
                             } else if (failedUploadsBadge) {
                               badgeCount = failedUploadsCount;
                               badgeColor = "bg-red-500";
