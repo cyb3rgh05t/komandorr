@@ -165,6 +165,13 @@
       "all": "Alle",
       "tvShows": "TV-Serien",
       "movies": "Filme"
+    },
+    "pagination": {
+      "showing": "Zeige",
+      "to": "bis",
+      "of": "von",
+      "items": "Einträgen",
+      "itemsPerPage": "Einträge pro Seite:"
     }
   },
   "traffic": {

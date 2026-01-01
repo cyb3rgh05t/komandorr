@@ -313,6 +313,13 @@
       "all": "All",
       "tvShows": "TV Shows",
       "movies": "Movies"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "items": "items",
+      "itemsPerPage": "Items per page:"
     }
   },
   "traffic": {

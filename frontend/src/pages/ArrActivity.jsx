@@ -16,6 +16,8 @@ import {
   Server,
   Upload as UploadIcon,
   Play,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { arrActivityApi } from "../services/arrActivityApi";
 
@@ -129,6 +131,10 @@ export default function ArrActivity() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Pagination state per instance
+  const [instancePages, setInstancePages] = useState({});
+  const [instanceItemsPerPage, setInstanceItemsPerPage] = useState({});
+
   // Get tab from URL params - defaults to "tvshows"
   const activeTab = searchParams.get("tab") || "tvshows";
 
@@ -207,6 +213,34 @@ export default function ArrActivity() {
       }),
     }));
   }, [instancesList, normalizedSearch]);
+
+  // Pagination helpers
+  const getInstancePage = (instanceId) => instancePages[instanceId] || 1;
+  const getInstanceItemsPerPage = (instanceId) =>
+    instanceItemsPerPage[instanceId] || 10;
+
+  const setInstancePage = (instanceId, page) => {
+    setInstancePages((prev) => ({ ...prev, [instanceId]: page }));
+  };
+
+  const setInstanceItemsPerPageValue = (instanceId, value) => {
+    setInstanceItemsPerPage((prev) => ({ ...prev, [instanceId]: value }));
+    // Reset to page 1 when changing items per page
+    setInstancePages((prev) => ({ ...prev, [instanceId]: 1 }));
+  };
+
+  const getPaginatedRecords = (records, instanceId) => {
+    const page = getInstancePage(instanceId);
+    const itemsPerPage = getInstanceItemsPerPage(instanceId);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return records.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (totalRecords, instanceId) => {
+    const itemsPerPage = getInstanceItemsPerPage(instanceId);
+    return Math.max(1, Math.ceil(totalRecords / itemsPerPage));
+  };
 
   const renderQueueTable = (items, type) => {
     const Icon = type === "sonarr" ? Tv : Film;
@@ -469,47 +503,174 @@ export default function ArrActivity() {
           if (activeTab === "movies") return inst.type === "radarr";
           return true;
         })
-        .map((inst) => (
-          <div key={inst.id}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                {inst.type === "sonarr" ? (
-                  <Tv className="w-5 h-5" />
-                ) : (
-                  <Film className="w-5 h-5" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text">
-                  {inst.name} Downloads
-                  <span className="text-sm font-normal text-theme-text-muted ml-2">
-                    ({(inst.records || []).length})
-                  </span>
-                </h3>
-              </div>
-            </div>
+        .map((inst) => {
+          const allRecords = inst.records || [];
+          const totalRecords = allRecords.length;
+          const paginatedRecords = getPaginatedRecords(allRecords, inst.id);
+          const currentPage = getInstancePage(inst.id);
+          const itemsPerPage = getInstanceItemsPerPage(inst.id);
+          const totalPages = getTotalPages(totalRecords, inst.id);
 
-            {inst.error ? (
-              <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-6">
-                <div className="flex items-center gap-3 text-red-400">
-                  <AlertCircle className="w-5 h-5" />
-                  <div>
-                    <p className="font-medium">
-                      Unable to connect to {inst.name}
-                    </p>
-                    <p className="text-sm text-theme-text-muted mt-1">
-                      {inst.error}
-                    </p>
-                  </div>
+          return (
+            <div key={inst.id}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  {inst.type === "sonarr" ? (
+                    <Tv className="w-5 h-5" />
+                  ) : (
+                    <Film className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {inst.name} Downloads
+                    <span className="text-sm font-normal text-theme-text-muted ml-2">
+                      ({totalRecords})
+                    </span>
+                  </h3>
                 </div>
               </div>
-            ) : (
-              <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-                {renderQueueTable(inst.records || [], inst.type)}
-              </div>
-            )}
-          </div>
-        ))}
+
+              {inst.error ? (
+                <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-6">
+                  <div className="flex items-center gap-3 text-red-400">
+                    <AlertCircle className="w-5 h-5" />
+                    <div>
+                      <p className="font-medium">
+                        Unable to connect to {inst.name}
+                      </p>
+                      <p className="text-sm text-theme-text-muted mt-1">
+                        {inst.error}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+                    {renderQueueTable(paginatedRecords, inst.type)}
+                  </div>
+
+                  {/* Pagination for this instance */}
+                  {totalRecords > 0 && (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm font-medium text-theme-text-muted">
+                          {t("arrActivity.pagination.showing", "Showing")}{" "}
+                          <span className="text-theme-text font-semibold">
+                            {totalRecords > 0
+                              ? (currentPage - 1) * itemsPerPage + 1
+                              : 0}
+                          </span>{" "}
+                          {t("arrActivity.pagination.to", "to")}{" "}
+                          <span className="text-theme-text font-semibold">
+                            {Math.min(currentPage * itemsPerPage, totalRecords)}
+                          </span>{" "}
+                          {t("arrActivity.pagination.of", "of")}{" "}
+                          <span className="text-theme-text font-semibold">
+                            {totalRecords}
+                          </span>{" "}
+                          {t("arrActivity.pagination.items", "items")}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-theme-text-muted">
+                            {t(
+                              "arrActivity.pagination.itemsPerPage",
+                              "Items per page:"
+                            )}
+                          </span>
+                          <select
+                            value={itemsPerPage}
+                            onChange={(e) =>
+                              setInstanceItemsPerPageValue(
+                                inst.id,
+                                Number(e.target.value)
+                              )
+                            }
+                            className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                          >
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            setInstancePage(inst.id, currentPage - 1)
+                          }
+                          disabled={currentPage === 1}
+                          className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                          title={t("common.previous")}
+                        >
+                          <ChevronLeft size={20} />
+                        </button>
+
+                        <div className="flex items-center gap-1.5">
+                          {Array.from({ length: totalPages }).map(
+                            (_, index) => {
+                              const page = index + 1;
+                              if (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= currentPage - 1 &&
+                                  page <= currentPage + 1)
+                              ) {
+                                return (
+                                  <button
+                                    key={page}
+                                    onClick={() =>
+                                      setInstancePage(inst.id, page)
+                                    }
+                                    className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                                      currentPage === page
+                                        ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                                        : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
+                                    }`}
+                                  >
+                                    {page}
+                                  </button>
+                                );
+                              } else if (
+                                page === currentPage - 2 ||
+                                page === currentPage + 2
+                              ) {
+                                return (
+                                  <span
+                                    key={page}
+                                    className="text-theme-text-muted px-2"
+                                  >
+                                    •••
+                                  </span>
+                                );
+                              }
+                              return null;
+                            }
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            setInstancePage(inst.id, currentPage + 1)
+                          }
+                          disabled={currentPage === totalPages}
+                          className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                          title={t("common.next")}
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
 
       {/* No Sonarr Services Configured (TV Shows tab) */}
       {activeTab === "tvshows" &&
