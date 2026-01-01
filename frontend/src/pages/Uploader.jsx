@@ -83,7 +83,8 @@ export default function Uploader() {
   const [queuePageNumber, setQueuePageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useItemsPerPage("uploader_completed");
-  const [queueItemsPerPage, setQueueItemsPerPage] = useItemsPerPage("uploader_queue");
+  const [queueItemsPerPage, setQueueItemsPerPage] =
+    useItemsPerPage("uploader_queue");
 
   const {
     data: queueData,
