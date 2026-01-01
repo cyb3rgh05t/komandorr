@@ -4,6 +4,7 @@ import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { formatDateTime } from "../utils/dateUtils";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import ConfirmDialog from "../components/ConfirmDialog";
 import {
   Plus,
@@ -130,7 +131,7 @@ const InvitesManager = () => {
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("invitesManager");
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState({

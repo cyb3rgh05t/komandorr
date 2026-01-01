@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
+import { usePersistedState } from "../utils/usePersistedState";
 import {
   Activity,
   Download,
@@ -133,7 +134,10 @@ export default function ArrActivity() {
 
   // Pagination state per instance
   const [instancePages, setInstancePages] = useState({});
-  const [instanceItemsPerPage, setInstanceItemsPerPage] = useState({});
+  const [instanceItemsPerPage, setInstanceItemsPerPage] = usePersistedState(
+    "komandorr_itemsPerPage_arrActivity",
+    {}
+  );
 
   // Get tab from URL params - defaults to "tvshows"
   const activeTab = searchParams.get("tab") || "tvshows";

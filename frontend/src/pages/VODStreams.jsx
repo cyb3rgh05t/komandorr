@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import {
   Video,
   Download,
@@ -274,7 +275,7 @@ export default function VODStreams() {
   const [activeFilter, setActiveFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("vodStreams");
 
   // Track activity timestamps and completion times
   const [activityTimestamps, setActivityTimestamps] = useState(() => {

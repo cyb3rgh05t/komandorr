@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import {
   UserPlus,
   Server,
@@ -39,7 +40,7 @@ export default function VODPortal() {
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("vodPortal");
   const [deleteDialog, setDeleteDialog] = useState({
     isOpen: false,
     userId: null,

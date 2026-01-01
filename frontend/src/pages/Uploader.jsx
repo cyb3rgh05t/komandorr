@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import {
   Activity,
   CheckCircle,
@@ -81,8 +82,8 @@ export default function Uploader() {
   const [pageNumber, setPageNumber] = useState(1);
   const [queuePageNumber, setQueuePageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [queueItemsPerPage, setQueueItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("uploader_completed");
+  const [queueItemsPerPage, setQueueItemsPerPage] = useItemsPerPage("uploader_queue");
 
   const {
     data: queueData,
