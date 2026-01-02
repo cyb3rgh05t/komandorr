@@ -153,13 +153,13 @@ async def get_storage_summary():
             services_with_storage.append(service)
             summary["services_with_storage"] += 1
 
-            # Aggregate storage paths and count unmounted
+            # Aggregate storage paths and count unmounted unionfs
             for path in service.storage.storage_paths:
                 summary["total_capacity"] += path.total
                 summary["total_used"] += path.used
                 summary["total_free"] += path.free
-                # Count unmounted paths (total = 0 usually indicates unmounted)
-                if path.total == 0:
+                # Count unmounted unionfs paths (total = 0 indicates unmounted)
+                if "unionfs" in path.path.lower() and path.total == 0:
                     summary["unmounted_paths"] += 1
 
             # Count RAID arrays (mdadm + ZFS)
