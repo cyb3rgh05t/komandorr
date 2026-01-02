@@ -144,6 +144,7 @@ async def get_storage_summary():
         "healthy_raids": 0,
         "degraded_raids": 0,
         "failed_raids": 0,
+        "unmounted_paths": 0,
     }
 
     services_with_storage = []
@@ -152,11 +153,14 @@ async def get_storage_summary():
             services_with_storage.append(service)
             summary["services_with_storage"] += 1
 
-            # Aggregate storage paths
+            # Aggregate storage paths and count unmounted
             for path in service.storage.storage_paths:
                 summary["total_capacity"] += path.total
                 summary["total_used"] += path.used
                 summary["total_free"] += path.free
+                # Count unmounted paths (total = 0 usually indicates unmounted)
+                if path.total == 0:
+                    summary["unmounted_paths"] += 1
 
             # Count RAID arrays (mdadm + ZFS)
             summary["total_raid_arrays"] += len(service.storage.raid_arrays) + len(

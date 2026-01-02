@@ -205,6 +205,34 @@ export default function Sidebar() {
 
   const queueCount = uploaderQueue?.files?.length || 0;
 
+  // Fetch storage summary for health issues badge
+  const { data: storageSummary } = useQuery({
+    queryKey: ["storage-summary-sidebar"],
+    queryFn: async () => {
+      try {
+        const response = await api.get("/storage/summary");
+        return response;
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 15000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Calculate storage issues count (degraded + failed raids, unmounted paths)
+  const storageIssuesCount = useMemo(() => {
+    if (!storageSummary) return 0;
+    let issues = 0;
+    // RAID/ZFS issues (already combined in backend)
+    issues += storageSummary.degraded_raids || 0;
+    issues += storageSummary.failed_raids || 0;
+    // Unmounted paths
+    issues += storageSummary.unmounted_paths || 0;
+    return issues;
+  }, [storageSummary]);
+
   // Fetch services for status badges
   const { data: services = [] } = useQuery({
     queryKey: ["services"],
@@ -703,6 +731,10 @@ export default function Sidebar() {
                   const showVodStreamsBadge =
                     isVodStreams && vodStreamsCount > 0;
 
+                  // Check for Storage issues badge
+                  const isStorage = item.path === "/storage";
+                  const showStorageBadge = isStorage && storageIssuesCount > 0;
+
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -739,6 +771,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {vodStreamsCount}
+                          </span>
+                        )}
+                        {showStorageBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {storageIssuesCount}
                           </span>
                         )}
                       </Link>
