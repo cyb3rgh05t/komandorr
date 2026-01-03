@@ -446,6 +446,12 @@
     "noMatching": "No matching activities",
     "noMatchingDescription": "No activities found matching",
     "clearSearch": "Clear Search",
+    "table": {
+      "media": "Media",
+      "user": "User",
+      "status": "Status",
+      "progress": "Progress"
+    },
     "pagination": {
       "showing": "Showing",
       "to": "to",

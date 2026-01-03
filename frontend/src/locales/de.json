@@ -380,6 +380,12 @@
     "noMatching": "Keine passenden Aktivitäten",
     "noMatchingDescription": "Keine Aktivitäten gefunden für",
     "clearSearch": "Suche löschen",
+    "table": {
+      "media": "Medien",
+      "user": "Benutzer",
+      "status": "Status",
+      "progress": "Fortschritt"
+    },
     "pagination": {
       "showing": "Zeige",
       "to": "bis",

@@ -854,7 +854,7 @@ export default function VODStreams() {
             <thead>
               <tr className="bg-theme-hover border-b border-theme">
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                  {t("vodStreams.table.title", "Title")}
+                  {t("vodStreams.table.media", "Media")}
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("vodStreams.table.user", "User")}
