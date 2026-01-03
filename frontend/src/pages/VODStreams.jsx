@@ -476,16 +476,10 @@ export default function VODStreams() {
       !(activity.type === "download" || activity.type === "media.download")
     )
       return false;
-    if (activeFilter === "paused" && activity.state !== "paused") return false;
-    if (
-      activeFilter === "transcoding" &&
-      !(activity.transcodeSession && activity.state === "playing")
-    )
+    if (activeFilter === "paused" && activity.type !== "pause") return false;
+    if (activeFilter === "transcoding" && activity.type !== "transcode")
       return false;
-    if (
-      activeFilter === "streaming" &&
-      !(activity.state === "playing" && !activity.transcodeSession)
-    )
+    if (activeFilter === "streaming" && activity.type !== "stream")
       return false;
 
     // Apply search query
@@ -637,7 +631,7 @@ export default function VODStreams() {
                 {t("vodStreams.stats.paused")}
               </p>
               <p className="text-2xl font-bold text-orange-500 mt-1">
-                {activities.filter((a) => a.state === "paused").length}
+                {activities.filter((a) => a.type === "pause").length}
               </p>
             </div>
             <Pause className="w-8 h-8 text-orange-500" />
@@ -659,11 +653,7 @@ export default function VODStreams() {
                 {t("vodStreams.stats.transcoding")}
               </p>
               <p className="text-2xl font-bold text-cyan-500 mt-1">
-                {
-                  activities.filter(
-                    (a) => a.transcodeSession && a.state === "playing"
-                  ).length
-                }
+                {activities.filter((a) => a.type === "transcode").length}
               </p>
             </div>
             <Video className="w-8 h-8 text-cyan-500" />
@@ -685,11 +675,7 @@ export default function VODStreams() {
                 {t("vodStreams.stats.streaming")}
               </p>
               <p className="text-2xl font-bold text-blue-500 mt-1">
-                {
-                  activities.filter(
-                    (a) => a.state === "playing" && !a.transcodeSession
-                  ).length
-                }
+                {activities.filter((a) => a.type === "stream").length}
               </p>
             </div>
             <Play className="w-8 h-8 text-blue-500" />
