@@ -857,7 +857,7 @@ export default function VODStreams() {
                   {t("vodStreams.table.media", "Media")}
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
-                  {t("vodStreams.table.user", "User")}
+                  {t("vodStreams.table.title", "Title")}
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                   {t("vodStreams.table.status", "Status")}

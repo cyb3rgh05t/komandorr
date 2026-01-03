@@ -382,7 +382,7 @@
     "clearSearch": "Suche löschen",
     "table": {
       "media": "Medien",
-      "user": "Benutzer",
+      "title": "Titel",
       "status": "Status",
       "progress": "Fortschritt"
     },

@@ -448,7 +448,7 @@
     "clearSearch": "Clear Search",
     "table": {
       "media": "Media",
-      "user": "User",
+      "title": "Title",
       "status": "Status",
       "progress": "Progress"
     },
