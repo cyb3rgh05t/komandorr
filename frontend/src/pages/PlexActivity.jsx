@@ -317,7 +317,7 @@ const LoadingCard = () => (
   </div>
 );
 
-const VODActivity = () => {
+const PlexActivity = () => {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -572,4 +572,4 @@ const VODActivity = () => {
   );
 };
 
-export default VODActivity;
+export default PlexActivity;
