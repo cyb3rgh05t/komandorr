@@ -9,7 +9,7 @@
     "services": "Services",
     "monitor": "Ping Response",
     "traffic": "Traffic",
-    "vodStreams": "VOD Monitor",
+    "vodStreams": "VOD Plex-Sync",
     "vodActivity": "Activity",
     "vodPortal": "VOD Portal",
     "uploader": "Uploads",

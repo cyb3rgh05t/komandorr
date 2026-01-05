@@ -77,8 +77,8 @@ const InvitesManager = () => {
   const { data: stats = null } = useQuery({
     queryKey: ["inviteStats"],
     queryFn: () => api.get("/invites/stats"),
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 3600000, // 1 hour
+    refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
 
@@ -101,8 +101,8 @@ const InvitesManager = () => {
       console.log("Plex users count response:", data);
       return data;
     },
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 3600000, // 1 hour
+    refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
 
@@ -112,8 +112,8 @@ const InvitesManager = () => {
   const { data: plexLiveStatsData } = useQuery({
     queryKey: ["plexLiveStats"],
     queryFn: () => api.get("/plex/stats/live"),
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 3600000, // 1 hour
+    refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
 

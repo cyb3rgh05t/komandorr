@@ -102,8 +102,8 @@ const UserAccounts = () => {
       const data = await api.get("/invites/");
       return data || [];
     },
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 600000, // 10 minutes
+    refetchInterval: 600000, // 10 minutes
     placeholderData: (previousData) => previousData,
   });
 
