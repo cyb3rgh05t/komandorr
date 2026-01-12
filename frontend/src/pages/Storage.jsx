@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
@@ -145,8 +145,16 @@ const RaidStatusBadge = ({ status }) => {
 // Storage Service Card
 const StorageServiceCard = ({ service, t }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const lastRefreshRef = useRef(null);
   const storage = service.storage;
   const history = service.storage_history || [];
+
+  // Update last refresh time only when new data comes from agent
+  useEffect(() => {
+    if (storage?.last_updated) {
+      lastRefreshRef.current = storage.last_updated;
+    }
+  }, [storage?.last_updated]);
 
   if (!storage) {
     return null;
@@ -202,7 +210,7 @@ const StorageServiceCard = ({ service, t }) => {
             {storage.hostname}
           </p>
           {/* Badges */}
-          <div className="flex gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2">
             <span className="inline-block bg-blue-500/20 text-blue-400 text-xs font-medium px-2 py-1 rounded">
               {service.type}
             </span>
@@ -216,6 +224,28 @@ const StorageServiceCard = ({ service, t }) => {
               }`}
             >
               {service.status}
+            </span>
+            {/* Last Refresh Badge */}
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded ${
+                lastRefreshRef.current &&
+                Date.now() - new Date(lastRefreshRef.current).getTime() > 120000
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "bg-purple-500/20 text-purple-400"
+              }`}
+              title={
+                lastRefreshRef.current
+                  ? new Date(lastRefreshRef.current).toLocaleString()
+                  : t("storage.noDataYet", "Waiting for data...")
+              }
+            >
+              <RefreshCw size={10} />
+              {lastRefreshRef.current
+                ? new Date(lastRefreshRef.current).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "--:--"}
             </span>
           </div>
         </div>
