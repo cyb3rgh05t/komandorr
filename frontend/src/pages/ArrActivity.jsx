@@ -515,43 +515,74 @@ export default function ArrActivity() {
           const itemsPerPage = getInstanceItemsPerPage(inst.id);
           const totalPages = getTotalPages(totalRecords, inst.id);
 
+          const isSonarr = inst.type === "sonarr";
+          const borderColor = isSonarr
+            ? "border-purple-500/30"
+            : "border-blue-500/30";
+          const headerBg = isSonarr ? "bg-purple-500/10" : "bg-blue-500/10";
+          const iconColor = isSonarr ? "text-purple-500" : "text-blue-500";
+          const badgeBg = isSonarr ? "bg-purple-500/20" : "bg-blue-500/20";
+          const badgeText = isSonarr ? "text-purple-400" : "text-blue-400";
+
           return (
             <div key={inst.id}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                  {inst.type === "sonarr" ? (
-                    <Tv className="w-5 h-5" />
-                  ) : (
-                    <Film className="w-5 h-5" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-theme-text">
-                    {inst.name} Downloads
-                    <span className="text-sm font-normal text-theme-text-muted ml-2">
-                      ({totalRecords})
-                    </span>
-                  </h3>
-                </div>
-              </div>
-
               {inst.error ? (
-                <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-6">
-                  <div className="flex items-center gap-3 text-red-400">
-                    <AlertCircle className="w-5 h-5" />
-                    <div>
-                      <p className="font-medium">
-                        Unable to connect to {inst.name}
-                      </p>
-                      <p className="text-sm text-theme-text-muted mt-1">
-                        {inst.error}
-                      </p>
+                <div className="bg-theme-card rounded-xl border border-red-500/30 shadow-lg overflow-hidden">
+                  <div className="bg-red-500/10 border-b border-red-500/30 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {isSonarr ? (
+                        <Tv className="w-5 h-5 text-red-500" />
+                      ) : (
+                        <Film className="w-5 h-5 text-red-500" />
+                      )}
+                      <h3 className="text-lg font-semibold text-theme-text">
+                        {inst.name}
+                      </h3>
+                      <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
+                        {t("arrActivity.error", "Error")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 text-red-400">
+                      <AlertCircle className="w-5 h-5" />
+                      <div>
+                        <p className="font-medium">
+                          Unable to connect to {inst.name}
+                        </p>
+                        <p className="text-sm text-theme-text-muted mt-1">
+                          {inst.error}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+                  <div
+                    className={`bg-theme-card rounded-xl border ${borderColor} shadow-lg overflow-hidden`}
+                  >
+                    {/* Header */}
+                    <div
+                      className={`${headerBg} border-b ${borderColor} px-4 py-3`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isSonarr ? (
+                          <Tv className={`w-5 h-5 ${iconColor}`} />
+                        ) : (
+                          <Film className={`w-5 h-5 ${iconColor}`} />
+                        )}
+                        <h3 className="text-lg font-semibold text-theme-text">
+                          {inst.name}
+                        </h3>
+                        <span
+                          className={`ml-2 px-2 py-0.5 ${badgeBg} ${badgeText} text-xs font-medium rounded-full`}
+                        >
+                          {totalRecords}{" "}
+                          {t("arrActivity.downloads", "downloads")}
+                        </span>
+                      </div>
+                    </div>
                     {renderQueueTable(paginatedRecords, inst.type)}
                   </div>
 

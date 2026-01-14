@@ -244,6 +244,12 @@
       "history": "History",
       "failedItems": "Failed Items"
     },
+    "sections": {
+      "active": "Active Uploads",
+      "queue": "Upload Queue",
+      "completed": "Completed Uploads",
+      "failed": "Failed Uploads"
+    },
     "refreshSuccess": "Data refreshed successfully",
     "activeUploads": "Active Uploads",
     "queue": "Queue",
@@ -309,6 +315,8 @@
     "size": "Size",
     "timeLeft": "Time Left",
     "client": "Client",
+    "downloads": "downloads",
+    "error": "Error",
     "tabs": {
       "all": "All",
       "tvShows": "TV Shows",
@@ -342,6 +350,11 @@
     "no_data": "No traffic data available. Deploy the traffic agent on your servers to start monitoring.",
     "noData": "No traffic data available",
     "noActiveTraffic": "No active traffic",
+    "emptyState": {
+      "title": "No Traffic Agents Connected",
+      "description": "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics.",
+      "setupGuide": "Setup Traffic Agent"
+    },
     "last_refresh": "Last refreshed",
     "realtimeMonitoring": "Real-time bandwidth monitoring",
     "service": "active service",
@@ -429,15 +442,27 @@
       "transcoding": "Transcoding",
       "streaming": "Streaming",
       "peakConcurrent": "Peak Concurrent",
-      "resetPeak": "Reset Peak"
+      "resetPeak": "Reset Peak",
+      "scanning": "Library Scans"
     },
     "badges": {
       "downloading": "Downloading...",
       "transcoding": "Transcoding...",
       "streaming": "Streaming...",
-      "paused": "Paused"
+      "paused": "Paused",
+      "scanning": "Scanning..."
     },
     "progress": "Progress",
+    "libraryScans": {
+      "title": "Library Scans",
+      "active": "active",
+      "library": "Library",
+      "details": "Details"
+    },
+    "downloads": {
+      "title": "Downloads & Streams",
+      "active": "active"
+    },
     "plexNotConfigured": {
       "title": "Plex Server Not Configured",
       "description": "Configure your Plex server in Settings to start monitoring sync activities.",
@@ -921,7 +946,8 @@
     "title": "VOD Portal",
     "description": "Add users to Overseerr from the web interface",
     "placeholder": "VOD Portal content will be added here",
-    "createUser": "Add User to StreamNet VOD",
+    "addUserTitle": "Add User to StreamNet VOD",
+    "createUser": "Add User",
     "username": "Username",
     "usernamePlaceholder": "Enter username",
     "password": "Password",
@@ -976,5 +1002,36 @@
     "delete": "Delete",
     "userDeleted": "User has been deleted",
     "deleteError": "Failed to delete user"
+  },
+  "storage": {
+    "searchPlaceholder": "Search servers...",
+    "refresh": "Refresh",
+    "monitoredServers": "Monitored Servers",
+    "noServersConfigured": "No Storage Servers Configured",
+    "noServersDescription": "Configure storage agents on your servers to start monitoring disk usage, RAID arrays, and ZFS pools.",
+    "setupGuide": "Setup Guide",
+    "noSearchResults": "No Servers Found",
+    "noSearchResultsDescription": "No servers match your search for",
+    "clearSearch": "Clear Search",
+    "emptyState": {
+      "title": "No Storage Agents Connected",
+      "description": "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time.",
+      "setupGuide": "Setup Storage Agent"
+    },
+    "total": "Total",
+    "used": "Used",
+    "free": "Free",
+    "usage": "Usage",
+    "totalCapacity": "Capacity",
+    "totalUsed": "Used",
+    "totalFree": "Free",
+    "raidStatus": "Arrays Status",
+    "paths": "Storage Paths",
+    "mdadmRaid": "mdadm RAID Arrays",
+    "zfsPools": "ZFS Pools",
+    "raidDetails": "mdadm RAID Details",
+    "zfsPoolDetails": "ZFS Pool Details",
+    "lastUpdated": "Last updated",
+    "noDataYet": "Waiting for data..."
   }
 }

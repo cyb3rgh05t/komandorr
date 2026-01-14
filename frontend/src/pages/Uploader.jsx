@@ -497,13 +497,27 @@ export default function Uploader() {
 
       {(activeTab === "uploader" || activeTab === "active") && (
         <Section>
-          <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="bg-theme-card rounded-xl border border-blue-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-blue-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.active", "Active Uploads")}
+                </h3>
+                {inProgressJobs.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
+                    {inProgressJobs.length}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.filename")}
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
@@ -524,7 +538,7 @@ export default function Uploader() {
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.remaining")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.speed")}
                       </th>
                     </tr>
@@ -602,13 +616,27 @@ export default function Uploader() {
 
       {(activeTab === "uploader" || activeTab === "queue") && (
         <Section>
-          <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="bg-theme-card rounded-xl border border-purple-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-purple-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.queue", "Upload Queue")}
+                </h3>
+                {queueFiles.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+                    {queueFiles.length}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         #
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
@@ -623,7 +651,7 @@ export default function Uploader() {
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.added")}
                       </th>
                     </tr>
@@ -783,13 +811,27 @@ export default function Uploader() {
 
       {(activeTab === "uploader" || activeTab === "history") && (
         <Section>
-          <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="bg-theme-card rounded-xl border border-green-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.completed", "Completed Uploads")}
+                </h3>
+                {totalCompleted > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+                    {totalCompleted}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.filename")}
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
@@ -807,7 +849,7 @@ export default function Uploader() {
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.duration")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.completedAt")}
                       </th>
                     </tr>
@@ -963,13 +1005,27 @@ export default function Uploader() {
 
       {activeTab === "failed" && (
         <Section>
-          <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
+          <div className="bg-theme-card rounded-xl border border-red-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-red-500/10 border-b border-red-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.failed", "Failed Uploads")}
+                </h3>
+                {failedJobs.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
+                    {failedJobs.length}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.filename")}
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
@@ -984,7 +1040,7 @@ export default function Uploader() {
                       <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.error", "Error")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
                         {t("uploader.table.failedAt", "Failed At")}
                       </th>
                     </tr>

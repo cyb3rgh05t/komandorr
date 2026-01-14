@@ -501,142 +501,149 @@ export default function VODPortal() {
       </div>
 
       {/* Create User Form */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-          <UserPlus className="w-5 h-5" />
+      <div className="bg-theme-card rounded-xl border border-green-500/30 shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-green-500" />
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("vodPortal.addUserTitle") || "Add User to StreamNet VOD"}
+            </h3>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-theme-text">
-            {t("vodPortal.createUser") || "Add User to StreamNet VOD"}
-          </h3>
-        </div>
-      </div>
-      <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-        {/* Decorative gradient overlay */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+        <div className="p-4 sm:p-6 space-y-4 relative">
+          {/* Decorative gradient overlay */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16" />
 
-        <div className="relative">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Username */}
-              <div>
+          <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Username */}
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-theme-text mb-2"
+                  >
+                    {t("vodPortal.username") || "Username"}{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+                    placeholder={
+                      t("vodPortal.usernamePlaceholder") || "Enter username"
+                    }
+                    disabled={
+                      !overseerrStatus?.configured ||
+                      !overseerrStatus?.reachable
+                    }
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-theme-text mb-2"
+                  >
+                    {t("vodPortal.password") || "Password"}{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+                    placeholder={
+                      t("vodPortal.passwordPlaceholder") || "Enter password"
+                    }
+                    disabled={
+                      !overseerrStatus?.configured ||
+                      !overseerrStatus?.reachable
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Email Domain */}
+              <div className="md:w-1/2">
                 <label
-                  htmlFor="username"
+                  htmlFor="email_domain"
                   className="block text-sm font-medium text-theme-text mb-2"
                 >
-                  {t("vodPortal.username") || "Username"}{" "}
-                  <span className="text-red-500">*</span>
+                  {t("vodPortal.emailDomain") || "Email Domain"}{" "}
+                  <span className="text-theme-text-secondary text-xs">
+                    ({t("vodPortal.optional") || "optional"})
+                  </span>
                 </label>
                 <input
                   type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  id="email_domain"
+                  name="email_domain"
+                  value={formData.email_domain}
                   onChange={handleInputChange}
-                  required
                   className="w-full px-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
                   placeholder={
-                    t("vodPortal.usernamePlaceholder") || "Enter username"
+                    t("vodPortal.emailDomainPlaceholder") || "example.com"
                   }
                   disabled={
                     !overseerrStatus?.configured || !overseerrStatus?.reachable
                   }
                 />
+                <p className="text-xs text-theme-text-secondary mt-1">
+                  {t("vodPortal.emailDomainHelp") ||
+                    "Email will be: username@domain.com"}
+                </p>
               </div>
 
-              {/* Password */}
+              {/* Submit Button */}
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-theme-text mb-2"
-                >
-                  {t("vodPortal.password") || "Password"}{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
-                  placeholder={
-                    t("vodPortal.passwordPlaceholder") || "Enter password"
-                  }
+                <button
+                  type="submit"
                   disabled={
-                    !overseerrStatus?.configured || !overseerrStatus?.reachable
+                    loading ||
+                    !overseerrStatus?.configured ||
+                    !overseerrStatus?.reachable
                   }
-                />
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-500/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <UserPlus className="w-4 h-4 text-green-500" />
+                  <span className="text-xs sm:text-sm text-green-400">
+                    {loading
+                      ? t("vodPortal.creating") || "Creating..."
+                      : t("vodPortal.createUser") || "Add User"}
+                  </span>
+                </button>
               </div>
-            </div>
-
-            {/* Email Domain */}
-            <div className="md:w-1/2">
-              <label
-                htmlFor="email_domain"
-                className="block text-sm font-medium text-theme-text mb-2"
-              >
-                {t("vodPortal.emailDomain") || "Email Domain"}{" "}
-                <span className="text-theme-text-secondary text-xs">
-                  ({t("vodPortal.optional") || "optional"})
-                </span>
-              </label>
-              <input
-                type="text"
-                id="email_domain"
-                name="email_domain"
-                value={formData.email_domain}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
-                placeholder={
-                  t("vodPortal.emailDomainPlaceholder") || "example.com"
-                }
-                disabled={
-                  !overseerrStatus?.configured || !overseerrStatus?.reachable
-                }
-              />
-              <p className="text-xs text-theme-text-secondary mt-1">
-                {t("vodPortal.emailDomainHelp") ||
-                  "Email will be: username@domain.com"}
-              </p>
-            </div>
-
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={
-                  loading ||
-                  !overseerrStatus?.configured ||
-                  !overseerrStatus?.reachable
-                }
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <UserPlus className="w-4 h-4 text-theme-primary" />
-                <span className="text-xs sm:text-sm">
-                  {loading
-                    ? t("vodPortal.creating") || "Creating..."
-                    : t("vodPortal.createUser") || "Add User"}
-                </span>
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
 
       {/* Users List */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-          <Users className="w-5 h-5" />
+      <div className="bg-theme-card rounded-xl border border-blue-500/30 shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-500" />
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("vodPortal.existingUsers") || "Existing Users"}
+            </h3>
+            {users.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
+                {users.length}
+              </span>
+            )}
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-theme-text">
-            {t("vodPortal.existingUsers") || "Existing Users"}
-          </h3>
-        </div>
-      </div>
-      <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
         <div className="overflow-hidden">
           <div className="overflow-x-auto">
             {usersLoading ? (
@@ -654,7 +661,7 @@ export default function VODPortal() {
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary rounded-tl-xl">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                       {t("vodPortal.username") || "Username"}
                     </th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
@@ -678,7 +685,7 @@ export default function VODPortal() {
                     <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
                       {t("vodPortal.requests") || "Requests"}
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary rounded-tr-xl">
+                    <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
                       {t("vodPortal.actions") || "Actions"}
                     </th>
                   </tr>

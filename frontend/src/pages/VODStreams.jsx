@@ -15,6 +15,7 @@ import {
   Search,
   Server,
   Activity,
+  HardDrive,
 } from "lucide-react";
 import {
   fetchPlexActivities,
@@ -46,9 +47,17 @@ const ActivityBadge = ({ type, t }) => {
       className: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
       label: t("vodStreams.badges.paused"),
     },
+    scan: {
+      icon: HardDrive,
+      className: "bg-purple-500/20 text-purple-400 border border-purple-500/30",
+      label: t("vodStreams.badges.scanning", "Scanning..."),
+    },
   };
 
-  const activityType = type ? type.toLowerCase() : "download";
+  const rawType = type ? type.toLowerCase() : "download";
+  // Map library.scanner and similar scan types to "scan"
+  const activityType =
+    rawType.includes("scanner") || rawType.includes("scan") ? "scan" : rawType;
   const style = styles[activityType] || styles.download;
   const Icon = style.icon;
 
@@ -468,8 +477,36 @@ export default function VODStreams() {
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
 
-  // Filter activities based on search query and active filter
-  const filteredActivities = activities.filter((activity) => {
+  // Helper function to check if activity is a library scan
+  const isScanActivity = (activity) => {
+    const type = (activity.type || "").toLowerCase();
+    const title = (activity.title || "").toLowerCase();
+    const subtitle = (activity.subtitle || "").toLowerCase();
+
+    // Check type for scanner patterns
+    const isTypeScanner =
+      type.includes("scanner") ||
+      type.includes("scan") ||
+      type === "library.scanner" ||
+      type === "library.update.section" ||
+      type === "media.generate";
+
+    // Check title/subtitle for scanning patterns
+    const isTitleScanner =
+      title.includes("scanning") ||
+      title.includes("scan ") ||
+      title.startsWith("scan") ||
+      subtitle.includes("scanning");
+
+    return isTypeScanner || isTitleScanner;
+  };
+
+  // Separate scan activities from stream activities
+  const scanActivities = activities.filter(isScanActivity);
+  const streamActivities = activities.filter((a) => !isScanActivity(a));
+
+  // Filter stream activities based on search query and active filter (excludes scans)
+  const filteredActivities = streamActivities.filter((activity) => {
     // Apply type filter
     if (
       activeFilter === "downloading" &&
@@ -571,7 +608,7 @@ export default function VODStreams() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <div
           onClick={() => setActiveFilter("all")}
           className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
@@ -583,7 +620,7 @@ export default function VODStreams() {
                 {t("vodStreams.stats.total")}
               </p>
               <p className="text-2xl font-bold text-theme-text mt-1">
-                {activities.length}
+                {streamActivities.length}
               </p>
             </div>
             <Server className="w-8 h-8 text-theme-primary" />
@@ -606,7 +643,7 @@ export default function VODStreams() {
               </p>
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {
-                  activities.filter(
+                  streamActivities.filter(
                     (a) => a.type === "download" || a.type === "media.download"
                   ).length
                 }
@@ -631,7 +668,7 @@ export default function VODStreams() {
                 {t("vodStreams.stats.paused")}
               </p>
               <p className="text-2xl font-bold text-orange-500 mt-1">
-                {activities.filter((a) => a.type === "pause").length}
+                {streamActivities.filter((a) => a.type === "pause").length}
               </p>
             </div>
             <Pause className="w-8 h-8 text-orange-500" />
@@ -653,7 +690,7 @@ export default function VODStreams() {
                 {t("vodStreams.stats.transcoding")}
               </p>
               <p className="text-2xl font-bold text-cyan-500 mt-1">
-                {activities.filter((a) => a.type === "transcode").length}
+                {streamActivities.filter((a) => a.type === "transcode").length}
               </p>
             </div>
             <Video className="w-8 h-8 text-cyan-500" />
@@ -675,10 +712,36 @@ export default function VODStreams() {
                 {t("vodStreams.stats.streaming")}
               </p>
               <p className="text-2xl font-bold text-blue-500 mt-1">
-                {activities.filter((a) => a.type === "stream").length}
+                {streamActivities.filter((a) => a.type === "stream").length}
               </p>
             </div>
             <Play className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+
+        {/* Library Scans Stat Card */}
+        <div
+          className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${
+            scanActivities.length > 0
+              ? "border-purple-500/50 bg-purple-500/5"
+              : "border-theme"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <HardDrive className="w-3 h-3 text-purple-500" />
+                {t("vodStreams.stats.scanning", "Library Scans")}
+              </p>
+              <p className="text-2xl font-bold text-purple-500 mt-1">
+                {scanActivities.length}
+              </p>
+            </div>
+            <HardDrive
+              className={`w-8 h-8 text-purple-500 ${
+                scanActivities.length > 0 ? "animate-pulse" : ""
+              }`}
+            />
           </div>
         </div>
 
@@ -733,7 +796,7 @@ export default function VODStreams() {
                   : "text-theme-text-muted"
               }`}
             >
-              ({activities.length})
+              ({streamActivities.length})
             </span>
           </button>
           <button
@@ -754,7 +817,7 @@ export default function VODStreams() {
             >
               (
               {
-                activities.filter(
+                streamActivities.filter(
                   (a) => a.type === "download" || a.type === "media.download"
                 ).length
               }
@@ -777,7 +840,7 @@ export default function VODStreams() {
                   : "text-theme-text-muted"
               }`}
             >
-              ({activities.filter((a) => a.state === "paused").length})
+              ({streamActivities.filter((a) => a.state === "paused").length})
             </span>
           </button>
           <button
@@ -798,7 +861,7 @@ export default function VODStreams() {
             >
               (
               {
-                activities.filter(
+                streamActivities.filter(
                   (a) => a.transcodeSession && a.state === "playing"
                 ).length
               }
@@ -823,7 +886,7 @@ export default function VODStreams() {
             >
               (
               {
-                activities.filter(
+                streamActivities.filter(
                   (a) => a.state === "playing" && !a.transcodeSession
                 ).length
               }
@@ -833,8 +896,111 @@ export default function VODStreams() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+      {/* Library Scans Section */}
+      {scanActivities.length > 0 && (
+        <div className="bg-theme-card border border-purple-500/30 rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-purple-500 animate-pulse" />
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("vodStreams.libraryScans.title", "Library Scans")}
+              </h3>
+              <span className="ml-2 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+                {scanActivities.length}{" "}
+                {t("vodStreams.libraryScans.active", "active")}
+              </span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-theme-hover border-b border-theme">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    {t("vodStreams.libraryScans.library", "Library")}
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    {t("vodStreams.libraryScans.details", "Details")}
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    {t("vodStreams.table.status", "Status")}
+                  </th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                    {t("vodStreams.table.progress", "Progress")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {scanActivities.map((scan) => {
+                  const percent =
+                    typeof scan.progress === "number"
+                      ? Math.min(scan.progress, 100)
+                      : 0;
+
+                  return (
+                    <tr
+                      key={scan.uuid || `scan-${Math.random()}`}
+                      className="border-b border-theme hover:bg-purple-500/5 transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <HardDrive
+                            size={14}
+                            className="text-purple-500 flex-shrink-0"
+                          />
+                          <span className="text-sm font-medium text-theme-text truncate max-w-xs">
+                            {scan.title || "Unknown Library"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-theme-text-muted truncate max-w-xs block">
+                          {scan.subtitle || "—"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <ActivityBadge type="scan" t={t} />
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="space-y-1.5 min-w-[200px] ml-auto">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-theme-text-muted">
+                              {t("vodStreams.progress")}
+                            </span>
+                            <span className="text-xs font-medium text-purple-400">
+                              {percent.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-300 ease-out bg-purple-500"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Downloads/Streams Content */}
+      <div className="bg-theme-card border border-green-500/30 rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Download className="w-5 h-5 text-green-500" />
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("vodStreams.downloads.title", "Downloads & Streams")}
+            </h3>
+            <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+              {streamActivities.length}{" "}
+              {t("vodStreams.downloads.active", "active")}
+            </span>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

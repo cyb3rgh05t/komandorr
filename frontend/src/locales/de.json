@@ -161,6 +161,8 @@
     "size": "Größe",
     "timeLeft": "Verbleibende Zeit",
     "client": "Client",
+    "downloads": "Downloads",
+    "error": "Fehler",
     "tabs": {
       "all": "Alle",
       "tvShows": "TV-Serien",
@@ -194,6 +196,11 @@
     "no_data": "Keine Traffic-Daten verfügbar. Installieren Sie den Traffic-Agent auf Ihren Servern, um die Überwachung zu starten.",
     "noData": "Keine Traffic-Daten verfügbar",
     "noActiveTraffic": "Kein aktiver Traffic",
+    "emptyState": {
+      "title": "Keine Traffic-Agents verbunden",
+      "description": "Installieren Sie den Traffic-Agent auf Ihren Servern, um Echtzeit-Bandbreite, Upload/Download-Geschwindigkeiten und Netzwerkstatistiken zu überwachen.",
+      "setupGuide": "Traffic-Agent einrichten"
+    },
     "last_refresh": "Zuletzt aktualisiert",
     "realtimeMonitoring": "Echtzeit-Bandbreitenüberwachung",
     "service": "aktiver Dienst",
@@ -256,6 +263,12 @@
       "queue": "Warteschlange",
       "history": "Verlauf",
       "failedItems": "Fehlgeschlagen"
+    },
+    "sections": {
+      "active": "Aktive Uploads",
+      "queue": "Upload Warteschlange",
+      "completed": "Abgeschlossene Uploads",
+      "failed": "Fehlgeschlagene Uploads"
     },
     "refreshSuccess": "Daten erfolgreich aktualisiert",
     "settings": "Uploader Einstellungen",
@@ -363,15 +376,27 @@
       "transcoding": "Transkodierung",
       "streaming": "Streaming",
       "peakConcurrent": "Höchste Gleichzeitigkeit",
-      "resetPeak": "Peak zurücksetzen"
+      "resetPeak": "Peak zurücksetzen",
+      "scanning": "Bibliothek-Scans"
     },
     "badges": {
       "downloading": "Download läuft...",
       "transcoding": "Transkodierung...",
       "streaming": "Streaming...",
-      "paused": "Pausiert"
+      "paused": "Pausiert",
+      "scanning": "Scannt..."
     },
     "progress": "Fortschritt",
+    "libraryScans": {
+      "title": "Bibliothek-Scans",
+      "active": "aktiv",
+      "library": "Bibliothek",
+      "details": "Details"
+    },
+    "downloads": {
+      "title": "Downloads & Streams",
+      "active": "aktiv"
+    },
     "plexNotConfigured": {
       "title": "Plex-Server nicht konfiguriert",
       "description": "Konfigurieren Sie Ihren Plex-Server in den Einstellungen, um Sync-Aktivitäten zu überwachen.",
@@ -916,7 +941,8 @@
     "title": "VOD-Portal",
     "description": "Benutzer über die Web-Oberfläche zu Overseerr hinzufügen",
     "placeholder": "VOD-Portal-Inhalte werden hier hinzugefügt",
-    "createUser": "Benutzer zu StreamNet VOD hinzufügen",
+    "addUserTitle": "Benutzer zu StreamNet VOD hinzufügen",
+    "createUser": "Benutzer hinzufügen",
     "username": "Benutzername",
     "usernamePlaceholder": "Benutzername eingeben",
     "password": "Passwort",
@@ -971,5 +997,36 @@
     "delete": "Löschen",
     "userDeleted": "Benutzer wurde gelöscht",
     "deleteError": "Fehler beim Löschen des Benutzers"
+  },
+  "storage": {
+    "searchPlaceholder": "Server suchen...",
+    "refresh": "Aktualisieren",
+    "monitoredServers": "Überwachte Server",
+    "noServersConfigured": "Keine Storage-Server konfiguriert",
+    "noServersDescription": "Konfigurieren Sie Storage-Agents auf Ihren Servern, um Speicherplatz, RAID-Arrays und ZFS-Pools zu überwachen.",
+    "setupGuide": "Einrichtungsanleitung",
+    "noSearchResults": "Keine Server gefunden",
+    "noSearchResultsDescription": "Keine Server gefunden für die Suche nach",
+    "clearSearch": "Suche löschen",
+    "emptyState": {
+      "title": "Keine Storage-Agents verbunden",
+      "description": "Installieren Sie den Storage-Agent auf Ihren Servern, um Speicherplatz, RAID-Arrays und ZFS-Pools in Echtzeit zu überwachen.",
+      "setupGuide": "Storage-Agent einrichten"
+    },
+    "total": "Gesamt",
+    "used": "Belegt",
+    "free": "Frei",
+    "usage": "Auslastung",
+    "totalCapacity": "Kapazität",
+    "totalUsed": "Belegt",
+    "totalFree": "Frei",
+    "raidStatus": "Array-Status",
+    "paths": "Speicherpfade",
+    "mdadmRaid": "mdadm RAID-Arrays",
+    "zfsPools": "ZFS-Pools",
+    "raidDetails": "mdadm RAID-Details",
+    "zfsPoolDetails": "ZFS-Pool-Details",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "noDataYet": "Warte auf Daten..."
   }
 }
