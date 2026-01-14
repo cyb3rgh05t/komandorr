@@ -4,6 +4,7 @@ import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { formatDateTime } from "../utils/dateUtils";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import ConfirmDialog from "../components/ConfirmDialog";
 import {
   Plus,
@@ -76,8 +77,8 @@ const InvitesManager = () => {
   const { data: stats = null } = useQuery({
     queryKey: ["inviteStats"],
     queryFn: () => api.get("/invites/stats"),
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 3600000, // 1 hour
+    refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
 
@@ -100,8 +101,8 @@ const InvitesManager = () => {
       console.log("Plex users count response:", data);
       return data;
     },
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 3600000, // 1 hour
+    refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
 
@@ -111,8 +112,8 @@ const InvitesManager = () => {
   const { data: plexLiveStatsData } = useQuery({
     queryKey: ["plexLiveStats"],
     queryFn: () => api.get("/plex/stats/live"),
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 3600000, // 1 hour
+    refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
 
@@ -130,7 +131,7 @@ const InvitesManager = () => {
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("invitesManager");
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState({
@@ -479,6 +480,24 @@ const InvitesManager = () => {
         <div className="space-y-3">
           {/* Invite Stats Row */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div
+              onClick={() => setFilter("all")}
+              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-theme-primary" />
+                    {t("invites.stats.totalInvites")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-text mt-1">
+                    {stats.total_invites || 0}
+                  </p>
+                </div>
+                <Mail className="w-8 h-8 text-theme-primary" />
+              </div>
+            </div>
+
             <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
@@ -515,24 +534,6 @@ const InvitesManager = () => {
                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                   />
                 </svg>
-              </div>
-            </div>
-
-            <div
-              onClick={() => setFilter("all")}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-theme-primary" />
-                    {t("invites.stats.totalInvites")}
-                  </p>
-                  <p className="text-2xl font-bold text-theme-text mt-1">
-                    {stats.total_invites || 0}
-                  </p>
-                </div>
-                <Mail className="w-8 h-8 text-theme-primary" />
               </div>
             </div>
 
@@ -784,7 +785,21 @@ const InvitesManager = () => {
       </div>
 
       {/* Invites Table */}
-      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-theme-card border border-purple-500/30 rounded-xl shadow-lg overflow-hidden">
+        {/* Purple Header for Invites */}
+        <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-purple-400" />
+              <h3 className="text-base font-semibold text-purple-400">
+                {t("invites.title")}
+              </h3>
+            </div>
+            <span className="px-2.5 py-1 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+              {invites.length}
+            </span>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

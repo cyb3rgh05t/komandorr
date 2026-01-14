@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import {
   Activity,
   CheckCircle,
@@ -14,8 +16,10 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import { uploaderApi } from "../services/uploaderApi";
+import { useToast } from "../context/ToastContext";
 
 const formatSize = (valueBytes) => {
   if (!valueBytes || Number.isNaN(valueBytes)) return "0 B";
@@ -72,25 +76,43 @@ const percentageToNumber = (value) => {
 
 export default function Uploader() {
   const { t } = useTranslation();
+  const toast = useToast();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "uploader";
   const [pageNumber, setPageNumber] = useState(1);
+  const [queuePageNumber, setQueuePageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("uploader_completed");
+  const [queueItemsPerPage, setQueueItemsPerPage] =
+    useItemsPerPage("uploader_queue");
 
-  const { data: queueData, refetch: refetchQueue } = useQuery({
+  const {
+    data: queueData,
+    isFetching: queueFetching,
+    refetch: refetchQueue,
+  } = useQuery({
     queryKey: ["uploader", "queue"],
     queryFn: () => uploaderApi.getQueue(),
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: queueStats, refetch: refetchQueueStats } = useQuery({
+  const {
+    data: queueStats,
+    isFetching: queueStatsFetching,
+    refetch: refetchQueueStats,
+  } = useQuery({
     queryKey: ["uploader", "queue-stats"],
     queryFn: () => uploaderApi.getQueueStats(),
     refetchInterval: 10000,
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: inProgressData, refetch: refetchInProgress } = useQuery({
+  const {
+    data: inProgressData,
+    isFetching: inProgressFetching,
+    refetch: refetchInProgress,
+  } = useQuery({
     queryKey: ["uploader", "inprogress"],
     queryFn: () => uploaderApi.getInProgress(),
     refetchInterval: 2000,
@@ -130,16 +152,41 @@ export default function Uploader() {
     placeholderData: (previousData) => previousData,
   });
 
+  const {
+    data: failedData,
+    isFetching: failedLoading,
+    refetch: refetchFailed,
+  } = useQuery({
+    queryKey: ["uploader", "failed"],
+    queryFn: () => uploaderApi.getFailed(1, 1000),
+    refetchInterval: 15000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const queueFiles = queueData?.files || [];
   const inProgressJobs = inProgressData?.jobs || [];
   const completedJobs = completedData?.jobs || [];
+  const failedJobs = failedData?.jobs || [];
   const totalCompleted = completedData?.total_count || 0;
   const totalPages = Math.max(1, Math.ceil(totalCompleted / itemsPerPage));
+
+  // Combined refreshing state for animation
+  const isRefreshing =
+    queueFetching ||
+    queueStatsFetching ||
+    inProgressFetching ||
+    completedLoading ||
+    failedLoading;
 
   // Reset to page 1 when items per page changes
   React.useEffect(() => {
     setPageNumber(1);
   }, [itemsPerPage]);
+
+  // Reset queue page to 1 when queue items per page changes
+  React.useEffect(() => {
+    setQueuePageNumber(1);
+  }, [queueItemsPerPage]);
 
   const queueTotalSize = useMemo(() => {
     if (queueStats?.total_size) return queueStats.total_size;
@@ -226,6 +273,8 @@ export default function Uploader() {
     refetchCompleted();
     refetchCompletedToday();
     refetchStatus();
+    refetchFailed();
+    toast.success(t("uploader.refreshSuccess", "Data refreshed successfully"));
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -249,6 +298,28 @@ export default function Uploader() {
       return haystack.includes(normalizedSearch);
     });
   }, [normalizedSearch, queueFiles]);
+
+  // Queue pagination calculations
+  const totalQueueFiles = filteredQueueFiles.length;
+  const totalQueuePages = Math.max(
+    1,
+    Math.ceil(totalQueueFiles / queueItemsPerPage)
+  );
+
+  // Paginated queue files
+  const paginatedQueueFiles = useMemo(() => {
+    const startIndex = (queuePageNumber - 1) * queueItemsPerPage;
+    const endIndex = startIndex + queueItemsPerPage;
+    return filteredQueueFiles.slice(startIndex, endIndex);
+  }, [filteredQueueFiles, queuePageNumber, queueItemsPerPage]);
+
+  const onQueueNextPage = () => {
+    setQueuePageNumber((prev) => Math.min(prev + 1, totalQueuePages));
+  };
+
+  const onQueuePrevPage = () => {
+    setQueuePageNumber((prev) => Math.max(prev - 1, 1));
+  };
 
   const filteredCompletedJobs = useMemo(() => {
     // Use all completed jobs for search to include all history pages
@@ -288,10 +359,17 @@ export default function Uploader() {
           </div>
           <button
             onClick={refreshAll}
-            className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm"
+            disabled={isRefreshing}
+            className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCcw className="w-4 h-4" />
-            {t("common.refresh", "Refresh")}
+            <RefreshCcw
+              className={`w-4 h-4 transition-transform duration-500 ${
+                isRefreshing ? "animate-spin" : ""
+              }`}
+            />
+            {isRefreshing
+              ? t("common.refreshing", "Refreshing...")
+              : t("common.refresh", "Refresh")}
           </button>
         </div>
 
@@ -417,399 +495,612 @@ export default function Uploader() {
         </div>
       </div>
 
-      <Section>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-            <Upload className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-theme-text">
-              {t("uploader.activeUploads")}
-            </h3>
-            <p className="text-sm text-theme-text-muted">
-              {t("uploader.activeDescription")}
-            </p>
-          </div>
-        </div>
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-          <div className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead>
-                  <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
-                      {t("uploader.table.filename")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.drive")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.directory")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.key")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.progress")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.size")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.remaining")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
-                      {t("uploader.table.speed")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredInProgressJobs.length === 0 && (
-                    <tr>
-                      <td
-                        className="py-6 px-4 text-center text-theme-text-secondary"
-                        colSpan={8}
-                      >
-                        {t("uploader.empty.active")}
-                      </td>
+      {(activeTab === "uploader" || activeTab === "active") && (
+        <Section>
+          <div className="bg-theme-card rounded-xl border border-blue-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-blue-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.active", "Active Uploads")}
+                </h3>
+                {inProgressJobs.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
+                    {inProgressJobs.length}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="bg-theme-hover border-b border-theme">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.filename")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.drive")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.directory")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.key")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.progress")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.size")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.remaining")}
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.speed")}
+                      </th>
                     </tr>
-                  )}
-                  {filteredInProgressJobs.map((job, index) => {
-                    const progress = percentageToNumber(job.upload_percentage);
-                    const normalizedDir =
-                      job.file_directory &&
-                      job.drive &&
-                      job.file_directory.startsWith(`${job.drive}/`)
-                        ? job.file_directory.slice(job.drive.length + 1)
-                        : job.file_directory || "";
-                    return (
-                      <tr
-                        key={`${job.file_name}-${index}`}
-                        className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
-                      >
-                        <td className="py-3 px-4 font-medium truncate max-w-[220px]">
-                          {job.file_name}
+                  </thead>
+                  <tbody>
+                    {filteredInProgressJobs.length === 0 && (
+                      <tr>
+                        <td
+                          className="py-6 px-4 text-center text-theme-text-secondary"
+                          colSpan={8}
+                        >
+                          {t("uploader.empty.active")}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.drive || "-"}
-                        </td>
-                        <td className="py-3 px-4 truncate max-w-[220px]">
-                          {normalizedDir || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.gdsa || "-"}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="space-y-2">
-                            <div className="relative h-2.5 bg-theme-hover rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full bg-green-500 transition-all duration-300 ease-out"
-                                style={{ width: `${progress}%` }}
-                              />
+                      </tr>
+                    )}
+                    {filteredInProgressJobs.map((job, index) => {
+                      const progress = percentageToNumber(
+                        job.upload_percentage
+                      );
+                      const normalizedDir =
+                        job.file_directory &&
+                        job.drive &&
+                        job.file_directory.startsWith(`${job.drive}/`)
+                          ? job.file_directory.slice(job.drive.length + 1)
+                          : job.file_directory || "";
+                      return (
+                        <tr
+                          key={`${job.file_name}-${index}`}
+                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                        >
+                          <td className="py-3 px-4 font-medium truncate max-w-[220px]">
+                            {job.file_name}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.drive || "-"}
+                          </td>
+                          <td className="py-3 px-4 truncate max-w-[220px]">
+                            {normalizedDir || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.gdsa || "-"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="space-y-2">
+                              <div className="relative h-2.5 bg-theme-hover rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-green-500 transition-all duration-300 ease-out"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                              <div className="text-xs font-medium text-green-400">
+                                {progress.toFixed(0)}%
+                              </div>
                             </div>
-                            <div className="text-xs font-medium text-green-400">
-                              {progress.toFixed(0)}%
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.file_size || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.upload_remainingtime || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.upload_speed || "-"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.file_size || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.upload_remainingtime || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-right">
+                            {job.upload_speed || "-"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      </Section>
+        </Section>
+      )}
 
-      <Section>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-            <ListOrdered className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-theme-text">
-              {t("uploader.queue")}
-            </h3>
-            <p className="text-sm text-theme-text-muted">
-              {t("uploader.queueDescription")}
-            </p>
-          </div>
-        </div>
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-          <div className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead>
-                  <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
-                      #
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.filename")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.drive")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.directory")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.size")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
-                      {t("uploader.table.added")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredQueueFiles.length === 0 && (
-                    <tr>
-                      <td
-                        className="py-6 px-4 text-center text-theme-text-secondary"
-                        colSpan={6}
-                      >
-                        {t("uploader.empty.queue")}
-                      </td>
+      {(activeTab === "uploader" || activeTab === "queue") && (
+        <Section>
+          <div className="bg-theme-card rounded-xl border border-purple-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-purple-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.queue", "Upload Queue")}
+                </h3>
+                {queueFiles.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+                    {queueFiles.length}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="bg-theme-hover border-b border-theme">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        #
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.filename")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.drive")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.directory")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.size")}
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.added")}
+                      </th>
                     </tr>
-                  )}
-                  {filteredQueueFiles.map((file, index) => {
-                    const normalizedDir =
-                      file.filedir &&
-                      file.drive &&
-                      file.filedir.startsWith(`${file.drive}/`)
-                        ? file.filedir.slice(file.drive.length + 1)
-                        : file.filedir || "";
-                    const added = file.created_at
-                      ? new Date(file.created_at * 1000).toLocaleString()
-                      : "-";
-                    return (
-                      <tr
-                        key={`${file.filename}-${index}`}
-                        className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
-                      >
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {index + 1}
+                  </thead>
+                  <tbody>
+                    {paginatedQueueFiles.length === 0 && (
+                      <tr>
+                        <td
+                          className="py-6 px-4 text-center text-theme-text-secondary"
+                          colSpan={6}
+                        >
+                          {t("uploader.empty.queue")}
                         </td>
-                        <td className="py-3 px-4 font-medium truncate max-w-[220px]">
-                          {file.filename}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {file.drive || "-"}
-                        </td>
-                        <td className="py-3 px-4 truncate max-w-[220px]">
-                          {normalizedDir || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {formatSize(file.filesize)}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">{added}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    )}
+                    {paginatedQueueFiles.map((file, index) => {
+                      const normalizedDir =
+                        file.filedir &&
+                        file.drive &&
+                        file.filedir.startsWith(`${file.drive}/`)
+                          ? file.filedir.slice(file.drive.length + 1)
+                          : file.filedir || "";
+                      const added = file.created_at
+                        ? new Date(file.created_at * 1000).toLocaleString()
+                        : "-";
+                      const rowNumber =
+                        (queuePageNumber - 1) * queueItemsPerPage + index + 1;
+                      return (
+                        <tr
+                          key={`${file.filename}-${index}`}
+                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                        >
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {rowNumber}
+                          </td>
+                          <td className="py-3 px-4 font-medium truncate max-w-[220px]">
+                            {file.filename}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {file.drive || "-"}
+                          </td>
+                          <td className="py-3 px-4 truncate max-w-[220px]">
+                            {normalizedDir || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {formatSize(file.filesize)}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-right">
+                            {added}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      </Section>
+          {/* Queue Pagination */}
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-medium text-theme-text-muted">
+                {t("uploader.pagination.showing", "Showing")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {totalQueueFiles > 0
+                    ? (queuePageNumber - 1) * queueItemsPerPage + 1
+                    : 0}
+                </span>{" "}
+                {t("uploader.pagination.to", "to")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {Math.min(
+                    queuePageNumber * queueItemsPerPage,
+                    totalQueueFiles
+                  )}
+                </span>{" "}
+                {t("uploader.pagination.of", "of")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {totalQueueFiles}
+                </span>{" "}
+                {t("uploader.pagination.files", "files")}
+              </div>
 
-      <Section>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-            <CheckCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-theme-text">
-              {t("uploader.completed")}
-            </h3>
-            <p className="text-sm text-theme-text-muted">
-              {t("uploader.completedDescription")}
-            </p>
-          </div>
-        </div>
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg">
-          <div className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px] text-sm">
-                <thead>
-                  <tr className="bg-theme-hover border-b border-theme">
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
-                      {t("uploader.table.filename")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.drive")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.directory")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.key")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.size")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
-                      {t("uploader.table.duration")}
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
-                      {t("uploader.table.completedAt")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(!filteredCompletedJobs ||
-                    filteredCompletedJobs.length === 0) && (
-                    <tr>
-                      <td
-                        className="py-6 px-4 text-center text-theme-text-secondary"
-                        colSpan={7}
-                      >
-                        {completedLoading
-                          ? t("common.loading")
-                          : t("uploader.empty.completed")}
-                      </td>
-                    </tr>
-                  )}
-                  {filteredCompletedJobs?.map((job, index) => {
-                    const normalizedDir =
-                      job.file_directory &&
-                      job.drive &&
-                      job.file_directory.startsWith(`${job.drive}/`)
-                        ? job.file_directory.slice(job.drive.length + 1)
-                        : job.file_directory || "";
-                    return (
-                      <tr
-                        key={`${job.file_name}-${index}`}
-                        className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
-                      >
-                        <td className="py-3 px-4 font-medium truncate max-w-[300px]">
-                          {job.file_name}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.drive || "-"}
-                        </td>
-                        <td className="py-3 px-4 truncate max-w-[280px]">
-                          {normalizedDir || "-"}
-                        </td>
-                        <td className="py-3 px-4 truncate max-w-[120px]">
-                          {job.gdsa || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.file_size || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.time_elapsed || "-"}
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {job.time_end_clean || job.time_end || "-"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        {/* Pagination - pill style like Plex pages, outside the card */}
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="text-sm font-medium text-theme-text-muted">
-              {t("uploader.pagination.showing", "Showing")}{" "}
-              <span className="text-theme-text font-semibold">
-                {(pageNumber - 1) * itemsPerPage + 1}
-              </span>{" "}
-              {t("uploader.pagination.to", "to")}{" "}
-              <span className="text-theme-text font-semibold">
-                {Math.min(pageNumber * itemsPerPage, totalCompleted)}
-              </span>{" "}
-              {t("uploader.pagination.of", "of")}{" "}
-              <span className="text-theme-text font-semibold">
-                {totalCompleted}
-              </span>{" "}
-              {t("uploader.pagination.jobs", "jobs")}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-theme-text-muted">
+                  {t("uploader.pagination.itemsPerPage", "Items per page:")}
+                </span>
+                <select
+                  value={queueItemsPerPage}
+                  onChange={(e) => setQueueItemsPerPage(Number(e.target.value))}
+                  className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-theme-text-muted">
-                {t("uploader.pagination.itemsPerPage", "Items per page:")}
-              </span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+              <button
+                onClick={onQueuePrevPage}
+                disabled={queuePageNumber === 1}
+                className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("common.previous")}
               >
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalQueuePages }).map((_, index) => {
+                  const page = index + 1;
+                  if (
+                    page === 1 ||
+                    page === totalQueuePages ||
+                    (page >= queuePageNumber - 1 && page <= queuePageNumber + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setQueuePageNumber(page)}
+                        className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                          queuePageNumber === page
+                            ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                            : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === queuePageNumber - 2 ||
+                    page === queuePageNumber + 2
+                  ) {
+                    return (
+                      <span key={page} className="text-theme-text-muted px-2">
+                        •••
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={onQueueNextPage}
+                disabled={queuePageNumber === totalQueuePages}
+                className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("common.next")}
+              >
+                <ChevronRight size={20} />
+              </button>
             </div>
           </div>
+        </Section>
+      )}
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onPrevPage}
-              disabled={pageNumber === 1}
-              className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-              title={t("common.previous")}
-            >
-              <ChevronLeft size={20} />
-            </button>
+      {(activeTab === "uploader" || activeTab === "history") && (
+        <Section>
+          <div className="bg-theme-card rounded-xl border border-green-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.completed", "Completed Uploads")}
+                </h3>
+                {totalCompleted > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+                    {totalCompleted}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="bg-theme-hover border-b border-theme">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.filename")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.drive")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.directory")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.key")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.size")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.duration")}
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.completedAt")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(!filteredCompletedJobs ||
+                      filteredCompletedJobs.length === 0) && (
+                      <tr>
+                        <td
+                          className="py-6 px-4 text-center text-theme-text-secondary"
+                          colSpan={7}
+                        >
+                          {completedLoading
+                            ? t("common.loading")
+                            : t("uploader.empty.completed")}
+                        </td>
+                      </tr>
+                    )}
+                    {filteredCompletedJobs?.map((job, index) => {
+                      const normalizedDir =
+                        job.file_directory &&
+                        job.drive &&
+                        job.file_directory.startsWith(`${job.drive}/`)
+                          ? job.file_directory.slice(job.drive.length + 1)
+                          : job.file_directory || "";
+                      return (
+                        <tr
+                          key={`${job.file_name}-${index}`}
+                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                        >
+                          <td className="py-3 px-4 font-medium truncate max-w-[300px]">
+                            {job.file_name}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.drive || "-"}
+                          </td>
+                          <td className="py-3 px-4 truncate max-w-[280px]">
+                            {normalizedDir || "-"}
+                          </td>
+                          <td className="py-3 px-4 truncate max-w-[120px]">
+                            {job.gdsa || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.file_size || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.time_elapsed || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-right">
+                            {job.time_end_clean || job.time_end || "-"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {/* Pagination - pill style like Plex pages, outside the card */}
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-medium text-theme-text-muted">
+                {t("uploader.pagination.showing", "Showing")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {(pageNumber - 1) * itemsPerPage + 1}
+                </span>{" "}
+                {t("uploader.pagination.to", "to")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {Math.min(pageNumber * itemsPerPage, totalCompleted)}
+                </span>{" "}
+                {t("uploader.pagination.of", "of")}{" "}
+                <span className="text-theme-text font-semibold">
+                  {totalCompleted}
+                </span>{" "}
+                {t("uploader.pagination.jobs", "jobs")}
+              </div>
 
-            <div className="flex items-center gap-1.5">
-              {Array.from({ length: totalPages }).map((_, index) => {
-                const page = index + 1;
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= pageNumber - 1 && page <= pageNumber + 1)
-                ) {
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setPageNumber(page)}
-                      className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
-                        pageNumber === page
-                          ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
-                          : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                } else if (page === pageNumber - 2 || page === pageNumber + 2) {
-                  return (
-                    <span key={page} className="text-theme-text-muted px-2">
-                      •••
-                    </span>
-                  );
-                }
-                return null;
-              })}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-theme-text-muted">
+                  {t("uploader.pagination.itemsPerPage", "Items per page:")}
+                </span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
             </div>
 
-            <button
-              onClick={onNextPage}
-              disabled={pageNumber === totalPages}
-              className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-              title={t("common.next")}
-            >
-              <ChevronRight size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onPrevPage}
+                disabled={pageNumber === 1}
+                className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("common.previous")}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const page = index + 1;
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= pageNumber - 1 && page <= pageNumber + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setPageNumber(page)}
+                        className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                          pageNumber === page
+                            ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                            : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === pageNumber - 2 ||
+                    page === pageNumber + 2
+                  ) {
+                    return (
+                      <span key={page} className="text-theme-text-muted px-2">
+                        •••
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={onNextPage}
+                disabled={pageNumber === totalPages}
+                className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                title={t("common.next")}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
           </div>
-        </div>
-      </Section>
+        </Section>
+      )}
+
+      {activeTab === "failed" && (
+        <Section>
+          <div className="bg-theme-card rounded-xl border border-red-500/30 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-red-500/10 border-b border-red-500/30 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploader.sections.failed", "Failed Uploads")}
+                </h3>
+                {failedJobs.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
+                    {failedJobs.length}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="bg-theme-hover border-b border-theme">
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.filename")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.drive")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.directory")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.size")}
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.error", "Error")}
+                      </th>
+                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                        {t("uploader.table.failedAt", "Failed At")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(!failedJobs || failedJobs.length === 0) && (
+                      <tr>
+                        <td
+                          className="py-6 px-4 text-center text-theme-text-secondary"
+                          colSpan={6}
+                        >
+                          {failedLoading
+                            ? t("common.loading")
+                            : t("uploader.empty.failed", "No failed uploads")}
+                        </td>
+                      </tr>
+                    )}
+                    {failedJobs?.map((job, index) => {
+                      const normalizedDir =
+                        job.file_directory &&
+                        job.drive &&
+                        job.file_directory.startsWith(`${job.drive}/`)
+                          ? job.file_directory.slice(job.drive.length + 1)
+                          : job.file_directory || "";
+                      return (
+                        <tr
+                          key={`${job.file_name}-${index}`}
+                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                        >
+                          <td className="py-3 px-4 font-medium truncate max-w-[220px]">
+                            {job.file_name}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.drive || "-"}
+                          </td>
+                          <td className="py-3 px-4 truncate max-w-[220px]">
+                            {normalizedDir || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {job.file_size || "-"}
+                          </td>
+                          <td
+                            className="py-3 px-4 truncate max-w-[200px] text-red-400 cursor-help"
+                            title={job.error_message || ""}
+                          >
+                            {job.error_message || "-"}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-right">
+                            {job.time_end_clean || job.time_end || "-"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
     </div>
   );
 }

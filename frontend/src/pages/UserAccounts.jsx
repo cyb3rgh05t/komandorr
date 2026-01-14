@@ -4,6 +4,7 @@ import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { formatDateTime } from "../utils/dateUtils";
+import { useItemsPerPage } from "../utils/usePersistedState";
 import ConfirmDialog from "../components/ConfirmDialog";
 import {
   Users,
@@ -101,8 +102,8 @@ const UserAccounts = () => {
       const data = await api.get("/invites/");
       return data || [];
     },
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 600000, // 10 minutes
+    refetchInterval: 600000, // 10 minutes
     placeholderData: (previousData) => previousData,
   });
 
@@ -167,7 +168,7 @@ const UserAccounts = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage("userAccounts");
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     userId: null,
@@ -784,7 +785,21 @@ const UserAccounts = () => {
       </div>
 
       {/* Users List */}
-      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-theme-card border border-blue-500/30 rounded-xl shadow-lg overflow-hidden">
+        {/* Blue Header for Users */}
+        <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-blue-400" />
+              <h3 className="text-base font-semibold text-blue-400">
+                {t("userAccounts.title")}
+              </h3>
+            </div>
+            <span className="px-2.5 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
+              {filteredUsers.length}
+            </span>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

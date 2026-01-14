@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
@@ -145,8 +145,16 @@ const RaidStatusBadge = ({ status }) => {
 // Storage Service Card
 const StorageServiceCard = ({ service, t }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const lastRefreshRef = useRef(null);
   const storage = service.storage;
   const history = service.storage_history || [];
+
+  // Update last refresh time only when new data comes from agent
+  useEffect(() => {
+    if (storage?.last_updated) {
+      lastRefreshRef.current = storage.last_updated;
+    }
+  }, [storage?.last_updated]);
 
   if (!storage) {
     return null;
@@ -202,7 +210,7 @@ const StorageServiceCard = ({ service, t }) => {
             {storage.hostname}
           </p>
           {/* Badges */}
-          <div className="flex gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2">
             <span className="inline-block bg-blue-500/20 text-blue-400 text-xs font-medium px-2 py-1 rounded">
               {service.type}
             </span>
@@ -216,6 +224,28 @@ const StorageServiceCard = ({ service, t }) => {
               }`}
             >
               {service.status}
+            </span>
+            {/* Last Refresh Badge */}
+            <span
+              className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded ${
+                lastRefreshRef.current &&
+                Date.now() - new Date(lastRefreshRef.current).getTime() > 120000
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "bg-purple-500/20 text-purple-400"
+              }`}
+              title={
+                lastRefreshRef.current
+                  ? new Date(lastRefreshRef.current).toLocaleString()
+                  : t("storage.noDataYet", "Waiting for data...")
+              }
+            >
+              <RefreshCw size={10} />
+              {lastRefreshRef.current
+                ? new Date(lastRefreshRef.current).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "--:--"}
             </span>
           </div>
         </div>
@@ -265,7 +295,7 @@ const StorageServiceCard = ({ service, t }) => {
             {averageUsage.toFixed(1)}%
           </span>
         </div>
-        <div className="h-2 bg-theme-bg-primary rounded-full overflow-hidden">
+        <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               averageUsage > 90
@@ -590,7 +620,15 @@ const Storage = () => {
     }
   }, [error, t, toast]);
 
-  const filteredServices = services.filter(
+  // Filter services that actually have storage data (storage agent installed)
+  const servicesWithStorage = services.filter(
+    (service) =>
+      service.storage &&
+      service.storage.storage_paths &&
+      service.storage.storage_paths.length > 0
+  );
+
+  const filteredServices = servicesWithStorage.filter(
     (service) =>
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.storage?.hostname || "")
@@ -616,8 +654,8 @@ const Storage = () => {
     }
   };
 
-  // Derived counts for UI (frontend-only)
-  const unionfsCount = services.reduce((acc, svc) => {
+  // Derived counts for UI (frontend-only) - use servicesWithStorage
+  const unionfsCount = servicesWithStorage.reduce((acc, svc) => {
     const paths = svc.storage?.storage_paths || [];
     return (
       acc +
@@ -627,7 +665,7 @@ const Storage = () => {
   }, 0);
 
   // Calculate UnionFS only storage metrics
-  const unionfsStats = services.reduce(
+  const unionfsStats = servicesWithStorage.reduce(
     (acc, svc) => {
       const paths = svc.storage?.storage_paths || [];
       paths.forEach((path) => {
@@ -642,7 +680,7 @@ const Storage = () => {
     { capacity: 0, used: 0, free: 0 }
   );
 
-  const raidStats = services.reduce(
+  const raidStats = servicesWithStorage.reduce(
     (acc, svc) => {
       const raids = svc.storage?.raid_arrays || [];
       raids.forEach((r) => {
@@ -656,7 +694,7 @@ const Storage = () => {
     { total: 0, healthy: 0, degraded: 0, failed: 0 }
   );
 
-  const zfsStats = services.reduce(
+  const zfsStats = servicesWithStorage.reduce(
     (acc, svc) => {
       const pools = svc.storage?.zfs_pools || [];
       pools.forEach((p) => {
@@ -872,23 +910,63 @@ const Storage = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="animate-spin text-purple-400" size={32} />
           </div>
-        ) : filteredServices.length === 0 ? (
-          <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
+        ) : servicesWithStorage.length === 0 ? (
+          /* Empty state when no storage agents are installed/configured */
+          <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
             <HardDrive
-              className="mx-auto text-theme-text-muted mb-4"
               size={48}
+              className="mx-auto mb-4 text-theme-text-muted opacity-30"
             />
-            <h3 className="text-theme-text font-semibold text-lg mb-2">
-              {t("storage.noServices", "No Storage Servers Found")}
-            </h3>
-            <p className="text-theme-text-muted">
-              {searchTerm
-                ? t("storage.noSearchResults", "No servers match your search")
-                : t(
-                    "storage.noServersConfigured",
-                    "Configure storage agents on your servers to start monitoring"
-                  )}
-            </p>
+            <div className="text-center space-y-1 mb-4">
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("storage.emptyState.title", "No Storage Agents Connected")}
+              </h3>
+              <p className="text-sm text-theme-text-muted max-w-md mx-auto">
+                {t(
+                  "storage.emptyState.description",
+                  "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time."
+                )}
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <a
+                href="https://github.com/cyb3rgh05t/komandorr/blob/main/storage/README.MD"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+              >
+                <HardDrive size={16} />
+                {t("storage.emptyState.setupGuide", "Setup Storage Agent")}
+              </a>
+            </div>
+          </div>
+        ) : filteredServices.length === 0 ? (
+          /* Empty state when search has no results */
+          <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+            <Search
+              size={48}
+              className="mx-auto mb-4 text-theme-text-muted opacity-30"
+            />
+            <div className="text-center space-y-1 mb-4">
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("storage.noSearchResults", "No Servers Found")}
+              </h3>
+              <p className="text-sm text-theme-text-muted max-w-md mx-auto">
+                {t(
+                  "storage.noSearchResultsDescription",
+                  "No servers match your search for"
+                )}{" "}
+                "{searchTerm}"
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setSearchTerm("")}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+              >
+                {t("storage.clearSearch", "Clear Search")}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

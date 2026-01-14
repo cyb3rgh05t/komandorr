@@ -9,10 +9,10 @@
     "services": "Services",
     "monitor": "Ping Response",
     "traffic": "Traffic",
-    "vodStreams": "VOD Monitor",
+    "vodStreams": "VOD Plex-Sync",
     "vodActivity": "Activity",
     "vodPortal": "VOD Portal",
-    "uploader": "Uploader",
+    "uploader": "Uploads",
     "arrActivity": "Downloads",
     "invites": "Invites",
     "userAccounts": "Users",
@@ -20,7 +20,7 @@
     "settings": "Settings",
     "about": "About"
   },
-  "uploader": {
+  "uploaderSettings": {
     "settings": "Uploader Settings",
     "baseUrl": "Uploader Base URL",
     "baseUrlHelp": "Set the URL of your Uploader service (container or external).",
@@ -238,6 +238,19 @@
     }
   },
   "uploader": {
+    "tabs": {
+      "active": "Active Uploads",
+      "queue": "Queue",
+      "history": "History",
+      "failedItems": "Failed Items"
+    },
+    "sections": {
+      "active": "Active Uploads",
+      "queue": "Upload Queue",
+      "completed": "Completed Uploads",
+      "failed": "Failed Uploads"
+    },
+    "refreshSuccess": "Data refreshed successfully",
     "activeUploads": "Active Uploads",
     "queue": "Queue",
     "completedToday": "Completed Today",
@@ -246,6 +259,8 @@
     "queueDescription": "Files waiting to upload",
     "completed": "Completed Uploads",
     "completedDescription": "Recently finished uploads",
+    "failedItems": "Failed Items",
+    "failedDescription": "Uploads that failed to complete",
     "systemOverview": "System Overview",
     "systemDescription": "High level uploader stats",
     "table": {
@@ -259,14 +274,26 @@
       "speed": "Speed",
       "added": "Added",
       "duration": "Duration",
-      "completedAt": "Completed"
+      "completedAt": "Completed",
+      "error": "Error",
+      "failedAt": "Failed At"
     },
     "empty": {
       "active": "No uploads in progress",
       "queue": "No files in queue",
-      "completed": "No completed uploads yet"
+      "completed": "No completed uploads yet",
+      "failed": "No failed uploads"
     },
-    "pagination": "Showing {{from}}-{{to}} of {{total}} uploads",
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "jobs": "jobs",
+      "files": "files",
+      "itemsPerPage": "Items per page:",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
     "mini": {
       "rate": "Upload Rate",
       "queueCount": "Queued Files",
@@ -275,19 +302,33 @@
     }
   },
   "arrActivity": {
-    "title": "*arr Download Activity",
+    "title": "Download",
     "subtitle": "Monitor Sonarr and Radarr download queues",
     "noActiveDownloads": "No active downloads",
     "noServicesConfigured": "No Services Configured",
     "configureServices": "Configure Sonarr and Radarr in the settings to monitor download activity.",
     "totalQueue": "Total Queue",
     "services": "Services",
-    "title": "Title",
+    "titleColumn": "Title",
     "status": "Status",
     "progress": "Progress",
     "size": "Size",
     "timeLeft": "Time Left",
-    "client": "Client"
+    "client": "Client",
+    "downloads": "downloads",
+    "error": "Error",
+    "tabs": {
+      "all": "All",
+      "tvShows": "TV Shows",
+      "movies": "Movies"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "to": "to",
+      "of": "of",
+      "items": "items",
+      "itemsPerPage": "Items per page:"
+    }
   },
   "traffic": {
     "title": "Network Traffic",
@@ -309,6 +350,11 @@
     "no_data": "No traffic data available. Deploy the traffic agent on your servers to start monitoring.",
     "noData": "No traffic data available",
     "noActiveTraffic": "No active traffic",
+    "emptyState": {
+      "title": "No Traffic Agents Connected",
+      "description": "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics.",
+      "setupGuide": "Setup Traffic Agent"
+    },
     "last_refresh": "Last refreshed",
     "realtimeMonitoring": "Real-time bandwidth monitoring",
     "service": "active service",
@@ -396,15 +442,27 @@
       "transcoding": "Transcoding",
       "streaming": "Streaming",
       "peakConcurrent": "Peak Concurrent",
-      "resetPeak": "Reset Peak"
+      "resetPeak": "Reset Peak",
+      "scanning": "Library Scans"
     },
     "badges": {
       "downloading": "Downloading...",
       "transcoding": "Transcoding...",
       "streaming": "Streaming...",
-      "paused": "Paused"
+      "paused": "Paused",
+      "scanning": "Scanning..."
     },
     "progress": "Progress",
+    "libraryScans": {
+      "title": "Library Scans",
+      "active": "active",
+      "library": "Library",
+      "details": "Details"
+    },
+    "downloads": {
+      "title": "Downloads & Streams",
+      "active": "active"
+    },
     "plexNotConfigured": {
       "title": "Plex Server Not Configured",
       "description": "Configure your Plex server in Settings to start monitoring sync activities.",
@@ -413,6 +471,12 @@
     "noMatching": "No matching activities",
     "noMatchingDescription": "No activities found matching",
     "clearSearch": "Clear Search",
+    "table": {
+      "media": "Media",
+      "title": "Title",
+      "status": "Status",
+      "progress": "Progress"
+    },
     "pagination": {
       "showing": "Showing",
       "to": "to",
@@ -882,7 +946,8 @@
     "title": "VOD Portal",
     "description": "Add users to Overseerr from the web interface",
     "placeholder": "VOD Portal content will be added here",
-    "createUser": "Add User to StreamNet VOD",
+    "addUserTitle": "Add User to StreamNet VOD",
+    "createUser": "Add User",
     "username": "Username",
     "usernamePlaceholder": "Enter username",
     "password": "Password",
@@ -915,6 +980,7 @@
     "searchPlaceholder": "Search users...",
     "refresh": "Refresh",
     "refreshing": "Refreshing...",
+    "refreshSuccess": "Users refreshed successfully",
     "noSearchResults": "No users match your search",
     "stats": {
       "totalUsers": "Total Users",
@@ -936,5 +1002,36 @@
     "delete": "Delete",
     "userDeleted": "User has been deleted",
     "deleteError": "Failed to delete user"
+  },
+  "storage": {
+    "searchPlaceholder": "Search servers...",
+    "refresh": "Refresh",
+    "monitoredServers": "Monitored Servers",
+    "noServersConfigured": "No Storage Servers Configured",
+    "noServersDescription": "Configure storage agents on your servers to start monitoring disk usage, RAID arrays, and ZFS pools.",
+    "setupGuide": "Setup Guide",
+    "noSearchResults": "No Servers Found",
+    "noSearchResultsDescription": "No servers match your search for",
+    "clearSearch": "Clear Search",
+    "emptyState": {
+      "title": "No Storage Agents Connected",
+      "description": "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time.",
+      "setupGuide": "Setup Storage Agent"
+    },
+    "total": "Total",
+    "used": "Used",
+    "free": "Free",
+    "usage": "Usage",
+    "totalCapacity": "Capacity",
+    "totalUsed": "Used",
+    "totalFree": "Free",
+    "raidStatus": "Arrays Status",
+    "paths": "Storage Paths",
+    "mdadmRaid": "mdadm RAID Arrays",
+    "zfsPools": "ZFS Pools",
+    "raidDetails": "mdadm RAID Details",
+    "zfsPoolDetails": "ZFS Pool Details",
+    "lastUpdated": "Last updated",
+    "noDataYet": "Waiting for data..."
   }
 }

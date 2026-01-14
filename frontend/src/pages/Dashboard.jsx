@@ -95,11 +95,6 @@ export default function Dashboard() {
           services: true,
         };
   });
-  const [chartLineThickness, setChartLineThickness] = useState(() => {
-    // Load from localStorage or use default (0.25px for ultra-thin lines)
-    const saved = localStorage.getItem("chartLineThickness");
-    return saved ? parseFloat(saved) : 0.25;
-  });
   const [version, setVersion] = useState({
     local: null,
     remote: null,
@@ -114,11 +109,6 @@ export default function Dashboard() {
       JSON.stringify(dashboardVisibility)
     );
   }, [dashboardVisibility]);
-
-  // Save chart line thickness to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("chartLineThickness", chartLineThickness.toString());
-  }, [chartLineThickness]);
 
   useEffect(() => {
     fetchVersion();
@@ -523,60 +513,6 @@ export default function Dashboard() {
                     }`}
                   />
                 </button>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-theme my-4"></div>
-
-              {/* Chart Line Thickness Slider */}
-              <div className="p-4 bg-theme-hover border border-theme rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.chartLineThickness")}
-                  </span>
-                  <span className="text-xs text-theme-text-muted bg-theme-card px-2 py-1 rounded">
-                    {chartLineThickness.toFixed(2)}px
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {/* Custom Slider */}
-                  <div className="relative pt-1">
-                    <div className="relative h-2 bg-gray-700 rounded-full">
-                      {/* Filled track */}
-                      <div
-                        className="absolute h-2 bg-gradient-to-r from-theme-primary to-theme-primary/80 rounded-full transition-all duration-200"
-                        style={{
-                          width: `${((chartLineThickness - 0.1) / 1.9) * 100}%`,
-                        }}
-                      />
-                      {/* Slider input */}
-                      <input
-                        type="range"
-                        min="0.1"
-                        max="2"
-                        step="0.05"
-                        value={chartLineThickness}
-                        onChange={(e) =>
-                          setChartLineThickness(parseFloat(e.target.value))
-                        }
-                        className="absolute w-full h-2 opacity-0 cursor-pointer"
-                      />
-                      {/* Slider thumb */}
-                      <div
-                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-theme-primary rounded-full shadow-lg pointer-events-none transition-all duration-200"
-                        style={{
-                          left: `calc(${
-                            ((chartLineThickness - 0.1) / 1.9) * 100
-                          }% - 8px)`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-between text-xs text-theme-text-muted">
-                    <span>{t("dashboard.thin")} (0.1px)</span>
-                    <span>{t("dashboard.thick")} (2px)</span>
-                  </div>
-                </div>
               </div>
             </div>
 
