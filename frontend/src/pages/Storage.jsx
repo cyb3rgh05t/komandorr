@@ -636,6 +636,22 @@ const Storage = () => {
         .includes(searchTerm.toLowerCase())
   );
 
+  // Separate services into UnionFS and RAID/ZFS groups
+  const unionfsServices = filteredServices.filter((service) =>
+    service.storage?.storage_paths?.some((path) =>
+      path.path.toLowerCase().includes("unionfs")
+    )
+  );
+
+  const raidZfsServices = filteredServices.filter(
+    (service) =>
+      (service.storage?.raid_arrays?.length > 0 ||
+        service.storage?.zfs_pools?.length > 0) &&
+      !service.storage?.storage_paths?.some((path) =>
+        path.path.toLowerCase().includes("unionfs")
+      )
+  );
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -889,93 +905,128 @@ const Storage = () => {
         </div>
       )}
 
-      {/* Monitored Servers Section */}
-      <div>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-            <Server className="w-5 h-5" />
-          </div>
-          <div>
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="animate-spin text-purple-400" size={32} />
+        </div>
+      ) : servicesWithStorage.length === 0 ? (
+        /* Empty state when no storage agents are installed/configured */
+        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+          <HardDrive
+            size={48}
+            className="mx-auto mb-4 text-theme-text-muted opacity-30"
+          />
+          <div className="text-center space-y-1 mb-4">
             <h3 className="text-lg font-semibold text-theme-text">
-              {t("storage.monitoredServers", "Monitored Servers")}
-              <span className="text-sm font-normal text-theme-text-muted ml-2">
-                ({filteredServices.length})
-              </span>
+              {t("storage.emptyState.title", "No Storage Agents Connected")}
             </h3>
+            <p className="text-sm text-theme-text-muted max-w-md mx-auto">
+              {t(
+                "storage.emptyState.description",
+                "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time."
+              )}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <a
+              href="https://github.com/cyb3rgh05t/komandorr/blob/main/storage/README.MD"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+            >
+              <HardDrive size={16} />
+              {t("storage.emptyState.setupGuide", "Setup Storage Agent")}
+            </a>
           </div>
         </div>
+      ) : filteredServices.length === 0 ? (
+        /* Empty state when search has no results */
+        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+          <Search
+            size={48}
+            className="mx-auto mb-4 text-theme-text-muted opacity-30"
+          />
+          <div className="text-center space-y-1 mb-4">
+            <h3 className="text-lg font-semibold text-theme-text">
+              {t("storage.noSearchResults", "No Servers Found")}
+            </h3>
+            <p className="text-sm text-theme-text-muted max-w-md mx-auto">
+              {t(
+                "storage.noSearchResultsDescription",
+                "No servers match your search for"
+              )}{" "}
+              "{searchTerm}"
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setSearchTerm("")}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+            >
+              {t("storage.clearSearch", "Clear Search")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* UnionFS Storage Section */}
+          {unionfsServices.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                  <HardDrive className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("storage.unionfsServers", "UnionFS Storage")}
+                    <span className="text-sm font-normal text-theme-text-muted ml-2">
+                      ({unionfsServices.length})
+                    </span>
+                  </h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {unionfsServices.map((service) => (
+                  <StorageServiceCard
+                    key={service.id}
+                    service={service}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-        {/* Services Grid */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-purple-400" size={32} />
-          </div>
-        ) : servicesWithStorage.length === 0 ? (
-          /* Empty state when no storage agents are installed/configured */
-          <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-            <HardDrive
-              size={48}
-              className="mx-auto mb-4 text-theme-text-muted opacity-30"
-            />
-            <div className="text-center space-y-1 mb-4">
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("storage.emptyState.title", "No Storage Agents Connected")}
-              </h3>
-              <p className="text-sm text-theme-text-muted max-w-md mx-auto">
-                {t(
-                  "storage.emptyState.description",
-                  "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time."
-                )}
-              </p>
+          {/* RAID/ZFS Storage Section */}
+          {raidZfsServices.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
+                  <Disc3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("storage.raidZfsServers", "RAID & ZFS Arrays")}
+                    <span className="text-sm font-normal text-theme-text-muted ml-2">
+                      ({raidZfsServices.length})
+                    </span>
+                  </h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {raidZfsServices.map((service) => (
+                  <StorageServiceCard
+                    key={service.id}
+                    service={service}
+                    t={t}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <a
-                href="https://github.com/cyb3rgh05t/komandorr/blob/main/storage/README.MD"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
-              >
-                <HardDrive size={16} />
-                {t("storage.emptyState.setupGuide", "Setup Storage Agent")}
-              </a>
-            </div>
-          </div>
-        ) : filteredServices.length === 0 ? (
-          /* Empty state when search has no results */
-          <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-            <Search
-              size={48}
-              className="mx-auto mb-4 text-theme-text-muted opacity-30"
-            />
-            <div className="text-center space-y-1 mb-4">
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("storage.noSearchResults", "No Servers Found")}
-              </h3>
-              <p className="text-sm text-theme-text-muted max-w-md mx-auto">
-                {t(
-                  "storage.noSearchResultsDescription",
-                  "No servers match your search for"
-                )}{" "}
-                "{searchTerm}"
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <button
-                onClick={() => setSearchTerm("")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
-              >
-                {t("storage.clearSearch", "Clear Search")}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredServices.map((service) => (
-              <StorageServiceCard key={service.id} service={service} t={t} />
-            ))}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
