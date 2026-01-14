@@ -76,7 +76,9 @@
       "uploadSpeed": "Upload Speed",
       "downloadSpeed": "Download Speed",
       "totalTransfer": "Total Transfer",
-      "vodStreams": "VOD Streams"
+      "vodStreams": "VOD Streams",
+      "activeUploads": "Uploading",
+      "activeDownloads": "Downloads"
     },
     "emptyStates": {
       "noOnline": {

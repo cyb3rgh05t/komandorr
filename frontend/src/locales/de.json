@@ -50,7 +50,9 @@
       "uploadSpeed": "Upload-Geschw.",
       "downloadSpeed": "Download-Geschw.",
       "totalTransfer": "Gesamt-Transfer",
-      "vodStreams": "VOD-Streams"
+      "vodStreams": "VOD-Streams",
+      "activeUploads": "Uploads",
+      "activeDownloads": "Downloads"
     },
     "emptyStates": {
       "noOnline": {

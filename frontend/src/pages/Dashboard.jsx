@@ -21,10 +21,14 @@ import {
   Network,
   ArrowUp,
   ArrowDown,
+  Upload,
+  Download,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
+import { uploaderApi } from "@/services/uploaderApi";
+import { arrActivityApi } from "@/services/arrActivityApi";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import ServiceModal from "@/components/ServiceModal";
@@ -65,6 +69,24 @@ export default function Dashboard() {
   const { data: plexActivities = [], isFetching: plexFetching } = useQuery({
     queryKey: ["plexActivities"],
     queryFn: fetchPlexActivities,
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Use React Query for uploader data (active uploads)
+  const { data: uploaderData } = useQuery({
+    queryKey: ["uploader", "inprogress"],
+    queryFn: () => uploaderApi.getInProgress(),
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Use React Query for arr-activity data (downloads queue)
+  const { data: arrQueueData } = useQuery({
+    queryKey: ["arr-activity", "queue"],
+    queryFn: () => arrActivityApi.getQueue(),
     staleTime: 5000,
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
@@ -301,6 +323,13 @@ export default function Dashboard() {
     downloadSpeed: trafficData?.total_bandwidth_down || 0,
     totalUploaded: trafficData?.total_traffic_up || 0,
     totalDownloaded: trafficData?.total_traffic_down || 0,
+    activeUploads: uploaderData?.jobs?.length || 0,
+    activeDownloads: (() => {
+      if (!arrQueueData?.instances) return 0;
+      return arrQueueData.instances.reduce((sum, inst) => {
+        return sum + (inst.records?.length || 0);
+      }, 0);
+    })(),
   };
 
   const LoadingServiceCard = () => (
@@ -758,6 +787,44 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <Video className="w-8 h-8 text-pink-500" />
+              </div>
+            </div>
+
+            {/* Active Uploads */}
+            <div
+              onClick={() => navigate("/uploader")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Upload className="w-3 h-3 text-emerald-500" />
+                    {t("dashboard.stats.activeUploads", "Uploading")}
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-500 mt-1">
+                    {stats.activeUploads}
+                  </p>
+                </div>
+                <Upload className="w-8 h-8 text-emerald-500" />
+              </div>
+            </div>
+
+            {/* Active Downloads */}
+            <div
+              onClick={() => navigate("/arr-activity")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-teal-500/10 hover:border-teal-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Download className="w-3 h-3 text-teal-500" />
+                    {t("dashboard.stats.activeDownloads", "Downloads")}
+                  </p>
+                  <p className="text-2xl font-bold text-teal-500 mt-1">
+                    {stats.activeDownloads}
+                  </p>
+                </div>
+                <Download className="w-8 h-8 text-teal-500" />
               </div>
             </div>
           </div>
