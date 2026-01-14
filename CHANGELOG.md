@@ -1,5 +1,63 @@
 # CHANGELOG.md
 
+# [3.2.0](https://github.com/cyb3rgh05t/komandorr/compare/v3.1.0...v3.2.0) (2026-01-14)
+
+### 🎨 UI/UX Improvements
+
+**Colored Table Headers**
+• **Unified table styling across all pages**
+◦ Added colored headers with icons and badges to all major tables
+◦ Uploader: Blue (active), Purple (queue), Green (completed), Red (failed)
+◦ InvitesManager: Purple themed invites table
+◦ UserAccounts: Blue themed users table
+◦ VODPortal: Blue (users), Green (add user form)
+◦ ArrActivity: Purple (Sonarr), Blue (Radarr) with error state styling
+◦ VODStreams: Purple (library scans), Green (downloads/streams)
+
+**Empty State Improvements**
+• **Traffic Page**
+◦ Enhanced empty state with Activity icon and descriptive text
+◦ Added "Setup Traffic Agent" button linking to documentation
+◦ Consistent styling with other empty states
+
+• **Storage Page**
+◦ Improved empty state for no storage agents connected
+◦ Added separate empty state for search with no results
+◦ Clear Search button for easy filter reset
+
+• **Dashboard Traffic Cards**
+◦ Updated empty state with better messaging
+◦ Added setup guide link button
+
+**VODStreams Enhancements**
+• **Library Scans Section**
+◦ Separated library scans from stream activities
+◦ New dedicated purple-themed table for active scans
+◦ Added Library Scans stat card with pulse animation
+◦ Proper scan type detection (library.scanner, media.generate, etc.)
+
+• **Stats & Filters**
+◦ Grid layout updated from 6 to 7 columns for new scan stat
+◦ All filter counts now correctly exclude scan activities
+
+**InvitesManager**
+• Reordered stats cards: Total Invites now first in the row
+• Purple themed header with Mail icon and count badge
+
+### 🌐 Localization
+
+• Added `uploader.sections.*` translations (active, queue, completed, failed)
+• Added `traffic.emptyState.*` translations (title, description, setupGuide)
+• Added `storage.emptyState.*` translations for empty states
+• Added `vodStreams.libraryScans.*` translations for scan section
+• Added `vodStreams.downloads.*` translations for downloads section
+• Added `vodStreams.stats.scanning` and `vodStreams.badges.scanning`
+• Added `vodPortal.addUserTitle` translation
+• Added `arrActivity.downloads` and `arrActivity.error` translations
+• All translations available in English and German
+
+---
+
 # [3.1.0](https://github.com/cyb3rgh05t/komandorr/compare/v3.0.0...v3.1.0) (2025-12-24)
 
 ### 🎨 UI/UX Improvements
