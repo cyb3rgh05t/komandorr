@@ -78,8 +78,8 @@ export default function Dashboard() {
   const { data: uploaderData } = useQuery({
     queryKey: ["uploader", "inprogress"],
     queryFn: () => uploaderApi.getInProgress(),
-    staleTime: 5000,
-    refetchInterval: 5000,
+    staleTime: 2000,
+    refetchInterval: 2000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -325,8 +325,9 @@ export default function Dashboard() {
     totalDownloaded: trafficData?.total_traffic_down || 0,
     activeUploads: uploaderData?.jobs?.length || 0,
     activeDownloads: (() => {
-      if (!arrQueueData?.instances) return 0;
-      return arrQueueData.instances.reduce((sum, inst) => {
+      if (!arrQueueData) return 0;
+      // arrQueueData is an object with instance IDs as keys
+      return Object.values(arrQueueData).reduce((sum, inst) => {
         return sum + (inst.records?.length || 0);
       }, 0);
     })(),
