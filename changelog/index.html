@@ -1541,8 +1541,54 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
-<h1 id="310-2025-12-24"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.0.0...v3.1.0">3.1.0</a> (2025-12-24)<a class="headerlink" href="#310-2025-12-24" title="Permanent link">&para;</a></h1>
+<h1 id="320-2026-01-14"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.1.0...v3.2.0">3.2.0</a> (2026-01-14)<a class="headerlink" href="#320-2026-01-14" title="Permanent link">&para;</a></h1>
 <h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>Colored Table Headers</strong>
+• <strong>Unified table styling across all pages</strong>
+◦ Added colored headers with icons and badges to all major tables
+◦ Uploader: Blue (active), Purple (queue), Green (completed), Red (failed)
+◦ InvitesManager: Purple themed invites table
+◦ UserAccounts: Blue themed users table
+◦ VODPortal: Blue (users), Green (add user form)
+◦ ArrActivity: Purple (Sonarr), Blue (Radarr) with error state styling
+◦ VODStreams: Purple (library scans), Green (downloads/streams)</p>
+<p><strong>Empty State Improvements</strong>
+• <strong>Traffic Page</strong>
+◦ Enhanced empty state with Activity icon and descriptive text
+◦ Added "Setup Traffic Agent" button linking to documentation
+◦ Consistent styling with other empty states</p>
+<p>• <strong>Storage Page</strong>
+◦ Improved empty state for no storage agents connected
+◦ Added separate empty state for search with no results
+◦ Clear Search button for easy filter reset</p>
+<p>• <strong>Dashboard Traffic Cards</strong>
+◦ Updated empty state with better messaging
+◦ Added setup guide link button</p>
+<p><strong>VODStreams Enhancements</strong>
+• <strong>Library Scans Section</strong>
+◦ Separated library scans from stream activities
+◦ New dedicated purple-themed table for active scans
+◦ Added Library Scans stat card with pulse animation
+◦ Proper scan type detection (library.scanner, media.generate, etc.)</p>
+<p>• <strong>Stats &amp; Filters</strong>
+◦ Grid layout updated from 6 to 7 columns for new scan stat
+◦ All filter counts now correctly exclude scan activities</p>
+<p><strong>InvitesManager</strong>
+• Reordered stats cards: Total Invites now first in the row
+• Purple themed header with Mail icon and count badge</p>
+<h3 id="localization">🌐 Localization<a class="headerlink" href="#localization" title="Permanent link">&para;</a></h3>
+<p>• Added <code>uploader.sections.*</code> translations (active, queue, completed, failed)
+• Added <code>traffic.emptyState.*</code> translations (title, description, setupGuide)
+• Added <code>storage.emptyState.*</code> translations for empty states
+• Added <code>vodStreams.libraryScans.*</code> translations for scan section
+• Added <code>vodStreams.downloads.*</code> translations for downloads section
+• Added <code>vodStreams.stats.scanning</code> and <code>vodStreams.badges.scanning</code>
+• Added <code>vodPortal.addUserTitle</code> translation
+• Added <code>arrActivity.downloads</code> and <code>arrActivity.error</code> translations
+• All translations available in English and German</p>
+<hr />
+<h1 id="310-2025-12-24"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.0.0...v3.1.0">3.1.0</a> (2025-12-24)<a class="headerlink" href="#310-2025-12-24" title="Permanent link">&para;</a></h1>
+<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
 <p><strong>ArrActivity Page Enhancements</strong>
 • <strong>Enhanced download table</strong>
 ◦ Added Quality and Protocol columns for better download visibility
@@ -1700,7 +1746,7 @@
 ◦ Prevents orphaned invite codes cluttering the dashboard
 ◦ Delete user action now checks for remaining users on invite
 ◦ Cascade deletion keeps invite database clean</p>
-<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
 <p><strong>Navigation Updates</strong></p>
 <p>• <strong>nav: Plex-specific naming</strong>
 ◦ "VOD Activity" renamed to "Plex Activity"
@@ -1909,7 +1955,7 @@
 ◦ <code>POST /api/invites/users/{id}/refresh</code> - Refresh user info from Plex
 ◦ <code>DELETE /api/invites/users/{id}</code> - Remove user from Plex
 ◦ <code>PUT /api/invites/users/{id}/expiration</code> - Update user expiration</p>
-<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_3">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_3" title="Permanent link">&para;</a></h3>
 <p>• <strong>skeleton-loading: Enhanced loading states</strong>
 ◦ Replaced spinner loaders with skeleton cards across UserAccounts page
 ◦ Skeleton cards match actual card layouts (avatar, text, badges, buttons)
@@ -2042,7 +2088,7 @@
 ◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
 ◦ CORS moved back to environment variables (deployment-level security setting)
 ◦ Simplified .env.example to server parameters only with migration comments</p>
-<h3 id="uiux-improvements_3">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_3" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_4">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_4" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
 <p>• <strong>monitor: Clickable service cards</strong>
 ◦ Service cards now link directly to service URLs
