@@ -524,21 +524,48 @@ export default function Traffic() {
           {/* Services Grid - Optimized for tablet */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
             {servicesInActiveGroup.length === 0 ? (
-              <div className="col-span-full bg-theme-card border border-theme rounded-lg p-8 text-center shadow-sm">
-                <Server
+              <div className="col-span-full bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                <Activity
                   size={48}
-                  className="mx-auto mb-4 text-theme-text-muted"
+                  className="mx-auto mb-4 text-theme-text-muted opacity-30"
                 />
-                <h3 className="text-lg font-semibold text-theme-text mb-2">
-                  {searchTerm
-                    ? t("traffic.page.emptyStates.noMatching")
-                    : t("traffic.page.emptyStates.noServices")}
-                </h3>
-                <p className="text-theme-text-muted">
-                  {searchTerm
-                    ? "Try adjusting your search criteria"
-                    : "Deploy the traffic agent on your servers to start monitoring"}
-                </p>
+                <div className="text-center space-y-1 mb-4">
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {searchTerm
+                      ? t("traffic.page.emptyStates.noMatching")
+                      : t(
+                          "traffic.emptyState.title",
+                          "No Traffic Agents Connected"
+                        )}
+                  </h3>
+                  <p className="text-sm text-theme-text-muted max-w-md mx-auto">
+                    {searchTerm
+                      ? t(
+                          "traffic.page.emptyStates.tryAdjusting",
+                          "Try adjusting your search criteria"
+                        )
+                      : t(
+                          "traffic.emptyState.description",
+                          "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics."
+                        )}
+                  </p>
+                </div>
+                {!searchTerm && (
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                    <a
+                      href="https://github.com/cyb3rgh05t/komandorr/blob/main/traffic/README.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+                    >
+                      <Activity size={16} />
+                      {t(
+                        "traffic.emptyState.setupGuide",
+                        "Setup Traffic Agent"
+                      )}
+                    </a>
+                  </div>
+                )}
               </div>
             ) : (
               servicesInActiveGroup.map((service) => (

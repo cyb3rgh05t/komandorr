@@ -40,6 +40,11 @@ export const uploaderApi = {
     fetchJson(`/completed?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
       signal,
     }),
+  getFailed: (pageNumber = 1, pageSize = 25, signal) =>
+    fetchJson(`/failed?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
+      signal,
+    }),
+  getFailedCount: (signal) => fetchJson("/failed_count", { signal }),
   getQueueStats: (signal) => fetchJson("/queue_stats", { signal }),
   getCompletedTodayStats: (signal) =>
     fetchJson("/completed_today_stats", { signal }),

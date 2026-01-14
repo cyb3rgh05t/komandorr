@@ -140,7 +140,8 @@ async def get_combined_queue(username: str = Depends(require_auth)):
         api_key = instance.get("api_key", "")
 
         # Determine endpoint parameters based on type
-        params = {"pageSize": 100}
+        # Use large pageSize to get all records in one request
+        params = {"pageSize": 10000, "page": 1}
         if instance_type == "sonarr":
             params["includeUnknownSeriesItems"] = True
         elif instance_type == "radarr":

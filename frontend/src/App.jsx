@@ -10,7 +10,7 @@ import Monitor from "./pages/Monitor";
 import Traffic from "./pages/Traffic";
 import Storage from "./pages/Storage";
 import VODStreams from "./pages/VODStreams";
-import VODActivity from "./pages/VODActivity";
+import PlexActivity from "./pages/PlexActivity";
 import VODPortal from "./pages/VODPortal";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
@@ -165,7 +165,7 @@ function App() {
                       <Route path="/traffic" element={<Traffic />} />
                       <Route path="/storage" element={<Storage />} />
                       <Route path="/vod-streams" element={<VODStreams />} />
-                      <Route path="/vod-activity" element={<VODActivity />} />
+                      <Route path="/vod-activity" element={<PlexActivity />} />
                       <Route path="/vod-portal" element={<VODPortal />} />
                       <Route path="/invites" element={<InvitesManager />} />
                       <Route path="/user-accounts" element={<UserAccounts />} />

@@ -317,9 +317,9 @@ const LoadingCard = () => (
   </div>
 );
 
-const VODActivity = () => {
+const PlexActivity = () => {
   const { t } = useTranslation();
-  const { showToast } = useToast();
+  const toast = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -342,9 +342,9 @@ const VODActivity = () => {
   const handleRefresh = async () => {
     try {
       await queryClient.invalidateQueries({ queryKey: ["plex-sessions"] });
-      showToast(t("vodActivity.refreshSuccess"), "success");
+      toast.success(t("vodActivity.refreshSuccess", "Sessions refreshed"));
     } catch (err) {
-      showToast(t("vodActivity.refreshError"), "error");
+      toast.error(t("vodActivity.refreshError", "Failed to refresh sessions"));
     }
   };
 
@@ -572,4 +572,4 @@ const VODActivity = () => {
   );
 };
 
-export default VODActivity;
+export default PlexActivity;

@@ -128,11 +128,33 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
             </button>
           )}
         </div>
-        <div className="h-48 flex flex-col items-center justify-center text-theme-text-muted space-y-2">
-          <Activity className="w-12 h-12 opacity-30" />
-          <p className="text-sm font-medium">
-            {t("traffic.noData") || "No traffic data available"}
-          </p>
+        <div className="bg-theme-card border border-theme rounded-xl p-12 text-center shadow-lg">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Activity size={40} className="" />
+          </div>
+
+          <div className="text-center space-y-1">
+            <h3 className="text-xl font-bold text-theme-text mb-3">
+              {t("traffic.emptyState.title", "No Traffic Agents Connected")}
+            </h3>
+            <p className="text-theme-text-muted mb-6 max-w-md mx-auto">
+              {t(
+                "traffic.emptyState.description",
+                "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics."
+              )}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <a
+              href="https://github.com/cyb3rgh05t/komandorr/blob/main/traffic/README.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+            >
+              <Activity size={16} />
+              {t("traffic.emptyState.setupGuide", "Setup Traffic Agent")}
+            </a>
+          </div>
         </div>
       </div>
     );

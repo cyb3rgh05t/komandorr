@@ -152,12 +152,19 @@ class StorageMonitor:
                 return None
 
             usage = psutil.disk_usage(path)
+            total_gb = usage.total / (1024**3)
+            used_gb = usage.used / (1024**3)
+            # Calculate free and percent from total/used for consistency
+            # (psutil.free excludes reserved blocks, which causes mismatches)
+            free_gb = total_gb - used_gb
+            percent = (used_gb / total_gb) * 100 if total_gb > 0 else 0
+
             return {
                 "path": path,
-                "total": round(usage.total / (1024**3), 2),  # GB
-                "used": round(usage.used / (1024**3), 2),  # GB
-                "free": round(usage.free / (1024**3), 2),  # GB
-                "percent": round(usage.percent, 2),
+                "total": round(total_gb, 2),  # GB
+                "used": round(used_gb, 2),  # GB
+                "free": round(free_gb, 2),  # GB
+                "percent": round(percent, 2),
             }
         except Exception as e:
             logger.error(f"Error getting disk usage for {path}: {e}")
@@ -445,7 +452,7 @@ class StorageMonitor:
             if usage:
                 data["storage_paths"].append(usage)
                 logger.debug(
-                    f"  {path}: {usage['used']:.2f}GB / {usage['total']:.2f}GB ({usage['percent']}%)"
+                    f"  {path}: {usage['used']:.2f}GB / {usage['total']:.2f}GB ({usage['percent']}%) - Free: {usage['free']:.2f}GB"
                 )
 
         # Get RAID status

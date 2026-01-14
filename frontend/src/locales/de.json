@@ -9,11 +9,11 @@
     "services": "Dienste",
     "monitor": "Ping Antwort",
     "traffic": "Traffic",
-    "vodStreams": "VOD Monitor",
+    "vodStreams": "VOD Plex-Sync",
     "vodActivity": "Aktivität",
     "arrActivity": "Downloads",
     "vodPortal": "VOD Portal",
-    "uploader": "Uploader",
+    "uploader": "Uploads",
     "invites": "Einladungen",
     "userAccounts": "Benutzerkonten",
     "userHistory": "Plex Benutzerstatistiken",
@@ -147,6 +147,35 @@
     },
     "all": "ALLE"
   },
+  "arrActivity": {
+    "title": "Downloads",
+    "subtitle": "Überwachen Sie die Sonarr und Radarr Download-Warteschlangen",
+    "noActiveDownloads": "Keine aktiven Downloads",
+    "noServicesConfigured": "Keine Dienste konfiguriert",
+    "configureServices": "Konfigurieren Sie Sonarr und Radarr in den Einstellungen, um Download-Aktivitäten zu überwachen.",
+    "totalQueue": "Gesamte Warteschlange",
+    "services": "Dienste",
+    "titleColumn": "Titel",
+    "status": "Status",
+    "progress": "Fortschritt",
+    "size": "Größe",
+    "timeLeft": "Verbleibende Zeit",
+    "client": "Client",
+    "downloads": "Downloads",
+    "error": "Fehler",
+    "tabs": {
+      "all": "Alle",
+      "tvShows": "TV-Serien",
+      "movies": "Filme"
+    },
+    "pagination": {
+      "showing": "Zeige",
+      "to": "bis",
+      "of": "von",
+      "items": "Einträgen",
+      "itemsPerPage": "Einträge pro Seite:"
+    }
+  },
   "traffic": {
     "title": "Netzwerk-Traffic",
     "subtitle": "Überwachen Sie Bandbreite und Datennutzung aller Dienste",
@@ -167,6 +196,11 @@
     "no_data": "Keine Traffic-Daten verfügbar. Installieren Sie den Traffic-Agent auf Ihren Servern, um die Überwachung zu starten.",
     "noData": "Keine Traffic-Daten verfügbar",
     "noActiveTraffic": "Kein aktiver Traffic",
+    "emptyState": {
+      "title": "Keine Traffic-Agents verbunden",
+      "description": "Installieren Sie den Traffic-Agent auf Ihren Servern, um Echtzeit-Bandbreite, Upload/Download-Geschwindigkeiten und Netzwerkstatistiken zu überwachen.",
+      "setupGuide": "Traffic-Agent einrichten"
+    },
     "last_refresh": "Zuletzt aktualisiert",
     "realtimeMonitoring": "Echtzeit-Bandbreitenüberwachung",
     "service": "aktiver Dienst",
@@ -224,6 +258,19 @@
     }
   },
   "uploader": {
+    "tabs": {
+      "active": "Aktive Uploads",
+      "queue": "Warteschlange",
+      "history": "Verlauf",
+      "failedItems": "Fehlgeschlagen"
+    },
+    "sections": {
+      "active": "Aktive Uploads",
+      "queue": "Upload Warteschlange",
+      "completed": "Abgeschlossene Uploads",
+      "failed": "Fehlgeschlagene Uploads"
+    },
+    "refreshSuccess": "Daten erfolgreich aktualisiert",
     "settings": "Uploader Einstellungen",
     "baseUrl": "Uploader Basis-URL",
     "baseUrlHelp": "Legen Sie die URL Ihres Uploader-Dienstes fest (Container oder extern).",
@@ -239,6 +286,8 @@
     "queueDescription": "Dateien, die auf den Upload warten",
     "completed": "Abgeschlossene Uploads",
     "completedDescription": "Kürzlich fertiggestellte Uploads",
+    "failedItems": "Fehlgeschlagene Uploads",
+    "failedDescription": "Uploads, die nicht abgeschlossen werden konnten",
     "systemOverview": "Systemübersicht",
     "systemDescription": "Überblick über Uploader-Statistiken",
     "table": {
@@ -252,14 +301,26 @@
       "speed": "Geschwindigkeit",
       "added": "Hinzugefügt",
       "duration": "Dauer",
-      "completedAt": "Abgeschlossen"
+      "completedAt": "Abgeschlossen",
+      "error": "Fehler",
+      "failedAt": "Fehlgeschlagen am"
     },
     "empty": {
       "active": "Keine Uploads aktiv",
       "queue": "Keine Dateien in der Warteschlange",
-      "completed": "Noch keine abgeschlossenen Uploads"
+      "completed": "Noch keine abgeschlossenen Uploads",
+      "failed": "Keine fehlgeschlagenen Uploads"
     },
-    "pagination": "Zeige {{from}}-{{to}} von {{total}} Uploads",
+    "pagination": {
+      "showing": "Zeige",
+      "to": "bis",
+      "of": "von",
+      "jobs": "Aufträge",
+      "files": "Dateien",
+      "itemsPerPage": "Einträge pro Seite:",
+      "previous": "Vorherige Seite",
+      "next": "Nächste Seite"
+    },
     "mini": {
       "rate": "Upload-Rate",
       "queueCount": "Dateien in Queue",
@@ -315,15 +376,27 @@
       "transcoding": "Transkodierung",
       "streaming": "Streaming",
       "peakConcurrent": "Höchste Gleichzeitigkeit",
-      "resetPeak": "Peak zurücksetzen"
+      "resetPeak": "Peak zurücksetzen",
+      "scanning": "Bibliothek-Scans"
     },
     "badges": {
       "downloading": "Download läuft...",
       "transcoding": "Transkodierung...",
       "streaming": "Streaming...",
-      "paused": "Pausiert"
+      "paused": "Pausiert",
+      "scanning": "Scannt..."
     },
     "progress": "Fortschritt",
+    "libraryScans": {
+      "title": "Bibliothek-Scans",
+      "active": "aktiv",
+      "library": "Bibliothek",
+      "details": "Details"
+    },
+    "downloads": {
+      "title": "Downloads & Streams",
+      "active": "aktiv"
+    },
     "plexNotConfigured": {
       "title": "Plex-Server nicht konfiguriert",
       "description": "Konfigurieren Sie Ihren Plex-Server in den Einstellungen, um Sync-Aktivitäten zu überwachen.",
@@ -332,6 +405,12 @@
     "noMatching": "Keine passenden Aktivitäten",
     "noMatchingDescription": "Keine Aktivitäten gefunden für",
     "clearSearch": "Suche löschen",
+    "table": {
+      "media": "Medien",
+      "title": "Titel",
+      "status": "Status",
+      "progress": "Fortschritt"
+    },
     "pagination": {
       "showing": "Zeige",
       "to": "bis",
@@ -862,7 +941,8 @@
     "title": "VOD-Portal",
     "description": "Benutzer über die Web-Oberfläche zu Overseerr hinzufügen",
     "placeholder": "VOD-Portal-Inhalte werden hier hinzugefügt",
-    "createUser": "Benutzer zu StreamNet VOD hinzufügen",
+    "addUserTitle": "Benutzer zu StreamNet VOD hinzufügen",
+    "createUser": "Benutzer hinzufügen",
     "username": "Benutzername",
     "usernamePlaceholder": "Benutzername eingeben",
     "password": "Passwort",
@@ -895,6 +975,7 @@
     "searchPlaceholder": "Benutzer suchen...",
     "refresh": "Aktualisieren",
     "refreshing": "Wird aktualisiert...",
+    "refreshSuccess": "Benutzer erfolgreich aktualisiert",
     "noSearchResults": "Keine Benutzer gefunden",
     "stats": {
       "totalUsers": "Gesamt Benutzer",
@@ -916,5 +997,36 @@
     "delete": "Löschen",
     "userDeleted": "Benutzer wurde gelöscht",
     "deleteError": "Fehler beim Löschen des Benutzers"
+  },
+  "storage": {
+    "searchPlaceholder": "Server suchen...",
+    "refresh": "Aktualisieren",
+    "monitoredServers": "Überwachte Server",
+    "noServersConfigured": "Keine Storage-Server konfiguriert",
+    "noServersDescription": "Konfigurieren Sie Storage-Agents auf Ihren Servern, um Speicherplatz, RAID-Arrays und ZFS-Pools zu überwachen.",
+    "setupGuide": "Einrichtungsanleitung",
+    "noSearchResults": "Keine Server gefunden",
+    "noSearchResultsDescription": "Keine Server gefunden für die Suche nach",
+    "clearSearch": "Suche löschen",
+    "emptyState": {
+      "title": "Keine Storage-Agents verbunden",
+      "description": "Installieren Sie den Storage-Agent auf Ihren Servern, um Speicherplatz, RAID-Arrays und ZFS-Pools in Echtzeit zu überwachen.",
+      "setupGuide": "Storage-Agent einrichten"
+    },
+    "total": "Gesamt",
+    "used": "Belegt",
+    "free": "Frei",
+    "usage": "Auslastung",
+    "totalCapacity": "Kapazität",
+    "totalUsed": "Belegt",
+    "totalFree": "Frei",
+    "raidStatus": "Array-Status",
+    "paths": "Speicherpfade",
+    "mdadmRaid": "mdadm RAID-Arrays",
+    "zfsPools": "ZFS-Pools",
+    "raidDetails": "mdadm RAID-Details",
+    "zfsPoolDetails": "ZFS-Pool-Details",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "noDataYet": "Warte auf Daten..."
   }
 }
