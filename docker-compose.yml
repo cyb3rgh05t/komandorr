@@ -28,9 +28,9 @@ services:
       - "TZ=Europe/Berlin"
       - "TERM=xterm"
       - "HOST=0.0.0.0"
-      - "PORT=8000"
+      - "PORT=8010"
       - "DEBUG=false"
-      - "CORS_ORIGINS=http://localhost,http://localhost:8000"
+      - "CORS_ORIGINS=http://localhost,http://localhost:8010"
       # Redis Configuration
       - "REDIS_ENABLED=true"
       - "REDIS_HOST=redis"
@@ -49,11 +49,11 @@ services:
         "--host",
         "0.0.0.0",
         "--port",
-        "8000",
+        "8010",
         "--no-access-log",
       ]
     ports:
-      - "8010:8000"
+      - "8010"
     networks:
       - "proxy"
     volumes:
@@ -69,7 +69,7 @@ services:
       - "traefik.http.routers.komandorr-rtr.tls.certresolver=dns-cloudflare"
       - "traefik.http.routers.komandorr-rtr.middlewares=chain-authelia@file"
       - "traefik.http.routers.komandorr-rtr.service=komandorr-svc"
-      - "traefik.http.services.komandorr-svc.loadbalancer.server.port=8000"
+      - "traefik.http.services.komandorr-svc.loadbalancer.server.port=8010"
 networks:
   proxy:
     driver: bridge

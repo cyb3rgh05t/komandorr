@@ -222,11 +222,11 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     { primary: "#f59e0b", shadow: "rgba(245, 158, 11, 0.4)" }, // amber
   ];
 
-  // Get services sorted by bandwidth (load) - highest to lowest
+  // Get services sorted alphabetically by name
   const allServices = [...activeServices].sort((a, b) => {
-    const loadA = (a.bandwidth_up || 0) + (a.bandwidth_down || 0);
-    const loadB = (b.bandwidth_up || 0) + (b.bandwidth_down || 0);
-    return loadB - loadA; // Descending order (highest load first)
+    const nameA = (a.name || "").toLowerCase();
+    const nameB = (b.name || "").toLowerCase();
+    return nameA.localeCompare(nameB);
   });
 
   const itemsPerPage = cardsPerPage;

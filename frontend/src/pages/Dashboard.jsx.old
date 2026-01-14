@@ -559,224 +559,274 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats Cards - Compact Layout */}
+      {/* Stats Cards */}
       {dashboardVisibility.stats && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
-          {/* Total Services */}
-          <button
-            onClick={() => setStatusFilter(null)}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 flex items-center gap-2"
-          >
-            <Server className="w-5 h-5 text-theme-primary flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.totalServices")}
-              </p>
-              <p className="text-lg font-bold text-theme-primary leading-tight">
-                {stats.total}
-              </p>
-            </div>
-          </button>
+        <div className="space-y-4">
+          {/* Enhanced Stats Grid - Optimized for 1280x800 tablet */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-10 gap-3">
+            {/* Total Services */}
+            <button
+              onClick={() => setStatusFilter(null)}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/50"
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Server className="w-3 h-3 text-theme-primary" />
+                    {t("dashboard.stats.totalServices")}
+                  </p>
+                  <p className="text-2xl font-bold text-theme-primary mt-1 text-left">
+                    {stats.total}
+                  </p>
+                </div>
+                <Server className="w-8 h-8 text-theme-primary" />
+              </div>
+            </button>
 
-          {/* Online */}
-          <button
-            onClick={() => setStatusFilter("online")}
-            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-green-500/10 flex items-center gap-2 ${
-              statusFilter === "online"
-                ? "border-green-500 ring-1 ring-green-500/20"
-                : "border-theme hover:border-green-500/50"
-            }`}
-          >
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.online")}
-              </p>
-              <p className="text-lg font-bold text-green-500 leading-tight">
-                {stats.online}
-              </p>
-            </div>
-          </button>
+            {/* Online */}
+            <button
+              onClick={() => setStatusFilter("online")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 group ${
+                statusFilter === "online"
+                  ? "border-green-500 ring-2 ring-green-500/20"
+                  : "border-theme hover:border-green-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                    {t("dashboard.stats.online")}
+                  </p>
+                  <p className="text-2xl font-bold text-green-500 mt-1 text-left">
+                    {stats.online}
+                  </p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </button>
 
-          {/* Offline */}
-          <button
-            onClick={() => setStatusFilter("offline")}
-            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-red-500/10 flex items-center gap-2 ${
-              statusFilter === "offline"
-                ? "border-red-500 ring-1 ring-red-500/20"
-                : "border-theme hover:border-red-500/50"
-            }`}
-          >
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.offline")}
-              </p>
-              <p className="text-lg font-bold text-red-500 leading-tight">
-                {stats.offline}
-              </p>
-            </div>
-          </button>
+            {/* Offline */}
+            <button
+              onClick={() => setStatusFilter("offline")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 group ${
+                statusFilter === "offline"
+                  ? "border-red-500 ring-2 ring-red-500/20"
+                  : "border-theme hover:border-red-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-red-500" />
+                    {t("dashboard.stats.offline")}
+                  </p>
+                  <p className="text-2xl font-bold text-red-500 mt-1 text-left">
+                    {stats.offline}
+                  </p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+            </button>
 
-          {/* Problem */}
-          <button
-            onClick={() => setStatusFilter("problem")}
-            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-yellow-500/10 flex items-center gap-2 ${
-              statusFilter === "problem"
-                ? "border-yellow-500 ring-1 ring-yellow-500/20"
-                : "border-theme hover:border-yellow-500/50"
-            }`}
-          >
-            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.problems")}
-              </p>
-              <p className="text-lg font-bold text-yellow-500 leading-tight">
-                {stats.problem}
-              </p>
-            </div>
-          </button>
+            {/* Problem */}
+            <button
+              onClick={() => setStatusFilter("problem")}
+              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 group ${
+                statusFilter === "problem"
+                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
+                  : "border-theme hover:border-yellow-500/50"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-yellow-500" />
+                    {t("dashboard.stats.problems")}
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-500 mt-1 text-left">
+                    {stats.problem}
+                  </p>
+                  <div className="text-[10px] text-theme-text-muted/70 mt-0.5 text-left">
+                    {t("dashboard.stats.slowResponse")}
+                  </div>
+                </div>
+                <AlertCircle className="w-8 h-8 text-yellow-500" />
+              </div>
+            </button>
 
-          {/* Avg Response Time */}
-          <div
-            onClick={() => navigate("/monitor")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.avgResponse")}
-              </p>
-              <p className="text-lg font-bold text-blue-500 leading-tight">
-                {stats.avgResponseTime}
-                <span className="text-xs text-blue-400 ml-0.5">ms</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Active (5min) */}
-          <div
-            onClick={() => navigate("/monitor")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Activity className="w-5 h-5 text-purple-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.active5min")}
-              </p>
-              <p className="text-lg font-bold text-purple-500 leading-tight">
-                {stats.recentlyChecked}
-              </p>
-            </div>
-          </div>
-
-          {/* Upload Speed */}
-          <div
-            onClick={() => navigate("/traffic")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <ArrowUp className="w-5 h-5 text-orange-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.uploadSpeed")}
-              </p>
-              <p className="text-lg font-bold text-orange-500 leading-tight">
-                {stats.uploadSpeed.toFixed(1)}
-                <span className="text-xs text-orange-400 ml-0.5">MB/s</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Download Speed */}
-          <div
-            onClick={() => navigate("/traffic")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <ArrowDown className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.downloadSpeed")}
-              </p>
-              <p className="text-lg font-bold text-cyan-500 leading-tight">
-                {stats.downloadSpeed.toFixed(1)}
-                <span className="text-xs text-cyan-400 ml-0.5">MB/s</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Total Transfer */}
-          <div
-            onClick={() => navigate("/traffic")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Network className="w-5 h-5 text-indigo-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.totalTransfer")}
-              </p>
-              <div className="flex items-center gap-2 text-xs font-semibold leading-tight">
-                <span className="text-orange-500 flex items-center">
-                  <ArrowUp className="w-3 h-3 mr-0.5" />
-                  {stats.totalUploaded >= 1024
-                    ? `${(stats.totalUploaded / 1024).toFixed(1)}T`
-                    : `${stats.totalUploaded.toFixed(1)}G`}
-                </span>
-                <span className="text-cyan-500 flex items-center">
-                  <ArrowDown className="w-3 h-3 mr-0.5" />
-                  {stats.totalDownloaded >= 1024
-                    ? `${(stats.totalDownloaded / 1024).toFixed(1)}T`
-                    : `${stats.totalDownloaded.toFixed(1)}G`}
-                </span>
+            {/* Avg Response Time */}
+            <div
+              onClick={() => navigate("/monitor")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-blue-500" />
+                    {t("dashboard.stats.avgResponse")}
+                  </p>
+                  <p className="text-2xl font-bold text-blue-500 mt-1">
+                    {stats.avgResponseTime}
+                    <span className="text-sm text-blue-400 ml-1">ms</span>
+                  </p>
+                </div>
+                <Zap className="w-8 h-8 text-blue-500" />
               </div>
             </div>
-          </div>
 
-          {/* Active Streams */}
-          <div
-            onClick={() => navigate("/vod-streams")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-pink-500/10 hover:border-pink-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Video className="w-5 h-5 text-pink-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.vodStreams")}
-              </p>
-              <p className="text-lg font-bold text-pink-500 leading-tight">
-                {stats.activeStreams}
-              </p>
+            {/* Active (5min) */}
+            <div
+              onClick={() => navigate("/monitor")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-purple-500" />
+                    {t("dashboard.stats.active5min")}
+                  </p>
+                  <p className="text-2xl font-bold text-purple-500 mt-1">
+                    {stats.recentlyChecked}
+                  </p>
+                </div>
+                <Activity className="w-8 h-8 text-purple-500" />
+              </div>
             </div>
-          </div>
 
-          {/* Active Uploads */}
-          <div
-            onClick={() => navigate("/uploader")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Upload className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.activeUploads", "Uploading")}
-              </p>
-              <p className="text-lg font-bold text-emerald-500 leading-tight">
-                {stats.activeUploads}
-              </p>
+            {/* Upload Speed */}
+            <div
+              onClick={() => navigate("/traffic")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3 text-orange-500" />
+                    {t("dashboard.stats.uploadSpeed")}
+                  </p>
+                  <p className="text-2xl font-bold text-orange-500 mt-1">
+                    {stats.uploadSpeed.toFixed(1)}
+                    <span className="text-sm text-orange-400 ml-1">MB/s</span>
+                  </p>
+                </div>
+                <ArrowUp className="w-8 h-8 text-orange-500" />
+              </div>
             </div>
-          </div>
 
-          {/* Active Downloads */}
-          <div
-            onClick={() => navigate("/arr-activity")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-teal-500/10 hover:border-teal-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Download className="w-5 h-5 text-teal-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.activeDownloads", "Downloads")}
-              </p>
-              <p className="text-lg font-bold text-teal-500 leading-tight">
-                {stats.activeDownloads}
-              </p>
+            {/* Download Speed */}
+            <div
+              onClick={() => navigate("/traffic")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowDown className="w-3 h-3 text-cyan-500" />
+                    {t("dashboard.stats.downloadSpeed")}
+                  </p>
+                  <p className="text-2xl font-bold text-cyan-500 mt-1">
+                    {stats.downloadSpeed.toFixed(1)}
+                    <span className="text-sm text-cyan-400 ml-1">MB/s</span>
+                  </p>
+                </div>
+                <ArrowDown className="w-8 h-8 text-cyan-500" />
+              </div>
+            </div>
+
+            {/* Total Transfer */}
+            <div
+              onClick={() => navigate("/traffic")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Network className="w-3 h-3 text-indigo-500" />
+                    {t("dashboard.stats.totalTransfer")}
+                  </p>
+                  <div className="mt-1">
+                    <div className="flex items-center gap-1 text-blue-500">
+                      <ArrowUp className="w-3 h-3" />
+                      <span className="text-xs font-semibold">
+                        {stats.totalUploaded >= 1024
+                          ? `${(stats.totalUploaded / 1024).toFixed(2)} TB`
+                          : stats.totalUploaded >= 1
+                          ? `${stats.totalUploaded.toFixed(2)} GB`
+                          : `${(stats.totalUploaded * 1024).toFixed(2)} MB`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-green-500">
+                      <ArrowDown className="w-3 h-3" />
+                      <span className="text-xs font-semibold">
+                        {stats.totalDownloaded >= 1024
+                          ? `${(stats.totalDownloaded / 1024).toFixed(2)} TB`
+                          : stats.totalDownloaded >= 1
+                          ? `${stats.totalDownloaded.toFixed(2)} GB`
+                          : `${(stats.totalDownloaded * 1024).toFixed(2)} MB`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <Network className="w-8 h-8 text-indigo-500" />
+              </div>
+            </div>
+
+            {/* Active Streams */}
+            <div
+              onClick={() => navigate("/vod-streams")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-pink-500/10 hover:border-pink-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Video className="w-3 h-3 text-pink-500" />
+                    {t("dashboard.stats.vodStreams")}
+                  </p>
+                  <p className="text-2xl font-bold text-pink-500 mt-1">
+                    {stats.activeStreams}
+                  </p>
+                </div>
+                <Video className="w-8 h-8 text-pink-500" />
+              </div>
+            </div>
+
+            {/* Active Uploads */}
+            <div
+              onClick={() => navigate("/uploader")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Upload className="w-3 h-3 text-emerald-500" />
+                    {t("dashboard.stats.activeUploads", "Uploading")}
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-500 mt-1">
+                    {stats.activeUploads}
+                  </p>
+                </div>
+                <Upload className="w-8 h-8 text-emerald-500" />
+              </div>
+            </div>
+
+            {/* Active Downloads */}
+            <div
+              onClick={() => navigate("/arr-activity")}
+              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-teal-500/10 hover:border-teal-500/50 transition-all group cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <Download className="w-3 h-3 text-teal-500" />
+                    {t("dashboard.stats.activeDownloads", "Downloads")}
+                  </p>
+                  <p className="text-2xl font-bold text-teal-500 mt-1">
+                    {stats.activeDownloads}
+                  </p>
+                </div>
+                <Download className="w-8 h-8 text-teal-500" />
+              </div>
             </div>
           </div>
         </div>
