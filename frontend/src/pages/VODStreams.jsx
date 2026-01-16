@@ -477,26 +477,29 @@ export default function VODStreams() {
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
 
-  // Helper function to check if activity is a library scan
+  // Helper function to check if activity is a library scan or background task
   const isScanActivity = (activity) => {
     const type = (activity.type || "").toLowerCase();
     const title = (activity.title || "").toLowerCase();
     const subtitle = (activity.subtitle || "").toLowerCase();
 
-    // Check type for scanner patterns
+    // Check type for scanner/background task patterns
     const isTypeScanner =
       type.includes("scanner") ||
       type.includes("scan") ||
+      type.includes("butler") ||
       type === "library.scanner" ||
       type === "library.update.section" ||
       type === "media.generate";
 
-    // Check title/subtitle for scanning patterns
+    // Check title/subtitle for scanning/butler patterns
     const isTitleScanner =
       title.includes("scanning") ||
       title.includes("scan ") ||
       title.startsWith("scan") ||
-      subtitle.includes("scanning");
+      title.includes("butler") ||
+      subtitle.includes("scanning") ||
+      subtitle.includes("butler");
 
     return isTypeScanner || isTitleScanner;
   };
