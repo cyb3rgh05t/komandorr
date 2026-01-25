@@ -488,18 +488,22 @@ export default function VODStreams() {
       type.includes("scanner") ||
       type.includes("scan") ||
       type.includes("butler") ||
+      type.includes("subscription") ||
       type === "library.scanner" ||
       type === "library.update.section" ||
       type === "media.generate";
 
-    // Check title/subtitle for scanning/butler patterns
+    // Check title/subtitle for scanning/butler/subscription patterns
     const isTitleScanner =
       title.includes("scanning") ||
       title.includes("scan ") ||
       title.startsWith("scan") ||
       title.includes("butler") ||
+      title.includes("subscription") ||
+      title.includes("processing") ||
       subtitle.includes("scanning") ||
-      subtitle.includes("butler");
+      subtitle.includes("butler") ||
+      subtitle.includes("subscription");
 
     return isTypeScanner || isTitleScanner;
   };
