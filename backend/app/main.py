@@ -27,6 +27,7 @@ from app.api.settings import router as settings_router
 from app.api.overseerr import router as overseerr_router
 from app.api.uploader import router as uploader_router
 from app.api.arr_activity import router as arr_activity_router
+from app.api.notifications import router as notifications_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -176,6 +177,7 @@ app.include_router(settings_router)
 app.include_router(overseerr_router)
 app.include_router(uploader_router)
 app.include_router(arr_activity_router)
+app.include_router(notifications_router)
 
 
 @app.get("/docs", include_in_schema=False)

@@ -18,6 +18,8 @@ import {
   Film,
   Plus,
   Trash2,
+  Bell,
+  Send,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -81,6 +83,18 @@ export default function Settings() {
   const [showArrKeys, setShowArrKeys] = useState({});
   const [arrTestStatus, setArrTestStatus] = useState({});
 
+  // Telegram notification settings state
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramNotifyOffline, setTelegramNotifyOffline] = useState(true);
+  const [telegramNotifyProblem, setTelegramNotifyProblem] = useState(true);
+  const [telegramNotifyRecovery, setTelegramNotifyRecovery] = useState(true);
+  const [showTelegramToken, setShowTelegramToken] = useState(false);
+  const [telegramTestStatus, setTelegramTestStatus] = useState(null);
+  const [telegramSaving, setTelegramSaving] = useState(false);
+  const [telegramTesting, setTelegramTesting] = useState(false);
+
   // Unsaved changes state
   const [pendingChanges, setPendingChanges] = useState(false);
 
@@ -129,7 +143,7 @@ export default function Settings() {
       }
       if (data.arr || data.instances) {
         setArrInstances(
-          (data.arr && data.arr.instances) || data.instances || []
+          (data.arr && data.arr.instances) || data.instances || [],
         );
       }
 
@@ -148,6 +162,9 @@ export default function Settings() {
           (data.arr && data.arr.instances) || data.instances || [];
         validateArrInstancesOnLoad(instances);
       }
+
+      // Load Telegram notification settings
+      loadTelegramSettings();
     } catch (error) {
       console.error("Failed to load settings:", error);
     }
@@ -215,6 +232,69 @@ export default function Settings() {
     }
   };
 
+  // Telegram notification functions
+  const loadTelegramSettings = async () => {
+    try {
+      const data = await api.get("/notifications/telegram");
+      if (data.telegram) {
+        setTelegramEnabled(data.telegram.enabled || false);
+        setTelegramBotToken(data.telegram.bot_token || "");
+        setTelegramChatId(data.telegram.chat_id || "");
+        setTelegramNotifyOffline(data.telegram.notify_offline ?? true);
+        setTelegramNotifyProblem(data.telegram.notify_problem ?? true);
+        setTelegramNotifyRecovery(data.telegram.notify_recovery ?? true);
+      }
+    } catch (error) {
+      console.error("Failed to load Telegram settings:", error);
+    }
+  };
+
+  const handleSaveTelegramSettings = async () => {
+    setTelegramSaving(true);
+    try {
+      await api.put("/notifications/telegram", {
+        enabled: telegramEnabled,
+        bot_token: telegramBotToken,
+        chat_id: telegramChatId,
+        notify_offline: telegramNotifyOffline,
+        notify_problem: telegramNotifyProblem,
+        notify_recovery: telegramNotifyRecovery,
+      });
+      toast.success(t("settings.telegramSaved") || "Telegram settings saved");
+      setTelegramTestStatus(null);
+    } catch (error) {
+      console.error("Failed to save Telegram settings:", error);
+      toast.error(
+        t("settings.telegramSaveError") || "Failed to save Telegram settings",
+      );
+    } finally {
+      setTelegramSaving(false);
+    }
+  };
+
+  const handleTestTelegram = async () => {
+    setTelegramTesting(true);
+    setTelegramTestStatus(null);
+    try {
+      const result = await api.post("/notifications/telegram/test");
+      if (result.success) {
+        setTelegramTestStatus("ok");
+        toast.success(result.message || "Test notification sent!");
+      } else {
+        setTelegramTestStatus("fail");
+        toast.error(result.message || "Failed to send test notification");
+      }
+    } catch (error) {
+      console.error("Failed to test Telegram:", error);
+      setTelegramTestStatus("fail");
+      toast.error(
+        t("settings.telegramTestError") || "Failed to send test notification",
+      );
+    } finally {
+      setTelegramTesting(false);
+    }
+  };
+
   const fetchAuthStatus = async () => {
     try {
       const credentials = sessionStorage.getItem("auth_credentials");
@@ -247,7 +327,7 @@ export default function Settings() {
         const data = await response.json();
         setAuthEnabled(data.enabled);
         toast.success(
-          data.enabled ? t("auth.authEnabled") : t("auth.authDisabled")
+          data.enabled ? t("auth.authEnabled") : t("auth.authDisabled"),
         );
 
         // If enabling auth, clear session and reload to show login screen
@@ -350,7 +430,8 @@ export default function Settings() {
   const handleValidateOverseerr = async () => {
     if (!overseerrUrl || !overseerrApiKey) {
       toast.error(
-        t("settings.overseerrFillAllFields") || "Please fill in URL and API Key"
+        t("settings.overseerrFillAllFields") ||
+          "Please fill in URL and API Key",
       );
       return;
     }
@@ -365,14 +446,14 @@ export default function Settings() {
         setOverseerrValid(true);
         toast.success(
           t("settings.overseerrValidationSuccess") ||
-            "Overseerr connection successful"
+            "Overseerr connection successful",
         );
       } else {
         setOverseerrValid(false);
         toast.error(
           result.message ||
             t("settings.overseerrValidationFailed") ||
-            "Cannot connect to Overseerr"
+            "Cannot connect to Overseerr",
         );
       }
     } catch (error) {
@@ -381,7 +462,7 @@ export default function Settings() {
       toast.error(
         error.message ||
           t("settings.overseerrValidationError") ||
-          "Failed to test connection"
+          "Failed to test connection",
       );
     } finally {
       setValidatingOverseerr(false);
@@ -916,8 +997,8 @@ export default function Settings() {
                       plexValid === true
                         ? "bg-green-600 hover:bg-green-700 text-white"
                         : plexValid === false
-                        ? "bg-red-600 hover:bg-red-700 text-white"
-                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
                     }`}
                   >
                     {validating ? (
@@ -1069,8 +1150,8 @@ export default function Settings() {
                       overseerrValid === true
                         ? "bg-green-600 hover:bg-green-700 text-white"
                         : overseerrValid === false
-                        ? "bg-red-600 hover:bg-red-700 text-white"
-                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
                     }`}
                   >
                     {validatingOverseerr ? (
@@ -1175,7 +1256,7 @@ export default function Settings() {
                           console.error("Uploader connection failed:", e);
                           setUploaderTestStatus("fail");
                           toast.error(
-                            e.message || "Cannot connect to Uploader"
+                            e.message || "Cannot connect to Uploader",
                           );
                         }
                       }}
@@ -1186,8 +1267,8 @@ export default function Settings() {
                         uploaderTestStatus === "ok"
                           ? "bg-green-600 hover:bg-green-700 text-white"
                           : uploaderTestStatus === "fail"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
                       }`}
                     >
                       {uploaderTestStatus === "loading" ? (
@@ -1242,6 +1323,289 @@ export default function Settings() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Telegram Notifications */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-theme-text">
+                {t("settings.telegramNotifications") ||
+                  "Telegram Notifications"}
+              </h3>
+              <p className="text-sm text-theme-muted">
+                {t("settings.telegramDescription") ||
+                  "Get notified when services go offline or have problems"}
+              </p>
+            </div>
+          </div>
+          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+            <div className="relative space-y-4">
+              {/* Enable Toggle */}
+              <div className="flex items-center justify-between p-3 bg-theme-hover/50 border border-theme rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("settings.enableTelegram") ||
+                      "Enable Telegram Notifications"}
+                  </span>
+                  <p className="text-xs text-theme-muted mt-1">
+                    {t("settings.enableTelegramHelp") ||
+                      "Send alerts when service status changes"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTelegramEnabled(!telegramEnabled)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    telegramEnabled ? "bg-green-500" : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      telegramEnabled ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Bot Token */}
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  {t("settings.telegramBotToken") || "Bot Token"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showTelegramToken ? "text" : "password"}
+                    value={telegramBotToken}
+                    onChange={(e) => setTelegramBotToken(e.target.value)}
+                    className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowTelegramToken(!showTelegramToken)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                  >
+                    {showTelegramToken ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-theme-muted">
+                  {t("settings.telegramBotTokenHelp") ||
+                    "Create a bot via @BotFather on Telegram to get your token"}
+                </p>
+              </div>
+
+              {/* Chat ID */}
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  {t("settings.telegramChatId") || "Chat ID"}
+                </label>
+                <input
+                  type="text"
+                  value={telegramChatId}
+                  onChange={(e) => setTelegramChatId(e.target.value)}
+                  className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                  placeholder="-1001234567890"
+                />
+                <p className="mt-2 text-xs text-theme-muted">
+                  {t("settings.telegramChatIdHelp") ||
+                    "Your personal chat ID or group/channel ID (use @userinfobot to find it)"}
+                </p>
+              </div>
+
+              {/* Notification Preferences */}
+              <div className="space-y-3 pt-2">
+                <span className="text-sm font-medium text-theme-text">
+                  {t("settings.notificationTypes") || "Notification Types"}
+                </span>
+
+                <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-theme-text">
+                      {t("settings.notifyOffline") || "Service Offline"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTelegramNotifyOffline(!telegramNotifyOffline)
+                    }
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      telegramNotifyOffline ? "bg-green-500" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                        telegramNotifyOffline ? "translate-x-5" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                    <span className="text-sm text-theme-text">
+                      {t("settings.notifyProblem") ||
+                        "Service Problems (Slow Response)"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTelegramNotifyProblem(!telegramNotifyProblem)
+                    }
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      telegramNotifyProblem ? "bg-green-500" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                        telegramNotifyProblem ? "translate-x-5" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-theme-text">
+                      {t("settings.notifyRecovery") || "Service Recovery"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTelegramNotifyRecovery(!telegramNotifyRecovery)
+                    }
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      telegramNotifyRecovery ? "bg-green-500" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                        telegramNotifyRecovery ? "translate-x-5" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleSaveTelegramSettings}
+                  disabled={telegramSaving}
+                  className="py-2 px-6 text-sm font-medium rounded-lg transition-all bg-theme-primary hover:bg-theme-primary/80 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                >
+                  {telegramSaving ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      {t("common.saving") || "Saving..."}
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <Save className="w-4 h-4" />
+                      {t("settings.saveTelegram") || "Save Telegram Settings"}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleTestTelegram}
+                  disabled={
+                    telegramTesting ||
+                    !telegramEnabled ||
+                    !telegramBotToken ||
+                    !telegramChatId
+                  }
+                  className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                    telegramTestStatus === "ok"
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : telegramTestStatus === "fail"
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                  }`}
+                >
+                  {telegramTesting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      {t("settings.testing") || "Testing..."}
+                    </span>
+                  ) : telegramTestStatus === "ok" ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <CheckCircle size={16} />
+                      {t("settings.testSuccess") || "Test Sent!"}
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <Send className="w-4 h-4" />
+                      {t("settings.testTelegram") || "Send Test"}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {telegramTestStatus === "fail" && (
+                <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <p>
+                    {t("settings.telegramTestFailed") ||
+                      "Failed to send test notification. Check your bot token and chat ID."}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1317,7 +1681,7 @@ export default function Settings() {
                               updateArrInstanceField(
                                 idx,
                                 "name",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -1335,7 +1699,7 @@ export default function Settings() {
                               updateArrInstanceField(
                                 idx,
                                 "type",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -1374,7 +1738,7 @@ export default function Settings() {
                                 updateArrInstanceField(
                                   idx,
                                   "api_key",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -1405,8 +1769,8 @@ export default function Settings() {
                                 arrTestStatus[inst.id] === "ok"
                                   ? "bg-green-600 hover:bg-green-700 text-white"
                                   : arrTestStatus[inst.id] === "fail"
-                                  ? "bg-red-600 hover:bg-red-700 text-white"
-                                  : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                                    ? "bg-red-600 hover:bg-red-700 text-white"
+                                    : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
                               }`}
                             >
                               {arrTestStatus[inst.id] === "loading" ? (

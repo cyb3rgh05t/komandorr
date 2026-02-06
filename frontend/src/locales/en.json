@@ -579,7 +579,27 @@
     "languages": {
       "en": "English",
       "de": "Deutsch"
-    }
+    },
+    "telegramNotifications": "Telegram Notifications",
+    "telegramDescription": "Get notified when services go offline or have problems",
+    "enableTelegram": "Enable Telegram Notifications",
+    "enableTelegramHelp": "Send alerts when service status changes",
+    "telegramBotToken": "Bot Token",
+    "telegramBotTokenHelp": "Create a bot via @BotFather on Telegram to get your token",
+    "telegramChatId": "Chat ID",
+    "telegramChatIdHelp": "Your personal chat ID or group/channel ID (use @userinfobot to find it)",
+    "notificationTypes": "Notification Types",
+    "notifyOffline": "Service Offline",
+    "notifyProblem": "Service Problems (Slow Response)",
+    "notifyRecovery": "Service Recovery",
+    "saveTelegram": "Save Telegram Settings",
+    "testTelegram": "Send Test",
+    "telegramSaved": "Telegram settings saved",
+    "telegramSaveError": "Failed to save Telegram settings",
+    "telegramTestError": "Failed to send test notification",
+    "telegramTestFailed": "Failed to send test notification. Check your bot token and chat ID.",
+    "testSuccess": "Test Sent!",
+    "testing": "Testing..."
   },
   "userAccounts": {
     "title": "User Accounts",

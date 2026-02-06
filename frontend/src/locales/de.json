@@ -512,7 +512,27 @@
     "languages": {
       "en": "English",
       "de": "Deutsch"
-    }
+    },
+    "telegramNotifications": "Telegram Benachrichtigungen",
+    "telegramDescription": "Erhalte Benachrichtigungen wenn Services offline oder Probleme haben",
+    "enableTelegram": "Telegram Benachrichtigungen aktivieren",
+    "enableTelegramHelp": "Sende Alerts bei Service-Status-Änderungen",
+    "telegramBotToken": "Bot Token",
+    "telegramBotTokenHelp": "Erstelle einen Bot via @BotFather auf Telegram um deinen Token zu erhalten",
+    "telegramChatId": "Chat ID",
+    "telegramChatIdHelp": "Deine persönliche Chat ID oder Gruppen-/Kanal-ID (nutze @userinfobot um sie zu finden)",
+    "notificationTypes": "Benachrichtigungstypen",
+    "notifyOffline": "Service Offline",
+    "notifyProblem": "Service Probleme (Langsame Antwort)",
+    "notifyRecovery": "Service Wiederherstellung",
+    "saveTelegram": "Telegram Einstellungen speichern",
+    "testTelegram": "Test senden",
+    "telegramSaved": "Telegram Einstellungen gespeichert",
+    "telegramSaveError": "Fehler beim Speichern der Telegram Einstellungen",
+    "telegramTestError": "Fehler beim Senden der Test-Benachrichtigung",
+    "telegramTestFailed": "Fehler beim Senden der Test-Benachrichtigung. Prüfe Bot Token und Chat ID.",
+    "testSuccess": "Test gesendet!",
+    "testing": "Teste..."
   },
   "common": {
     "loading": "Lade...",
