@@ -333,21 +333,21 @@ export default function VODStreams() {
   useEffect(() => {
     localStorage.setItem(
       "plexActivityTimestamps",
-      JSON.stringify(activityTimestamps)
+      JSON.stringify(activityTimestamps),
     );
   }, [activityTimestamps]);
 
   useEffect(() => {
     localStorage.setItem(
       "plexActivityProgress",
-      JSON.stringify(activityProgress)
+      JSON.stringify(activityProgress),
     );
   }, [activityProgress]);
 
   useEffect(() => {
     localStorage.setItem(
       "plexCompletedActivities",
-      JSON.stringify(completedActivities)
+      JSON.stringify(completedActivities),
     );
   }, [completedActivities]);
 
@@ -473,7 +473,7 @@ export default function VODStreams() {
 
   const timeUntilNextRefresh = Math.max(
     0,
-    REFRESH_INTERVAL - (Date.now() - lastRefreshTime)
+    REFRESH_INTERVAL - (Date.now() - lastRefreshTime),
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
 
@@ -651,7 +651,7 @@ export default function VODStreams() {
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {
                   streamActivities.filter(
-                    (a) => a.type === "download" || a.type === "media.download"
+                    (a) => a.type === "download" || a.type === "media.download",
                   ).length
                 }
               </p>
@@ -825,7 +825,7 @@ export default function VODStreams() {
               (
               {
                 streamActivities.filter(
-                  (a) => a.type === "download" || a.type === "media.download"
+                  (a) => a.type === "download" || a.type === "media.download",
                 ).length
               }
               )
@@ -869,7 +869,7 @@ export default function VODStreams() {
               (
               {
                 streamActivities.filter(
-                  (a) => a.transcodeSession && a.state === "playing"
+                  (a) => a.transcodeSession && a.state === "playing",
                 ).length
               }
               )
@@ -894,7 +894,7 @@ export default function VODStreams() {
               (
               {
                 streamActivities.filter(
-                  (a) => a.state === "playing" && !a.transcodeSession
+                  (a) => a.state === "playing" && !a.transcodeSession,
                 ).length
               }
               )
@@ -1084,7 +1084,7 @@ export default function VODStreams() {
                           </h3>
                           <p className="text-theme-muted mb-6">
                             {`${t(
-                              "vodStreams.noMatchingDescription"
+                              "vodStreams.noMatchingDescription",
                             )} "${searchQuery}"`}
                           </p>
                           <button
