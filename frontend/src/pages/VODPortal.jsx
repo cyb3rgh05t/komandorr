@@ -501,11 +501,11 @@ export default function VODPortal() {
       </div>
 
       {/* Create User Form */}
-      <div className="bg-theme-card rounded-xl border border-green-500/30 shadow-lg overflow-hidden">
+      <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
           <div className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-green-500" />
+            <UserPlus className="w-5 h-5 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text">
               {t("vodPortal.addUserTitle") || "Add User to StreamNet VOD"}
             </h3>
@@ -513,7 +513,7 @@ export default function VODPortal() {
         </div>
         <div className="p-4 sm:p-6 space-y-4 relative">
           {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16" />
 
           <div className="relative">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -629,16 +629,16 @@ export default function VODPortal() {
       </div>
 
       {/* Users List */}
-      <div className="bg-theme-card rounded-xl border border-blue-500/30 shadow-lg overflow-hidden">
+      <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-3">
+        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-500" />
+            <Users className="w-5 h-5 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text">
               {t("vodPortal.existingUsers") || "Existing Users"}
             </h3>
             {users.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
+              <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
                 {users.length}
               </span>
             )}

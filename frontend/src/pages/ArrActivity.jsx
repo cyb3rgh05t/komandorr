@@ -516,24 +516,22 @@ export default function ArrActivity() {
           const totalPages = getTotalPages(totalRecords, inst.id);
 
           const isSonarr = inst.type === "sonarr";
-          const borderColor = isSonarr
-            ? "border-purple-500/30"
-            : "border-blue-500/30";
-          const headerBg = isSonarr ? "bg-purple-500/10" : "bg-blue-500/10";
-          const iconColor = isSonarr ? "text-purple-500" : "text-blue-500";
-          const badgeBg = isSonarr ? "bg-purple-500/20" : "bg-blue-500/20";
-          const badgeText = isSonarr ? "text-purple-400" : "text-blue-400";
+          const borderColor = "border-theme";
+          const headerBg = "bg-theme-primary/10";
+          const iconColor = "text-theme-primary";
+          const badgeBg = "bg-theme-primary/20";
+          const badgeText = "text-theme-primary";
 
           return (
             <div key={inst.id}>
               {inst.error ? (
-                <div className="bg-theme-card rounded-xl border border-red-500/30 shadow-lg overflow-hidden">
-                  <div className="bg-red-500/10 border-b border-red-500/30 px-4 py-3">
+                <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+                  <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
                     <div className="flex items-center gap-2">
                       {isSonarr ? (
-                        <Tv className="w-5 h-5 text-red-500" />
+                        <Tv className="w-5 h-5 text-theme-primary" />
                       ) : (
-                        <Film className="w-5 h-5 text-red-500" />
+                        <Film className="w-5 h-5 text-theme-primary" />
                       )}
                       <h3 className="text-lg font-semibold text-theme-text">
                         {inst.name}

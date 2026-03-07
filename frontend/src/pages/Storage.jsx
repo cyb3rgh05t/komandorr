@@ -783,59 +783,59 @@ const Storage = () => {
           </div>
 
           {/* Total Capacity (UnionFS only) */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Database className="w-3 h-3 text-purple-500" />
+                  <Database className="w-3 h-3 text-theme-primary" />
                   {t("storage.totalCapacity", "Capacity")}
                 </p>
-                <p className="text-2xl font-bold text-purple-500 mt-1">
+                <p className="text-2xl font-bold text-theme-primary mt-1">
                   {formatStorageSize(unionfsStats.capacity)}
                 </p>
               </div>
-              <Database className="w-8 h-8 text-purple-500/50" />
+              <Database className="w-8 h-8 text-theme-primary/50" />
             </div>
           </div>
 
           {/* Total Used (UnionFS only) */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <HardDrive className="w-3 h-3 text-blue-500" />
+                  <HardDrive className="w-3 h-3 text-theme-primary" />
                   {t("storage.totalUsed", "Used")}
                 </p>
-                <p className="text-2xl font-bold text-blue-500 mt-1">
+                <p className="text-2xl font-bold text-theme-primary mt-1">
                   {formatStorageSize(unionfsStats.used)}
                 </p>
               </div>
-              <HardDrive className="w-8 h-8 text-blue-500/50" />
+              <HardDrive className="w-8 h-8 text-theme-primary/50" />
             </div>
           </div>
 
           {/* Total Free (UnionFS only) */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-green-500" />
+                  <Activity className="w-3 h-3 text-theme-primary" />
                   {t("storage.totalFree", "Free")}
                 </p>
-                <p className="text-2xl font-bold text-green-500 mt-1">
+                <p className="text-2xl font-bold text-theme-primary mt-1">
                   {formatStorageSize(unionfsStats.free)}
                 </p>
               </div>
-              <Activity className="w-8 h-8 text-green-500/50" />
+              <Activity className="w-8 h-8 text-theme-primary/50" />
             </div>
           </div>
 
           {/* RAID/ZFS Status */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
             <div className="flex items-center justify-between">
               <div className="w-full">
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Disc3 className="w-3 h-3 text-yellow-500" />
+                  <Disc3 className="w-3 h-3 text-theme-primary" />
                   {t("storage.raidStatus", "Arrays Status")}
                 </p>
                 <div className="mt-2 space-y-1.5">
@@ -899,7 +899,7 @@ const Storage = () => {
                   </div>
                 </div>
               </div>
-              <Disc3 className="w-8 h-8 text-yellow-500/50 flex-shrink-0" />
+              <Disc3 className="w-8 h-8 text-theme-primary/50 flex-shrink-0" />
             </div>
           </div>
         </div>
@@ -908,7 +908,7 @@ const Storage = () => {
       {/* Loading state */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-purple-400" size={32} />
+          <Loader2 className="animate-spin text-theme-primary" size={32} />
         </div>
       ) : servicesWithStorage.length === 0 ? (
         /* Empty state when no storage agents are installed/configured */
@@ -974,7 +974,7 @@ const Storage = () => {
           {unionfsServices.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
                   <HardDrive className="w-5 h-5" />
                 </div>
                 <div>
@@ -1002,7 +1002,7 @@ const Storage = () => {
           {raidZfsServices.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
+                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
                   <Disc3 className="w-5 h-5" />
                 </div>
                 <div>

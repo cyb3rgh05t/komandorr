@@ -905,14 +905,14 @@ export default function VODStreams() {
 
       {/* Library Scans Section */}
       {scanActivities.length > 0 && (
-        <div className="bg-theme-card border border-purple-500/30 rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
+        <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
             <div className="flex items-center gap-2">
-              <HardDrive className="w-5 h-5 text-purple-500 animate-pulse" />
+              <HardDrive className="w-5 h-5 text-theme-primary animate-pulse" />
               <h3 className="text-lg font-semibold text-theme-text">
                 {t("vodStreams.libraryScans.title", "Library Scans")}
               </h3>
-              <span className="ml-2 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+              <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
                 {scanActivities.length}{" "}
                 {t("vodStreams.libraryScans.active", "active")}
               </span>
@@ -995,14 +995,14 @@ export default function VODStreams() {
       )}
 
       {/* Downloads/Streams Content */}
-      <div className="bg-theme-card border border-green-500/30 rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
           <div className="flex items-center gap-2">
-            <Download className="w-5 h-5 text-green-500" />
+            <Download className="w-5 h-5 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text">
               {t("vodStreams.downloads.title", "Downloads & Streams")}
             </h3>
-            <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+            <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
               {streamActivities.length}{" "}
               {t("vodStreams.downloads.active", "active")}
             </span>

@@ -786,17 +786,15 @@ const InvitesManager = () => {
       </div>
 
       {/* Invites Table */}
-      <div className="bg-theme-card border border-purple-500/30 rounded-xl shadow-lg overflow-hidden">
-        {/* Purple Header for Invites */}
-        <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-purple-400" />
-              <h3 className="text-base font-semibold text-purple-400">
-                {t("invites.title")}
-              </h3>
-            </div>
-            <span className="px-2.5 py-1 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        {/* Header for Invites */}
+        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Mail className="w-5 h-5 text-theme-primary" />
+            <h3 className="text-base font-semibold text-theme-text">
+              {t("invites.title")}
+            </h3>
+            <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
               {invites.length}
             </span>
           </div>
