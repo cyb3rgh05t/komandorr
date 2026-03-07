@@ -64,7 +64,7 @@ const StorageChart = ({ data = [], serviceId, t }) => {
 
   const linePath = `M ${points.join(" L ")}`;
   const areaPath = `M 0,${height} L ${points.join(
-    " L "
+    " L ",
   )} L ${width},${height} Z`;
 
   return (
@@ -162,27 +162,27 @@ const StorageServiceCard = ({ service, t }) => {
 
   const totalCapacity = storage.storage_paths.reduce(
     (sum, path) => sum + path.total,
-    0
+    0,
   );
   const totalUsed = storage.storage_paths.reduce(
     (sum, path) => sum + path.used,
-    0
+    0,
   );
   const totalFree = storage.storage_paths.reduce(
     (sum, path) => sum + path.free,
-    0
+    0,
   );
   const averageUsage =
     totalCapacity > 0 ? (totalUsed / totalCapacity) * 100 : 0;
 
   const healthyRaids = storage.raid_arrays.filter(
-    (r) => r.status === "healthy"
+    (r) => r.status === "healthy",
   ).length;
   const degradedRaids = storage.raid_arrays.filter(
-    (r) => r.status === "degraded"
+    (r) => r.status === "degraded",
   ).length;
   const failedRaids = storage.raid_arrays.filter(
-    (r) => !["healthy", "degraded", "recovering"].includes(r.status)
+    (r) => !["healthy", "degraded", "recovering"].includes(r.status),
   ).length;
 
   // Include ZFS pools in RAID counts
@@ -190,7 +190,7 @@ const StorageServiceCard = ({ service, t }) => {
   const healthyZfs = zfsPools.filter((p) => p.status === "healthy").length;
   const degradedZfs = zfsPools.filter((p) => p.status === "degraded").length;
   const failedZfs = zfsPools.filter(
-    (p) => !["healthy", "degraded", "recovering"].includes(p.status)
+    (p) => !["healthy", "degraded", "recovering"].includes(p.status),
   ).length;
 
   const totalHealthy = healthyRaids + healthyZfs;
@@ -219,8 +219,8 @@ const StorageServiceCard = ({ service, t }) => {
                 service.status === "online"
                   ? "bg-green-500/20 text-green-400"
                   : service.status === "problem"
-                  ? "bg-yellow-500/20 text-yellow-400"
-                  : "bg-red-500/20 text-red-400"
+                    ? "bg-yellow-500/20 text-yellow-400"
+                    : "bg-red-500/20 text-red-400"
               }`}
             >
               {service.status}
@@ -301,8 +301,8 @@ const StorageServiceCard = ({ service, t }) => {
               averageUsage > 90
                 ? "bg-red-500"
                 : averageUsage > 75
-                ? "bg-yellow-500"
-                : "bg-purple-500"
+                  ? "bg-yellow-500"
+                  : "bg-purple-500"
             }`}
             style={{ width: `${Math.min(averageUsage, 100)}%` }}
           />
@@ -458,8 +458,8 @@ const StorageServiceCard = ({ service, t }) => {
                                 disk.state === "active"
                                   ? "bg-green-500/10 text-green-400"
                                   : disk.state === "spare"
-                                  ? "bg-yellow-500/10 text-yellow-400"
-                                  : "bg-red-500/10 text-red-400"
+                                    ? "bg-yellow-500/10 text-yellow-400"
+                                    : "bg-red-500/10 text-red-400"
                               }`}
                             >
                               {disk.device} ({disk.state})
@@ -521,8 +521,8 @@ const StorageServiceCard = ({ service, t }) => {
                                 disk.state === "online"
                                   ? "bg-green-500/10 text-green-400"
                                   : disk.state === "degraded"
-                                  ? "bg-yellow-500/10 text-yellow-400"
-                                  : "bg-red-500/10 text-red-400"
+                                    ? "bg-yellow-500/10 text-yellow-400"
+                                    : "bg-red-500/10 text-red-400"
                               }`}
                               title={`Errors: R=${disk.read_errors || 0} W=${
                                 disk.write_errors || 0
@@ -625,7 +625,7 @@ const Storage = () => {
     (service) =>
       service.storage &&
       service.storage.storage_paths &&
-      service.storage.storage_paths.length > 0
+      service.storage.storage_paths.length > 0,
   );
 
   const filteredServices = servicesWithStorage.filter(
@@ -633,14 +633,14 @@ const Storage = () => {
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.storage?.hostname || "")
         .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+        .includes(searchTerm.toLowerCase()),
   );
 
   // Separate services into UnionFS and RAID/ZFS groups
   const unionfsServices = filteredServices.filter((service) =>
     service.storage?.storage_paths?.some((path) =>
-      path.path.toLowerCase().includes("unionfs")
-    )
+      path.path.toLowerCase().includes("unionfs"),
+    ),
   );
 
   const raidZfsServices = filteredServices.filter(
@@ -648,8 +648,8 @@ const Storage = () => {
       (service.storage?.raid_arrays?.length > 0 ||
         service.storage?.zfs_pools?.length > 0) &&
       !service.storage?.storage_paths?.some((path) =>
-        path.path.toLowerCase().includes("unionfs")
-      )
+        path.path.toLowerCase().includes("unionfs"),
+      ),
   );
 
   const handleRefresh = async () => {
@@ -693,7 +693,7 @@ const Storage = () => {
       });
       return acc;
     },
-    { capacity: 0, used: 0, free: 0 }
+    { capacity: 0, used: 0, free: 0 },
   );
 
   const raidStats = servicesWithStorage.reduce(
@@ -707,7 +707,7 @@ const Storage = () => {
       });
       return acc;
     },
-    { total: 0, healthy: 0, degraded: 0, failed: 0 }
+    { total: 0, healthy: 0, degraded: 0, failed: 0 },
   );
 
   const zfsStats = servicesWithStorage.reduce(
@@ -721,7 +721,7 @@ const Storage = () => {
       });
       return acc;
     },
-    { total: 0, healthy: 0, degraded: 0, failed: 0 }
+    { total: 0, healthy: 0, degraded: 0, failed: 0 },
   );
 
   return (
@@ -745,7 +745,7 @@ const Storage = () => {
         <button
           onClick={handleRefresh}
           disabled={isRefreshing || isFetching || isFetchingSummary}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
         >
           <RefreshCw
             size={16}
@@ -924,7 +924,7 @@ const Storage = () => {
             <p className="text-sm text-theme-text-muted max-w-md mx-auto">
               {t(
                 "storage.emptyState.description",
-                "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time."
+                "Install the Storage Agent on your servers to monitor disk usage, RAID arrays, and ZFS pools in real-time.",
               )}
             </p>
           </div>
@@ -933,7 +933,7 @@ const Storage = () => {
               href="https://github.com/cyb3rgh05t/komandorr/blob/main/storage/README.MD"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary-hover text-black rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:scale-105"
             >
               <HardDrive size={16} />
               {t("storage.emptyState.setupGuide", "Setup Storage Agent")}
@@ -954,7 +954,7 @@ const Storage = () => {
             <p className="text-sm text-theme-text-muted max-w-md mx-auto">
               {t(
                 "storage.noSearchResultsDescription",
-                "No servers match your search for"
+                "No servers match your search for",
               )}{" "}
               "{searchTerm}"
             </p>

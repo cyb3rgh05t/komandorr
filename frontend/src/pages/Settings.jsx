@@ -651,7 +651,7 @@ export default function Settings() {
             setPendingChanges(false);
           }}
           disabled={settingsLoading || !pendingChanges}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           <Save className="text-theme-primary w-4 h-4" />
           {settingsLoading ? t("settings.saving") : t("settings.saveNow")}
@@ -672,10 +672,10 @@ export default function Settings() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-theme-hover text-white shadow-lg"
-                    : "text-theme-text hover:bg-theme-hover"
+                    ? "bg-theme-primary text-black shadow-lg"
+                    : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -778,7 +778,7 @@ export default function Settings() {
                           type="text"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           placeholder={t("auth.enterUsername")}
                           required
                         />
@@ -792,7 +792,7 @@ export default function Settings() {
                           type="password"
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           placeholder={t("auth.enterPassword")}
                           required
                         />
@@ -806,7 +806,7 @@ export default function Settings() {
                           type="password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           placeholder={t("auth.enterPassword")}
                           required
                         />
@@ -820,7 +820,7 @@ export default function Settings() {
                           type="password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           placeholder={t("auth.enterPassword")}
                           required
                         />
@@ -1006,7 +1006,7 @@ export default function Settings() {
                             setGithubToken(e.target.value);
                             setPendingChanges(true);
                           }}
-                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                         />
                         <button
@@ -1038,7 +1038,7 @@ export default function Settings() {
                             setTmdbApiKey(e.target.value);
                             setPendingChanges(true);
                           }}
-                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                         />
                         <button
@@ -1096,7 +1096,7 @@ export default function Settings() {
                         setPlexValid(null);
                         setPendingChanges(true);
                       }}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="http://192.168.1.100:32400"
                     />
                   </div>
@@ -1114,7 +1114,7 @@ export default function Settings() {
                           setPlexValid(null);
                           setPendingChanges(true);
                         }}
-                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                         placeholder="XXXXXXXXXXXXXXXXXXXX"
                       />
                       <button
@@ -1224,7 +1224,7 @@ export default function Settings() {
                         setOverseerrValid(null);
                         setPendingChanges(true);
                       }}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="https://overseerr.example.com/api/v1/user"
                     />
                     <p className="mt-2 text-xs text-theme-muted">
@@ -1246,7 +1246,7 @@ export default function Settings() {
                           setOverseerrValid(null);
                           setPendingChanges(true);
                         }}
-                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                         placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                       />
                       <button
@@ -1279,7 +1279,7 @@ export default function Settings() {
                         setDefaultEmailDomain(e.target.value);
                         setPendingChanges(true);
                       }}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="example.com"
                     />
                     <p className="mt-2 text-xs text-theme-muted">
@@ -1376,7 +1376,7 @@ export default function Settings() {
                         setUploaderTestStatus(null);
                         setPendingChanges(true);
                       }}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="http://uploader:8080"
                     />
                     <p className="mt-2 text-xs text-theme-muted">
@@ -1546,7 +1546,7 @@ export default function Settings() {
                         setTelegramBotToken(e.target.value);
                         setPendingChanges(true);
                       }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
                     />
                     <button
@@ -1579,7 +1579,7 @@ export default function Settings() {
                       setTelegramChatId(e.target.value);
                       setPendingChanges(true);
                     }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                     placeholder="-1001234567890"
                   />
                   <p className="mt-2 text-xs text-theme-muted">
@@ -1816,7 +1816,7 @@ export default function Settings() {
                                   e.target.value,
                                 )
                               }
-                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                               placeholder="Sonarr 4K"
                             />
                           </div>
@@ -1834,7 +1834,7 @@ export default function Settings() {
                                   e.target.value,
                                 )
                               }
-                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             >
                               <option value="sonarr">Sonarr</option>
                               <option value="radarr">Radarr</option>
@@ -1857,7 +1857,7 @@ export default function Settings() {
                                   e.target.value,
                                 )
                               }
-                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                               placeholder="http://localhost:8989"
                             />
                           </div>
@@ -1881,7 +1881,7 @@ export default function Settings() {
                                     e.target.value,
                                   )
                                 }
-                                className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                                className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                                 placeholder="XXXXXXXXXXXXXXXXXXXX"
                               />
                               <button
@@ -1993,7 +1993,7 @@ export default function Settings() {
                             type="text"
                             value={newArrName}
                             onChange={(e) => setNewArrName(e.target.value)}
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             placeholder="Radarr 4K"
                           />
                         </div>
@@ -2004,7 +2004,7 @@ export default function Settings() {
                           <select
                             value={newArrType}
                             onChange={(e) => setNewArrType(e.target.value)}
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           >
                             <option value="sonarr">Sonarr</option>
                             <option value="radarr">Radarr</option>
@@ -2018,7 +2018,7 @@ export default function Settings() {
                             type="url"
                             value={newArrUrl}
                             onChange={(e) => setNewArrUrl(e.target.value)}
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             placeholder="http://localhost:7878"
                           />
                         </div>
@@ -2032,7 +2032,7 @@ export default function Settings() {
                             type="text"
                             value={newArrApiKey}
                             onChange={(e) => setNewArrApiKey(e.target.value)}
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             placeholder="XXXXXXXXXXXXXXXXXXXX"
                           />
                         </div>

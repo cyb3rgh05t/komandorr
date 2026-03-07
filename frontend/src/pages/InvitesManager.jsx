@@ -61,7 +61,7 @@ const InvitesManager = () => {
       if (data && data.length > 0) {
         console.log(
           "First invite full object:",
-          JSON.stringify(data[0], null, 2)
+          JSON.stringify(data[0], null, 2),
         );
         console.log("First invite plex_server:", data[0].plex_server);
         console.log("First invite keys:", Object.keys(data[0]));
@@ -271,7 +271,7 @@ const InvitesManager = () => {
       } else {
         const expiryDate = new Date();
         expiryDate.setDate(
-          expiryDate.getDate() + parseInt(editForm.expires_in_days)
+          expiryDate.getDate() + parseInt(editForm.expires_in_days),
         );
         updateData.expires_at = expiryDate.toISOString();
       }
@@ -288,7 +288,7 @@ const InvitesManager = () => {
       queryClient.invalidateQueries(["invites"]);
       queryClient.invalidateQueries(["inviteStats"]);
       toast.success(
-        t("invites.inviteUpdated") || "Invite updated successfully"
+        t("invites.inviteUpdated") || "Invite updated successfully",
       );
     } catch (error) {
       console.error("Error updating invite:", error);
@@ -319,7 +319,7 @@ const InvitesManager = () => {
       if (error.message && error.message.includes("active user")) {
         toast.error(
           t("invites.errorDeletingWithUsers") ||
-            "Cannot delete invite with active users. Remove users first from User Accounts page."
+            "Cannot delete invite with active users. Remove users first from User Accounts page.",
         );
       } else {
         toast.error(t("invites.errorDeleting"));
@@ -434,7 +434,7 @@ const InvitesManager = () => {
             placeholder={t("invites.searchPlaceholder") || "Search invites..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
           />
         </div>
 
@@ -449,7 +449,7 @@ const InvitesManager = () => {
               toast.success(t("invites.refreshed"));
             }}
             disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
@@ -465,7 +465,7 @@ const InvitesManager = () => {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
           >
             <Plus size={16} className="text-theme-primary" />
             <span className="text-xs sm:text-sm">
@@ -561,7 +561,7 @@ const InvitesManager = () => {
                         inv.users.length > 0 &&
                         !inv.is_expired &&
                         !inv.is_exhausted &&
-                        inv.is_active
+                        inv.is_active,
                     ).length > 0 && (
                       <p className="text-sm text-theme-text-muted">
                         (
@@ -572,7 +572,7 @@ const InvitesManager = () => {
                               inv.users.length > 0 &&
                               !inv.is_expired &&
                               !inv.is_exhausted &&
-                              inv.is_active
+                              inv.is_active,
                           ).length
                         }{" "}
                         redeemed)
@@ -685,16 +685,16 @@ const InvitesManager = () => {
         <div className="flex gap-2 min-w-max">
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               filter === "all"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("invites.filter.all")}
             <span
               className={`ml-2 text-xs ${
-                filter === "all" ? "text-white/80" : "text-theme-text-muted"
+                filter === "all" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
               ({invites.length})
@@ -702,22 +702,23 @@ const InvitesManager = () => {
           </button>
           <button
             onClick={() => setFilter("active")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               filter === "active"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("invites.filter.active")}
             <span
               className={`ml-2 text-xs ${
-                filter === "active" ? "text-white/80" : "text-theme-text-muted"
+                filter === "active" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
               (
               {
                 invites.filter(
-                  (inv) => !inv.is_expired && !inv.is_exhausted && inv.is_active
+                  (inv) =>
+                    !inv.is_expired && !inv.is_exhausted && inv.is_active,
                 ).length
               }
               )
@@ -725,17 +726,17 @@ const InvitesManager = () => {
           </button>
           <button
             onClick={() => setFilter("redeemed")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               filter === "redeemed"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("invites.filter.redeemed")}
             <span
               className={`ml-2 text-xs ${
                 filter === "redeemed"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -749,16 +750,16 @@ const InvitesManager = () => {
           </button>
           <button
             onClick={() => setFilter("expired")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               filter === "expired"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("invites.filter.expired")}
             <span
               className={`ml-2 text-xs ${
-                filter === "expired" ? "text-white/80" : "text-theme-text-muted"
+                filter === "expired" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
               ({invites.filter((inv) => inv.is_expired).length})
@@ -766,16 +767,16 @@ const InvitesManager = () => {
           </button>
           <button
             onClick={() => setFilter("used-up")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               filter === "used-up"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("invites.filter.usedUp")}
             <span
               className={`ml-2 text-xs ${
-                filter === "used-up" ? "text-white/80" : "text-theme-text-muted"
+                filter === "used-up" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
               ({invites.filter((inv) => inv.is_exhausted).length})
@@ -803,32 +804,32 @@ const InvitesManager = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-hover border-b border-theme">
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+              <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.code") || "Code"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.status") || "Status"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.usage") || "Usage"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.expires") || "Expires"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.libraries") || "Libraries"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.server") || "Server"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.permissions") || "Permissions"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.redeemedBy") || "Redeemed By"}
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-right py-3 px-4 text-sm font-semibold text-black">
                   {t("invites.fields.actions") || "Actions"}
                 </th>
               </tr>
@@ -872,13 +873,13 @@ const InvitesManager = () => {
                 const totalItems = filteredInvites.length;
                 const totalPages = Math.max(
                   1,
-                  Math.ceil(totalItems / itemsPerPage)
+                  Math.ceil(totalItems / itemsPerPage),
                 );
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
                 const paginatedInvites = filteredInvites.slice(
                   startIndex,
-                  endIndex
+                  endIndex,
                 );
 
                 // Store for use in pagination component below
@@ -907,7 +908,7 @@ const InvitesManager = () => {
                       .map((id) => id.trim());
                     return libraryIds.map((id) => {
                       const lib = plexLibraries.find(
-                        (l) => l.id.toString() === id
+                        (l) => l.id.toString() === id,
                       );
                       return lib
                         ? { name: lib.name, type: lib.type }
@@ -964,8 +965,8 @@ const InvitesManager = () => {
                               usagePercentage >= 100
                                 ? "text-red-400"
                                 : usagePercentage >= 75
-                                ? "text-orange-400"
-                                : "text-theme-text"
+                                  ? "text-orange-400"
+                                  : "text-theme-text"
                             }`}
                           >
                             {invite.used_count}/{invite.usage_limit}
@@ -984,8 +985,8 @@ const InvitesManager = () => {
                             invite.is_expired
                               ? "text-red-400 font-semibold"
                               : invite.expires_at
-                              ? "text-theme-text"
-                              : "text-theme-primary"
+                                ? "text-theme-text"
+                                : "text-theme-primary"
                           }`}
                         >
                           <FormattedDate date={invite.expires_at} />
@@ -1000,10 +1001,10 @@ const InvitesManager = () => {
                               library.type === "movie"
                                 ? Film
                                 : library.type === "show"
-                                ? Tv
-                                : library.type === "music"
-                                ? Music
-                                : null;
+                                  ? Tv
+                                  : library.type === "music"
+                                    ? Music
+                                    : null;
 
                             return (
                               <span
@@ -1012,12 +1013,12 @@ const InvitesManager = () => {
                                   library.type === "all"
                                     ? "bg-cyan-500/15 text-cyan-400"
                                     : library.type === "movie"
-                                    ? "bg-blue-500/15 text-blue-400"
-                                    : library.type === "show"
-                                    ? "bg-purple-500/15 text-purple-400"
-                                    : library.type === "music"
-                                    ? "bg-pink-500/15 text-pink-400"
-                                    : "bg-gray-500/15 text-gray-400"
+                                      ? "bg-blue-500/15 text-blue-400"
+                                      : library.type === "show"
+                                        ? "bg-purple-500/15 text-purple-400"
+                                        : library.type === "music"
+                                          ? "bg-pink-500/15 text-pink-400"
+                                          : "bg-gray-500/15 text-gray-400"
                                 }`}
                                 title={library.name}
                               >
@@ -1238,7 +1239,7 @@ const InvitesManager = () => {
               <button
                 onClick={() =>
                   setCurrentPage(
-                    Math.min(paginationData.totalPages, currentPage + 1)
+                    Math.min(paginationData.totalPages, currentPage + 1),
                   )
                 }
                 disabled={currentPage === paginationData.totalPages}
@@ -1290,7 +1291,7 @@ const InvitesManager = () => {
                     })
                   }
                   placeholder={t("invites.form.customCodePlaceholder")}
-                  className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all"
+                  className="w-full px-4 py-3 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-all"
                   maxLength="32"
                 />
                 <p className="text-xs text-theme-muted">
@@ -1307,7 +1308,7 @@ const InvitesManager = () => {
                   <button
                     type="button"
                     onClick={() => setUsageDropdownOpen(!usageDropdownOpen)}
-                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
+                    className="w-full px-4 py-3 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
                   >
                     <span>
                       {createForm.usage_limit || t("invites.form.unlimited")}
@@ -1366,7 +1367,7 @@ const InvitesManager = () => {
                   <button
                     type="button"
                     onClick={() => setExpiryDropdownOpen(!expiryDropdownOpen)}
-                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
+                    className="w-full px-4 py-3 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 cursor-pointer transition-all flex items-center justify-between"
                   >
                     <span>
                       {createForm.expires_in_days || t("invites.fields.never")}
@@ -1412,7 +1413,7 @@ const InvitesManager = () => {
                             {value || t("invites.fields.never")}
                             {value && ` ${t("invites.form.days")}`}
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   )}
@@ -1425,12 +1426,12 @@ const InvitesManager = () => {
                   {t("invites.form.permissionsTitle")}
                 </label>
 
-                <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
+                <label className="group/toggle flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-theme-text">
+                    <div className="text-sm font-medium text-theme-text group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.allowSync")}
                     </div>
-                    <div className="text-xs text-theme-muted">
+                    <div className="text-xs text-theme-muted group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.allowSyncDesc")}
                     </div>
                   </div>
@@ -1456,12 +1457,12 @@ const InvitesManager = () => {
                   </button>
                 </label>
 
-                <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
+                <label className="group/toggle flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-theme-text">
+                    <div className="text-sm font-medium text-theme-text group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.allowLiveTV")}
                     </div>
-                    <div className="text-xs text-theme-muted">
+                    <div className="text-xs text-theme-muted group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.allowLiveTVDesc")}
                     </div>
                   </div>
@@ -1487,12 +1488,12 @@ const InvitesManager = () => {
                   </button>
                 </label>
 
-                <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
+                <label className="group/toggle flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-theme-text">
+                    <div className="text-sm font-medium text-theme-text group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.plexHome")}
                     </div>
-                    <div className="text-xs text-theme-muted">
+                    <div className="text-xs text-theme-muted group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.plexHomeDesc")}
                     </div>
                   </div>
@@ -1524,12 +1525,12 @@ const InvitesManager = () => {
                 </label>
 
                 {/* All Libraries Option */}
-                <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
+                <label className="group/toggle flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-primary/10 transition-colors">
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-theme-text">
+                    <div className="text-sm font-medium text-theme-text group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.allLibrariesTitle")}
                     </div>
-                    <div className="text-xs text-theme-muted">
+                    <div className="text-xs text-theme-muted group-hover/toggle:text-theme-primary transition-colors">
                       {t("invites.form.allLibrariesDesc")}
                     </div>
                   </div>
@@ -1566,19 +1567,19 @@ const InvitesManager = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto p-1">
                       {plexLibraries.map((library) => {
                         const isSelected = createForm.libraries.includes(
-                          library.id.toString()
+                          library.id.toString(),
                         );
                         const LibraryIcon =
                           library.type === "movie"
                             ? Film
                             : library.type === "show"
-                            ? Tv
-                            : Music;
+                              ? Tv
+                              : Music;
 
                         return (
                           <label
                             key={library.id}
-                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                            className={`group/toggle flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                               isSelected
                                 ? "bg-theme-primary/10"
                                 : "bg-theme-hover hover:bg-theme-primary/5"
@@ -1589,8 +1590,8 @@ const InvitesManager = () => {
                                 library.type === "movie"
                                   ? "bg-blue-500/20 border border-blue-500/30"
                                   : library.type === "show"
-                                  ? "bg-purple-500/20 border border-purple-500/30"
-                                  : "bg-pink-500/20 border border-pink-500/30"
+                                    ? "bg-purple-500/20 border border-purple-500/30"
+                                    : "bg-pink-500/20 border border-pink-500/30"
                               }`}
                             >
                               <LibraryIcon
@@ -1598,14 +1599,14 @@ const InvitesManager = () => {
                                   library.type === "movie"
                                     ? "text-blue-400"
                                     : library.type === "show"
-                                    ? "text-purple-400"
-                                    : "text-pink-400"
+                                      ? "text-purple-400"
+                                      : "text-pink-400"
                                 }`}
                               />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div
-                                className={`text-sm font-medium truncate ${
+                                className={`text-sm font-medium truncate group-hover/toggle:text-theme-primary transition-colors ${
                                   isSelected
                                     ? "text-theme-primary"
                                     : "text-theme-text"
@@ -1613,7 +1614,7 @@ const InvitesManager = () => {
                               >
                                 {library.name}
                               </div>
-                              <div className="text-xs text-theme-text-muted capitalize">
+                              <div className="text-xs text-theme-text-muted group-hover/toggle:text-theme-primary capitalize transition-colors">
                                 {t(`invites.libraryTypes.${library.type}`)}
                               </div>
                             </div>
@@ -1623,7 +1624,7 @@ const InvitesManager = () => {
                                 const libId = library.id.toString();
                                 const newLibraries = isSelected
                                   ? createForm.libraries.filter(
-                                      (id) => id !== libId
+                                      (id) => id !== libId,
                                     )
                                   : [...createForm.libraries, libId];
 
@@ -1668,13 +1669,13 @@ const InvitesManager = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-6 py-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all font-semibold text-theme-text"
+                  className="flex-1 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500 rounded-lg transition-all font-semibold text-red-400"
                 >
                   {t("invites.buttons.cancel")}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 items-center justify-center gap-2 sm:px-4 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                  className="flex-1 px-6 py-3 bg-theme-primary text-black font-medium border border-transparent hover:border-theme-primary rounded-lg hover:bg-theme-primary-hover transition-all shadow-sm"
                 >
                   {t("invites.buttons.create")}
                 </button>
@@ -1732,7 +1733,7 @@ const InvitesManager = () => {
                     onClick={() =>
                       setEditUsageDropdownOpen(!editUsageDropdownOpen)
                     }
-                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary  cursor-pointer transition-all flex items-center justify-between"
+                    className="w-full px-4 py-3 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary cursor-pointer transition-all flex items-center justify-between"
                   >
                     <span>
                       {editForm.usage_limit || t("invites.form.unlimited")}
@@ -1794,7 +1795,7 @@ const InvitesManager = () => {
                     onClick={() =>
                       setEditExpiryDropdownOpen(!editExpiryDropdownOpen)
                     }
-                    className="w-full px-4 py-3 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary  cursor-pointer transition-all flex items-center justify-between"
+                    className="w-full px-4 py-3 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary cursor-pointer transition-all flex items-center justify-between"
                   >
                     <span>
                       {editForm.expires_in_days || t("invites.fields.never")}
@@ -1839,7 +1840,7 @@ const InvitesManager = () => {
                             {value || t("invites.fields.never")}
                             {value && ` ${t("invites.form.days")}`}
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   )}
@@ -1861,13 +1862,13 @@ const InvitesManager = () => {
                   setShowEditModal(false);
                   setEditingInvite(null);
                 }}
-                className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-theme-text font-medium transition-all"
+                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500 rounded-lg text-red-400 font-medium transition-all"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleUpdateInvite}
-                className="px-4 py-2 bg-theme-hover hover:bg-theme-primary/90 text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
+                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 text-black font-medium border border-transparent hover:border-theme-primary rounded-lg transition-all shadow-sm hover:shadow-md"
               >
                 {t("common.save")}
               </button>

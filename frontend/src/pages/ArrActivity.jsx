@@ -136,7 +136,7 @@ export default function ArrActivity() {
   const [instancePages, setInstancePages] = useState({});
   const [instanceItemsPerPage, setInstanceItemsPerPage] = usePersistedState(
     "komandorr_itemsPerPage_arrActivity",
-    {}
+    {},
   );
 
   // Get tab from URL params - defaults to "tvshows"
@@ -264,29 +264,29 @@ export default function ArrActivity() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="bg-theme-hover border-b border-theme">
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary rounded-tl-xl">
+              <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                <th className="text-left py-3 px-4 font-semibold text-black rounded-tl-xl">
                   {t("arrActivity.title", "Title")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.quality", "Quality")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.status", "Status")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.size", "Size")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.timeLeft", "Time Left")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.protocol", "Protocol")}
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.client", "Client")}
                 </th>
-                <th className="text-right py-3 px-4 font-medium text-theme-text-secondary rounded-tr-xl">
+                <th className="text-right py-3 px-4 font-semibold text-black rounded-tr-xl">
                   {t("arrActivity.progress", "Progress")}
                 </th>
               </tr>
@@ -313,12 +313,12 @@ export default function ArrActivity() {
                             S
                             {String(item.episode.seasonNumber || 0).padStart(
                               2,
-                              "0"
+                              "0",
                             )}
                             E
                             {String(item.episode.episodeNumber || 0).padStart(
                               2,
-                              "0"
+                              "0",
                             )}
                             {item.episode.title && ` - ${item.episode.title}`}
                           </div>
@@ -612,7 +612,7 @@ export default function ArrActivity() {
                           <span className="text-sm text-theme-text-muted">
                             {t(
                               "arrActivity.pagination.itemsPerPage",
-                              "Items per page:"
+                              "Items per page:",
                             )}
                           </span>
                           <select
@@ -620,7 +620,7 @@ export default function ArrActivity() {
                             onChange={(e) =>
                               setInstanceItemsPerPageValue(
                                 inst.id,
-                                Number(e.target.value)
+                                Number(e.target.value),
                               )
                             }
                             className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
@@ -684,7 +684,7 @@ export default function ArrActivity() {
                                 );
                               }
                               return null;
-                            }
+                            },
                           )}
                         </div>
 
@@ -710,20 +710,20 @@ export default function ArrActivity() {
       {/* No Sonarr Services Configured (TV Shows tab) */}
       {activeTab === "tvshows" &&
         filteredInstances.filter(
-          (inst) => inst.enabled && inst.type === "sonarr"
+          (inst) => inst.enabled && inst.type === "sonarr",
         ).length === 0 && (
           <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
             <Tv className="w-16 h-16 mx-auto text-purple-500/50 mb-4" />
             <h3 className="text-lg font-semibold text-theme-text mb-2">
               {t(
                 "arrActivity.noSonarrConfigured",
-                "No Sonarr Services Configured"
+                "No Sonarr Services Configured",
               )}
             </h3>
             <p className="text-theme-text-muted max-w-md mx-auto">
               {t(
                 "arrActivity.configureSonarr",
-                "Configure Sonarr instances in settings to monitor TV show downloads."
+                "Configure Sonarr instances in settings to monitor TV show downloads.",
               )}
             </p>
           </div>
@@ -732,20 +732,20 @@ export default function ArrActivity() {
       {/* No Radarr Services Configured (Movies tab) */}
       {activeTab === "movies" &&
         filteredInstances.filter(
-          (inst) => inst.enabled && inst.type === "radarr"
+          (inst) => inst.enabled && inst.type === "radarr",
         ).length === 0 && (
           <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
             <Film className="w-16 h-16 mx-auto text-blue-500/50 mb-4" />
             <h3 className="text-lg font-semibold text-theme-text mb-2">
               {t(
                 "arrActivity.noRadarrConfigured",
-                "No Radarr Services Configured"
+                "No Radarr Services Configured",
               )}
             </h3>
             <p className="text-theme-text-muted max-w-md mx-auto">
               {t(
                 "arrActivity.configureRadarr",
-                "Configure Radarr instances in settings to monitor movie downloads."
+                "Configure Radarr instances in settings to monitor movie downloads.",
               )}
             </p>
           </div>
@@ -761,7 +761,7 @@ export default function ArrActivity() {
           <p className="text-theme-text-muted max-w-md mx-auto">
             {t(
               "arrActivity.configureServices",
-              "Configure Sonarr/Radarr instances in settings to monitor download activity."
+              "Configure Sonarr/Radarr instances in settings to monitor download activity.",
             )}
           </p>
         </div>

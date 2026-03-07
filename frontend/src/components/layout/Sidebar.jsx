@@ -251,7 +251,7 @@ export default function Sidebar() {
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
-      invite.is_expired && (!invite.users || invite.users.length === 0)
+      invite.is_expired && (!invite.users || invite.users.length === 0),
   ).length;
 
   // Extract all users from invites
@@ -432,7 +432,7 @@ export default function Sidebar() {
                   const Icon = item.icon;
                   const isExpanded = expandedTabs[item.tabName];
                   const hasActiveSub = item.items.some((sub) =>
-                    isActive(sub.path)
+                    isActive(sub.path),
                   );
 
                   // Check if Plex tab has any subtabs with warning badges (expired invites/users)
@@ -478,8 +478,8 @@ export default function Sidebar() {
                           }
                           ${
                             hasActiveSub
-                              ? "bg-theme-hover text-white"
-                              : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                              ? "bg-theme-primary text-black"
+                              : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                           }
                         `}
                         title={!isOpen ? item.label : ""}
@@ -693,8 +693,8 @@ export default function Sidebar() {
                                     transition-all duration-200 relative
                                     ${
                                       active
-                                        ? "bg-theme-hover text-white"
-                                        : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                                        ? "bg-theme-primary text-black"
+                                        : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                                     }
                                   `}
                                 >
@@ -750,8 +750,8 @@ export default function Sidebar() {
                           }
                           ${
                             active
-                              ? "bg-theme-hover text-white"
-                              : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                              ? "bg-theme-primary text-black"
+                              : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                           }
                         `}
                         title={!isOpen ? item.label : ""}

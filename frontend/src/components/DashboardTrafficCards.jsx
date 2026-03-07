@@ -72,7 +72,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
       const chevronWidth = 120; // Space for chevrons on sides (increased for better spacing)
       const availableWidth = width - chevronWidth;
       const maxCards = Math.floor(
-        (availableWidth + gapWidth) / (cardWidth + gapWidth)
+        (availableWidth + gapWidth) / (cardWidth + gapWidth),
       );
 
       // Ensure at least 1 card, maximum based on screen width
@@ -140,7 +140,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
             <p className="text-theme-text-muted mb-6 max-w-md mx-auto">
               {t(
                 "traffic.emptyState.description",
-                "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics."
+                "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics.",
               )}
             </p>
           </div>
@@ -149,7 +149,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
               href="https://github.com/cyb3rgh05t/komandorr/blob/main/traffic/README.md"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary-hover text-black rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:scale-105"
             >
               <Activity size={16} />
               {t("traffic.emptyState.setupGuide", "Setup Traffic Agent")}
@@ -165,33 +165,33 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     (service) =>
       service.traffic_history &&
       service.traffic_history.length > 0 &&
-      (service.bandwidth_up > 0 || service.bandwidth_down > 0)
+      (service.bandwidth_up > 0 || service.bandwidth_down > 0),
   );
 
   // Calculate totals
   const totalUpload = activeServices.reduce(
     (sum, s) => sum + (s.bandwidth_up || 0),
-    0
+    0,
   );
   const totalDownload = activeServices.reduce(
     (sum, s) => sum + (s.bandwidth_down || 0),
-    0
+    0,
   );
   const totalBandwidth = totalUpload + totalDownload;
 
   // Get max bandwidth from service configuration or fallback to relative calculation
   // If all services have max_bandwidth set, use that. Otherwise fall back to relative.
   const servicesWithMaxBandwidth = activeServices.filter(
-    (s) => s.max_bandwidth
+    (s) => s.max_bandwidth,
   );
   const useAbsolutePercentage = servicesWithMaxBandwidth.length > 0;
 
   // For fallback: Find max bandwidth for relative percentage calculation
   const maxBandwidth = Math.max(
     ...activeServices.map(
-      (s) => (s.bandwidth_up || 0) + (s.bandwidth_down || 0)
+      (s) => (s.bandwidth_up || 0) + (s.bandwidth_down || 0),
     ),
-    1
+    1,
   );
 
   const formatBandwidth = (mbps) => {
@@ -272,7 +272,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
           if (maxBandwidthValue && maxBandwidthValue > 0) {
             // Absolute percentage based on configured maximum
             percentage = Math.round(
-              (serviceBandwidth / maxBandwidthValue) * 100
+              (serviceBandwidth / maxBandwidthValue) * 100,
             );
           } else {
             // Relative percentage (fallback)
@@ -377,7 +377,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                     </div>
                     <div className="font-mono font-semibold text-sm text-amber-400">
                       {formatData(
-                        (service.total_up || 0) + (service.total_down || 0)
+                        (service.total_up || 0) + (service.total_down || 0),
                       )}
                     </div>
                   </div>

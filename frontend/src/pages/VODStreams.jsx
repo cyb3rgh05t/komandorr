@@ -597,7 +597,7 @@ export default function VODStreams() {
           <button
             onClick={() => handleRefresh(true)}
             disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
@@ -789,17 +789,17 @@ export default function VODStreams() {
         <div className="flex gap-2 min-w-max">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "all"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.all")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "all"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -808,17 +808,17 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("downloading")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "downloading"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.downloading")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "downloading"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -833,17 +833,17 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("paused")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "paused"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.paused")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "paused"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -852,17 +852,17 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("transcoding")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "transcoding"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.transcoding")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "transcoding"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -877,17 +877,17 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("streaming")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "streaming"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.streaming")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "streaming"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -921,17 +921,17 @@ export default function VODStreams() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-theme-hover border-b border-theme">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.libraryScans.library", "Library")}
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.libraryScans.details", "Details")}
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.table.status", "Status")}
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.table.progress", "Progress")}
                   </th>
                 </tr>
@@ -1011,17 +1011,17 @@ export default function VODStreams() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-hover border-b border-theme">
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+              <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.media", "Media")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.title", "Title")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.status", "Status")}
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-right py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.progress", "Progress")}
                 </th>
               </tr>

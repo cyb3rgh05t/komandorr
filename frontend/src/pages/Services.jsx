@@ -118,7 +118,7 @@ export default function Services() {
     try {
       const updatedService = await api.updateService(editingService.id, data);
       queryClient.setQueryData(["services"], (old) =>
-        old.map((s) => (s.id === editingService.id ? updatedService : s))
+        old.map((s) => (s.id === editingService.id ? updatedService : s)),
       );
       setShowModal(false);
       setEditingService(null);
@@ -142,7 +142,7 @@ export default function Services() {
     try {
       await api.deleteService(confirmDialog.serviceId);
       queryClient.setQueryData(["services"], (old) =>
-        old.filter((s) => s.id !== confirmDialog.serviceId)
+        old.filter((s) => s.id !== confirmDialog.serviceId),
       );
       toast.success(t("success.serviceDeleted"));
     } catch (error) {
@@ -155,7 +155,7 @@ export default function Services() {
     try {
       const updatedService = await api.checkService(id);
       queryClient.setQueryData(["services"], (old) =>
-        old.map((s) => (s.id === id ? updatedService : s))
+        old.map((s) => (s.id === id ? updatedService : s)),
       );
       toast.success(t("success.serviceChecked"));
     } catch (error) {
@@ -295,7 +295,7 @@ export default function Services() {
               <button
                 onClick={handleRefresh}
                 disabled={isFetching}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
               >
                 <RefreshCw
                   size={16}
@@ -314,7 +314,7 @@ export default function Services() {
                   setEditingService(null);
                   setShowModal(true);
                 }}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
               >
                 <Plus size={16} className="text-theme-primary" />
                 <span className="text-xs sm:text-sm">
@@ -428,17 +428,17 @@ export default function Services() {
               <div className="flex gap-2 min-w-max">
                 <button
                   onClick={() => setActiveTab("ALL")}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                     activeTab === "ALL"
-                      ? "bg-theme-hover text-white shadow-md"
-                      : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                      ? "bg-theme-primary text-black shadow-md"
+                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                   }`}
                 >
                   {t("services.all")}
                   <span
                     className={`ml-2 text-xs ${
                       activeTab === "ALL"
-                        ? "text-white/80"
+                        ? "text-black/70"
                         : "text-theme-text-muted"
                     }`}
                   >
@@ -451,17 +451,17 @@ export default function Services() {
                     <button
                       key={groupName}
                       onClick={() => setActiveTab(groupName)}
-                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                         activeTab === groupName
-                          ? "bg-theme-hover text-white shadow-md"
-                          : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                          ? "bg-theme-primary text-black shadow-md"
+                          : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                       }`}
                     >
                       {groupName}
                       <span
                         className={`ml-2 text-xs ${
                           activeTab === groupName
-                            ? "text-white/80"
+                            ? "text-black/70"
                             : "text-theme-text-muted"
                         }`}
                       >

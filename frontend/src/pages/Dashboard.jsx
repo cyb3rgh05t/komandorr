@@ -128,7 +128,7 @@ export default function Dashboard() {
   useEffect(() => {
     localStorage.setItem(
       "dashboardVisibility",
-      JSON.stringify(dashboardVisibility)
+      JSON.stringify(dashboardVisibility),
     );
   }, [dashboardVisibility]);
 
@@ -230,7 +230,7 @@ export default function Dashboard() {
       const updated = await api.checkService(id);
       // Update the cache with the updated service
       queryClient.setQueryData(["services"], (old) =>
-        old.map((s) => (s.id === id ? updated : s))
+        old.map((s) => (s.id === id ? updated : s)),
       );
       toast.success(t("common.success"));
     } catch (error) {
@@ -257,7 +257,7 @@ export default function Dashboard() {
       const updated = await api.updateService(editingService.id, data);
       // Update cache
       queryClient.setQueryData(["services"], (old) =>
-        old.map((s) => (s.id === updated.id ? updated : s))
+        old.map((s) => (s.id === updated.id ? updated : s)),
       );
       setShowModal(false);
       setEditingService(null);
@@ -281,7 +281,7 @@ export default function Dashboard() {
       await api.deleteService(confirmDialog.serviceId);
       // Remove from cache
       queryClient.setQueryData(["services"], (old) =>
-        old.filter((s) => s.id !== confirmDialog.serviceId)
+        old.filter((s) => s.id !== confirmDialog.serviceId),
       );
       toast.success(t("common.success"));
     } catch (error) {
@@ -309,7 +309,7 @@ export default function Dashboard() {
       services.length > 0
         ? Math.round(
             services.reduce((sum, s) => sum + (s.response_time || 0), 0) /
-              services.length
+              services.length,
           )
         : 0,
     recentlyChecked: services.filter((s) => {
@@ -377,7 +377,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowCustomizeMenu(!showCustomizeMenu)}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
             title={t("dashboard.customize")}
           >
             <Settings size={16} sm:size={18} className="text-theme-primary" />
@@ -388,7 +388,7 @@ export default function Dashboard() {
           <button
             onClick={handleRefreshAll}
             disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
@@ -404,7 +404,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
           >
             <Plus size={16} className="text-theme-primary" />
             <span className="text-xs sm:text-sm">
@@ -915,7 +915,7 @@ export default function Dashboard() {
 
                           // Find the service in the filtered services list to get its group
                           const matchingService = filteredServices.find(
-                            (s) => s.id === service.id
+                            (s) => s.id === service.id,
                           );
                           if (!matchingService) return false;
                           const serviceGroup =
@@ -967,7 +967,7 @@ export default function Dashboard() {
                               ))}
                             </div>
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   );
@@ -981,17 +981,17 @@ export default function Dashboard() {
                       <div className="flex gap-2 min-w-max">
                         <button
                           onClick={() => setActiveTab("ALL")}
-                          className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                          className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                             activeTab === "ALL"
-                              ? "bg-theme-hover text-white shadow-md"
-                              : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                              ? "bg-theme-primary text-black shadow-md"
+                              : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                           }`}
                         >
                           {t("dashboard.all")}
                           <span
                             className={`ml-2 text-xs ${
                               activeTab === "ALL"
-                                ? "text-white/80"
+                                ? "text-black/70"
                                 : "text-theme-text-muted"
                             }`}
                           >
@@ -1002,17 +1002,17 @@ export default function Dashboard() {
                           <button
                             key={groupName}
                             onClick={() => setActiveTab(groupName)}
-                            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                               activeTab === groupName
-                                ? "bg-theme-hover text-white shadow-md"
-                                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                                ? "bg-theme-primary text-black shadow-md"
+                                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                             }`}
                           >
                             {groupName}
                             <span
                               className={`ml-2 text-xs ${
                                 activeTab === groupName
-                                  ? "text-white/80"
+                                  ? "text-black/70"
                                   : "text-theme-text-muted"
                               }`}
                             >

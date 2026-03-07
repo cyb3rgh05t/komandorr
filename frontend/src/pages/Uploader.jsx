@@ -192,7 +192,7 @@ export default function Uploader() {
     if (queueStats?.total_size) return queueStats.total_size;
     return queueFiles.reduce(
       (acc, file) => acc + parseSizeToBytes(file.filesize),
-      0
+      0,
     );
   }, [queueFiles, queueStats]);
 
@@ -200,9 +200,9 @@ export default function Uploader() {
     () =>
       inProgressJobs.reduce(
         (acc, job) => acc + parseSpeedToMbps(job.upload_speed),
-        0
+        0,
       ),
-    [inProgressJobs]
+    [inProgressJobs],
   );
 
   const rawStatus = uploaderStatus?.status || "UNKNOWN";
@@ -303,7 +303,7 @@ export default function Uploader() {
   const totalQueueFiles = filteredQueueFiles.length;
   const totalQueuePages = Math.max(
     1,
-    Math.ceil(totalQueueFiles / queueItemsPerPage)
+    Math.ceil(totalQueueFiles / queueItemsPerPage),
   );
 
   // Paginated queue files
@@ -516,29 +516,29 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.key")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.progress")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.remaining")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-right py-3 px-4 font-semibold text-black">
                         {t("uploader.table.speed")}
                       </th>
                     </tr>
@@ -556,7 +556,7 @@ export default function Uploader() {
                     )}
                     {filteredInProgressJobs.map((job, index) => {
                       const progress = percentageToNumber(
-                        job.upload_percentage
+                        job.upload_percentage,
                       );
                       const normalizedDir =
                         job.file_directory &&
@@ -635,23 +635,23 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         #
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-right py-3 px-4 font-semibold text-black">
                         {t("uploader.table.added")}
                       </th>
                     </tr>
@@ -724,7 +724,7 @@ export default function Uploader() {
                 <span className="text-theme-text font-semibold">
                   {Math.min(
                     queuePageNumber * queueItemsPerPage,
-                    totalQueueFiles
+                    totalQueueFiles,
                   )}
                 </span>{" "}
                 {t("uploader.pagination.of", "of")}{" "}
@@ -830,26 +830,26 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.key")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.duration")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-right py-3 px-4 font-semibold text-black">
                         {t("uploader.table.completedAt")}
                       </th>
                     </tr>
@@ -1024,23 +1024,23 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-hover border-b border-theme">
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-left py-3 px-4 font-semibold text-black">
                         {t("uploader.table.error", "Error")}
                       </th>
-                      <th className="text-right py-3 px-4 font-medium text-theme-text-secondary">
+                      <th className="text-right py-3 px-4 font-semibold text-black">
                         {t("uploader.table.failedAt", "Failed At")}
                       </th>
                     </tr>
