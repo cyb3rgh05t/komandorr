@@ -613,10 +613,10 @@ export default function VODPortal() {
                     !overseerrStatus?.configured ||
                     !overseerrStatus?.reachable
                   }
-                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-500/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <UserPlus className="w-4 h-4 text-green-500" />
-                  <span className="text-xs sm:text-sm text-green-400">
+                  <UserPlus className="w-4 h-4 text-theme-primary" />
+                  <span className="text-xs sm:text-sm">
                     {loading
                       ? t("vodPortal.creating") || "Creating..."
                       : t("vodPortal.createUser") || "Add User"}
@@ -874,7 +874,7 @@ export default function VODPortal() {
         if (paginationData.totalItems === 0) return null;
 
         return (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="text-sm font-medium text-theme-text-muted">
                 {t("vodPortal.showing") || "Showing"}{" "}

@@ -783,59 +783,59 @@ const Storage = () => {
           </div>
 
           {/* Total Capacity (UnionFS only) */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Database className="w-3 h-3 text-theme-primary" />
+                  <Database className="w-3 h-3 text-purple-500" />
                   {t("storage.totalCapacity", "Capacity")}
                 </p>
-                <p className="text-2xl font-bold text-theme-primary mt-1">
+                <p className="text-2xl font-bold text-purple-500 mt-1">
                   {formatStorageSize(unionfsStats.capacity)}
                 </p>
               </div>
-              <Database className="w-8 h-8 text-theme-primary/50" />
+              <Database className="w-8 h-8 text-purple-500/50" />
             </div>
           </div>
 
           {/* Total Used (UnionFS only) */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <HardDrive className="w-3 h-3 text-theme-primary" />
+                  <HardDrive className="w-3 h-3 text-blue-500" />
                   {t("storage.totalUsed", "Used")}
                 </p>
-                <p className="text-2xl font-bold text-theme-primary mt-1">
+                <p className="text-2xl font-bold text-blue-500 mt-1">
                   {formatStorageSize(unionfsStats.used)}
                 </p>
               </div>
-              <HardDrive className="w-8 h-8 text-theme-primary/50" />
+              <HardDrive className="w-8 h-8 text-blue-500/50" />
             </div>
           </div>
 
           {/* Total Free (UnionFS only) */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-theme-primary" />
+                  <Activity className="w-3 h-3 text-green-500" />
                   {t("storage.totalFree", "Free")}
                 </p>
-                <p className="text-2xl font-bold text-theme-primary mt-1">
+                <p className="text-2xl font-bold text-green-500 mt-1">
                   {formatStorageSize(unionfsStats.free)}
                 </p>
               </div>
-              <Activity className="w-8 h-8 text-theme-primary/50" />
+              <Activity className="w-8 h-8 text-green-500/50" />
             </div>
           </div>
 
           {/* RAID/ZFS Status */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
             <div className="flex items-center justify-between">
               <div className="w-full">
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Disc3 className="w-3 h-3 text-theme-primary" />
+                  <Disc3 className="w-3 h-3 text-yellow-500" />
                   {t("storage.raidStatus", "Arrays Status")}
                 </p>
                 <div className="mt-2 space-y-1.5">
@@ -899,7 +899,7 @@ const Storage = () => {
                   </div>
                 </div>
               </div>
-              <Disc3 className="w-8 h-8 text-theme-primary/50 flex-shrink-0" />
+              <Disc3 className="w-8 h-8 text-yellow-500/50 flex-shrink-0" />
             </div>
           </div>
         </div>
@@ -972,56 +972,56 @@ const Storage = () => {
         <div className="space-y-6">
           {/* UnionFS Storage Section */}
           {unionfsServices.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
-                  <HardDrive className="w-5 h-5" />
-                </div>
-                <div>
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="w-5 h-5 text-theme-primary" />
                   <h3 className="text-lg font-semibold text-theme-text">
                     {t("storage.unionfsServers", "UnionFS Storage")}
-                    <span className="text-sm font-normal text-theme-text-muted ml-2">
-                      ({unionfsServices.length})
-                    </span>
                   </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {unionfsServices.length}
+                  </span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {unionfsServices.map((service) => (
-                  <StorageServiceCard
-                    key={service.id}
-                    service={service}
-                    t={t}
-                  />
-                ))}
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {unionfsServices.map((service) => (
+                    <StorageServiceCard
+                      key={service.id}
+                      service={service}
+                      t={t}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* RAID/ZFS Storage Section */}
           {raidZfsServices.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
-                  <Disc3 className="w-5 h-5" />
-                </div>
-                <div>
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Disc3 className="w-5 h-5 text-theme-primary" />
                   <h3 className="text-lg font-semibold text-theme-text">
                     {t("storage.raidZfsServers", "RAID & ZFS Arrays")}
-                    <span className="text-sm font-normal text-theme-text-muted ml-2">
-                      ({raidZfsServices.length})
-                    </span>
                   </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {raidZfsServices.length}
+                  </span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {raidZfsServices.map((service) => (
-                  <StorageServiceCard
-                    key={service.id}
-                    service={service}
-                    t={t}
-                  />
-                ))}
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {raidZfsServices.map((service) => (
+                    <StorageServiceCard
+                      key={service.id}
+                      service={service}
+                      t={t}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}

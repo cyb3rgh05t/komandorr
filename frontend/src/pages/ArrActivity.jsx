@@ -265,7 +265,7 @@ export default function ArrActivity() {
           <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                <th className="text-left py-3 px-4 font-semibold text-black rounded-tl-xl">
+                <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.title", "Title")}
                 </th>
                 <th className="text-left py-3 px-4 font-semibold text-black">
@@ -286,7 +286,7 @@ export default function ArrActivity() {
                 <th className="text-left py-3 px-4 font-semibold text-black">
                   {t("arrActivity.client", "Client")}
                 </th>
-                <th className="text-right py-3 px-4 font-semibold text-black rounded-tr-xl">
+                <th className="text-right py-3 px-4 font-semibold text-black">
                   {t("arrActivity.progress", "Progress")}
                 </th>
               </tr>
@@ -586,7 +586,7 @@ export default function ArrActivity() {
 
                   {/* Pagination for this instance */}
                   {totalRecords > 0 && (
-                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
                       <div className="flex items-center gap-4">
                         <div className="text-sm font-medium text-theme-text-muted">
                           {t("arrActivity.pagination.showing", "Showing")}{" "}

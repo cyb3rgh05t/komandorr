@@ -1184,7 +1184,7 @@ const UserAccounts = () => {
         if (paginationData.totalItems === 0) return null;
 
         return (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="text-sm font-medium text-theme-text-muted">
                 {t("userAccounts.pagination.showing", "Showing")}{" "}

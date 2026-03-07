@@ -711,7 +711,7 @@ export default function Uploader() {
             </div>
           </div>
           {/* Queue Pagination */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="text-sm font-medium text-theme-text-muted">
                 {t("uploader.pagination.showing", "Showing")}{" "}
@@ -910,7 +910,7 @@ export default function Uploader() {
             </div>
           </div>
           {/* Pagination - pill style like Plex pages, outside the card */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="text-sm font-medium text-theme-text-muted">
                 {t("uploader.pagination.showing", "Showing")}{" "}
