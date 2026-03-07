@@ -50,7 +50,7 @@ export default function DashboardServiceCard({
 
   // Find traffic data for this service
   const serviceTraffic = trafficData?.services?.find(
-    (s) => s.id === service.id
+    (s) => s.id === service.id,
   );
 
   const formatBandwidth = (mbps) => {

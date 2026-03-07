@@ -107,7 +107,7 @@ const SessionCard = ({ session }) => {
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={`/api/plex/proxy/image?url=${encodeURIComponent(
-              session.media.art
+              session.media.art,
             )}`}
             alt=""
             className="w-full h-auto object-cover object-center opacity-50"
@@ -122,7 +122,7 @@ const SessionCard = ({ session }) => {
           {session.media.thumb ? (
             <img
               src={`/api/plex/proxy/image?url=${encodeURIComponent(
-                session.media.thumb
+                session.media.thumb,
               )}`}
               alt={session.media.title}
               className="w-full h-full object-cover rounded-l-lg"
@@ -171,7 +171,7 @@ const SessionCard = ({ session }) => {
                 {session.user.thumb ? (
                   <img
                     src={`/api/plex/proxy/image?url=${encodeURIComponent(
-                      session.user.thumb
+                      session.user.thumb,
                     )}`}
                     alt={session.user.name}
                     className="w-full h-full object-cover"
@@ -194,8 +194,8 @@ const SessionCard = ({ session }) => {
                   session.media.type === "movie"
                     ? "bg-purple-500/20 border border-purple-500/30 text-purple-400"
                     : session.media.type === "episode"
-                    ? "bg-cyan-500/20 border border-cyan-500/30 text-cyan-400"
-                    : "bg-theme-primary/20 border border-theme-primary/30 text-theme-primary"
+                      ? "bg-cyan-500/20 border border-cyan-500/30 text-cyan-400"
+                      : "bg-theme-primary/20 border border-theme-primary/30 text-theme-primary"
                 }`}
               >
                 {session.media.type}
@@ -210,10 +210,10 @@ const SessionCard = ({ session }) => {
                   session.stream.video_resolution >= 2160
                     ? "bg-pink-500/20 border border-pink-500/30 text-pink-400"
                     : session.stream.video_resolution >= 1080
-                    ? "bg-indigo-500/20 border border-indigo-500/30 text-indigo-400"
-                    : session.stream.video_resolution >= 720
-                    ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
-                    : "bg-gray-500/20 border border-gray-500/30 text-gray-400"
+                      ? "bg-indigo-500/20 border border-indigo-500/30 text-indigo-400"
+                      : session.stream.video_resolution >= 720
+                        ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
+                        : "bg-gray-500/20 border border-gray-500/30 text-gray-400"
                 }`}
               >
                 {session.stream.video_resolution
@@ -247,8 +247,8 @@ const SessionCard = ({ session }) => {
                 {session.stream.location === "lan"
                   ? t("vodActivity.labels.lan", "LAN")
                   : session.stream.location === "wan"
-                  ? t("vodActivity.labels.wan", "WAN")
-                  : t("vodActivity.labels.unknown", "Unknown")}
+                    ? t("vodActivity.labels.wan", "WAN")
+                    : t("vodActivity.labels.unknown", "Unknown")}
               </span>
             </div>
 
@@ -371,13 +371,13 @@ const PlexActivity = () => {
   // Calculate stats from filtered sessions
   const totalSessions = filteredSessions.length;
   const transcodingSessions = filteredSessions.filter(
-    (s) => s.transcode.is_transcoding
+    (s) => s.transcode.is_transcoding,
   ).length;
   const playingSessions = filteredSessions.filter(
-    (s) => s.playback.state === "playing"
+    (s) => s.playback.state === "playing",
   ).length;
   const pausedSessions = filteredSessions.filter(
-    (s) => s.playback.state === "paused"
+    (s) => s.playback.state === "paused",
   ).length;
 
   return (
@@ -393,7 +393,7 @@ const PlexActivity = () => {
             type="text"
             placeholder={t(
               "vodStreams.searchPlaceholder",
-              "Search sessions..."
+              "Search sessions...",
             )}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -532,7 +532,7 @@ const PlexActivity = () => {
               <p className="text-theme-text-muted">
                 {t(
                   "vodActivity.noSessionsDesc",
-                  "There are currently no active streaming sessions on your Plex server."
+                  "There are currently no active streaming sessions on your Plex server.",
                 )}
               </p>
             </div>

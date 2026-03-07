@@ -165,7 +165,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
           console.error(
             "Upload failed with status:",
             response.status,
-            errorText
+            errorText,
           );
           alert("Failed to upload icon");
           return;
@@ -279,7 +279,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                             <span>{t(`service.types.${type}`)}</span>
                             {formData.type === type && <Check size={16} />}
                           </button>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                       onError={(e) => {
                         console.error(
                           "Failed to load icon preview:",
-                          iconPreview
+                          iconPreview,
                         );
                         console.error("Error event:", e);
                       }}

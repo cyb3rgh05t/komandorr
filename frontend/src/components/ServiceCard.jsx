@@ -74,7 +74,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
                 onError={(e) => {
                   console.error(
                     `Failed to load icon for ${service.name}:`,
-                    service.icon
+                    service.icon,
                   );
                   e.target.style.display = "none";
                 }}
@@ -114,8 +114,8 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
               service.status === "online"
                 ? "green"
                 : service.status === "offline"
-                ? "red"
-                : "yellow"
+                  ? "red"
+                  : "yellow"
             }-500/30 shadow-md`}
             style={{
               boxShadow: `0 4px 12px ${config.shadowColor}`,
