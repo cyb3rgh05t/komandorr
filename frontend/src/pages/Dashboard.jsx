@@ -31,6 +31,7 @@ import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
 import DashboardServiceCard from "@/components/DashboardServiceCard";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
+import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -56,12 +57,14 @@ export default function Dashboard() {
     placeholderData: (previousData) => previousData, // Show old data while fetching
   });
 
-  // Use React Query for traffic data
+  // Real-time traffic via WebSocket
+  useTrafficWebSocket();
+
+  // Use React Query for traffic data (initial load, WebSocket pushes updates)
   const { data: trafficData, isFetching: trafficFetching } = useQuery({
     queryKey: ["traffic"],
     queryFn: () => api.getTrafficSummary(),
-    staleTime: 5000,
-    refetchInterval: 5000,
+    staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
 
