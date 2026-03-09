@@ -79,6 +79,7 @@ export default function Settings() {
   const [newArrName, setNewArrName] = useState("");
   const [newArrType, setNewArrType] = useState("sonarr");
   const [newArrUrl, setNewArrUrl] = useState("");
+  const [newArrAccessUrl, setNewArrAccessUrl] = useState("");
   const [newArrApiKey, setNewArrApiKey] = useState("");
   const [showArrKeys, setShowArrKeys] = useState({});
   const [arrTestStatus, setArrTestStatus] = useState({});
@@ -466,6 +467,7 @@ export default function Settings() {
             type: newArrType,
             url: newArrUrl,
             api_key: newArrApiKey,
+            access_url: newArrAccessUrl || "",
           },
         ];
       }
@@ -529,6 +531,7 @@ export default function Settings() {
       if (hasPendingNew) {
         setNewArrName("");
         setNewArrUrl("");
+        setNewArrAccessUrl("");
         setNewArrApiKey("");
         setNewArrType("sonarr");
         setShowAddArr(false);
@@ -571,10 +574,12 @@ export default function Settings() {
       type: newArrType,
       url: newArrUrl,
       api_key: newArrApiKey,
+      access_url: newArrAccessUrl || "",
     };
     setArrInstances((prev) => [...prev, instance]);
     setNewArrName("");
     setNewArrUrl("");
+    setNewArrAccessUrl("");
     setNewArrApiKey("");
     setNewArrType("sonarr");
     setShowAddArr(false);
@@ -1681,12 +1686,12 @@ export default function Settings() {
                       !telegramBotToken ||
                       !telegramChatId
                     }
-                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial disabled:opacity-50 disabled:cursor-not-allowed ${
                       telegramTestStatus === "ok"
-                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                         : telegramTestStatus === "fail"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                          : ""
                     }`}
                   >
                     {telegramTesting ? (
@@ -1864,6 +1869,27 @@ export default function Settings() {
 
                           <div className="sm:col-span-2">
                             <label className="block text-sm font-medium text-theme-text mb-2">
+                              {t("arr.accessUrl", {
+                                defaultValue: "Access URL",
+                              })}
+                            </label>
+                            <input
+                              type="url"
+                              value={inst.access_url || ""}
+                              onChange={(e) =>
+                                updateArrInstanceField(
+                                  idx,
+                                  "access_url",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="https://radarr.example.com"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-theme-text mb-2">
                               {t("arr.instanceApiKey", {
                                 defaultValue: "API Key",
                               })}
@@ -1975,7 +2001,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={() => setShowAddArr(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
                     >
                       <Plus className="w-4 h-4 text-theme-primary" />
                       {t("arr.addInstance", { defaultValue: "Add Instance" })}
@@ -2024,6 +2050,20 @@ export default function Settings() {
                         </div>
                         <div className="sm:col-span-2">
                           <label className="block text-sm font-medium text-theme-text mb-2">
+                            {t("arr.accessUrl", {
+                              defaultValue: "Access URL",
+                            })}
+                          </label>
+                          <input
+                            type="url"
+                            value={newArrAccessUrl}
+                            onChange={(e) => setNewArrAccessUrl(e.target.value)}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="https://radarr.example.com"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-theme-text mb-2">
                             {t("arr.instanceApiKey", {
                               defaultValue: "API Key",
                             })}
@@ -2042,14 +2082,15 @@ export default function Settings() {
                         <button
                           type="button"
                           onClick={addArrInstance}
-                          className="px-3 py-2 bg-theme-primary text-white rounded-lg text-sm hover:bg-theme-primary/90 transition-colors"
+                          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
                         >
+                          <Plus className="w-4 h-4 text-theme-primary" />
                           {t("arr.add", { defaultValue: "Add" })}
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowAddArr(false)}
-                          className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text"
+                          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
                         >
                           {t("arr.cancel", { defaultValue: "Cancel" })}
                         </button>
