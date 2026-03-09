@@ -274,6 +274,10 @@ class TrafficMonitor:
         # Save state periodically
         self._save_state()
 
+        # Collect CPU and memory usage
+        cpu_percent = psutil.cpu_percent(interval=None)
+        memory = psutil.virtual_memory()
+
         return {
             "service_id": SERVICE_ID,
             "bandwidth_up": round(bandwidth_up, 2),
@@ -283,6 +287,8 @@ class TrafficMonitor:
             # Double the max_bandwidth since UI calculates percentage on combined up+down
             # Full-duplex NIC: 10 Gbps up + 10 Gbps down = 20 Gbps total capacity
             "max_bandwidth": self.max_bandwidth * 2,
+            "cpu_percent": round(cpu_percent, 1),
+            "memory_percent": round(memory.percent, 1),
         }
 
     def send_to_komandorr(self, traffic_data: Dict) -> bool:

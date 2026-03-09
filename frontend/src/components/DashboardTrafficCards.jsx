@@ -9,13 +9,16 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
+  Cpu,
+  MemoryStick,
 } from "lucide-react";
 
-const CircularProgress = ({ percentage, color, size = 120 }) => {
-  const strokeWidth = 8;
+const CircularProgress = ({ percentage, color, size = 120, label, strokeWidth: sw }) => {
+  const strokeWidth = sw || (size > 100 ? 8 : 5);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
+  const isSmall = size <= 80;
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -50,7 +53,14 @@ const CircularProgress = ({ percentage, color, size = 120 }) => {
       </svg>
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-4xl font-bold text-theme-text">{percentage}%</div>
+        {label && (
+          <span className={`font-medium text-theme-text-muted ${isSmall ? "text-[9px]" : "text-xs"} uppercase tracking-wider`}>
+            {label}
+          </span>
+        )}
+        <div className={`font-bold text-theme-text ${isSmall ? "text-lg" : "text-4xl"}`}>
+          {percentage}%
+        </div>
       </div>
     </div>
   );
@@ -284,18 +294,48 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
           const colorScheme = colors[index % colors.length];
 
+          const cpuPercent = Math.min(
+            Math.round(service.traffic?.cpu_percent ?? service.cpu_percent ?? 0),
+            100,
+          );
+          const memPercent = Math.min(
+            Math.round(service.traffic?.memory_percent ?? service.memory_percent ?? 0),
+            100,
+          );
+
           return (
             <div
               key={service.id || index}
               className="relative group transition-all duration-300"
             >
-              {/* Circular Progress */}
-              <div className="flex justify-center mb-4">
+              {/* Circles row: CPU - Traffic - RAM */}
+              <div className="flex items-center justify-center gap-4 mb-4">
+                {/* CPU Circle (left) */}
+                <div className="flex-shrink-0 self-end mb-2">
+                  <CircularProgress
+                    percentage={cpuPercent}
+                    color="#f59e0b"
+                    size={70}
+                    label="CPU"
+                  />
+                </div>
+
+                {/* Main Traffic Circle (center) */}
                 <CircularProgress
                   percentage={percentage}
                   color={colorScheme.primary}
                   size={200}
                 />
+
+                {/* RAM Circle (right) */}
+                <div className="flex-shrink-0 self-end mb-2">
+                  <CircularProgress
+                    percentage={memPercent}
+                    color="#06b6d4"
+                    size={70}
+                    label="RAM"
+                  />
+                </div>
               </div>
 
               {/* Service Name */}
@@ -305,82 +345,25 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                 </div>
               </div>
 
-              {/* Bandwidth Details */}
-              <div className="bg-theme-card border border-theme rounded-lg p-3">
-                {/* Row 1: Current Speeds */}
-                <div className="grid grid-cols-3 gap-3 text-center pb-3 border-b border-theme-primary/20">
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <ArrowUp className="w-3 h-3 text-blue-400" />
-                      <span className="text-xs font-medium text-blue-400">
-                        {t("traffic.up")}
-                      </span>
-                    </div>
-                    <div className="font-mono font-semibold text-sm text-blue-400">
-                      {formatBandwidth(service.bandwidth_up || 0)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <ArrowDown className="w-3 h-3 text-green-400" />
-                      <span className="text-xs font-medium text-green-400">
-                        {t("traffic.down")}
-                      </span>
-                    </div>
-                    <div className="font-mono font-semibold text-sm text-green-400">
-                      {formatBandwidth(service.bandwidth_down || 0)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Activity className="w-3 h-3 text-purple-400" />
-                      <span className="text-xs font-medium text-purple-400">
-                        {t("traffic.total")}
-                      </span>
-                    </div>
-                    <div className="font-mono font-semibold text-sm text-purple-400">
-                      {formatBandwidth(serviceBandwidth)}
-                    </div>
-                  </div>
+              {/* Current Speeds */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="flex items-center justify-center gap-1">
+                  <ArrowUp className="w-3 h-3 text-blue-400" />
+                  <span className="font-mono font-semibold text-sm text-blue-400">
+                    {formatBandwidth(service.bandwidth_up || 0)}
+                  </span>
                 </div>
-
-                {/* Row 2: Total Data Transferred */}
-                <div className="grid grid-cols-3 gap-3 text-center pt-3">
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <ArrowUp className="w-3 h-3 text-orange-400" />
-                      <span className="text-xs font-medium text-orange-400">
-                        Uploaded
-                      </span>
-                    </div>
-                    <div className="font-mono font-semibold text-sm text-orange-400">
-                      {formatData(service.total_up || 0)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <ArrowDown className="w-3 h-3 text-cyan-400" />
-                      <span className="text-xs font-medium text-cyan-400">
-                        Downloaded
-                      </span>
-                    </div>
-                    <div className="font-mono font-semibold text-sm text-cyan-400">
-                      {formatData(service.total_down || 0)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Activity className="w-3 h-3 text-amber-400" />
-                      <span className="text-xs font-medium text-amber-400">
-                        Combined
-                      </span>
-                    </div>
-                    <div className="font-mono font-semibold text-sm text-amber-400">
-                      {formatData(
-                        (service.total_up || 0) + (service.total_down || 0),
-                      )}
-                    </div>
-                  </div>
+                <div className="flex items-center justify-center gap-1">
+                  <ArrowDown className="w-3 h-3 text-green-400" />
+                  <span className="font-mono font-semibold text-sm text-green-400">
+                    {formatBandwidth(service.bandwidth_down || 0)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-1">
+                  <Activity className="w-3 h-3 text-purple-400" />
+                  <span className="font-mono font-semibold text-sm text-purple-400">
+                    {formatBandwidth(serviceBandwidth)}
+                  </span>
                 </div>
               </div>
             </div>
