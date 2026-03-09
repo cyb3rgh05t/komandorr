@@ -125,6 +125,8 @@ async def get_traffic_summary():
                     "total_up": service.traffic.total_up,
                     "total_down": service.traffic.total_down,
                     "max_bandwidth": service.traffic.max_bandwidth,
+                    "cpu_percent": service.traffic.cpu_percent,
+                    "memory_percent": service.traffic.memory_percent,
                     "last_updated": service.traffic.last_updated,
                     "traffic_history": (
                         service.traffic_history[-60:] if service.traffic_history else []
