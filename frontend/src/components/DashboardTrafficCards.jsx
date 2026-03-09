@@ -13,7 +13,13 @@ import {
   MemoryStick,
 } from "lucide-react";
 
-const CircularProgress = ({ percentage, color, size = 120, label, strokeWidth: sw }) => {
+const CircularProgress = ({
+  percentage,
+  color,
+  size = 120,
+  label,
+  strokeWidth: sw,
+}) => {
   const strokeWidth = sw || (size > 100 ? 8 : 5);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -54,11 +60,15 @@ const CircularProgress = ({ percentage, color, size = 120, label, strokeWidth: s
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {label && (
-          <span className={`font-medium text-theme-text-muted ${isSmall ? "text-[9px]" : "text-xs"} uppercase tracking-wider`}>
+          <span
+            className={`font-medium text-theme-text-muted ${isSmall ? "text-[9px]" : "text-xs"} uppercase tracking-wider`}
+          >
             {label}
           </span>
         )}
-        <div className={`font-bold text-theme-text ${isSmall ? "text-lg" : "text-4xl"}`}>
+        <div
+          className={`font-bold text-theme-text ${isSmall ? "text-lg" : "text-4xl"}`}
+        >
           {percentage}%
         </div>
       </div>
@@ -295,11 +305,15 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
           const colorScheme = colors[index % colors.length];
 
           const cpuPercent = Math.min(
-            Math.round(service.traffic?.cpu_percent ?? service.cpu_percent ?? 0),
+            Math.round(
+              service.traffic?.cpu_percent ?? service.cpu_percent ?? 0,
+            ),
             100,
           );
           const memPercent = Math.min(
-            Math.round(service.traffic?.memory_percent ?? service.memory_percent ?? 0),
+            Math.round(
+              service.traffic?.memory_percent ?? service.memory_percent ?? 0,
+            ),
             100,
           );
 
