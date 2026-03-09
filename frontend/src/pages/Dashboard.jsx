@@ -905,7 +905,7 @@ export default function Dashboard() {
                     <div className="space-y-6">
                       {/* Traffic Chart */}
                       {dashboardVisibility.trafficChart && (
-                        <div className="flex justify-center w-full">
+                        <div className="flex justify-center w-full my-8">
                           <DashboardTrafficCards
                             trafficData={filteredTrafficData}
                             onRefresh={handleRefreshTraffic}
@@ -998,7 +998,7 @@ export default function Dashboard() {
 
                     {/* Traffic Chart - filtered by active tab */}
                     {dashboardVisibility.trafficChart && (
-                      <div className="flex justify-center w-full">
+                      <div className="flex justify-center w-full my-8">
                         <DashboardTrafficCards
                           trafficData={filteredTrafficData}
                           onRefresh={handleRefreshTraffic}

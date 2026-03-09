@@ -336,7 +336,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                   <CircularProgress
                     percentage={cpuPercent}
                     color="#f59e0b"
-                    size={70}
+                    size={80}
                     label="CPU"
                   />
                 </div>
@@ -345,23 +345,23 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                 <CircularProgress
                   percentage={percentage}
                   color={colorScheme.primary}
-                  size={160}
+                  size={180}
                 >
-                  <span className="text-[9px] font-medium text-theme-text-muted uppercase tracking-wider">
+                  <span className="text-[10px] font-medium text-theme-text-muted uppercase tracking-wider">
                     Traffic
                   </span>
-                  <div className="text-2xl font-bold text-theme-text">
+                  <div className="text-3xl font-bold text-theme-text">
                     {percentage}%
                   </div>
                   <div className="flex items-center gap-1 mt-1">
                     <ArrowUp className="w-3 h-3 text-blue-400" />
-                    <span className="font-mono font-semibold text-[10px] text-blue-400">
+                    <span className="font-mono font-semibold text-[11px] text-blue-400">
                       {formatBandwidth(service.bandwidth_up || 0)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <ArrowDown className="w-3 h-3 text-green-400" />
-                    <span className="font-mono font-semibold text-[10px] text-green-400">
+                    <span className="font-mono font-semibold text-[11px] text-green-400">
                       {formatBandwidth(service.bandwidth_down || 0)}
                     </span>
                   </div>
@@ -372,7 +372,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                   <CircularProgress
                     percentage={memPercent}
                     color="#06b6d4"
-                    size={70}
+                    size={80}
                     label="RAM"
                   />
                 </div>
