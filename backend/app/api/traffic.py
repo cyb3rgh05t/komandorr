@@ -9,6 +9,7 @@ import json
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"])
 
+
 # WebSocket connection manager for real-time traffic updates
 class TrafficConnectionManager:
     def __init__(self):
@@ -17,11 +18,15 @@ class TrafficConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.debug(f"WebSocket client connected. Total: {len(self.active_connections)}")
+        logger.debug(
+            f"WebSocket client connected. Total: {len(self.active_connections)}"
+        )
 
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
-        logger.debug(f"WebSocket client disconnected. Total: {len(self.active_connections)}")
+        logger.debug(
+            f"WebSocket client disconnected. Total: {len(self.active_connections)}"
+        )
 
     async def broadcast(self, data: dict):
         """Send traffic data to all connected WebSocket clients"""
@@ -36,6 +41,7 @@ class TrafficConnectionManager:
                 disconnected.append(connection)
         for conn in disconnected:
             self.active_connections.remove(conn)
+
 
 ws_manager = TrafficConnectionManager()
 
