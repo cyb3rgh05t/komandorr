@@ -48,6 +48,7 @@ class ArrInstance(BaseModel):
     type: str  # "sonarr" or "radarr"
     url: str
     api_key: str
+    access_url: str = ""
 
 
 class ArrSettings(BaseModel):
@@ -300,6 +301,7 @@ async def update_settings(
                     "type": instance.type,
                     "url": instance.url,
                     "api_key": instance.api_key,
+                    "access_url": instance.access_url,
                 }
                 for instance in updates.arr.instances
             ]
