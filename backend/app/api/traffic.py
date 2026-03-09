@@ -30,6 +30,10 @@ async def update_traffic(traffic_data: TrafficUpdate):
     service.traffic.total_down = traffic_data.total_down
     if traffic_data.max_bandwidth is not None:
         service.traffic.max_bandwidth = traffic_data.max_bandwidth
+    if traffic_data.cpu_percent is not None:
+        service.traffic.cpu_percent = traffic_data.cpu_percent
+    if traffic_data.memory_percent is not None:
+        service.traffic.memory_percent = traffic_data.memory_percent
     service.traffic.last_updated = datetime.now(timezone.utc)
 
     # Add to history (keep last 100 data points)
@@ -121,6 +125,8 @@ async def get_traffic_summary():
                     "total_up": service.traffic.total_up,
                     "total_down": service.traffic.total_down,
                     "max_bandwidth": service.traffic.max_bandwidth,
+                    "cpu_percent": service.traffic.cpu_percent,
+                    "memory_percent": service.traffic.memory_percent,
                     "last_updated": service.traffic.last_updated,
                     "traffic_history": (
                         service.traffic_history[-60:] if service.traffic_history else []
