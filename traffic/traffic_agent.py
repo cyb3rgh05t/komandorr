@@ -158,13 +158,40 @@ class TrafficMonitor:
                         f"Could not detect speed for interface {NETWORK_INTERFACE}"
                     )
             else:
-                # Find the fastest active interface
+                # Find the fastest active physical interface
                 max_speed = 0
                 detected_interface = None
 
+                # Known virtual interface prefixes/patterns to skip
+                virtual_prefixes = (
+                    "lo",
+                    "docker",
+                    "br-",
+                    "veth",
+                    "virbr",
+                    "vnet",
+                    "tun",
+                    "tap",
+                    "wg",
+                    "tailscale",
+                    "nordlynx",
+                    "vmnet",
+                    "vboxnet",
+                    "ham",
+                    "isatap",
+                    "teredo",
+                )
+
                 for iface_name, iface_stats in psutil.net_if_stats().items():
-                    # Skip loopback interfaces
-                    if iface_name.startswith("lo") or "loopback" in iface_name.lower():
+                    name_lower = iface_name.lower()
+
+                    # Skip loopback
+                    if "loopback" in name_lower:
+                        continue
+
+                    # Skip virtual interfaces
+                    if any(name_lower.startswith(p) for p in virtual_prefixes):
+                        logger.debug(f"Skipping virtual interface: {iface_name}")
                         continue
 
                     # Check if interface is up and has speed info

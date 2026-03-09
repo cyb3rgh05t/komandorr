@@ -561,7 +561,7 @@ export default function Dashboard() {
 
       {/* Stats Cards - Compact Layout */}
       {dashboardVisibility.stats && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
           {/* Total Services */}
           <button
             onClick={() => setStatusFilter(null)}
@@ -702,33 +702,6 @@ export default function Dashboard() {
                 {stats.downloadSpeed.toFixed(1)}
                 <span className="text-xs text-cyan-400 ml-0.5">MB/s</span>
               </p>
-            </div>
-          </div>
-
-          {/* Total Transfer */}
-          <div
-            onClick={() => navigate("/traffic")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Network className="w-5 h-5 text-indigo-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.totalTransfer")}
-              </p>
-              <div className="flex items-center gap-2 text-xs font-semibold leading-tight">
-                <span className="text-orange-500 flex items-center">
-                  <ArrowUp className="w-3 h-3 mr-0.5" />
-                  {stats.totalUploaded >= 1024
-                    ? `${(stats.totalUploaded / 1024).toFixed(1)}T`
-                    : `${stats.totalUploaded.toFixed(1)}G`}
-                </span>
-                <span className="text-cyan-500 flex items-center">
-                  <ArrowDown className="w-3 h-3 mr-0.5" />
-                  {stats.totalDownloaded >= 1024
-                    ? `${(stats.totalDownloaded / 1024).toFixed(1)}T`
-                    : `${stats.totalDownloaded.toFixed(1)}G`}
-                </span>
-              </div>
             </div>
           </div>
 
