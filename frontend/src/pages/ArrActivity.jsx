@@ -247,7 +247,7 @@ export default function ArrActivity() {
     return Math.max(1, Math.ceil(totalRecords / itemsPerPage));
   };
 
-  const renderQueueTable = (items, type) => {
+  const renderQueueTable = (items, type, accessUrl) => {
     const Icon = type === "sonarr" ? Tv : Film;
     const colorClass = type === "sonarr" ? "text-purple-500" : "text-blue-500";
 
@@ -307,7 +307,19 @@ export default function ArrActivity() {
                     <td className="py-3 px-4">
                       <div className="min-w-0">
                         <div className="font-medium text-theme-text truncate">
-                          {item.title}
+                          {accessUrl ? (
+                            <a
+                              href={accessUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 hover:text-theme-primary transition-colors"
+                            >
+                              {item.title}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            item.title
+                          )}
                         </div>
                         {type === "sonarr" && item.episode && (
                           <div className="text-xs text-theme-text-muted">
@@ -535,19 +547,7 @@ export default function ArrActivity() {
                         <Film className="w-5 h-5 text-theme-primary" />
                       )}
                       <h3 className="text-lg font-semibold text-theme-text">
-                        {inst.access_url ? (
-                          <a
-                            href={inst.access_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 hover:text-theme-primary transition-colors"
-                          >
-                            {inst.name}
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        ) : (
-                          inst.name
-                        )}
+                        {inst.name}
                       </h3>
                       <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
                         {t("arrActivity.error", "Error")}
@@ -584,19 +584,7 @@ export default function ArrActivity() {
                           <Film className={`w-5 h-5 ${iconColor}`} />
                         )}
                         <h3 className="text-lg font-semibold text-theme-text">
-                          {inst.access_url ? (
-                            <a
-                              href={inst.access_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 hover:text-theme-primary transition-colors"
-                            >
-                              {inst.name}
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          ) : (
-                            inst.name
-                          )}
+                          {inst.name}
                         </h3>
                         <span
                           className={`ml-2 px-2 py-0.5 ${badgeBg} ${badgeText} text-xs font-medium rounded-full`}
@@ -606,7 +594,11 @@ export default function ArrActivity() {
                         </span>
                       </div>
                     </div>
-                    {renderQueueTable(paginatedRecords, inst.type)}
+                    {renderQueueTable(
+                      paginatedRecords,
+                      inst.type,
+                      inst.access_url,
+                    )}
                   </div>
 
                   {/* Pagination for this instance */}
