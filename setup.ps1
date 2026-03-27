@@ -41,7 +41,7 @@ if (-not (Test-Path "venv")) {
 # Activate virtual environment and install dependencies
 Write-Host "Installing Python dependencies..." -ForegroundColor Cyan
 .\venv\Scripts\Activate.ps1
-pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 
 if ($LASTEXITCODE -eq 0) {
