@@ -29,7 +29,7 @@ import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
 import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
-import DashboardServiceListItem from "@/components/DashboardServiceListItem";
+import DashboardServiceTable from "@/components/DashboardServiceTable";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
@@ -336,20 +336,39 @@ export default function Dashboard() {
     })(),
   };
 
-  const LoadingServiceRow = () => (
-    <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
-      <div className="flex items-center gap-3 animate-pulse">
-        <div className="w-7 h-7 bg-theme-hover rounded flex-shrink-0" />
-        <div className="h-4 bg-theme-hover rounded w-32" />
-        <div className="flex-1" />
-        <div className="h-4 bg-theme-hover rounded w-16" />
-        <div className="h-6 bg-theme-hover rounded w-20" />
-        <div className="flex gap-1">
-          <div className="w-7 h-7 bg-theme-hover rounded" />
-          <div className="w-7 h-7 bg-theme-hover rounded" />
-          <div className="w-7 h-7 bg-theme-hover rounded" />
+  const LoadingTableSkeleton = () => (
+    <div className="bg-theme-card border border-theme rounded-lg overflow-hidden">
+      <div className="border-b border-theme bg-theme-hover/30 px-3 py-2.5">
+        <div className="flex gap-6 animate-pulse">
+          <div className="h-3 bg-theme-hover rounded w-20" />
+          <div className="h-3 bg-theme-hover rounded w-16 hidden sm:block" />
+          <div className="h-3 bg-theme-hover rounded w-14" />
+          <div className="h-3 bg-theme-hover rounded w-16 hidden md:block" />
+          <div className="h-3 bg-theme-hover rounded w-16 hidden lg:block" />
+          <div className="flex-1" />
+          <div className="h-3 bg-theme-hover rounded w-16" />
         </div>
       </div>
+      {[...Array(8)].map((_, i) => (
+        <div
+          key={i}
+          className="border-b border-theme last:border-b-0 px-3 py-2.5"
+        >
+          <div className="flex items-center gap-4 animate-pulse">
+            <div className="w-6 h-6 bg-theme-hover rounded flex-shrink-0" />
+            <div className="h-4 bg-theme-hover rounded w-32" />
+            <div className="h-4 bg-theme-hover rounded w-16 hidden sm:block" />
+            <div className="h-5 bg-theme-hover rounded w-16" />
+            <div className="h-4 bg-theme-hover rounded w-14 hidden md:block" />
+            <div className="flex-1" />
+            <div className="flex gap-1">
+              <div className="w-7 h-7 bg-theme-hover rounded" />
+              <div className="w-7 h-7 bg-theme-hover rounded" />
+              <div className="w-7 h-7 bg-theme-hover rounded" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 
@@ -759,12 +778,8 @@ export default function Dashboard() {
         <>
           {loading ? (
             <div className="space-y-6">
-              {/* Service List Loading */}
-              <div className="flex flex-col gap-2">
-                {[...Array(8)].map((_, i) => (
-                  <LoadingServiceRow key={i} />
-                ))}
-              </div>
+              {/* Service Table Loading */}
+              <LoadingTableSkeleton />
             </div>
           ) : services.length === 0 ? (
             <div className="bg-theme-card border border-theme rounded-lg p-6 md:p-8 text-center shadow-sm">
@@ -926,18 +941,13 @@ export default function Dashboard() {
                                 </h2>
                               </div>
                             )}
-                            <div className="flex flex-col gap-2">
-                              {groupServices.map((service) => (
-                                <DashboardServiceListItem
-                                  key={service.id}
-                                  service={service}
-                                  trafficData={trafficData}
-                                  onCheck={handleCheckService}
-                                  onEdit={handleEditService}
-                                  onDelete={handleDeleteService}
-                                />
-                              ))}
-                            </div>
+                            <DashboardServiceTable
+                              services={groupServices}
+                              trafficData={trafficData}
+                              onCheck={handleCheckService}
+                              onEdit={handleEditService}
+                              onDelete={handleDeleteService}
+                            />
                           </div>
                         ),
                       )}
@@ -1011,21 +1021,17 @@ export default function Dashboard() {
                       (activeTab === "ALL"
                         ? filteredServices
                         : grouped[activeTab]) && (
-                        <div className="flex flex-col gap-2">
-                          {(activeTab === "ALL"
-                            ? filteredServices
-                            : grouped[activeTab]
-                          ).map((service) => (
-                            <DashboardServiceListItem
-                              key={service.id}
-                              service={service}
-                              trafficData={trafficData}
-                              onCheck={handleCheckService}
-                              onEdit={handleEditService}
-                              onDelete={handleDeleteService}
-                            />
-                          ))}
-                        </div>
+                        <DashboardServiceTable
+                          services={
+                            activeTab === "ALL"
+                              ? filteredServices
+                              : grouped[activeTab]
+                          }
+                          trafficData={trafficData}
+                          onCheck={handleCheckService}
+                          onEdit={handleEditService}
+                          onDelete={handleDeleteService}
+                        />
                       )}
                   </div>
                 );
