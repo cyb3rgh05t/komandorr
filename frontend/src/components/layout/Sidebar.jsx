@@ -29,6 +29,7 @@ import {
   AlertCircle,
   Clock,
   ListOrdered,
+  Shield,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -290,6 +291,11 @@ export default function Sidebar() {
         { path: "/monitor", label: t("nav.monitor"), icon: Activity },
         { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
       ],
+    },
+    {
+      label: "VPN-Proxy Manager",
+      icon: Shield,
+      external: "http://50.7.224.34:5000/",
     },
     {
       label: t("nav.plex"),
@@ -720,6 +726,46 @@ export default function Sidebar() {
                         </ul>
                       )}
                     </div>
+                  );
+                } else if (item.external) {
+                  // External link item
+                  const Icon = item.icon;
+
+                  return (
+                    <li key={item.label} className="relative group">
+                      <a
+                        href={item.external}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className={`
+                          flex items-center gap-3 rounded-lg
+                          transition-all duration-200 relative
+                          ${
+                            isOpen
+                              ? "px-4 py-3"
+                              : "md:px-2 md:py-3 md:justify-center 2xl:px-4 2xl:justify-start"
+                          }
+                          text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary
+                        `}
+                        title={!isOpen ? item.label : ""}
+                      >
+                        <Icon size={20} className="flex-shrink-0" />
+                        <span
+                          className={`flex-1 transition-all overflow-hidden whitespace-nowrap ${
+                            isOpen ? "" : "md:hidden 2xl:block"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      </a>
+                      {/* Tooltip for collapsed state on tablets */}
+                      {!isOpen && (
+                        <div className="hidden md:group-hover:block 2xl:hidden absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 bg-theme-card border border-theme rounded-lg shadow-lg whitespace-nowrap text-sm">
+                          {item.label}
+                        </div>
+                      )}
+                    </li>
                   );
                 } else {
                   // Regular menu item
