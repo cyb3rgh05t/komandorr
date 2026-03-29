@@ -29,7 +29,7 @@ import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
 import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
-import DashboardServiceCard from "@/components/DashboardServiceCard";
+import DashboardServiceListItem from "@/components/DashboardServiceListItem";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
@@ -336,29 +336,25 @@ export default function Dashboard() {
     })(),
   };
 
-  const LoadingServiceCard = () => (
-    <div className="bg-theme-card border border-theme rounded-lg p-6">
-      <div className="space-y-3 animate-pulse">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2 flex-1">
-            <div className="h-5 bg-theme-hover rounded w-1/2" />
-            <div className="flex gap-2">
-              <div className="h-4 bg-theme-hover rounded w-16" />
-              <div className="h-4 bg-theme-hover rounded w-32" />
-            </div>
-          </div>
-          <div className="h-6 w-6 bg-theme-hover rounded" />
-        </div>
-        <div className="flex gap-2">
-          <div className="h-8 bg-theme-hover rounded w-20" />
-          <div className="h-8 bg-theme-hover rounded w-20" />
+  const LoadingServiceRow = () => (
+    <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+      <div className="flex items-center gap-3 animate-pulse">
+        <div className="w-7 h-7 bg-theme-hover rounded flex-shrink-0" />
+        <div className="h-4 bg-theme-hover rounded w-32" />
+        <div className="flex-1" />
+        <div className="h-4 bg-theme-hover rounded w-16" />
+        <div className="h-6 bg-theme-hover rounded w-20" />
+        <div className="flex gap-1">
+          <div className="w-7 h-7 bg-theme-hover rounded" />
+          <div className="w-7 h-7 bg-theme-hover rounded" />
+          <div className="w-7 h-7 bg-theme-hover rounded" />
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 min-w-0 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="relative w-full sm:max-w-xs">
@@ -763,10 +759,10 @@ export default function Dashboard() {
         <>
           {loading ? (
             <div className="space-y-6">
-              {/* Service Cards Loading - Optimized for tablet */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {/* Service List Loading */}
+              <div className="flex flex-col gap-2">
                 {[...Array(8)].map((_, i) => (
-                  <LoadingServiceCard key={i} />
+                  <LoadingServiceRow key={i} />
                 ))}
               </div>
             </div>
@@ -930,9 +926,9 @@ export default function Dashboard() {
                                 </h2>
                               </div>
                             )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            <div className="flex flex-col gap-2">
                               {groupServices.map((service) => (
-                                <DashboardServiceCard
+                                <DashboardServiceListItem
                                   key={service.id}
                                   service={service}
                                   trafficData={trafficData}
@@ -1015,12 +1011,12 @@ export default function Dashboard() {
                       (activeTab === "ALL"
                         ? filteredServices
                         : grouped[activeTab]) && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        <div className="flex flex-col gap-2">
                           {(activeTab === "ALL"
                             ? filteredServices
                             : grouped[activeTab]
                           ).map((service) => (
-                            <DashboardServiceCard
+                            <DashboardServiceListItem
                               key={service.id}
                               service={service}
                               trafficData={trafficData}
