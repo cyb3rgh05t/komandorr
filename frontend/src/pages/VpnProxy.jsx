@@ -109,6 +109,8 @@ export default function VpnProxy() {
       const parent = containers.find(
         (c) =>
           c.name === vpnParent ||
+          c.docker_name === vpnParent ||
+          vpnParent === `gluetun-${c.name}` ||
           dep.network_mode?.includes(c.name) ||
           dep.network_mode?.includes(c.container_id?.slice(0, 12)),
       );
@@ -389,8 +391,8 @@ export default function VpnProxy() {
                       </div>
                     )}
 
-                  {/* HTTP Proxy */}
-                  {proxyUrl && (
+                  {/* HTTP Proxy (hide when container has network-mode clients) */}
+                  {proxyUrl && deps.length === 0 && (
                     <div className="mt-2 pt-2 border-t border-theme">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-theme-text-muted flex items-center gap-1">
