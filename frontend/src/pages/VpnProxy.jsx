@@ -129,7 +129,7 @@ export default function VpnProxy() {
         c.name?.toLowerCase().includes(q) ||
         c.vpn_provider?.toLowerCase().includes(q) ||
         vpnInfoMap[c.id]?.country?.toLowerCase().includes(q) ||
-        vpnInfoMap[c.id]?.ip?.includes(q),
+        vpnInfoMap[c.id]?.public_ip?.includes(q),
     );
   }, [containers, search, vpnInfoMap]);
 
@@ -333,7 +333,7 @@ export default function VpnProxy() {
                   </div>
 
                   {/* IP & Location (only when running) */}
-                  {isRunning && info.ip && (
+                  {isRunning && info.public_ip && (
                     <>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-theme-text-muted flex items-center gap-1">
@@ -341,7 +341,7 @@ export default function VpnProxy() {
                           Public IP
                         </span>
                         <span className="text-theme-text font-mono">
-                          {info.ip}
+                          {info.public_ip}
                         </span>
                       </div>
                       {(info.country || info.region) && (
@@ -377,14 +377,14 @@ export default function VpnProxy() {
 
                   {/* Port Forwarding */}
                   {isRunning &&
-                    info.forwarded_port &&
-                    info.forwarded_port > 0 && (
+                    info.port_forwarded &&
+                    info.port_forwarded > 0 && (
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-theme-text-muted">
                           Port Forward
                         </span>
                         <span className="text-theme-primary font-mono">
-                          {info.forwarded_port}
+                          {info.port_forwarded}
                         </span>
                       </div>
                     )}
