@@ -118,63 +118,60 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     trafficData.services.length === 0
   ) {
     return (
-      <div className="w-full bg-theme-card border border-theme rounded-xl p-6 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-theme-primary/20 to-theme-primary/10 rounded-xl shadow-inner">
-              <TrendingUp className="w-6 h-6 text-theme-primary" />
+      <div className="w-full bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-theme">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-theme-primary" />
+            <span className="text-sm font-semibold text-theme-text">
+              {t("dashboard.trafficChart") || "Traffic Overview"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={refreshing}
+                className="p-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md group"
+                title={t("traffic.refreshData")}
+              >
+                <RefreshCw
+                  size={14}
+                  className={`text-theme-primary transition-transform duration-300 ${
+                    refreshing ? "animate-spin" : "group-hover:rotate-180"
+                  }`}
+                />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="bg-theme-card border border-theme rounded-xl p-12 text-center shadow-lg">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Activity size={40} className="" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-theme-text">
-                {t("dashboard.trafficChart") || "Traffic Overview"}
-              </h2>
-              <p className="text-xs text-theme-text-muted">
-                {t("traffic.realtimeMonitoring")}
+
+            <div className="text-center space-y-1">
+              <h3 className="text-xl font-bold text-theme-text mb-3">
+                {t("traffic.emptyState.title", "No Traffic Agents Connected")}
+              </h3>
+              <p className="text-theme-text-muted mb-6 max-w-md mx-auto">
+                {t(
+                  "traffic.emptyState.description",
+                  "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics.",
+                )}
               </p>
             </div>
-          </div>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={refreshing}
-              className="p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md group"
-              title={t("traffic.refreshData")}
-            >
-              <RefreshCw
-                size={16}
-                className={`text-theme-primary transition-transform duration-300 ${
-                  refreshing ? "animate-spin" : "group-hover:rotate-180"
-                }`}
-              />
-            </button>
-          )}
-        </div>
-        <div className="bg-theme-card border border-theme rounded-xl p-12 text-center shadow-lg">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Activity size={40} className="" />
-          </div>
-
-          <div className="text-center space-y-1">
-            <h3 className="text-xl font-bold text-theme-text mb-3">
-              {t("traffic.emptyState.title", "No Traffic Agents Connected")}
-            </h3>
-            <p className="text-theme-text-muted mb-6 max-w-md mx-auto">
-              {t(
-                "traffic.emptyState.description",
-                "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics.",
-              )}
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <a
-              href="https://github.com/cyb3rgh05t/komandorr/blob/main/traffic/README.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary-hover text-black rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:scale-105"
-            >
-              <Activity size={16} />
-              {t("traffic.emptyState.setupGuide", "Setup Traffic Agent")}
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <a
+                href="https://github.com/cyb3rgh05t/komandorr/blob/main/traffic/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary-hover text-black rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:scale-105"
+              >
+                <Activity size={16} />
+                {t("traffic.emptyState.setupGuide", "Setup Traffic Agent")}
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -267,8 +264,8 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   };
 
   return topServices.length > 0 ? (
-    <div className="w-full bg-theme-card border border-theme rounded-xl p-4 sm:p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="w-full bg-theme-card border border-theme rounded-xl shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-theme">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-theme-primary" />
           <span className="text-sm font-semibold text-theme-text">
@@ -280,9 +277,11 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
         </div>
         <div className="flex items-center gap-2">
           {hasMoreCards && (
-            <span className="text-[10px] text-theme-text-muted">
-              {carouselIndex + 1}/{maxIndex + 1}
-            </span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-theme-hover rounded-full">
+              <span className="text-[10px] text-theme-text-muted font-medium">
+                {carouselIndex + 1}/{maxIndex + 1}
+              </span>
+            </div>
           )}
           {onRefresh && (
             <button
@@ -301,7 +300,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
           )}
         </div>
       </div>
-      <div className="flex items-center justify-center gap-2 sm:gap-4">
+      <div className="flex items-center justify-center gap-2 sm:gap-4 p-4 sm:p-6">
         {/* Left Chevron */}
         {hasMoreCards && (
           <button
