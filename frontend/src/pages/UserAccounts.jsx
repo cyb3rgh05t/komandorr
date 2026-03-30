@@ -60,8 +60,8 @@ const ThumbnailWithFallback = ({ item, Icon }) => {
           item.type === "movie"
             ? "bg-blue-500/20"
             : item.type === "episode"
-            ? "bg-purple-500/20"
-            : "bg-pink-500/20"
+              ? "bg-purple-500/20"
+              : "bg-pink-500/20"
         }`}
       >
         <Icon
@@ -70,8 +70,8 @@ const ThumbnailWithFallback = ({ item, Icon }) => {
             item.type === "movie"
               ? "text-blue-400"
               : item.type === "episode"
-              ? "text-purple-400"
-              : "text-pink-400"
+                ? "text-purple-400"
+                : "text-pink-400"
           }`}
         />
       </div>
@@ -251,12 +251,12 @@ const UserAccounts = () => {
     // Filter watch history to only include current users
     const userWatchHistory = watchHistory.filter(
       (item) =>
-        userPlexIds.includes(item.user_id) || userEmails.includes(item.email)
+        userPlexIds.includes(item.user_id) || userEmails.includes(item.email),
     );
 
     const totalWatchTime = userWatchHistory.reduce(
       (sum, item) => sum + (item.duration || 0),
-      0
+      0,
     );
 
     return {
@@ -286,7 +286,7 @@ const UserAccounts = () => {
     let filtered = watchHistory.filter(
       (item) =>
         item.user_id === selectedUser.plex_id ||
-        item.email === selectedUser.email
+        item.email === selectedUser.email,
     );
 
     // Apply type filter
@@ -308,28 +308,28 @@ const UserAccounts = () => {
       }
 
       filtered = filtered.filter(
-        (item) => new Date(item.viewed_at) >= filterDate
+        (item) => new Date(item.viewed_at) >= filterDate,
       );
     }
 
     return filtered.sort(
-      (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at)
+      (a, b) => new Date(b.viewed_at) - new Date(a.viewed_at),
     );
   };
 
   const getUserStats = (user) => {
     const userWatchData = watchHistory.filter(
-      (item) => item.user_id === user.plex_id || item.email === user.email
+      (item) => item.user_id === user.plex_id || item.email === user.email,
     );
 
     const totalWatched = userWatchData.length;
     const movies = userWatchData.filter((item) => item.type === "movie").length;
     const episodes = userWatchData.filter(
-      (item) => item.type === "episode"
+      (item) => item.type === "episode",
     ).length;
     const totalSeconds = userWatchData.reduce(
       (sum, item) => sum + (item.duration || 0),
-      0
+      0,
     );
     const totalMinutes = Math.floor(totalSeconds / 60);
 
@@ -395,7 +395,7 @@ const UserAccounts = () => {
       const date = new Date(currentExpiration);
       expirationDate = currentExpiration.split("T")[0];
       expirationTime = `${String(date.getHours()).padStart(2, "0")}:${String(
-        date.getMinutes()
+        date.getMinutes(),
       ).padStart(2, "0")}`;
     }
 
@@ -430,7 +430,7 @@ const UserAccounts = () => {
 
       await api.put(
         `/invites/users/${editModal.user.id}/expiration`,
-        updateData
+        updateData,
       );
       queryClient.invalidateQueries(["invites"]);
       queryClient.invalidateQueries(["inviteStats"]);
@@ -480,12 +480,12 @@ const UserAccounts = () => {
       queryClient.invalidateQueries(["inviteStats"]);
       toast.success(
         t("userAccounts.userRefreshed") ||
-          `Updated info for ${user.username || user.email}`
+          `Updated info for ${user.username || user.email}`,
       );
     } catch (error) {
       console.error("Error refreshing user:", error);
       toast.error(
-        t("userAccounts.errorRefreshing") || "Failed to refresh user info"
+        t("userAccounts.errorRefreshing") || "Failed to refresh user info",
       );
     } finally {
       // Remove user from refreshing set
@@ -520,7 +520,7 @@ const UserAccounts = () => {
         <button
           onClick={handleRefresh}
           disabled={loading || isFetching}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
         >
           <RefreshCw
             size={16}
@@ -785,17 +785,15 @@ const UserAccounts = () => {
       </div>
 
       {/* Users List */}
-      <div className="bg-theme-card border border-blue-500/30 rounded-xl shadow-lg overflow-hidden">
-        {/* Blue Header for Users */}
-        <div className="bg-blue-500/10 border-b border-blue-500/30 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-blue-400" />
-              <h3 className="text-base font-semibold text-blue-400">
-                {t("userAccounts.title")}
-              </h3>
-            </div>
-            <span className="px-2.5 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full">
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        {/* Header for Users */}
+        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-theme-primary" />
+            <h3 className="text-base font-semibold text-theme-text">
+              {t("userAccounts.title")}
+            </h3>
+            <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
               {filteredUsers.length}
             </span>
           </div>
@@ -803,35 +801,35 @@ const UserAccounts = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-hover border-b border-theme">
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+              <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.user") || "User"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.email") || "Email"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.status") || "Status"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.inviteCode") || "Invite Code"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.joined") || "Joined"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.expires") || "Expires"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.libraries") || "Libraries"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.permissions") || "Permissions"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.watchTime") || "Watch Time"}
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-right py-3 px-4 text-sm font-semibold text-black">
                   {t("userAccounts.fields.actions") || "Actions"}
                 </th>
               </tr>
@@ -912,13 +910,13 @@ const UserAccounts = () => {
                   const totalItems = filteredUsers.length;
                   const totalPages = Math.max(
                     1,
-                    Math.ceil(totalItems / itemsPerPage)
+                    Math.ceil(totalItems / itemsPerPage),
                   );
                   const startIndex = (currentPage - 1) * itemsPerPage;
                   const endIndex = startIndex + itemsPerPage;
                   const paginatedUsers = filteredUsers.slice(
                     startIndex,
-                    endIndex
+                    endIndex,
                   );
                   window.__userPaginationData = {
                     totalItems,
@@ -938,7 +936,7 @@ const UserAccounts = () => {
                             {user.thumb ? (
                               <img
                                 src={`/api/plex/proxy/image?url=${encodeURIComponent(
-                                  user.thumb
+                                  user.thumb,
                                 )}`}
                                 alt={user.username || user.email}
                                 className="w-full h-full object-cover"
@@ -1021,10 +1019,10 @@ const UserAccounts = () => {
                               library.type === "movie"
                                 ? Film
                                 : library.type === "show"
-                                ? Tv
-                                : library.type === "music"
-                                ? Music
-                                : null;
+                                  ? Tv
+                                  : library.type === "music"
+                                    ? Music
+                                    : null;
 
                             return (
                               <span
@@ -1033,12 +1031,12 @@ const UserAccounts = () => {
                                   library.type === "all"
                                     ? "bg-cyan-500/15 text-cyan-400"
                                     : library.type === "movie"
-                                    ? "bg-blue-500/15 text-blue-400"
-                                    : library.type === "show"
-                                    ? "bg-purple-500/15 text-purple-400"
-                                    : library.type === "music"
-                                    ? "bg-pink-500/15 text-pink-400"
-                                    : "bg-gray-500/15 text-gray-400"
+                                      ? "bg-blue-500/15 text-blue-400"
+                                      : library.type === "show"
+                                        ? "bg-purple-500/15 text-purple-400"
+                                        : library.type === "music"
+                                          ? "bg-pink-500/15 text-pink-400"
+                                          : "bg-gray-500/15 text-gray-400"
                                 }`}
                                 title={library.name}
                               >
@@ -1186,7 +1184,7 @@ const UserAccounts = () => {
         if (paginationData.totalItems === 0) return null;
 
         return (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="text-sm font-medium text-theme-text-muted">
                 {t("userAccounts.pagination.showing", "Showing")}{" "}
@@ -1269,7 +1267,7 @@ const UserAccounts = () => {
               <button
                 onClick={() =>
                   setCurrentPage(
-                    Math.min(paginationData.totalPages, currentPage + 1)
+                    Math.min(paginationData.totalPages, currentPage + 1),
                   )
                 }
                 disabled={currentPage === paginationData.totalPages}
@@ -1529,10 +1527,10 @@ const UserAccounts = () => {
                       <button
                         key={filter}
                         onClick={() => setTimeFilter(filter)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
                           timeFilter === filter
-                            ? "bg-theme-hover text-white shadow-md"
-                            : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                            ? "bg-theme-primary text-black shadow-md"
+                            : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                         }`}
                       >
                         {t(`userHistory.filters.${filter}`) ||
@@ -1551,10 +1549,10 @@ const UserAccounts = () => {
                       <button
                         key={filter}
                         onClick={() => setTypeFilter(filter)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
                           typeFilter === filter
-                            ? "bg-theme-hover text-white shadow-md"
-                            : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                            ? "bg-theme-primary text-black shadow-md"
+                            : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                         }`}
                       >
                         {t(`userHistory.filters.${filter}`) ||
@@ -1594,16 +1592,16 @@ const UserAccounts = () => {
                             item.type === "movie"
                               ? "bg-blue-500/20 border border-blue-500/40 text-blue-400"
                               : item.type === "episode"
-                              ? "bg-purple-500/20 border border-purple-500/40 text-purple-400"
-                              : "bg-pink-500/20 border border-pink-500/40 text-pink-400"
+                                ? "bg-purple-500/20 border border-purple-500/40 text-purple-400"
+                                : "bg-pink-500/20 border border-pink-500/40 text-pink-400"
                           }`}
                         >
                           <Icon size={10} />
                           {item.type === "movie"
                             ? "MOVIE"
                             : item.type === "episode"
-                            ? "TV"
-                            : "MUSIC"}
+                              ? "TV"
+                              : "MUSIC"}
                         </div>
 
                         {/* Thumbnail */}
@@ -1615,8 +1613,8 @@ const UserAccounts = () => {
                               item.type === "movie"
                                 ? "bg-blue-500/20 border border-blue-500/30"
                                 : item.type === "episode"
-                                ? "bg-purple-500/20 border border-purple-500/30"
-                                : "bg-pink-500/20 border border-pink-500/30"
+                                  ? "bg-purple-500/20 border border-purple-500/30"
+                                  : "bg-pink-500/20 border border-pink-500/30"
                             }`}
                           >
                             <Icon
@@ -1624,8 +1622,8 @@ const UserAccounts = () => {
                                 item.type === "movie"
                                   ? "text-blue-400"
                                   : item.type === "episode"
-                                  ? "text-purple-400"
-                                  : "text-pink-400"
+                                    ? "text-purple-400"
+                                    : "text-pink-400"
                               }`}
                               size={32}
                             />

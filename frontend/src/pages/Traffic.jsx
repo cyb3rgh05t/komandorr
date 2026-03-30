@@ -26,7 +26,7 @@ const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
 
   // Extract bandwidth values based on type
   const values = data.map((point) =>
-    type === "upload" ? point.bandwidth_up : point.bandwidth_down
+    type === "upload" ? point.bandwidth_up : point.bandwidth_down,
   );
 
   const max = Math.max(...values);
@@ -48,7 +48,7 @@ const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
 
   const linePath = `M ${points.join(" L ")}`;
   const areaPath = `M 0,${height} L ${points.join(
-    " L "
+    " L ",
   )} L ${width},${height} Z`;
 
   // Color based on type
@@ -244,21 +244,21 @@ export default function Traffic() {
   // Calculate total bandwidth across all services
   const totalBandwidthUp = services.reduce(
     (sum, service) => sum + (service.traffic?.bandwidth_up || 0),
-    0
+    0,
   );
   const totalBandwidthDown = services.reduce(
     (sum, service) => sum + (service.traffic?.bandwidth_down || 0),
-    0
+    0,
   );
 
   // Calculate total traffic (cumulative) across all services
   const totalTrafficUp = services.reduce(
     (sum, service) => sum + Math.abs(service.traffic?.total_up || 0),
-    0
+    0,
   );
   const totalTrafficDown = services.reduce(
     (sum, service) => sum + Math.abs(service.traffic?.total_down || 0),
-    0
+    0,
   );
 
   // Filter and group services
@@ -354,7 +354,7 @@ export default function Traffic() {
             <button
               onClick={handleRefresh}
               disabled={isFetching}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
             >
               <RefreshCw
                 size={16}
@@ -475,17 +475,17 @@ export default function Traffic() {
               <div className="flex gap-2 min-w-max">
                 <button
                   onClick={() => setActiveTab("ALL")}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                     activeTab === "ALL"
-                      ? "bg-theme-hover text-white shadow-md"
-                      : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                      ? "bg-theme-primary text-black shadow-md"
+                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                   }`}
                 >
                   {t("traffic.page.tabs.all")}
                   <span
                     className={`ml-2 text-xs ${
                       activeTab === "ALL"
-                        ? "text-white/80"
+                        ? "text-black/70"
                         : "text-theme-text-muted"
                     }`}
                   >
@@ -498,17 +498,17 @@ export default function Traffic() {
                     <button
                       key={groupName}
                       onClick={() => setActiveTab(groupName)}
-                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                         activeTab === groupName
-                          ? "bg-theme-hover text-white shadow-md"
-                          : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                          ? "bg-theme-primary text-black shadow-md"
+                          : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                       }`}
                     >
                       {groupName}
                       <span
                         className={`ml-2 text-xs ${
                           activeTab === groupName
-                            ? "text-white/80"
+                            ? "text-black/70"
                             : "text-theme-text-muted"
                         }`}
                       >
@@ -535,18 +535,18 @@ export default function Traffic() {
                       ? t("traffic.page.emptyStates.noMatching")
                       : t(
                           "traffic.emptyState.title",
-                          "No Traffic Agents Connected"
+                          "No Traffic Agents Connected",
                         )}
                   </h3>
                   <p className="text-sm text-theme-text-muted max-w-md mx-auto">
                     {searchTerm
                       ? t(
                           "traffic.page.emptyStates.tryAdjusting",
-                          "Try adjusting your search criteria"
+                          "Try adjusting your search criteria",
                         )
                       : t(
                           "traffic.emptyState.description",
-                          "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics."
+                          "Install the Traffic Agent on your servers to monitor real-time bandwidth usage, upload/download speeds, and network statistics.",
                         )}
                   </p>
                 </div>
@@ -556,12 +556,12 @@ export default function Traffic() {
                       href="https://github.com/cyb3rgh05t/komandorr/blob/main/traffic/README.md"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary-hover text-black rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg hover:scale-105"
                     >
                       <Activity size={16} />
                       {t(
                         "traffic.emptyState.setupGuide",
-                        "Setup Traffic Agent"
+                        "Setup Traffic Agent",
                       )}
                     </a>
                   </div>
@@ -640,7 +640,7 @@ export default function Traffic() {
                       </div>
                       <p className="text-lg font-bold text-orange-400">
                         {formatTraffic(
-                          Math.abs(service.traffic?.total_up || 0)
+                          Math.abs(service.traffic?.total_up || 0),
                         )}
                       </p>
                     </div>
@@ -655,7 +655,7 @@ export default function Traffic() {
                       </div>
                       <p className="text-lg font-bold text-cyan-400">
                         {formatTraffic(
-                          Math.abs(service.traffic?.total_down || 0)
+                          Math.abs(service.traffic?.total_down || 0),
                         )}
                       </p>
                     </div>
@@ -688,7 +688,7 @@ export default function Traffic() {
                             </div>
                             {(() => {
                               const values = service.traffic_history.map(
-                                (p) => p.bandwidth_up
+                                (p) => p.bandwidth_up,
                               );
                               if (values.length > 0) {
                                 const avg =
@@ -730,7 +730,7 @@ export default function Traffic() {
                             </div>
                             {(() => {
                               const values = service.traffic_history.map(
-                                (p) => p.bandwidth_down
+                                (p) => p.bandwidth_down,
                               );
                               if (values.length > 0) {
                                 const avg =

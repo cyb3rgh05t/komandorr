@@ -29,6 +29,7 @@ import {
   AlertCircle,
   Clock,
   ListOrdered,
+  Shield,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -39,6 +40,7 @@ export default function Sidebar() {
   const [expandedTabs, setExpandedTabs] = useState({
     plex: false,
     services: false,
+    vod: false,
     downloads: false,
     uploader: false,
   });
@@ -248,10 +250,26 @@ export default function Sidebar() {
   const errorServices = services.filter((s) => s.status === "error").length;
   const totalIssues = offlineServices + problemServices + errorServices;
 
+  // Fetch VPN proxy containers for error badge
+  const { data: vpnContainers = [] } = useQuery({
+    queryKey: ["vpn-proxy-containers-sidebar"],
+    queryFn: () => api.get("/vpn-proxy/containers"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const vpnErrorCount = vpnContainers.filter((c) => {
+    const s = (c.docker_status || c.status || "").toLowerCase();
+    return (
+      s === "unhealthy" || s === "stopped" || s === "exited" || s === "dead"
+    );
+  }).length;
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
-      invite.is_expired && (!invite.users || invite.users.length === 0)
+      invite.is_expired && (!invite.users || invite.users.length === 0),
   ).length;
 
   // Extract all users from invites
@@ -292,6 +310,11 @@ export default function Sidebar() {
       ],
     },
     {
+      label: "VPN-Proxy Manager",
+      icon: Shield,
+      path: "/vpn-proxy",
+    },
+    {
       label: t("nav.plex"),
       icon: Tv2Icon,
       isTab: true,
@@ -302,8 +325,20 @@ export default function Sidebar() {
         { path: "/invites", label: t("nav.invites"), icon: Mail },
       ],
     },
-    { path: "/vod-streams", label: t("nav.vodStreams"), icon: FilmIcon },
-    { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
+    {
+      label: t("nav.vodMedia", "VoD Media"),
+      icon: Video,
+      isTab: true,
+      tabName: "vod",
+      items: [
+        {
+          path: "/vod-streams",
+          label: t("nav.vodPlexSync", "VoD Plex-Sync"),
+          icon: FilmIcon,
+        },
+        { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
+      ],
+    },
     { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
     {
       label: t("nav.uploader"),
@@ -432,7 +467,7 @@ export default function Sidebar() {
                   const Icon = item.icon;
                   const isExpanded = expandedTabs[item.tabName];
                   const hasActiveSub = item.items.some((sub) =>
-                    isActive(sub.path)
+                    isActive(sub.path),
                   );
 
                   // Check if Plex tab has any subtabs with warning badges (expired invites/users)
@@ -453,6 +488,10 @@ export default function Sidebar() {
                     item.tabName === "uploader" && activeUploadsCount > 0;
                   const hasFailedUploadsBadge =
                     item.tabName === "uploader" && failedUploadsCount > 0;
+
+                  // Check if VoD Media tab has active streams badge
+                  const hasVodStreamsBadge =
+                    item.tabName === "vod" && vodStreamsCount > 0;
 
                   // Check if Downloads tab has active or stuck downloads (show separate badges)
                   const totalActiveDownloads =
@@ -478,8 +517,8 @@ export default function Sidebar() {
                           }
                           ${
                             hasActiveSub
-                              ? "bg-theme-hover text-white"
-                              : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                              ? "bg-theme-primary text-black"
+                              : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                           }
                         `}
                         title={!isOpen ? item.label : ""}
@@ -546,6 +585,15 @@ export default function Sidebar() {
                             {totalStuckDownloads}
                           </span>
                         )}
+                        {hasVodStreamsBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vodStreamsCount}
+                          </span>
+                        )}
                         <ChevronDown
                           size={16}
                           className={`flex-shrink-0 transition-transform ${
@@ -592,6 +640,12 @@ export default function Sidebar() {
                               isMovies && downloadCounts.radarrActive > 0;
                             const moviesStuckBadge =
                               isMovies && downloadCounts.radarrStuck > 0;
+
+                            // VoD Plex-Sync badge
+                            const isVodPlexSync =
+                              subItem.path === "/vod-streams";
+                            const vodPlexSyncBadge =
+                              isVodPlexSync && vodStreamsCount > 0;
 
                             // Uploader Active Uploads badge
                             const isActiveUploads =
@@ -663,6 +717,12 @@ export default function Sidebar() {
                                 color: "bg-yellow-500",
                               });
                             }
+                            if (vodPlexSyncBadge) {
+                              badges.push({
+                                count: vodStreamsCount,
+                                color: "bg-green-500",
+                              });
+                            }
                             // Uploader: separate badges for active, queue, and failed
                             if (activeUploadsBadge) {
                               badges.push({
@@ -693,8 +753,8 @@ export default function Sidebar() {
                                     transition-all duration-200 relative
                                     ${
                                       active
-                                        ? "bg-theme-hover text-white"
-                                        : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                                        ? "bg-theme-primary text-black"
+                                        : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                                     }
                                   `}
                                 >
@@ -721,6 +781,46 @@ export default function Sidebar() {
                       )}
                     </div>
                   );
+                } else if (item.external) {
+                  // External link item
+                  const Icon = item.icon;
+
+                  return (
+                    <li key={item.label} className="relative group">
+                      <a
+                        href={item.external}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className={`
+                          flex items-center gap-3 rounded-lg
+                          transition-all duration-200 relative
+                          ${
+                            isOpen
+                              ? "px-4 py-3"
+                              : "md:px-2 md:py-3 md:justify-center 2xl:px-4 2xl:justify-start"
+                          }
+                          text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary
+                        `}
+                        title={!isOpen ? item.label : ""}
+                      >
+                        <Icon size={20} className="flex-shrink-0" />
+                        <span
+                          className={`flex-1 transition-all overflow-hidden whitespace-nowrap ${
+                            isOpen ? "" : "md:hidden 2xl:block"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      </a>
+                      {/* Tooltip for collapsed state on tablets */}
+                      {!isOpen && (
+                        <div className="hidden md:group-hover:block 2xl:hidden absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 bg-theme-card border border-theme rounded-lg shadow-lg whitespace-nowrap text-sm">
+                          {item.label}
+                        </div>
+                      )}
+                    </li>
+                  );
                 } else {
                   // Regular menu item
                   const Icon = item.icon;
@@ -734,6 +834,10 @@ export default function Sidebar() {
                   // Check for Storage issues badge
                   const isStorage = item.path === "/storage";
                   const showStorageBadge = isStorage && storageIssuesCount > 0;
+
+                  // Check for VPN Proxy error badge
+                  const isVpnProxy = item.path === "/vpn-proxy";
+                  const showVpnErrorBadge = isVpnProxy && vpnErrorCount > 0;
 
                   return (
                     <li key={item.path} className="relative group">
@@ -750,8 +854,8 @@ export default function Sidebar() {
                           }
                           ${
                             active
-                              ? "bg-theme-hover text-white"
-                              : "text-theme-text hover:bg-theme-hover hover:text-theme-text-hover"
+                              ? "bg-theme-primary text-black"
+                              : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                           }
                         `}
                         title={!isOpen ? item.label : ""}
@@ -780,6 +884,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {storageIssuesCount}
+                          </span>
+                        )}
+                        {showVpnErrorBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vpnErrorCount}
                           </span>
                         )}
                       </Link>

@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .bg-theme-primary-80 {
+    background-color: color-mix(in srgb, var(--theme-primary) 80%, transparent);
+  }
+}
+
 /* ========================================
    THEME CSS VARIABLES
    ======================================== */
@@ -131,7 +137,8 @@
   --theme-primary: #e5a00d;
   --theme-primary-hover: #cc8f0c;
   --theme-accent: #282a2d;
-  --theme-bg: radial-gradient(
+  --theme-bg:
+    radial-gradient(
       circle farthest-side at 0% 100%,
       rgb(47, 47, 47) 0%,
       rgba(47, 47, 47, 0) 100%
@@ -466,6 +473,38 @@
   --plex-poster-unwatched: #6366f1;
 }
 
+/* Original Theme (Lime/Yellow - Kassenbuch style) */
+[data-theme="original"] {
+  --theme-primary: #d8ed18;
+  --theme-primary-hover: #deef45;
+  --theme-accent: #e4f162;
+  --theme-bg: #030303;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #000000;
+  --theme-bg-hover: #000000;
+  --theme-border: #373737;
+  --theme-text: #c1c1c1;
+  --theme-text-muted: #868686;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #d8ed18;
+  --button-color-hover: #deef45;
+  --button-text: #000000;
+  --button-text-hover: #000000;
+  --link-color: #e4f162;
+  --link-color-hover: #e9f37b;
+  --label-text-color: #000000;
+  --modal-bg-color: #1f1f1f;
+  --modal-header-color: #1f1f1f;
+  --modal-footer-color: #1f1f1f;
+  --drop-down-menu-bg: #1f1f1f;
+  --accent-color: 216, 237, 24;
+  --accent-color-hover: rgba(216, 237, 24, 0.8);
+  --arr-queue-color: #d8ed18;
+  --plex-poster-unwatched: #d8ed18;
+}
+
 /* ========================================
    TRANSPARENCY VARIABLES
    ======================================== */
@@ -528,9 +567,9 @@ html::before {
 
 body {
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--theme-text);
@@ -538,7 +577,8 @@ body {
 
 /* Plex Theme Body with Gradient */
 html[data-theme="plex"] body {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle farthest-side at 0% 100%,
       rgb(47, 47, 47) 0%,
       rgba(47, 47, 47, 0) 100%
@@ -563,8 +603,8 @@ html[data-theme="plex"] body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 /* ========================================
@@ -723,6 +763,17 @@ html.hide-scrollbars * {
 
 .hover\:border-theme-primary:hover {
   border-color: var(--theme-primary);
+}
+
+.focus\:border-theme-primary:focus {
+  border-color: var(--theme-primary) !important;
+  outline: none !important;
+}
+
+.focus\:ring-theme-primary:focus {
+  --tw-ring-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 2px var(--theme-primary) !important;
+  outline: none !important;
 }
 
 .border-theme-accent {

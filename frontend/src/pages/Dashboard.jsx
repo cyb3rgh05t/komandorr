@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,12 +21,21 @@ import {
   Network,
   ArrowUp,
   ArrowDown,
+  Upload,
+  Download,
+  Shield,
+  Globe,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
-import DashboardServiceCard from "@/components/DashboardServiceCard";
+import { uploaderApi } from "@/services/uploaderApi";
+import { arrActivityApi } from "@/services/arrActivityApi";
+import DashboardServiceTable from "@/components/DashboardServiceTable";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
+import DashboardVpnTable from "@/components/DashboardVpnTable";
+import DashboardVpnMap from "@/components/DashboardVpnMap";
+import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -52,12 +61,14 @@ export default function Dashboard() {
     placeholderData: (previousData) => previousData, // Show old data while fetching
   });
 
-  // Use React Query for traffic data
+  // Real-time traffic via WebSocket
+  useTrafficWebSocket();
+
+  // Use React Query for traffic data (initial load, WebSocket pushes updates)
   const { data: trafficData, isFetching: trafficFetching } = useQuery({
     queryKey: ["traffic"],
     queryFn: () => api.getTrafficSummary(),
-    staleTime: 5000,
-    refetchInterval: 5000,
+    staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
 
@@ -69,6 +80,79 @@ export default function Dashboard() {
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
+
+  // Use React Query for uploader data (active uploads)
+  const { data: uploaderData } = useQuery({
+    queryKey: ["uploader", "inprogress"],
+    queryFn: () => uploaderApi.getInProgress(),
+    staleTime: 2000,
+    refetchInterval: 2000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // Use React Query for arr-activity data (downloads queue)
+  const { data: arrQueueData } = useQuery({
+    queryKey: ["arr-activity", "queue"],
+    queryFn: () => arrActivityApi.getQueue(),
+    staleTime: 5000,
+    refetchInterval: 5000,
+    placeholderData: (previousData) => previousData,
+  });
+
+  // VPN Proxy data
+  const { data: vpnContainers = [] } = useQuery({
+    queryKey: ["vpn-proxy-containers"],
+    queryFn: () => api.get("/vpn-proxy/containers"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: vpnInfoMap = {} } = useQuery({
+    queryKey: ["vpn-proxy-vpn-info"],
+    queryFn: () => api.get("/vpn-proxy/containers/vpn-info-batch"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: vpnDependentsRaw = [] } = useQuery({
+    queryKey: ["vpn-proxy-dependents"],
+    queryFn: () => api.get("/vpn-proxy/containers/dependents"),
+    staleTime: 15000,
+    refetchInterval: 20000,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: vpnConnectionStatus } = useQuery({
+    queryKey: ["vpn-proxy-status"],
+    queryFn: () => api.get("/vpn-proxy/status"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+
+  // Build VPN dependents map
+  const vpnDepsMap = useMemo(() => {
+    const map = {};
+    if (!Array.isArray(vpnDependentsRaw)) return map;
+    vpnDependentsRaw.forEach((dep) => {
+      const vpnParent = dep.vpn_container_name || dep.vpn_parent;
+      if (!vpnParent) return;
+      const parent = vpnContainers.find(
+        (c) =>
+          c.name === vpnParent ||
+          c.docker_name === vpnParent ||
+          vpnParent === `gluetun-${c.name}` ||
+          dep.network_mode?.includes(c.name) ||
+          dep.network_mode?.includes(c.container_id?.slice(0, 12)),
+      );
+      if (parent) {
+        if (!map[parent.id]) map[parent.id] = [];
+        map[parent.id].push(dep);
+      }
+    });
+    return map;
+  }, [vpnDependentsRaw, vpnContainers]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -93,6 +177,8 @@ export default function Dashboard() {
           stats: true,
           trafficChart: true,
           services: true,
+          vpnList: true,
+          vpnMap: true,
         };
   });
   const [version, setVersion] = useState({
@@ -106,7 +192,7 @@ export default function Dashboard() {
   useEffect(() => {
     localStorage.setItem(
       "dashboardVisibility",
-      JSON.stringify(dashboardVisibility)
+      JSON.stringify(dashboardVisibility),
     );
   }, [dashboardVisibility]);
 
@@ -208,7 +294,7 @@ export default function Dashboard() {
       const updated = await api.checkService(id);
       // Update the cache with the updated service
       queryClient.setQueryData(["services"], (old) =>
-        old.map((s) => (s.id === id ? updated : s))
+        old.map((s) => (s.id === id ? updated : s)),
       );
       toast.success(t("common.success"));
     } catch (error) {
@@ -235,7 +321,7 @@ export default function Dashboard() {
       const updated = await api.updateService(editingService.id, data);
       // Update cache
       queryClient.setQueryData(["services"], (old) =>
-        old.map((s) => (s.id === updated.id ? updated : s))
+        old.map((s) => (s.id === updated.id ? updated : s)),
       );
       setShowModal(false);
       setEditingService(null);
@@ -259,7 +345,7 @@ export default function Dashboard() {
       await api.deleteService(confirmDialog.serviceId);
       // Remove from cache
       queryClient.setQueryData(["services"], (old) =>
-        old.filter((s) => s.id !== confirmDialog.serviceId)
+        old.filter((s) => s.id !== confirmDialog.serviceId),
       );
       toast.success(t("common.success"));
     } catch (error) {
@@ -287,7 +373,7 @@ export default function Dashboard() {
       services.length > 0
         ? Math.round(
             services.reduce((sum, s) => sum + (s.response_time || 0), 0) /
-              services.length
+              services.length,
           )
         : 0,
     recentlyChecked: services.filter((s) => {
@@ -301,31 +387,54 @@ export default function Dashboard() {
     downloadSpeed: trafficData?.total_bandwidth_down || 0,
     totalUploaded: trafficData?.total_traffic_up || 0,
     totalDownloaded: trafficData?.total_traffic_down || 0,
+    activeUploads: uploaderData?.jobs?.length || 0,
+    activeDownloads: (() => {
+      if (!arrQueueData) return 0;
+      // arrQueueData is an object with instance IDs as keys
+      return Object.values(arrQueueData).reduce((sum, inst) => {
+        return sum + (inst.records?.length || 0);
+      }, 0);
+    })(),
   };
 
-  const LoadingServiceCard = () => (
-    <div className="bg-theme-card border border-theme rounded-lg p-6">
-      <div className="space-y-3 animate-pulse">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2 flex-1">
-            <div className="h-5 bg-theme-hover rounded w-1/2" />
-            <div className="flex gap-2">
-              <div className="h-4 bg-theme-hover rounded w-16" />
-              <div className="h-4 bg-theme-hover rounded w-32" />
-            </div>
-          </div>
-          <div className="h-6 w-6 bg-theme-hover rounded" />
-        </div>
-        <div className="flex gap-2">
-          <div className="h-8 bg-theme-hover rounded w-20" />
-          <div className="h-8 bg-theme-hover rounded w-20" />
+  const LoadingTableSkeleton = () => (
+    <div className="bg-theme-card border border-theme rounded-lg overflow-hidden">
+      <div className="border-b border-theme bg-theme-hover/30 px-3 py-2.5">
+        <div className="flex gap-6 animate-pulse">
+          <div className="h-3 bg-theme-hover rounded w-20" />
+          <div className="h-3 bg-theme-hover rounded w-16 hidden sm:block" />
+          <div className="h-3 bg-theme-hover rounded w-14" />
+          <div className="h-3 bg-theme-hover rounded w-16 hidden md:block" />
+          <div className="h-3 bg-theme-hover rounded w-16 hidden lg:block" />
+          <div className="flex-1" />
+          <div className="h-3 bg-theme-hover rounded w-16" />
         </div>
       </div>
+      {[...Array(8)].map((_, i) => (
+        <div
+          key={i}
+          className="border-b border-theme last:border-b-0 px-3 py-2.5"
+        >
+          <div className="flex items-center gap-4 animate-pulse">
+            <div className="w-6 h-6 bg-theme-hover rounded flex-shrink-0" />
+            <div className="h-4 bg-theme-hover rounded w-32" />
+            <div className="h-4 bg-theme-hover rounded w-16 hidden sm:block" />
+            <div className="h-5 bg-theme-hover rounded w-16" />
+            <div className="h-4 bg-theme-hover rounded w-14 hidden md:block" />
+            <div className="flex-1" />
+            <div className="flex gap-1">
+              <div className="w-7 h-7 bg-theme-hover rounded" />
+              <div className="w-7 h-7 bg-theme-hover rounded" />
+              <div className="w-7 h-7 bg-theme-hover rounded" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 
   return (
-    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 min-w-0 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="relative w-full sm:max-w-xs">
@@ -347,7 +456,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowCustomizeMenu(!showCustomizeMenu)}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
             title={t("dashboard.customize")}
           >
             <Settings size={16} sm:size={18} className="text-theme-primary" />
@@ -358,7 +467,7 @@ export default function Dashboard() {
           <button
             onClick={handleRefreshAll}
             disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
@@ -374,7 +483,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
           >
             <Plus size={16} className="text-theme-primary" />
             <span className="text-xs sm:text-sm">
@@ -514,6 +623,72 @@ export default function Dashboard() {
                   />
                 </button>
               </div>
+
+              {/* VPN List Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.vpnList ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showVpnList", "VPN Proxy List")}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      vpnList: !dashboardVisibility.vpnList,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.vpnList
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.vpnList ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* VPN Map Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.vpnMap ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showVpnMap", "VPN Connection Map")}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      vpnMap: !dashboardVisibility.vpnMap,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.vpnMap
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.vpnMap ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Footer */}
@@ -529,236 +704,209 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Compact Layout */}
       {dashboardVisibility.stats && (
-        <div className="space-y-4">
-          {/* Enhanced Stats Grid - Optimized for 1280x800 tablet */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-10 gap-3">
-            {/* Total Services */}
-            <button
-              onClick={() => setStatusFilter(null)}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/50"
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-left">
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Server className="w-3 h-3 text-theme-primary" />
-                    {t("dashboard.stats.totalServices")}
-                  </p>
-                  <p className="text-2xl font-bold text-theme-primary mt-1 text-left">
-                    {stats.total}
-                  </p>
-                </div>
-                <Server className="w-8 h-8 text-theme-primary" />
-              </div>
-            </button>
-
-            {/* Online */}
-            <button
-              onClick={() => setStatusFilter("online")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 group ${
-                statusFilter === "online"
-                  ? "border-green-500 ring-2 ring-green-500/20"
-                  : "border-theme hover:border-green-500/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-left">
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3 text-green-500" />
-                    {t("dashboard.stats.online")}
-                  </p>
-                  <p className="text-2xl font-bold text-green-500 mt-1 text-left">
-                    {stats.online}
-                  </p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-500" />
-              </div>
-            </button>
-
-            {/* Offline */}
-            <button
-              onClick={() => setStatusFilter("offline")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 group ${
-                statusFilter === "offline"
-                  ? "border-red-500 ring-2 ring-red-500/20"
-                  : "border-theme hover:border-red-500/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-left">
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3 text-red-500" />
-                    {t("dashboard.stats.offline")}
-                  </p>
-                  <p className="text-2xl font-bold text-red-500 mt-1 text-left">
-                    {stats.offline}
-                  </p>
-                </div>
-                <AlertCircle className="w-8 h-8 text-red-500" />
-              </div>
-            </button>
-
-            {/* Problem */}
-            <button
-              onClick={() => setStatusFilter("problem")}
-              className={`relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-yellow-500/10 group ${
-                statusFilter === "problem"
-                  ? "border-yellow-500 ring-2 ring-yellow-500/20"
-                  : "border-theme hover:border-yellow-500/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-left">
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3 text-yellow-500" />
-                    {t("dashboard.stats.problems")}
-                  </p>
-                  <p className="text-2xl font-bold text-yellow-500 mt-1 text-left">
-                    {stats.problem}
-                  </p>
-                  <div className="text-[10px] text-theme-text-muted/70 mt-0.5 text-left">
-                    {t("dashboard.stats.slowResponse")}
-                  </div>
-                </div>
-                <AlertCircle className="w-8 h-8 text-yellow-500" />
-              </div>
-            </button>
-
-            {/* Avg Response Time */}
-            <div
-              onClick={() => navigate("/monitor")}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-blue-500" />
-                    {t("dashboard.stats.avgResponse")}
-                  </p>
-                  <p className="text-2xl font-bold text-blue-500 mt-1">
-                    {stats.avgResponseTime}
-                    <span className="text-sm text-blue-400 ml-1">ms</span>
-                  </p>
-                </div>
-                <Zap className="w-8 h-8 text-blue-500" />
-              </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
+          {/* Total Services */}
+          <button
+            onClick={() => setStatusFilter(null)}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 flex items-center gap-2"
+          >
+            <Server className="w-5 h-5 text-theme-primary flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.totalServices")}
+              </p>
+              <p className="text-lg font-bold text-theme-primary leading-tight">
+                {stats.total}
+              </p>
             </div>
+          </button>
 
-            {/* Active (5min) */}
-            <div
-              onClick={() => navigate("/monitor")}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Activity className="w-3 h-3 text-purple-500" />
-                    {t("dashboard.stats.active5min")}
-                  </p>
-                  <p className="text-2xl font-bold text-purple-500 mt-1">
-                    {stats.recentlyChecked}
-                  </p>
-                </div>
-                <Activity className="w-8 h-8 text-purple-500" />
-              </div>
+          {/* Online */}
+          <button
+            onClick={() => setStatusFilter("online")}
+            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-green-500/10 flex items-center gap-2 ${
+              statusFilter === "online"
+                ? "border-green-500 ring-1 ring-green-500/20"
+                : "border-theme hover:border-green-500/50"
+            }`}
+          >
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.online")}
+              </p>
+              <p className="text-lg font-bold text-green-500 leading-tight">
+                {stats.online}
+              </p>
             </div>
+          </button>
 
-            {/* Upload Speed */}
-            <div
-              onClick={() => navigate("/traffic")}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3 text-orange-500" />
-                    {t("dashboard.stats.uploadSpeed")}
-                  </p>
-                  <p className="text-2xl font-bold text-orange-500 mt-1">
-                    {stats.uploadSpeed.toFixed(1)}
-                    <span className="text-sm text-orange-400 ml-1">MB/s</span>
-                  </p>
-                </div>
-                <ArrowUp className="w-8 h-8 text-orange-500" />
-              </div>
+          {/* Offline */}
+          <button
+            onClick={() => setStatusFilter("offline")}
+            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-red-500/10 flex items-center gap-2 ${
+              statusFilter === "offline"
+                ? "border-red-500 ring-1 ring-red-500/20"
+                : "border-theme hover:border-red-500/50"
+            }`}
+          >
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.offline")}
+              </p>
+              <p className="text-lg font-bold text-red-500 leading-tight">
+                {stats.offline}
+              </p>
             </div>
+          </button>
 
-            {/* Download Speed */}
-            <div
-              onClick={() => navigate("/traffic")}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3 text-cyan-500" />
-                    {t("dashboard.stats.downloadSpeed")}
-                  </p>
-                  <p className="text-2xl font-bold text-cyan-500 mt-1">
-                    {stats.downloadSpeed.toFixed(1)}
-                    <span className="text-sm text-cyan-400 ml-1">MB/s</span>
-                  </p>
-                </div>
-                <ArrowDown className="w-8 h-8 text-cyan-500" />
-              </div>
+          {/* Problem */}
+          <button
+            onClick={() => setStatusFilter("problem")}
+            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-yellow-500/10 flex items-center gap-2 ${
+              statusFilter === "problem"
+                ? "border-yellow-500 ring-1 ring-yellow-500/20"
+                : "border-theme hover:border-yellow-500/50"
+            }`}
+          >
+            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.problems")}
+              </p>
+              <p className="text-lg font-bold text-yellow-500 leading-tight">
+                {stats.problem}
+              </p>
             </div>
+          </button>
 
-            {/* Total Transfer */}
-            <div
-              onClick={() => navigate("/traffic")}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Network className="w-3 h-3 text-indigo-500" />
-                    {t("dashboard.stats.totalTransfer")}
-                  </p>
-                  <div className="mt-1">
-                    <div className="flex items-center gap-1 text-blue-500">
-                      <ArrowUp className="w-3 h-3" />
-                      <span className="text-xs font-semibold">
-                        {stats.totalUploaded >= 1024
-                          ? `${(stats.totalUploaded / 1024).toFixed(2)} TB`
-                          : stats.totalUploaded >= 1
-                          ? `${stats.totalUploaded.toFixed(2)} GB`
-                          : `${(stats.totalUploaded * 1024).toFixed(2)} MB`}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-green-500">
-                      <ArrowDown className="w-3 h-3" />
-                      <span className="text-xs font-semibold">
-                        {stats.totalDownloaded >= 1024
-                          ? `${(stats.totalDownloaded / 1024).toFixed(2)} TB`
-                          : stats.totalDownloaded >= 1
-                          ? `${stats.totalDownloaded.toFixed(2)} GB`
-                          : `${(stats.totalDownloaded * 1024).toFixed(2)} MB`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <Network className="w-8 h-8 text-indigo-500" />
-              </div>
+          {/* Avg Response Time */}
+          <div
+            onClick={() => navigate("/vpn-proxy")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Shield className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                VPN Total
+              </p>
+              <p className="text-lg font-bold text-blue-500 leading-tight">
+                {vpnContainers.length}
+              </p>
             </div>
+          </div>
 
-            {/* Active Streams */}
-            <div
-              onClick={() => navigate("/vod-streams")}
-              className="relative bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:bg-pink-500/10 hover:border-pink-500/50 transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Video className="w-3 h-3 text-pink-500" />
-                    {t("dashboard.stats.vodStreams")}
-                  </p>
-                  <p className="text-2xl font-bold text-pink-500 mt-1">
-                    {stats.activeStreams}
-                  </p>
-                </div>
-                <Video className="w-8 h-8 text-pink-500" />
-              </div>
+          {/* VPN Running */}
+          <div
+            onClick={() => navigate("/vpn-proxy")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Activity className="w-5 h-5 text-purple-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                VPN Running
+              </p>
+              <p className="text-lg font-bold text-purple-500 leading-tight">
+                {
+                  vpnContainers.filter((c) => {
+                    const s = (c.docker_status || c.status || "").toLowerCase();
+                    return s === "running" || s === "healthy";
+                  }).length
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* VPN Countries */}
+          <div
+            onClick={() => navigate("/vpn-proxy")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Globe className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                Countries
+              </p>
+              <p className="text-lg font-bold text-orange-500 leading-tight">
+                {
+                  new Set(
+                    vpnContainers
+                      .map((c) => vpnInfoMap?.[c.id]?.country)
+                      .filter(Boolean),
+                  ).size
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* VPN Providers */}
+          <div
+            onClick={() => navigate("/vpn-proxy")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Network className="w-5 h-5 text-cyan-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                Providers
+              </p>
+              <p className="text-lg font-bold text-cyan-500 leading-tight">
+                {
+                  new Set(
+                    vpnContainers.map((c) => c.vpn_provider).filter(Boolean),
+                  ).size
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* Active Streams */}
+          <div
+            onClick={() => navigate("/vod-streams")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-pink-500/10 hover:border-pink-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Video className="w-5 h-5 text-pink-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.vodStreams")}
+              </p>
+              <p className="text-lg font-bold text-pink-500 leading-tight">
+                {stats.activeStreams}
+              </p>
+            </div>
+          </div>
+
+          {/* Active Uploads */}
+          <div
+            onClick={() => navigate("/uploader")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Upload className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.activeUploads", "Uploading")}
+              </p>
+              <p className="text-lg font-bold text-emerald-500 leading-tight">
+                {stats.activeUploads}
+              </p>
+            </div>
+          </div>
+
+          {/* Active Downloads */}
+          <div
+            onClick={() => navigate("/arr-activity")}
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-teal-500/10 hover:border-teal-500/50 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Download className="w-5 h-5 text-teal-500 flex-shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
+                {t("dashboard.stats.activeDownloads", "Downloads")}
+              </p>
+              <p className="text-lg font-bold text-teal-500 leading-tight">
+                {stats.activeDownloads}
+              </p>
             </div>
           </div>
         </div>
@@ -769,12 +917,8 @@ export default function Dashboard() {
         <>
           {loading ? (
             <div className="space-y-6">
-              {/* Service Cards Loading - Optimized for tablet */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {[...Array(8)].map((_, i) => (
-                  <LoadingServiceCard key={i} />
-                ))}
-              </div>
+              {/* Service Table Loading */}
+              <LoadingTableSkeleton />
             </div>
           ) : services.length === 0 ? (
             <div className="bg-theme-card border border-theme rounded-lg p-6 md:p-8 text-center shadow-sm">
@@ -897,7 +1041,7 @@ export default function Dashboard() {
 
                           // Find the service in the filtered services list to get its group
                           const matchingService = filteredServices.find(
-                            (s) => s.id === service.id
+                            (s) => s.id === service.id,
                           );
                           if (!matchingService) return false;
                           const serviceGroup =
@@ -914,12 +1058,35 @@ export default function Dashboard() {
                     <div className="space-y-6">
                       {/* Traffic Chart */}
                       {dashboardVisibility.trafficChart && (
-                        <div className="flex justify-center w-full">
-                          <DashboardTrafficCards
-                            trafficData={filteredTrafficData}
-                            onRefresh={handleRefreshTraffic}
-                            refreshing={trafficFetching}
+                        <DashboardTrafficCards
+                          trafficData={filteredTrafficData}
+                          onRefresh={handleRefreshTraffic}
+                          refreshing={trafficFetching}
+                        />
+                      )}
+
+                      {/* VPN World Map */}
+                      {vpnConnectionStatus?.connected &&
+                        dashboardVisibility.vpnMap && (
+                          <DashboardVpnMap
+                            containers={vpnContainers}
+                            vpnInfoMap={vpnInfoMap}
                           />
+                        )}
+
+                      {/* Service Header */}
+                      {dashboardVisibility.services && (
+                        <div
+                          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate("/services")}
+                        >
+                          <Server className="w-5 h-5 text-theme-primary" />
+                          <span className="text-lg font-semibold text-theme-text">
+                            {t("dashboard.services", "Services")}
+                          </span>
+                          <span className="text-sm text-theme-text-muted">
+                            ({filteredServices.length})
+                          </span>
                         </div>
                       )}
 
@@ -936,20 +1103,15 @@ export default function Dashboard() {
                                 </h2>
                               </div>
                             )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                              {groupServices.map((service) => (
-                                <DashboardServiceCard
-                                  key={service.id}
-                                  service={service}
-                                  trafficData={trafficData}
-                                  onCheck={handleCheckService}
-                                  onEdit={handleEditService}
-                                  onDelete={handleDeleteService}
-                                />
-                              ))}
-                            </div>
+                            <DashboardServiceTable
+                              services={groupServices}
+                              trafficData={trafficData}
+                              onCheck={handleCheckService}
+                              onEdit={handleEditService}
+                              onDelete={handleDeleteService}
+                            />
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   );
@@ -963,17 +1125,17 @@ export default function Dashboard() {
                       <div className="flex gap-2 min-w-max">
                         <button
                           onClick={() => setActiveTab("ALL")}
-                          className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                          className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                             activeTab === "ALL"
-                              ? "bg-theme-hover text-white shadow-md"
-                              : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                              ? "bg-theme-primary text-black shadow-md"
+                              : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                           }`}
                         >
                           {t("dashboard.all")}
                           <span
                             className={`ml-2 text-xs ${
                               activeTab === "ALL"
-                                ? "text-white/80"
+                                ? "text-black/70"
                                 : "text-theme-text-muted"
                             }`}
                           >
@@ -984,17 +1146,17 @@ export default function Dashboard() {
                           <button
                             key={groupName}
                             onClick={() => setActiveTab(groupName)}
-                            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                               activeTab === groupName
-                                ? "bg-theme-hover text-white shadow-md"
-                                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                                ? "bg-theme-primary text-black shadow-md"
+                                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                             }`}
                           >
                             {groupName}
                             <span
                               className={`ml-2 text-xs ${
                                 activeTab === groupName
-                                  ? "text-white/80"
+                                  ? "text-black/70"
                                   : "text-theme-text-muted"
                               }`}
                             >
@@ -1007,12 +1169,35 @@ export default function Dashboard() {
 
                     {/* Traffic Chart - filtered by active tab */}
                     {dashboardVisibility.trafficChart && (
-                      <div className="flex justify-center w-full">
-                        <DashboardTrafficCards
-                          trafficData={filteredTrafficData}
-                          onRefresh={handleRefreshTraffic}
-                          refreshing={trafficFetching}
+                      <DashboardTrafficCards
+                        trafficData={filteredTrafficData}
+                        onRefresh={handleRefreshTraffic}
+                        refreshing={trafficFetching}
+                      />
+                    )}
+
+                    {/* VPN World Map */}
+                    {vpnConnectionStatus?.connected &&
+                      dashboardVisibility.vpnMap && (
+                        <DashboardVpnMap
+                          containers={vpnContainers}
+                          vpnInfoMap={vpnInfoMap}
                         />
+                      )}
+
+                    {/* Service Header */}
+                    {dashboardVisibility.services && (
+                      <div
+                        className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => navigate("/services")}
+                      >
+                        <Server className="w-5 h-5 text-theme-primary" />
+                        <span className="text-lg font-semibold text-theme-text">
+                          {t("dashboard.services", "Services")}
+                        </span>
+                        <span className="text-sm text-theme-text-muted">
+                          ({filteredServices.length})
+                        </span>
                       </div>
                     )}
 
@@ -1021,21 +1206,17 @@ export default function Dashboard() {
                       (activeTab === "ALL"
                         ? filteredServices
                         : grouped[activeTab]) && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                          {(activeTab === "ALL"
-                            ? filteredServices
-                            : grouped[activeTab]
-                          ).map((service) => (
-                            <DashboardServiceCard
-                              key={service.id}
-                              service={service}
-                              trafficData={trafficData}
-                              onCheck={handleCheckService}
-                              onEdit={handleEditService}
-                              onDelete={handleDeleteService}
-                            />
-                          ))}
-                        </div>
+                        <DashboardServiceTable
+                          services={
+                            activeTab === "ALL"
+                              ? filteredServices
+                              : grouped[activeTab]
+                          }
+                          trafficData={trafficData}
+                          onCheck={handleCheckService}
+                          onEdit={handleEditService}
+                          onDelete={handleDeleteService}
+                        />
                       )}
                   </div>
                 );
@@ -1043,6 +1224,16 @@ export default function Dashboard() {
             </>
           )}
         </>
+      )}
+
+      {/* VPN Proxy Table */}
+      {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
+        <DashboardVpnTable
+          containers={vpnContainers}
+          vpnInfoMap={vpnInfoMap}
+          depsMap={vpnDepsMap}
+          connected={vpnConnectionStatus?.connected}
+        />
       )}
 
       {/* Modal */}

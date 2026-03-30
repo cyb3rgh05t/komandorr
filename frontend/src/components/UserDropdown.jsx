@@ -35,7 +35,7 @@ export default function UserDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
+        className="flex items-center justify-center w-10 h-10 rounded-lg border border-transparent hover:border-theme-primary hover:bg-theme-hover transition-colors text-theme-text"
         aria-label="User menu"
       >
         <User className="w-5 h-5" />

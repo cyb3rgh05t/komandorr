@@ -78,8 +78,6 @@ function VersionBadge() {
               ? "bg-orange-500/20 border border-orange-500/40"
               : "bg-theme-card border border-theme"
           }`}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
         >
           {/* Top Row: Komandorr + Icon */}
           <div className="flex items-center justify-between">

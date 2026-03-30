@@ -51,7 +51,7 @@ const MiniChart = ({ data = [], serviceId }) => {
 
   const linePath = `M ${points.join(" L ")}`;
   const areaPath = `M 0,${height} L ${points.join(
-    " L "
+    " L ",
   )} L ${width},${height} Z`;
 
   return (
@@ -263,7 +263,7 @@ export default function Monitor() {
       services.length > 0
         ? Math.round(
             services.reduce((sum, s) => sum + (s.response_time || 0), 0) /
-              services.length
+              services.length,
           )
         : 0,
   };
@@ -371,7 +371,7 @@ export default function Monitor() {
               <button
                 onClick={handleRefresh}
                 disabled={isFetching}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw
                   size={16}
@@ -516,17 +516,17 @@ export default function Monitor() {
                     setActiveTab("ALL");
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                     activeTab === "ALL"
-                      ? "bg-theme-hover text-white shadow-md"
-                      : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                      ? "bg-theme-primary text-black shadow-md"
+                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                   }`}
                 >
                   {t("monitor.tabs.all")}
                   <span
                     className={`ml-2 text-xs ${
                       activeTab === "ALL"
-                        ? "text-white/80"
+                        ? "text-black/70"
                         : "text-theme-text-muted"
                     }`}
                   >
@@ -542,17 +542,17 @@ export default function Monitor() {
                         setActiveTab(groupName);
                         setCurrentPage(1); // Reset to first page when changing tabs
                       }}
-                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                         activeTab === groupName
-                          ? "bg-theme-hover text-white shadow-md"
-                          : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                          ? "bg-theme-primary text-black shadow-md"
+                          : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                       }`}
                     >
                       {groupName}
                       <span
                         className={`ml-2 text-xs ${
                           activeTab === groupName
-                            ? "text-white/80"
+                            ? "text-black/70"
                             : "text-theme-text-muted"
                         }`}
                       >
@@ -754,13 +754,13 @@ export default function Monitor() {
                             )}
                           <span
                             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider ${getStatusBg(
-                              service.status
+                              service.status,
                             )} ${getStatusColor(service.status)} border ${
                               service.status === "online"
                                 ? "border-green-500/30"
                                 : service.status === "offline"
-                                ? "border-red-500/30"
-                                : "border-yellow-500/30"
+                                  ? "border-red-500/30"
+                                  : "border-yellow-500/30"
                             }`}
                           >
                             <span className="w-2 h-2 rounded-full bg-current" />
@@ -816,8 +816,8 @@ export default function Monitor() {
                                 history.length > 0
                                   ? history
                                   : service.response_time
-                                  ? [service.response_time]
-                                  : [];
+                                    ? [service.response_time]
+                                    : [];
 
                               if (displayData.length > 0) {
                                 const avg =
@@ -845,8 +845,8 @@ export default function Monitor() {
                               return history.length > 0
                                 ? history
                                 : service.response_time
-                                ? [service.response_time]
-                                : [];
+                                  ? [service.response_time]
+                                  : [];
                             })()}
                           />
                         </div>

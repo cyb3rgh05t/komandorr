@@ -74,7 +74,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
                 onError={(e) => {
                   console.error(
                     `Failed to load icon for ${service.name}:`,
-                    service.icon
+                    service.icon,
                   );
                   e.target.style.display = "none";
                 }}
@@ -114,8 +114,8 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
               service.status === "online"
                 ? "green"
                 : service.status === "offline"
-                ? "red"
-                : "yellow"
+                  ? "red"
+                  : "yellow"
             }-500/30 shadow-md`}
             style={{
               boxShadow: `0 4px 12px ${config.shadowColor}`,
@@ -202,7 +202,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
             e.stopPropagation();
             onCheck(service.id);
           }}
-          className="flex-1 px-2 py-1.5 bg-theme-hover hover:from-theme-primary/30 hover:to-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-lg transition-all duration-200 text-[10px] font-semibold text-theme-primary hover:text-theme-primary-hover flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md group"
+          className="flex-1 px-2 py-1.5 bg-theme-hover hover:from-theme-primary/30 hover:to-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all duration-200 text-[10px] font-semibold text-theme-primary hover:text-theme-primary-hover flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md group"
           title={t("service.checkNow")}
         >
           <RefreshCw
@@ -217,7 +217,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
             e.stopPropagation();
             onEdit(service);
           }}
-          className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-lg transition-all duration-200 border border-theme hover:border-theme-primary/50 shadow-sm hover:shadow-md hover:shadow-theme-primary/10 group"
+          className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-lg transition-all duration-200 border border-theme hover:border-theme-primary shadow-sm hover:shadow-md hover:shadow-theme-primary/10 group"
           title={t("service.edit")}
         >
           <Edit

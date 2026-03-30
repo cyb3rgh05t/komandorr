@@ -1,11 +1,49 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from typing import List
 from app.models.service import TrafficUpdate, TrafficDataPoint
 from app.services.monitor import monitor
 from app.utils.logger import logger
 from datetime import datetime, timezone
+import asyncio
+import json
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"])
+
+
+# WebSocket connection manager for real-time traffic updates
+class TrafficConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.debug(
+            f"WebSocket client connected. Total: {len(self.active_connections)}"
+        )
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        logger.debug(
+            f"WebSocket client disconnected. Total: {len(self.active_connections)}"
+        )
+
+    async def broadcast(self, data: dict):
+        """Send traffic data to all connected WebSocket clients"""
+        if not self.active_connections:
+            return
+        message = json.dumps(data, default=str)
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception:
+                disconnected.append(connection)
+        for conn in disconnected:
+            self.active_connections.remove(conn)
+
+
+ws_manager = TrafficConnectionManager()
 
 
 @router.post("/update")
@@ -30,6 +68,10 @@ async def update_traffic(traffic_data: TrafficUpdate):
     service.traffic.total_down = traffic_data.total_down
     if traffic_data.max_bandwidth is not None:
         service.traffic.max_bandwidth = traffic_data.max_bandwidth
+    if traffic_data.cpu_percent is not None:
+        service.traffic.cpu_percent = traffic_data.cpu_percent
+    if traffic_data.memory_percent is not None:
+        service.traffic.memory_percent = traffic_data.memory_percent
     service.traffic.last_updated = datetime.now(timezone.utc)
 
     # Add to history (keep last 100 data points)
@@ -53,6 +95,11 @@ async def update_traffic(traffic_data: TrafficUpdate):
         f"Updated traffic for {service.name}: "
         f"↑{traffic_data.bandwidth_up:.2f}MB/s ↓{traffic_data.bandwidth_down:.2f}MB/s"
     )
+
+    # Broadcast real-time update to all WebSocket clients
+    summary = await _build_traffic_summary()
+    await ws_manager.broadcast(summary)
+
     return {"status": "success", "message": "Traffic data updated"}
 
 
@@ -92,6 +139,28 @@ async def get_current_traffic(service_id: str):
 @router.get("/summary")
 async def get_traffic_summary():
     """Get traffic summary for all services"""
+    return await _build_traffic_summary()
+
+
+@router.websocket("/ws")
+async def traffic_websocket(websocket: WebSocket):
+    """WebSocket endpoint for real-time traffic updates"""
+    await ws_manager.connect(websocket)
+    try:
+        # Send initial data immediately
+        summary = await _build_traffic_summary()
+        await websocket.send_text(json.dumps(summary, default=str))
+        # Keep connection alive, wait for client disconnect
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception:
+        ws_manager.disconnect(websocket)
+
+
+async def _build_traffic_summary() -> dict:
+    """Build the traffic summary dict (shared by REST and WebSocket)"""
     services = monitor.get_all_services()
 
     summary = {
@@ -121,6 +190,8 @@ async def get_traffic_summary():
                     "total_up": service.traffic.total_up,
                     "total_down": service.traffic.total_down,
                     "max_bandwidth": service.traffic.max_bandwidth,
+                    "cpu_percent": service.traffic.cpu_percent,
+                    "memory_percent": service.traffic.memory_percent,
                     "last_updated": service.traffic.last_updated,
                     "traffic_history": (
                         service.traffic_history[-60:] if service.traffic_history else []

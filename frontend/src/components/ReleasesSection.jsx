@@ -121,7 +121,7 @@ function ReleasesSection() {
 
               {/* Version Number */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-theme-text font-bold text-lg">
+                <span className="text-theme-primary font-bold text-lg">
                   {release.version}
                 </span>
                 {index === 0 && (

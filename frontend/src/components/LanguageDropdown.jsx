@@ -32,7 +32,7 @@ export default function LanguageDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
+        className="flex items-center justify-center w-10 h-10 rounded-lg border border-transparent hover:border-theme-primary hover:bg-theme-hover transition-colors text-theme-text"
         aria-label="Select language"
       >
         <Globe className="w-5 h-5" />
@@ -52,8 +52,8 @@ export default function LanguageDropdown() {
                   onClick={() => changeLanguage(lang.code)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                     i18n.language === lang.code
-                      ? "bg-theme-primary text-white"
-                      : "text-theme-text-muted hover:bg-theme-hover"
+                      ? "bg-theme-primary text-black font-medium"
+                      : "text-theme-text-muted hover:bg-theme-hover hover:text-theme-primary"
                   }`}
                 >
                   <span>{lang.name}</span>
