@@ -16,32 +16,40 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 
+const isActiveStatus = (s) => {
+  const lower = (s || "").toLowerCase();
+  return lower === "running" || lower === "healthy" || lower === "starting";
+};
+
 const StatusBadge = ({ status }) => {
   const statusLower = (status || "").toLowerCase();
   let color = "bg-gray-500/20 text-gray-400 border-gray-500/30";
   let label = status || "unknown";
+  let dotClass = "bg-yellow-400";
 
-  if (statusLower === "running") {
+  if (statusLower === "running" || statusLower === "healthy") {
     color = "bg-green-500/20 text-green-400 border-green-500/30";
+    dotClass = "bg-green-400 animate-pulse";
+  } else if (statusLower === "unhealthy") {
+    color = "bg-red-500/20 text-red-400 border-red-500/30";
+    dotClass = "bg-red-400";
   } else if (statusLower === "stopped" || statusLower === "exited") {
     color = "bg-red-500/20 text-red-400 border-red-500/30";
-  } else if (statusLower === "restarting" || statusLower === "created") {
+    dotClass = "bg-red-400";
+  } else if (
+    statusLower === "restarting" ||
+    statusLower === "created" ||
+    statusLower === "starting"
+  ) {
     color = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+    dotClass = "bg-yellow-400";
   }
 
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${color}`}
     >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${
-          statusLower === "running"
-            ? "bg-green-400 animate-pulse"
-            : statusLower === "stopped" || statusLower === "exited"
-              ? "bg-red-400"
-              : "bg-yellow-400"
-        }`}
-      />
+      <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
       {label}
     </span>
   );
@@ -126,10 +134,8 @@ export default function VpnProxy() {
   }, [containers, search, vpnInfoMap]);
 
   // Stats
-  const runningCount = containers.filter(
-    (c) =>
-      c.status?.toLowerCase() === "running" ||
-      c.docker_status?.toLowerCase() === "running",
+  const runningCount = containers.filter((c) =>
+    isActiveStatus(c.docker_status || c.status),
   ).length;
   const stoppedCount = containers.length - runningCount;
 
@@ -282,7 +288,7 @@ export default function VpnProxy() {
             const deps = depsMap[container.id] || [];
             const status =
               container.docker_status || container.status || "unknown";
-            const isRunning = status.toLowerCase() === "running";
+            const isRunning = isActiveStatus(status);
             const proxyUrl = container.port_http_proxy
               ? `http://${window.location.hostname}:${container.port_http_proxy}`
               : null;
@@ -425,17 +431,18 @@ export default function VpnProxy() {
                             dep.state ||
                             ""
                           ).toLowerCase();
+                          const depActive = isActiveStatus(depStatus);
                           return (
                             <span
                               key={i}
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border ${
-                                depStatus === "running"
+                                depActive
                                   ? "bg-green-500/10 text-green-400 border-green-500/20"
                                   : "bg-red-500/10 text-red-400 border-red-500/20"
                               }`}
                             >
                               <span
-                                className={`w-1 h-1 rounded-full ${depStatus === "running" ? "bg-green-400" : "bg-red-400"}`}
+                                className={`w-1 h-1 rounded-full ${depActive ? "bg-green-400" : "bg-red-400"}`}
                               />
                               {dep.name || dep.container_name}
                             </span>
