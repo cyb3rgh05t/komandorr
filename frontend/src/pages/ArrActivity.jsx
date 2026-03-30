@@ -302,7 +302,7 @@ export default function ArrActivity() {
                 return (
                   <tr
                     key={item.id || idx}
-                    className="border-b border-theme hover:bg-theme-hover transition-colors"
+                    className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                   >
                     <td className="py-3 px-4">
                       <div className="min-w-0">

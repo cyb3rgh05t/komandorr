@@ -276,7 +276,7 @@ export default function DashboardVpnMap({ containers = [], vpnInfoMap = {} }) {
         </div>
 
         <div
-          className="bg-[var(--bg-primary,#0a0a0a)]"
+          className="bg-[#050505]"
           style={{ height: "350px", overflow: "hidden" }}
         >
           <ComposableMap
@@ -362,24 +362,24 @@ export default function DashboardVpnMap({ containers = [], vpnInfoMap = {} }) {
                         geography={geo}
                         fill={
                           active
-                            ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.08)"
-                            : "#080808"
+                            ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.15)"
+                            : "#1a1a1a"
                         }
                         stroke={
                           active
-                            ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.25)"
-                            : "#151515"
+                            ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.35)"
+                            : "#2a2a2a"
                         }
-                        strokeWidth={active ? 0.6 : 0.25}
+                        strokeWidth={active ? 0.6 : 0.3}
                         style={{
                           default: { outline: "none" },
                           hover: {
                             fill: active
-                              ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.12)"
-                              : "#0c0c0c",
+                              ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.2)"
+                              : "#222222",
                             stroke: active
-                              ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.4)"
-                              : "#1a1a1a",
+                              ? "rgba(var(--color-primary-rgb, 216, 237, 24), 0.5)"
+                              : "#333333",
                             strokeWidth: active ? 0.8 : 0.4,
                             outline: "none",
                           },

@@ -21,6 +21,7 @@ import UserAccounts from "./pages/UserAccounts";
 import Uploader from "./pages/Uploader";
 import ArrActivity from "./pages/ArrActivity";
 import VpnProxy from "./pages/VpnProxy";
+import Posterizarr from "./pages/Posterizarr";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -173,6 +174,7 @@ function App() {
                       <Route path="/uploader" element={<Uploader />} />
                       <Route path="/arr-activity" element={<ArrActivity />} />
                       <Route path="/vpn-proxy" element={<VpnProxy />} />
+                      <Route path="/posterizarr" element={<Posterizarr />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>

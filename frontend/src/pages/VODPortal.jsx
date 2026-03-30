@@ -736,7 +736,7 @@ export default function VODPortal() {
                       return (
                         <tr
                           key={user.id}
-                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">

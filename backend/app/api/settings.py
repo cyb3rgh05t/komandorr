@@ -47,6 +47,11 @@ class VpnProxySettings(BaseModel):
     api_key: str
 
 
+class PosterizarrSettings(BaseModel):
+    url: str
+    api_key: str
+
+
 class ArrInstance(BaseModel):
     id: str
     name: str
@@ -68,6 +73,7 @@ class SettingsResponse(BaseModel):
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
+    posterizarr: Optional[PosterizarrSettings] = None
     arr: Optional[ArrSettings] = None
 
 
@@ -79,6 +85,7 @@ class SettingsUpdate(BaseModel):
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
+    posterizarr: Optional[PosterizarrSettings] = None
     arr: Optional[ArrSettings] = None
 
 
@@ -175,6 +182,15 @@ async def get_settings(username: str = Depends(require_auth)):
         ),
     )
 
+    # Get Posterizarr settings from config or defaults
+    posterizarr_config = config_data.get("posterizarr", {})
+    posterizarr_settings = PosterizarrSettings(
+        url=posterizarr_config.get("url", getattr(settings, "POSTERIZARR_URL", "")),
+        api_key=posterizarr_config.get(
+            "api_key", getattr(settings, "POSTERIZARR_API_KEY", "")
+        ),
+    )
+
     # Get *arr settings from config - support both old and legacy formats
     arr_config = config_data.get("arr", {})
     arr_settings = None
@@ -236,6 +252,7 @@ async def get_settings(username: str = Depends(require_auth)):
         overseerr=overseerr_settings,
         uploader=uploader_settings,
         vpn_proxy=vpn_proxy_settings,
+        posterizarr=posterizarr_settings,
         arr=arr_settings,
     )
 
@@ -318,6 +335,17 @@ async def update_settings(
         settings.VPN_PROXY_URL = updates.vpn_proxy.url
         settings.VPN_PROXY_API_KEY = updates.vpn_proxy.api_key
         logger.info(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
+
+    # Update Posterizarr settings
+    if updates.posterizarr is not None:
+        config_data["posterizarr"] = {
+            "url": updates.posterizarr.url,
+            "api_key": updates.posterizarr.api_key,
+        }
+        # Update runtime settings
+        settings.POSTERIZARR_URL = updates.posterizarr.url
+        settings.POSTERIZARR_API_KEY = updates.posterizarr.api_key
+        logger.info(f"Updated Posterizarr URL to: {updates.posterizarr.url}")
 
     # Update *arr settings
     if updates.arr is not None:

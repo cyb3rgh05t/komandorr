@@ -8,6 +8,15 @@
   }
 }
 
+/* Custom hover utilities - outside @layer to prevent Tailwind purging */
+.hover\:bg-theme-primary-10:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--theme-primary) 20%,
+    transparent
+  ) !important;
+}
+
 /* ========================================
    THEME CSS VARIABLES
    ======================================== */

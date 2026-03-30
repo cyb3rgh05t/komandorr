@@ -30,6 +30,7 @@ import {
   Clock,
   ListOrdered,
   Shield,
+  Palette,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -385,6 +386,11 @@ export default function Sidebar() {
           icon: Film,
         },
       ],
+    },
+    {
+      label: "Posterizarr",
+      icon: Palette,
+      path: "/posterizarr",
     },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },

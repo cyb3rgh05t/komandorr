@@ -29,6 +29,7 @@ from app.api.uploader import router as uploader_router
 from app.api.arr_activity import router as arr_activity_router
 from app.api.notifications import router as notifications_router
 from app.api.vpn_proxy import router as vpn_proxy_router
+from app.api.posterizarr import router as posterizarr_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -180,6 +181,7 @@ app.include_router(uploader_router)
 app.include_router(arr_activity_router)
 app.include_router(notifications_router)
 app.include_router(vpn_proxy_router)
+app.include_router(posterizarr_router)
 
 
 @app.get("/docs", include_in_schema=False)

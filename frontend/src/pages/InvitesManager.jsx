@@ -919,7 +919,7 @@ const InvitesManager = () => {
                   return (
                     <tr
                       key={invite.id}
-                      className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                     >
                       {/* Code Column */}
                       <td className="py-3 px-4">

@@ -927,7 +927,7 @@ const UserAccounts = () => {
                   return paginatedUsers.map((user) => (
                     <tr
                       key={user.id}
-                      className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                     >
                       {/* User Column (Avatar + Username) */}
                       <td className="py-3 px-4">

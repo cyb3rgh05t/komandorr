@@ -20,6 +20,7 @@ import {
   Trash2,
   Bell,
   Send,
+  Palette,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -78,6 +79,12 @@ export default function Settings() {
   const [vpnProxyApiKey, setVpnProxyApiKey] = useState("");
   const [vpnProxyTestStatus, setVpnProxyTestStatus] = useState(null);
   const [showVpnProxyKey, setShowVpnProxyKey] = useState(false);
+
+  // Posterizarr settings state
+  const [posterizarrUrl, setPosterizarrUrl] = useState("");
+  const [posterizarrApiKey, setPosterizarrApiKey] = useState("");
+  const [posterizarrTestStatus, setPosterizarrTestStatus] = useState(null);
+  const [showPosterizarrKey, setShowPosterizarrKey] = useState(false);
 
   // *arr instances state
   const [arrInstances, setArrInstances] = useState([]);
@@ -154,6 +161,10 @@ export default function Settings() {
         setVpnProxyUrl(data.vpn_proxy.url || "");
         setVpnProxyApiKey(data.vpn_proxy.api_key || "");
       }
+      if (data.posterizarr) {
+        setPosterizarrUrl(data.posterizarr.url || "");
+        setPosterizarrApiKey(data.posterizarr.api_key || "");
+      }
       if (data.arr || data.instances) {
         setArrInstances(
           (data.arr && data.arr.instances) || data.instances || [],
@@ -172,6 +183,9 @@ export default function Settings() {
       }
       if (data.vpn_proxy?.url && data.vpn_proxy?.api_key) {
         validateVpnProxyOnLoad();
+      }
+      if (data.posterizarr?.url && data.posterizarr?.api_key) {
+        validatePosterizarrOnLoad();
       }
       if (data.arr?.instances || data.instances) {
         const instances =
@@ -230,6 +244,15 @@ export default function Settings() {
       setVpnProxyTestStatus(result.connected ? "ok" : "fail");
     } catch (error) {
       setVpnProxyTestStatus("fail");
+    }
+  };
+
+  const validatePosterizarrOnLoad = async () => {
+    try {
+      const result = await api.get("/posterizarr/status");
+      setPosterizarrTestStatus(result.connected ? "ok" : "fail");
+    } catch (error) {
+      setPosterizarrTestStatus("fail");
     }
   };
 
@@ -523,6 +546,10 @@ export default function Settings() {
           url: vpnProxyUrl || "",
           api_key: vpnProxyApiKey || "",
         },
+        posterizarr: {
+          url: posterizarrUrl || "",
+          api_key: posterizarrApiKey || "",
+        },
         arr: {
           instances: instancesPayload || [],
         },
@@ -665,6 +692,7 @@ export default function Settings() {
       icon: Upload,
     },
     { id: "vpn_proxy", label: "VPN-Proxy", icon: Shield },
+    { id: "posterizarr", label: "Posterizarr", icon: Palette },
     { id: "arr", label: "*arr Instances", icon: Film },
     {
       id: "notifications",
@@ -1668,6 +1696,168 @@ export default function Settings() {
                     <p>
                       Cannot connect to VPN Proxy Manager. Check the URL and API
                       Key are correct and the service is running.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Posterizarr Settings */}
+        {activeTab === "posterizarr" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Palette className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Posterizarr
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  Connect to your Posterizarr instance for poster management and
+                  status monitoring
+                </p>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    Posterizarr URL
+                  </label>
+                  <input
+                    type="url"
+                    value={posterizarrUrl}
+                    onChange={(e) => {
+                      setPosterizarrUrl(e.target.value);
+                      setPosterizarrTestStatus(null);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="http://posterizarr:8000"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    The URL of your Posterizarr instance (e.g.
+                    http://posterizarr:8000 or http://192.168.1.100:8000)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    API Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPosterizarrKey ? "text" : "password"}
+                      value={posterizarrApiKey}
+                      onChange={(e) => {
+                        setPosterizarrApiKey(e.target.value);
+                        setPosterizarrTestStatus(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm"
+                      placeholder="Paste your Posterizarr API key"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPosterizarrKey(!showPosterizarrKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                    >
+                      {showPosterizarrKey ? (
+                        <EyeOff size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    Your Posterizarr API key for authentication
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!posterizarrUrl || !posterizarrApiKey) {
+                        toast.error("Please enter URL and API Key");
+                        return;
+                      }
+                      setPosterizarrTestStatus("loading");
+                      try {
+                        const result = await api.get("/posterizarr/status");
+                        if (result.connected) {
+                          setPosterizarrTestStatus("ok");
+                          toast.success("Posterizarr connected");
+                        } else {
+                          setPosterizarrTestStatus("fail");
+                          toast.error(result.error || "Connection failed");
+                        }
+                      } catch (e) {
+                        setPosterizarrTestStatus("fail");
+                        toast.error(
+                          e.message || "Cannot connect to Posterizarr",
+                        );
+                      }
+                    }}
+                    disabled={
+                      posterizarrTestStatus === "loading" ||
+                      !posterizarrUrl ||
+                      !posterizarrApiKey
+                    }
+                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      posterizarrTestStatus === "ok"
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : posterizarrTestStatus === "fail"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                    }`}
+                  >
+                    {posterizarrTestStatus === "loading" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Testing...
+                      </span>
+                    ) : posterizarrTestStatus === "ok" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        Connected
+                      </span>
+                    ) : (
+                      "Test Connection"
+                    )}
+                  </button>
+                </div>
+
+                {posterizarrTestStatus === "fail" && (
+                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>
+                      Cannot connect to Posterizarr. Check the URL and API Key
+                      are correct and the service is running.
                     </p>
                   </div>
                 )}
