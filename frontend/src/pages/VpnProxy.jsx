@@ -141,7 +141,7 @@ export default function VpnProxy() {
 
   if (!connectionStatus?.connected && !isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-theme-text">
             VPN-Proxy Manager
@@ -169,9 +169,9 @@ export default function VpnProxy() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-bold text-theme-text">
             VPN-Proxy Manager
@@ -182,23 +182,23 @@ export default function VpnProxy() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
             <input
               type="text"
               placeholder="Search containers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent w-64"
+              className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
             />
           </div>
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme text-theme-text text-sm rounded-lg hover:bg-theme-hover transition-colors"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
-              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+              className={`w-4 h-4 text-theme-primary ${isFetching ? "animate-spin" : ""}`}
             />
             Refresh
           </button>
@@ -207,45 +207,63 @@ export default function VpnProxy() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-theme-card border border-theme rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Server className="w-4 h-4 text-theme-text-muted" />
-            <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-              Total
-            </span>
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
+                Total
+              </span>
+              <p className="text-2xl font-bold text-theme-text">
+                {containers.length}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-theme-text-muted/10">
+              <Server className="w-5 h-5 text-theme-text-muted" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-theme-text">
-            {containers.length}
-          </p>
         </div>
-        <div className="bg-theme-card border border-theme rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Activity className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-              Running
-            </span>
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-green-500/40 transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
+                Running
+              </span>
+              <p className="text-2xl font-bold text-green-400">
+                {runningCount}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Activity className="w-5 h-5 text-green-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-green-400">{runningCount}</p>
         </div>
-        <div className="bg-theme-card border border-theme rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Server className="w-4 h-4 text-red-400" />
-            <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-              Stopped
-            </span>
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-red-500/40 transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
+                Stopped
+              </span>
+              <p className="text-2xl font-bold text-red-400">{stoppedCount}</p>
+            </div>
+            <div className="p-2 rounded-lg bg-red-500/10">
+              <Server className="w-5 h-5 text-red-400" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-red-400">{stoppedCount}</p>
         </div>
-        <div className="bg-theme-card border border-theme rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Network className="w-4 h-4 text-theme-primary" />
-            <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-              Clients
-            </span>
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary/40 transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
+                Clients
+              </span>
+              <p className="text-2xl font-bold text-theme-primary">
+                {Object.values(depsMap).reduce((sum, d) => sum + d.length, 0)}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-theme-primary/10">
+              <Network className="w-5 h-5 text-theme-primary" />
+            </div>
           </div>
-          <p className="text-2xl font-bold text-theme-primary">
-            {Object.values(depsMap).reduce((sum, d) => sum + d.length, 0)}
-          </p>
         </div>
       </div>
 
@@ -258,7 +276,7 @@ export default function VpnProxy() {
 
       {/* Container Cards */}
       {!isLoading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((container) => {
             const info = vpnInfoMap[container.id] || {};
             const deps = depsMap[container.id] || [];
@@ -272,7 +290,7 @@ export default function VpnProxy() {
             return (
               <div
                 key={container.id}
-                className="bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary/40 transition-colors"
+                className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary hover:shadow-lg transition-all"
               >
                 {/* Card Header */}
                 <div className="p-4 border-b border-theme">
@@ -440,7 +458,7 @@ export default function VpnProxy() {
 
       {/* Empty State */}
       {!isLoading && filtered.length === 0 && containers.length > 0 && (
-        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
+        <div className="bg-theme-card border border-theme rounded-lg p-8 text-center">
           <Search className="w-8 h-8 text-theme-text-muted mx-auto mb-3" />
           <p className="text-theme-text-muted text-sm">
             No containers matching "{search}"
@@ -449,7 +467,7 @@ export default function VpnProxy() {
       )}
 
       {!isLoading && containers.length === 0 && connectionStatus?.connected && (
-        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
+        <div className="bg-theme-card border border-theme rounded-lg p-8 text-center">
           <Shield className="w-8 h-8 text-theme-text-muted mx-auto mb-3" />
           <p className="text-theme-text-muted text-sm">
             No VPN containers found. Create one in the VPN Proxy Manager.
