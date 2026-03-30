@@ -473,13 +473,13 @@ export default function ArrActivity() {
             }`}
           />
           <span className="text-xs sm:text-sm">
-          {isRefreshing ||
-          isFetchingQueue ||
-          isFetchingStatus ||
-          isFetchingSystem ||
-          isFetchingHistory
-            ? t("common.refreshing", "Refreshing")
-            : t("common.refresh", "Refresh")}
+            {isRefreshing ||
+            isFetchingQueue ||
+            isFetchingStatus ||
+            isFetchingSystem ||
+            isFetchingHistory
+              ? t("common.refreshing", "Refreshing")
+              : t("common.refresh", "Refresh")}
           </span>
         </button>
       </div>
