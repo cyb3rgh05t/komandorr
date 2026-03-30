@@ -458,10 +458,11 @@ export default function ArrActivity() {
             isFetchingSystem ||
             isFetchingHistory
           }
-          className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCcw
-            className={`w-4 h-4 ${
+            size={16}
+            className={`text-theme-primary transition-transform duration-500 ${
               isRefreshing ||
               isFetchingQueue ||
               isFetchingStatus ||
@@ -471,6 +472,7 @@ export default function ArrActivity() {
                 : ""
             }`}
           />
+          <span className="text-xs sm:text-sm">
           {isRefreshing ||
           isFetchingQueue ||
           isFetchingStatus ||
@@ -478,6 +480,7 @@ export default function ArrActivity() {
           isFetchingHistory
             ? t("common.refreshing", "Refreshing")
             : t("common.refresh", "Refresh")}
+          </span>
         </button>
       </div>
 
