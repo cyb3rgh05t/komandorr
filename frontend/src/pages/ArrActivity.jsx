@@ -188,7 +188,7 @@ export default function ArrActivity() {
   );
   const [historyPageSize, setHistoryPageSize] = usePersistedState(
     "komandorr_arrHistory_pageSize",
-    50,
+    10,
   );
 
   const {
@@ -1118,6 +1118,7 @@ export default function ArrActivity() {
                           }}
                           className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
                         >
+                          <option value="10">10</option>
                           <option value="25">25</option>
                           <option value="50">50</option>
                           <option value="100">100</option>
