@@ -153,6 +153,7 @@ async def get_combined_queue(username: str = Depends(require_auth)):
             "name": instance.get("name", ""),
             "type": instance_type,
             "enabled": bool(url and api_key),
+            "access_url": instance.get("access_url", ""),
             "records": data.get("records", []),
             "totalRecords": data.get("totalRecords", 0),
             "error": data.get("error"),

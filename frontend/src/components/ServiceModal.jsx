@@ -165,7 +165,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
           console.error(
             "Upload failed with status:",
             response.status,
-            errorText
+            errorText,
           );
           alert("Failed to upload icon");
           return;
@@ -217,7 +217,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
+              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
               placeholder="My Service"
             />
           </div>
@@ -232,7 +232,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               value={formData.url}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
+              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
               placeholder="https://example.com"
             />
           </div>
@@ -245,7 +245,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               <button
                 type="button"
                 onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-                className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
+                className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
               >
                 <span className="text-theme-text">
                   {t(`service.types.${formData.type}`)}
@@ -272,14 +272,14 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                             }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                               formData.type === type
-                                ? "bg-theme-primary text-white"
-                                : "text-theme-text-muted hover:bg-theme-hover"
+                                ? "bg-theme-primary text-black font-medium"
+                                : "text-theme-text-muted hover:bg-theme-hover hover:text-theme-primary"
                             }`}
                           >
                             <span>{t(`service.types.${type}`)}</span>
                             {formData.type === type && <Check size={16} />}
                           </button>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -297,7 +297,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary resize-none"
+              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary resize-none"
               placeholder="Optional description"
             />
           </div>
@@ -320,7 +320,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                       onError={(e) => {
                         console.error(
                           "Failed to load icon preview:",
-                          iconPreview
+                          iconPreview,
                         );
                         console.error("Error event:", e);
                       }}
@@ -344,7 +344,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full px-4 py-6 bg-theme-hover border-2 border-dashed border-theme rounded-lg hover:bg-theme-hover transition-colors flex flex-col items-center gap-2"
+                  className="w-full px-4 py-6 bg-theme-hover border-2 border-dashed border-theme rounded-lg hover:border-theme-primary hover:bg-theme-hover transition-colors flex flex-col items-center gap-2"
                 >
                   <Upload className="text-theme-primary" size={24} />
                   <span className="text-sm text-theme-text">
@@ -374,7 +374,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={() => setShowGroupDropdown(!showGroupDropdown)}
-                  className="w-full px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
+                  className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary flex items-center justify-between"
                 >
                   <span
                     className={
@@ -404,8 +404,8 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                             !formData.group
-                              ? "bg-theme-primary text-white"
-                              : "text-theme-text-muted hover:bg-theme-hover"
+                              ? "bg-theme-primary text-black font-medium"
+                              : "text-theme-text-muted hover:bg-theme-hover hover:text-theme-primary"
                           }`}
                         >
                           <span>{t("service.noGroup")}</span>
@@ -421,8 +421,8 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                             }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                               formData.group === group
-                                ? "bg-theme-primary text-white"
-                                : "text-theme-text-muted hover:bg-theme-hover"
+                                ? "bg-theme-primary text-black font-medium"
+                                : "text-theme-text-muted hover:bg-theme-hover hover:text-theme-primary"
                             }`}
                           >
                             <span>{group}</span>
@@ -446,13 +446,13 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                       (e.preventDefault(), handleCreateGroup())
                     }
                     placeholder={t("service.newGroupName")}
-                    className="flex-1 px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
+                    className="flex-1 px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:outline-none focus:border-theme-primary"
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={handleCreateGroup}
-                    className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
+                    className="px-4 py-2 bg-theme-primary text-black font-medium border border-transparent hover:border-theme-primary rounded-lg hover:bg-theme-primary-hover transition-colors"
                   >
                     {t("form.add")}
                   </button>
@@ -462,7 +462,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                       setShowNewGroupInput(false);
                       setNewGroupName("");
                     }}
-                    className="px-4 py-2 bg-theme-bg-hover text-theme-text rounded-lg hover:bg-theme-hover transition-colors"
+                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500 rounded-lg text-red-400 font-medium transition-colors"
                   >
                     {t("form.cancel")}
                   </button>
@@ -471,7 +471,7 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
                 <button
                   type="button"
                   onClick={() => setShowNewGroupInput(true)}
-                  className="w-full px-3 py-2 bg-theme-bg-hover text-theme-text rounded-lg hover:bg-theme-hover transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-3 py-2 bg-theme-bg-hover text-theme-text border border-transparent hover:border-theme-primary rounded-lg hover:bg-theme-hover transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus size={16} />
                   <span>{t("service.createGroup")}</span>
@@ -485,13 +485,13 @@ export default function ServiceModal({ isOpen, service, onClose, onSave }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-theme-bg-hover text-theme-text rounded-lg hover:bg-theme-hover transition-colors"
+              className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500 rounded-lg text-red-400 font-medium transition-colors"
             >
               {t("form.cancel")}
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-theme-primary-hover transition-colors"
+              className="flex-1 px-4 py-2 bg-theme-primary text-black font-medium border border-transparent hover:border-theme-primary rounded-lg hover:bg-theme-primary-hover transition-colors"
             >
               {service ? t("form.save") : t("form.create")}
             </button>

@@ -18,6 +18,7 @@ from app.database import (
     StorageHistoryDB,
 )
 from app.utils.logger import logger
+from app.services.notifications import notification_service
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -69,6 +70,11 @@ class ServiceMonitor:
 
     async def check_service(self, service: Service) -> None:
         """Check a single service status"""
+        # Store old status for notification
+        old_status = service.status
+        new_status = old_status
+        response_time = None
+
         try:
             start_time = datetime.now(timezone.utc)
 
@@ -79,13 +85,15 @@ class ServiceMonitor:
                 response_time = (end_time - start_time).total_seconds() * 1000
 
                 if response.status_code < 400:
-                    service.status = "online"
+                    new_status = "online"
+                    service.status = new_status
                     service.response_time = response_time
                     logger.debug(
                         f"Service {service.name} is online ({response_time:.2f}ms)"
                     )
                 else:
-                    service.status = "problem"
+                    new_status = "problem"
+                    service.status = new_status
                     service.response_time = response_time
                     logger.warning(
                         f"Service {service.name} returned status {response.status_code}"
@@ -97,15 +105,33 @@ class ServiceMonitor:
                 self._add_response_time(service, response_time)
 
         except httpx.TimeoutException:
-            service.status = "problem"
+            new_status = "problem"
+            service.status = new_status
             service.last_check = datetime.now(timezone.utc)
             logger.warning(f"Service {service.name} timed out")
 
         except Exception as e:
-            service.status = "offline"
+            new_status = "offline"
+            service.status = new_status
             service.response_time = None  # Clear response time for offline services
             service.last_check = datetime.now(timezone.utc)
             logger.error(f"Service {service.name} check failed: {str(e)}")
+
+        # Send notification if status changed
+        should_notify, tracked_old_status = notification_service.should_notify(
+            service.id, new_status
+        )
+        if should_notify:
+            try:
+                await notification_service.notify_service_status_change(
+                    service_name=service.name,
+                    service_url=service.url,
+                    old_status=tracked_old_status,
+                    new_status=new_status,
+                    response_time=response_time,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send notification for {service.name}: {e}")
 
     async def check_all_services(self) -> None:
         """Check all services"""

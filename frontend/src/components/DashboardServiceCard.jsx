@@ -50,7 +50,7 @@ export default function DashboardServiceCard({
 
   // Find traffic data for this service
   const serviceTraffic = trafficData?.services?.find(
-    (s) => s.id === service.id
+    (s) => s.id === service.id,
   );
 
   const formatBandwidth = (mbps) => {
@@ -134,7 +134,7 @@ export default function DashboardServiceCard({
                 e.stopPropagation();
                 onCheck(service.id);
               }}
-              className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-lg transition-all duration-200 border border-theme hover:border-theme-primary/50 shadow-sm hover:shadow-md group/btn"
+              className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-lg transition-all duration-200 border border-theme hover:border-theme-primary shadow-sm hover:shadow-md group/btn"
               title={t("service.checkNow")}
             >
               <RefreshCw
@@ -148,7 +148,7 @@ export default function DashboardServiceCard({
                 e.stopPropagation();
                 onEdit(service);
               }}
-              className="p-1.5 hover:bg-theme-hover rounded transition-colors border border-theme hover:border-theme-primary/50"
+              className="p-1.5 hover:bg-theme-hover rounded transition-colors border border-theme hover:border-theme-primary"
               title={t("service.edit")}
             >
               <Edit

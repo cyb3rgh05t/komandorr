@@ -168,7 +168,7 @@ const Pagination = ({
   t,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme border border-theme rounded-xl p-5 shadow-sm">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-4">
         <div className="text-sm font-medium text-theme-text-muted">
           {t("vodStreams.pagination.showing")}{" "}
@@ -333,21 +333,21 @@ export default function VODStreams() {
   useEffect(() => {
     localStorage.setItem(
       "plexActivityTimestamps",
-      JSON.stringify(activityTimestamps)
+      JSON.stringify(activityTimestamps),
     );
   }, [activityTimestamps]);
 
   useEffect(() => {
     localStorage.setItem(
       "plexActivityProgress",
-      JSON.stringify(activityProgress)
+      JSON.stringify(activityProgress),
     );
   }, [activityProgress]);
 
   useEffect(() => {
     localStorage.setItem(
       "plexCompletedActivities",
-      JSON.stringify(completedActivities)
+      JSON.stringify(completedActivities),
     );
   }, [completedActivities]);
 
@@ -473,30 +473,37 @@ export default function VODStreams() {
 
   const timeUntilNextRefresh = Math.max(
     0,
-    REFRESH_INTERVAL - (Date.now() - lastRefreshTime)
+    REFRESH_INTERVAL - (Date.now() - lastRefreshTime),
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
 
-  // Helper function to check if activity is a library scan
+  // Helper function to check if activity is a library scan or background task
   const isScanActivity = (activity) => {
     const type = (activity.type || "").toLowerCase();
     const title = (activity.title || "").toLowerCase();
     const subtitle = (activity.subtitle || "").toLowerCase();
 
-    // Check type for scanner patterns
+    // Check type for scanner/background task patterns
     const isTypeScanner =
       type.includes("scanner") ||
       type.includes("scan") ||
+      type.includes("butler") ||
+      type.includes("subscription") ||
       type === "library.scanner" ||
       type === "library.update.section" ||
       type === "media.generate";
 
-    // Check title/subtitle for scanning patterns
+    // Check title/subtitle for scanning/butler/subscription patterns
     const isTitleScanner =
       title.includes("scanning") ||
       title.includes("scan ") ||
       title.startsWith("scan") ||
-      subtitle.includes("scanning");
+      title.includes("butler") ||
+      title.includes("subscription") ||
+      title.includes("processing") ||
+      subtitle.includes("scanning") ||
+      subtitle.includes("butler") ||
+      subtitle.includes("subscription");
 
     return isTypeScanner || isTitleScanner;
   };
@@ -590,7 +597,7 @@ export default function VODStreams() {
           <button
             onClick={() => handleRefresh(true)}
             disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
           >
             <RefreshCw
               size={16}
@@ -644,7 +651,7 @@ export default function VODStreams() {
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {
                   streamActivities.filter(
-                    (a) => a.type === "download" || a.type === "media.download"
+                    (a) => a.type === "download" || a.type === "media.download",
                   ).length
                 }
               </p>
@@ -782,17 +789,17 @@ export default function VODStreams() {
         <div className="flex gap-2 min-w-max">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "all"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.all")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "all"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -801,24 +808,24 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("downloading")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "downloading"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.downloading")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "downloading"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
               (
               {
                 streamActivities.filter(
-                  (a) => a.type === "download" || a.type === "media.download"
+                  (a) => a.type === "download" || a.type === "media.download",
                 ).length
               }
               )
@@ -826,17 +833,17 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("paused")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "paused"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.paused")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "paused"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
@@ -845,24 +852,24 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("transcoding")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "transcoding"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.transcoding")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "transcoding"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
               (
               {
                 streamActivities.filter(
-                  (a) => a.transcodeSession && a.state === "playing"
+                  (a) => a.transcodeSession && a.state === "playing",
                 ).length
               }
               )
@@ -870,24 +877,24 @@ export default function VODStreams() {
           </button>
           <button
             onClick={() => setActiveFilter("streaming")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               activeFilter === "streaming"
-                ? "bg-theme-hover text-white shadow-md"
-                : "bg-theme-accent text-theme-text hover:bg-theme-hover"
+                ? "bg-theme-primary text-black shadow-md"
+                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
             }`}
           >
             {t("vodStreams.filter.streaming")}
             <span
               className={`ml-2 text-xs ${
                 activeFilter === "streaming"
-                  ? "text-white/80"
+                  ? "text-black/70"
                   : "text-theme-text-muted"
               }`}
             >
               (
               {
                 streamActivities.filter(
-                  (a) => a.state === "playing" && !a.transcodeSession
+                  (a) => a.state === "playing" && !a.transcodeSession,
                 ).length
               }
               )
@@ -898,14 +905,14 @@ export default function VODStreams() {
 
       {/* Library Scans Section */}
       {scanActivities.length > 0 && (
-        <div className="bg-theme-card border border-purple-500/30 rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-purple-500/10 border-b border-purple-500/30 px-4 py-3">
+        <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
             <div className="flex items-center gap-2">
-              <HardDrive className="w-5 h-5 text-purple-500 animate-pulse" />
+              <HardDrive className="w-5 h-5 text-theme-primary animate-pulse" />
               <h3 className="text-lg font-semibold text-theme-text">
                 {t("vodStreams.libraryScans.title", "Library Scans")}
               </h3>
-              <span className="ml-2 px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full">
+              <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
                 {scanActivities.length}{" "}
                 {t("vodStreams.libraryScans.active", "active")}
               </span>
@@ -914,17 +921,17 @@ export default function VODStreams() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-theme-hover border-b border-theme">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.libraryScans.library", "Library")}
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.libraryScans.details", "Details")}
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.table.status", "Status")}
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-black">
                     {t("vodStreams.table.progress", "Progress")}
                   </th>
                 </tr>
@@ -988,14 +995,14 @@ export default function VODStreams() {
       )}
 
       {/* Downloads/Streams Content */}
-      <div className="bg-theme-card border border-green-500/30 rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-green-500/10 border-b border-green-500/30 px-4 py-3">
+      <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
           <div className="flex items-center gap-2">
-            <Download className="w-5 h-5 text-green-500" />
+            <Download className="w-5 h-5 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text">
               {t("vodStreams.downloads.title", "Downloads & Streams")}
             </h3>
-            <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-medium rounded-full">
+            <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
               {streamActivities.length}{" "}
               {t("vodStreams.downloads.active", "active")}
             </span>
@@ -1004,17 +1011,17 @@ export default function VODStreams() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-hover border-b border-theme">
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+              <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.media", "Media")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.title", "Title")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.status", "Status")}
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-theme-text-secondary">
+                <th className="text-right py-3 px-4 text-sm font-semibold text-black">
                   {t("vodStreams.table.progress", "Progress")}
                 </th>
               </tr>
@@ -1077,7 +1084,7 @@ export default function VODStreams() {
                           </h3>
                           <p className="text-theme-muted mb-6">
                             {`${t(
-                              "vodStreams.noMatchingDescription"
+                              "vodStreams.noMatchingDescription",
                             )} "${searchQuery}"`}
                           </p>
                           <button

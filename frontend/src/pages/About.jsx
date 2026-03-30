@@ -138,7 +138,7 @@ function About() {
           <button
             onClick={fetchVersion}
             disabled={refreshing}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm w-full sm:w-auto justify-center"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm w-full sm:w-auto justify-center"
           >
             <RefreshCw
               className={`w-4 h-4 text-theme-primary ${
@@ -202,7 +202,7 @@ function About() {
             href="https://cyb3rgh05t.github.io/komandorr"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all group"
+            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all group"
           >
             <div className="flex items-center gap-3">
               <Info className="w-5 h-5 text-theme-primary" />
@@ -217,7 +217,7 @@ function About() {
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all group"
+            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all group"
           >
             <div className="flex items-center gap-3">
               <Info className="w-5 h-5 text-theme-primary" />
@@ -232,7 +232,7 @@ function About() {
             href="https://github.com/cyb3rgh05t/komandorr/issues"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all group"
+            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all group"
           >
             <div className="flex items-center gap-3">
               <Github className="w-5 h-5 text-theme-primary" />
@@ -247,7 +247,7 @@ function About() {
             href="https://t.me/cyb3rgh05t_01"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all group"
+            className="flex items-center justify-between p-3 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all group"
           >
             <div className="flex items-center gap-3">
               <svg
@@ -277,7 +277,7 @@ function About() {
           href="https://ko-fi.com/streamnetclub"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-theme-hover hover:bg-theme-primary/20 border border-theme-primary/30 rounded-lg transition-all group"
+          className="flex items-center justify-between p-4 bg-theme-hover hover:bg-theme-primary/20 border border-theme-primary/30 hover:border-theme-primary rounded-lg transition-all group"
         >
           <div className="flex items-center gap-3">
             <Heart className="w-6 h-6 text-theme-primary" />

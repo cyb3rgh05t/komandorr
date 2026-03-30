@@ -20,6 +20,7 @@ import InvitesManager from "./pages/InvitesManager";
 import UserAccounts from "./pages/UserAccounts";
 import Uploader from "./pages/Uploader";
 import ArrActivity from "./pages/ArrActivity";
+import VpnProxy from "./pages/VpnProxy";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -171,6 +172,7 @@ function App() {
                       <Route path="/user-accounts" element={<UserAccounts />} />
                       <Route path="/uploader" element={<Uploader />} />
                       <Route path="/arr-activity" element={<ArrActivity />} />
+                      <Route path="/vpn-proxy" element={<VpnProxy />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>

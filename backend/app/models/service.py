@@ -11,6 +11,8 @@ class TrafficMetrics(BaseModel):
     total_up: float = 0.0  # Total upload in GB
     total_down: float = 0.0  # Total download in GB
     max_bandwidth: float | None = None  # Maximum bandwidth capacity in MB/s
+    cpu_percent: float | None = None  # CPU usage percentage
+    memory_percent: float | None = None  # Memory usage percentage
     last_updated: datetime | None = None
 
 
@@ -109,6 +111,8 @@ class TrafficUpdate(BaseModel):
     total_up: float  # GB
     total_down: float  # GB
     max_bandwidth: float | None = None  # Maximum bandwidth capacity in MB/s
+    cpu_percent: float | None = None  # CPU usage percentage
+    memory_percent: float | None = None  # Memory usage percentage
 
 
 # Import storage models for forward references

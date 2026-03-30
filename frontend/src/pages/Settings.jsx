@@ -18,6 +18,8 @@ import {
   Film,
   Plus,
   Trash2,
+  Bell,
+  Send,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -71,18 +73,39 @@ export default function Settings() {
   const [uploaderUrl, setUploaderUrl] = useState("");
   const [uploaderTestStatus, setUploaderTestStatus] = useState(null);
 
+  // VPN Proxy Manager settings state
+  const [vpnProxyUrl, setVpnProxyUrl] = useState("");
+  const [vpnProxyApiKey, setVpnProxyApiKey] = useState("");
+  const [vpnProxyTestStatus, setVpnProxyTestStatus] = useState(null);
+  const [showVpnProxyKey, setShowVpnProxyKey] = useState(false);
+
   // *arr instances state
   const [arrInstances, setArrInstances] = useState([]);
   const [showAddArr, setShowAddArr] = useState(false);
   const [newArrName, setNewArrName] = useState("");
   const [newArrType, setNewArrType] = useState("sonarr");
   const [newArrUrl, setNewArrUrl] = useState("");
+  const [newArrAccessUrl, setNewArrAccessUrl] = useState("");
   const [newArrApiKey, setNewArrApiKey] = useState("");
   const [showArrKeys, setShowArrKeys] = useState({});
   const [arrTestStatus, setArrTestStatus] = useState({});
 
+  // Telegram notification settings state
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramNotifyOffline, setTelegramNotifyOffline] = useState(true);
+  const [telegramNotifyProblem, setTelegramNotifyProblem] = useState(true);
+  const [telegramNotifyRecovery, setTelegramNotifyRecovery] = useState(true);
+  const [showTelegramToken, setShowTelegramToken] = useState(false);
+  const [telegramTestStatus, setTelegramTestStatus] = useState(null);
+  const [telegramTesting, setTelegramTesting] = useState(false);
+
   // Unsaved changes state
   const [pendingChanges, setPendingChanges] = useState(false);
+
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState("general");
 
   useEffect(() => {
     // Check auth status
@@ -127,9 +150,13 @@ export default function Settings() {
       if (data.uploader) {
         setUploaderUrl(data.uploader.base_url || "");
       }
+      if (data.vpn_proxy) {
+        setVpnProxyUrl(data.vpn_proxy.url || "");
+        setVpnProxyApiKey(data.vpn_proxy.api_key || "");
+      }
       if (data.arr || data.instances) {
         setArrInstances(
-          (data.arr && data.arr.instances) || data.instances || []
+          (data.arr && data.arr.instances) || data.instances || [],
         );
       }
 
@@ -143,11 +170,17 @@ export default function Settings() {
       if (data.uploader?.base_url) {
         validateUploaderOnLoad();
       }
+      if (data.vpn_proxy?.url && data.vpn_proxy?.api_key) {
+        validateVpnProxyOnLoad();
+      }
       if (data.arr?.instances || data.instances) {
         const instances =
           (data.arr && data.arr.instances) || data.instances || [];
         validateArrInstancesOnLoad(instances);
       }
+
+      // Load Telegram notification settings
+      loadTelegramSettings();
     } catch (error) {
       console.error("Failed to load settings:", error);
     }
@@ -191,6 +224,15 @@ export default function Settings() {
     }
   };
 
+  const validateVpnProxyOnLoad = async () => {
+    try {
+      const result = await api.get("/vpn-proxy/status");
+      setVpnProxyTestStatus(result.connected ? "ok" : "fail");
+    } catch (error) {
+      setVpnProxyTestStatus("fail");
+    }
+  };
+
   const validateArrInstancesOnLoad = async (instances) => {
     for (const inst of instances) {
       if (inst.url && inst.api_key) {
@@ -212,6 +254,46 @@ export default function Settings() {
           setArrTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
         }
       }
+    }
+  };
+
+  // Telegram notification functions
+  const loadTelegramSettings = async () => {
+    try {
+      const data = await api.get("/notifications/telegram");
+      if (data.telegram) {
+        setTelegramEnabled(data.telegram.enabled || false);
+        setTelegramBotToken(data.telegram.bot_token || "");
+        setTelegramChatId(data.telegram.chat_id || "");
+        setTelegramNotifyOffline(data.telegram.notify_offline ?? true);
+        setTelegramNotifyProblem(data.telegram.notify_problem ?? true);
+        setTelegramNotifyRecovery(data.telegram.notify_recovery ?? true);
+      }
+    } catch (error) {
+      console.error("Failed to load Telegram settings:", error);
+    }
+  };
+
+  const handleTestTelegram = async () => {
+    setTelegramTesting(true);
+    setTelegramTestStatus(null);
+    try {
+      const result = await api.post("/notifications/telegram/test");
+      if (result.success) {
+        setTelegramTestStatus("ok");
+        toast.success(result.message || "Test notification sent!");
+      } else {
+        setTelegramTestStatus("fail");
+        toast.error(result.message || "Failed to send test notification");
+      }
+    } catch (error) {
+      console.error("Failed to test Telegram:", error);
+      setTelegramTestStatus("fail");
+      toast.error(
+        t("settings.telegramTestError") || "Failed to send test notification",
+      );
+    } finally {
+      setTelegramTesting(false);
     }
   };
 
@@ -247,7 +329,7 @@ export default function Settings() {
         const data = await response.json();
         setAuthEnabled(data.enabled);
         toast.success(
-          data.enabled ? t("auth.authEnabled") : t("auth.authDisabled")
+          data.enabled ? t("auth.authEnabled") : t("auth.authDisabled"),
         );
 
         // If enabling auth, clear session and reload to show login screen
@@ -350,7 +432,8 @@ export default function Settings() {
   const handleValidateOverseerr = async () => {
     if (!overseerrUrl || !overseerrApiKey) {
       toast.error(
-        t("settings.overseerrFillAllFields") || "Please fill in URL and API Key"
+        t("settings.overseerrFillAllFields") ||
+          "Please fill in URL and API Key",
       );
       return;
     }
@@ -365,14 +448,14 @@ export default function Settings() {
         setOverseerrValid(true);
         toast.success(
           t("settings.overseerrValidationSuccess") ||
-            "Overseerr connection successful"
+            "Overseerr connection successful",
         );
       } else {
         setOverseerrValid(false);
         toast.error(
           result.message ||
             t("settings.overseerrValidationFailed") ||
-            "Cannot connect to Overseerr"
+            "Cannot connect to Overseerr",
         );
       }
     } catch (error) {
@@ -381,7 +464,7 @@ export default function Settings() {
       toast.error(
         error.message ||
           t("settings.overseerrValidationError") ||
-          "Failed to test connection"
+          "Failed to test connection",
       );
     } finally {
       setValidatingOverseerr(false);
@@ -406,6 +489,7 @@ export default function Settings() {
             type: newArrType,
             url: newArrUrl,
             api_key: newArrApiKey,
+            access_url: newArrAccessUrl || "",
           },
         ];
       }
@@ -435,6 +519,10 @@ export default function Settings() {
         uploader: {
           base_url: uploaderUrl || "",
         },
+        vpn_proxy: {
+          url: vpnProxyUrl || "",
+          api_key: vpnProxyApiKey || "",
+        },
         arr: {
           instances: instancesPayload || [],
         },
@@ -443,6 +531,22 @@ export default function Settings() {
       console.log("Saving settings payload:", payload);
       const result = await api.post("/settings", payload);
       console.log("Settings saved successfully, response:", result);
+
+      // Save Telegram settings separately
+      try {
+        await api.put("/notifications/telegram", {
+          enabled: telegramEnabled,
+          bot_token: telegramBotToken,
+          chat_id: telegramChatId,
+          notify_offline: telegramNotifyOffline,
+          notify_problem: telegramNotifyProblem,
+          notify_recovery: telegramNotifyRecovery,
+        });
+        console.log("Telegram settings saved successfully");
+      } catch (telegramError) {
+        console.error("Failed to save Telegram settings:", telegramError);
+        // Don't fail the whole save if Telegram fails
+      }
 
       // Clear timezone cache so new timezone takes effect immediately
       clearTimezoneCache();
@@ -453,6 +557,7 @@ export default function Settings() {
       if (hasPendingNew) {
         setNewArrName("");
         setNewArrUrl("");
+        setNewArrAccessUrl("");
         setNewArrApiKey("");
         setNewArrType("sonarr");
         setShowAddArr(false);
@@ -495,10 +600,12 @@ export default function Settings() {
       type: newArrType,
       url: newArrUrl,
       api_key: newArrApiKey,
+      access_url: newArrAccessUrl || "",
     };
     setArrInstances((prev) => [...prev, instance]);
     setNewArrName("");
     setNewArrUrl("");
+    setNewArrAccessUrl("");
     setNewArrApiKey("");
     setNewArrType("sonarr");
     setShowAddArr(false);
@@ -543,17 +650,40 @@ export default function Settings() {
     }
   };
 
+  const tabs = [
+    { id: "general", label: t("settings.general", "General"), icon: Globe },
+    {
+      id: "auth",
+      label: t("auth.authSettings", "Authentication"),
+      icon: Shield,
+    },
+    { id: "plex", label: t("plex.serverSettings", "Plex"), icon: Server },
+    { id: "overseerr", label: "VoD Portal", icon: Server },
+    {
+      id: "uploader",
+      label: t("uploaderSettings.settings", "Uploader"),
+      icon: Upload,
+    },
+    { id: "vpn_proxy", label: "VPN-Proxy", icon: Shield },
+    { id: "arr", label: "*arr Instances", icon: Film },
+    {
+      id: "notifications",
+      label: t("settings.notifications", "Notifications"),
+      icon: Bell,
+    },
+  ];
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Save Settings Button - Top */}
-      <div className="flex flex-col items-end">
+      <div className="flex flex-col items-start">
         <button
           onClick={() => {
             handleSaveSettings();
             setPendingChanges(false);
           }}
           disabled={settingsLoading || !pendingChanges}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           <Save className="text-theme-primary w-4 h-4" />
           {settingsLoading ? t("settings.saving") : t("settings.saveNow")}
@@ -565,75 +695,418 @@ export default function Settings() {
         )}
       </div>
 
-      {/* Authentication Settings */}
-      <div className="space-y-6">
-        {/* Auth Toggle */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("auth.authSettings")}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+      {/* Tab Navigation */}
+      <div className="bg-theme-card border border-theme rounded-xl p-2 overflow-x-auto">
+        <div className="flex gap-2 min-w-max">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? "bg-theme-primary text-black shadow-lg"
+                    : "text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            <div className="relative">
-              {/* Enable/Disable Auth */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
-                  <div>
-                    <h3 className="font-medium text-theme-text mb-1">
-                      {t("auth.enableAuth")}
-                    </h3>
-                    <p className="text-sm text-theme-muted">
-                      {authEnabled
-                        ? t("auth.authEnabled")
-                        : t("auth.authDisabled")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleToggleAuth}
-                    disabled={loading}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      authEnabled ? "bg-green-500" : "bg-gray-600"
-                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        authEnabled ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {/* Authentication Settings */}
+        {activeTab === "auth" && (
+          <>
+            {/* Auth Toggle */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Shield className="w-5 h-5" />
                 </div>
-                <div className="flex items-start gap-2 text-sm text-orange-400 bg-orange-500/10 backdrop-blur-sm border border-orange-500/30 rounded-lg p-3">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <p>
-                    {authEnabled
-                      ? "Disabling authentication will allow unrestricted access to your dashboard."
-                      : "Enable this for an additional security layer on top of Authelia/Traefik."}
-                  </p>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("auth.authSettings")}
+                  </h3>
+                </div>
+              </div>
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                {/* Decorative gradient overlay */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+                <div className="relative">
+                  {/* Enable/Disable Auth */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                      <div>
+                        <h3 className="font-medium text-theme-text mb-1">
+                          {t("auth.enableAuth")}
+                        </h3>
+                        <p className="text-sm text-theme-muted">
+                          {authEnabled
+                            ? t("auth.authEnabled")
+                            : t("auth.authDisabled")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleToggleAuth}
+                        disabled={loading}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          authEnabled ? "bg-green-500" : "bg-gray-600"
+                        } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            authEnabled ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-orange-400 bg-orange-500/10 backdrop-blur-sm border border-orange-500/30 rounded-lg p-3">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <p>
+                        {authEnabled
+                          ? "Disabling authentication will allow unrestricted access to your dashboard."
+                          : "Enable this for an additional security layer on top of Authelia/Traefik."}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Change Credentials Form */}
-        {authEnabled && (
+            {/* Change Credentials Form */}
+            {authEnabled && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-theme-text">
+                      {t("auth.changeCredentials")}
+                    </h3>
+                  </div>
+                </div>
+                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                  {/* Decorative gradient overlay */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+                  <div className="relative">
+                    <form
+                      onSubmit={handleUpdateCredentials}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("auth.username")}
+                        </label>
+                        <input
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder={t("auth.enterUsername")}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("auth.currentPassword")}
+                        </label>
+                        <input
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder={t("auth.enterPassword")}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("auth.newPassword")}
+                        </label>
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder={t("auth.enterPassword")}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          {t("auth.confirmPassword")}
+                        </label>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder={t("auth.enterPassword")}
+                          required
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {loading
+                          ? t("auth.updating")
+                          : t("auth.updateCredentials")}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* General Settings */}
+        {activeTab === "general" && (
+          <>
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("settings.generalSettings")}
+                  </h3>
+                </div>
+              </div>
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                {/* Decorative gradient overlay */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+                <div className="relative">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("settings.timezone")}
+                      </label>
+                      <CustomDropdown
+                        value={timezone}
+                        onChange={(val) => {
+                          setTimezone(val);
+                          setPendingChanges(true);
+                        }}
+                        options={[
+                          { value: "UTC", label: "UTC" },
+                          {
+                            value: "America/New_York",
+                            label: "America/New_York (EST/EDT)",
+                          },
+                          {
+                            value: "America/Chicago",
+                            label: "America/Chicago (CST/CDT)",
+                          },
+                          {
+                            value: "America/Denver",
+                            label: "America/Denver (MST/MDT)",
+                          },
+                          {
+                            value: "America/Los_Angeles",
+                            label: "America/Los_Angeles (PST/PDT)",
+                          },
+                          {
+                            value: "Europe/London",
+                            label: "Europe/London (GMT/BST)",
+                          },
+                          {
+                            value: "Europe/Paris",
+                            label: "Europe/Paris (CET/CEST)",
+                          },
+                          {
+                            value: "Europe/Berlin",
+                            label: "Europe/Berlin (CET/CEST)",
+                          },
+                          {
+                            value: "Europe/Amsterdam",
+                            label: "Europe/Amsterdam (CET/CEST)",
+                          },
+                          { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
+                          {
+                            value: "Asia/Shanghai",
+                            label: "Asia/Shanghai (CST)",
+                          },
+                          {
+                            value: "Australia/Sydney",
+                            label: "Australia/Sydney (AEST/AEDT)",
+                          },
+                        ]}
+                      />
+                      <p className="mt-2 text-xs text-theme-muted">
+                        {t("settings.timezoneHelp")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("settings.logLevel")}
+                      </label>
+                      <CustomDropdown
+                        value={logLevel}
+                        onChange={(val) => {
+                          setLogLevel(val);
+                          setPendingChanges(true);
+                        }}
+                        options={[
+                          { value: "DEBUG", label: "DEBUG" },
+                          { value: "INFO", label: "INFO" },
+                          { value: "WARNING", label: "WARNING" },
+                          { value: "ERROR", label: "ERROR" },
+                          { value: "CRITICAL", label: "CRITICAL" },
+                        ]}
+                      />
+                      <p className="mt-2 text-xs text-theme-muted">
+                        {t("settings.logLevelHelp")}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                      <div>
+                        <h3 className="font-medium text-theme-text mb-1">
+                          {t("settings.enableFileLogging")}
+                        </h3>
+                        <p className="text-sm text-theme-muted">
+                          {t("settings.enableFileLoggingHelp")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setLogEnableFile(!logEnableFile);
+                          setPendingChanges(true);
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          logEnableFile ? "bg-green-500" : "bg-gray-600"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            logEnableFile ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* API Configuration */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("settings.apiConfiguration")}
+                  </h3>
+                </div>
+              </div>
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                {/* Decorative gradient overlay */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+                <div className="relative">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("settings.githubToken")}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showGithubToken ? "text" : "password"}
+                          value={githubToken}
+                          onChange={(e) => {
+                            setGithubToken(e.target.value);
+                            setPendingChanges(true);
+                          }}
+                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowGithubToken(!showGithubToken)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                        >
+                          {showGithubToken ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="mt-2 text-xs text-theme-muted">
+                        {t("settings.githubTokenHelp")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("settings.tmdbApiKey")}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showTmdbKey ? "text" : "password"}
+                          value={tmdbApiKey}
+                          onChange={(e) => {
+                            setTmdbApiKey(e.target.value);
+                            setPendingChanges(true);
+                          }}
+                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowTmdbKey(!showTmdbKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                        >
+                          {showTmdbKey ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="mt-2 text-xs text-theme-muted">
+                        {t("settings.tmdbApiKeyHelp")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Plex Server Settings */}
+          </>
+        )}
+
+        {activeTab === "plex" && (
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                <Shield className="w-5 h-5" />
+                <Server className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-theme-text">
-                  {t("auth.changeCredentials")}
+                  {t("plex.serverSettings")}
                 </h3>
               </div>
             </div>
@@ -642,555 +1115,70 @@ export default function Settings() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
               <div className="relative">
-                <form onSubmit={handleUpdateCredentials} className="space-y-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("auth.username")}
+                      {t("plex.serverUrl")}
                     </label>
                     <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder={t("auth.enterUsername")}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("auth.currentPassword")}
-                    </label>
-                    <input
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder={t("auth.enterPassword")}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("auth.newPassword")}
-                    </label>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder={t("auth.enterPassword")}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("auth.confirmPassword")}
-                    </label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder={t("auth.enterPassword")}
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                  >
-                    {loading ? t("auth.updating") : t("auth.updateCredentials")}
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* General Settings */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Globe className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("settings.generalSettings")}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-            <div className="relative">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.timezone")}
-                  </label>
-                  <CustomDropdown
-                    value={timezone}
-                    onChange={(val) => {
-                      setTimezone(val);
-                      setPendingChanges(true);
-                    }}
-                    options={[
-                      { value: "UTC", label: "UTC" },
-                      {
-                        value: "America/New_York",
-                        label: "America/New_York (EST/EDT)",
-                      },
-                      {
-                        value: "America/Chicago",
-                        label: "America/Chicago (CST/CDT)",
-                      },
-                      {
-                        value: "America/Denver",
-                        label: "America/Denver (MST/MDT)",
-                      },
-                      {
-                        value: "America/Los_Angeles",
-                        label: "America/Los_Angeles (PST/PDT)",
-                      },
-                      {
-                        value: "Europe/London",
-                        label: "Europe/London (GMT/BST)",
-                      },
-                      {
-                        value: "Europe/Paris",
-                        label: "Europe/Paris (CET/CEST)",
-                      },
-                      {
-                        value: "Europe/Berlin",
-                        label: "Europe/Berlin (CET/CEST)",
-                      },
-                      {
-                        value: "Europe/Amsterdam",
-                        label: "Europe/Amsterdam (CET/CEST)",
-                      },
-                      { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
-                      { value: "Asia/Shanghai", label: "Asia/Shanghai (CST)" },
-                      {
-                        value: "Australia/Sydney",
-                        label: "Australia/Sydney (AEST/AEDT)",
-                      },
-                    ]}
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.timezoneHelp")}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.logLevel")}
-                  </label>
-                  <CustomDropdown
-                    value={logLevel}
-                    onChange={(val) => {
-                      setLogLevel(val);
-                      setPendingChanges(true);
-                    }}
-                    options={[
-                      { value: "DEBUG", label: "DEBUG" },
-                      { value: "INFO", label: "INFO" },
-                      { value: "WARNING", label: "WARNING" },
-                      { value: "ERROR", label: "ERROR" },
-                      { value: "CRITICAL", label: "CRITICAL" },
-                    ]}
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.logLevelHelp")}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
-                  <div>
-                    <h3 className="font-medium text-theme-text mb-1">
-                      {t("settings.enableFileLogging")}
-                    </h3>
-                    <p className="text-sm text-theme-muted">
-                      {t("settings.enableFileLoggingHelp")}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setLogEnableFile(!logEnableFile);
-                      setPendingChanges(true);
-                    }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      logEnableFile ? "bg-green-500" : "bg-gray-600"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        logEnableFile ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Plex Server Settings */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Server className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("plex.serverSettings")}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-            <div className="relative">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("plex.serverUrl")}
-                  </label>
-                  <input
-                    type="url"
-                    value={plexUrl}
-                    onChange={(e) => {
-                      setPlexUrl(e.target.value);
-                      setPlexValid(null);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="http://192.168.1.100:32400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("plex.token")}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPlexToken ? "text" : "password"}
-                      value={plexToken}
+                      type="url"
+                      value={plexUrl}
                       onChange={(e) => {
-                        setPlexToken(e.target.value);
+                        setPlexUrl(e.target.value);
                         setPlexValid(null);
                         setPendingChanges(true);
                       }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="XXXXXXXXXXXXXXXXXXXX"
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="http://192.168.1.100:32400"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPlexToken(!showPlexToken)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                    >
-                      {showPlexToken ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
                   </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("plex.tokenHelp")}
-                  </p>
-                </div>
 
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleValidatePlex}
-                    disabled={validating || !plexUrl || !plexToken}
-                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
-                      plexValid === true
-                        ? "bg-green-600 hover:bg-green-700 text-white"
-                        : plexValid === false
-                        ? "bg-red-600 hover:bg-red-700 text-white"
-                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
-                    }`}
-                  >
-                    {validating ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg
-                          className="animate-spin h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        {t("plex.validating")}
-                      </span>
-                    ) : plexValid === true ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <CheckCircle size={16} />
-                        {t("plex.validated")}
-                      </span>
-                    ) : (
-                      t("plex.validate")
-                    )}
-                  </button>
-                </div>
-
-                {plexValid === false && (
-                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <p>{t("plex.validationFailedMessage")}</p>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("plex.token")}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPlexToken ? "text" : "password"}
+                        value={plexToken}
+                        onChange={(e) => {
+                          setPlexToken(e.target.value);
+                          setPlexValid(null);
+                          setPendingChanges(true);
+                        }}
+                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="XXXXXXXXXXXXXXXXXXXX"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPlexToken(!showPlexToken)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                      >
+                        {showPlexToken ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-theme-muted">
+                      {t("plex.tokenHelp")}
+                    </p>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Overseerr Configuration */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Server className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("settings.overseerrSettings") || "Overseerr Configuration"}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-            <div className="relative">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.overseerrUrl") || "Overseerr API URL"}
-                  </label>
-                  <input
-                    type="text"
-                    value={overseerrUrl}
-                    onChange={(e) => {
-                      setOverseerrUrl(e.target.value);
-                      setOverseerrValid(null);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="https://overseerr.example.com/api/v1/user"
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.overseerrUrlHelp") ||
-                      "Full API endpoint URL for creating users"}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.overseerrApiKey") || "Overseerr API Key"}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showOverseerrKey ? "text" : "password"}
-                      value={overseerrApiKey}
-                      onChange={(e) => {
-                        setOverseerrApiKey(e.target.value);
-                        setOverseerrValid(null);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    />
+                  <div className="flex gap-3">
                     <button
-                      type="button"
-                      onClick={() => setShowOverseerrKey(!showOverseerrKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                    >
-                      {showOverseerrKey ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.overseerrApiKeyHelp") ||
-                      "API key from Overseerr settings"}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.defaultEmailDomain") || "Default Email Domain"}
-                  </label>
-                  <input
-                    type="text"
-                    value={defaultEmailDomain}
-                    onChange={(e) => {
-                      setDefaultEmailDomain(e.target.value);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="example.com"
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.defaultEmailDomainHelp") ||
-                      "Default domain for user emails (username@domain.com)"}
-                  </p>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleValidateOverseerr}
-                    disabled={
-                      validatingOverseerr || !overseerrUrl || !overseerrApiKey
-                    }
-                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
-                      overseerrValid === true
-                        ? "bg-green-600 hover:bg-green-700 text-white"
-                        : overseerrValid === false
-                        ? "bg-red-600 hover:bg-red-700 text-white"
-                        : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
-                    }`}
-                  >
-                    {validatingOverseerr ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg
-                          className="animate-spin h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        {t("settings.overseerrValidating") || "Testing..."}
-                      </span>
-                    ) : overseerrValid === true ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <CheckCircle size={16} />
-                        {t("settings.overseerrValidated") || "Connected"}
-                      </span>
-                    ) : (
-                      t("settings.overseerrValidate") || "Test Connection"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Uploader Settings */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Upload className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("uploaderSettings.settings", {
-                  defaultValue: "Uploader Settings",
-                })}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-            <div className="relative">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("uploaderSettings.baseUrl", {
-                      defaultValue: "Uploader Base URL",
-                    })}
-                  </label>
-                  <input
-                    type="url"
-                    value={uploaderUrl}
-                    onChange={(e) => {
-                      setUploaderUrl(e.target.value);
-                      setUploaderTestStatus(null);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="http://uploader:8080"
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("uploaderSettings.baseUrlHelp", {
-                      defaultValue:
-                        "Set the URL of your Uploader service (container or external).",
-                    })}
-                  </p>
-                  <div className="flex gap-3 mt-3">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!uploaderUrl) {
-                          toast.error("Please enter Uploader URL");
-                          return;
-                        }
-                        setUploaderTestStatus("loading");
-                        console.log("Testing Uploader connection...", {
-                          url: uploaderUrl,
-                        });
-                        try {
-                          const result = await api.get("/uploader/status");
-                          console.log("Uploader connection successful", result);
-                          setUploaderTestStatus("ok");
-                          toast.success("Uploader connection successful");
-                        } catch (e) {
-                          console.error("Uploader connection failed:", e);
-                          setUploaderTestStatus("fail");
-                          toast.error(
-                            e.message || "Cannot connect to Uploader"
-                          );
-                        }
-                      }}
-                      disabled={
-                        uploaderTestStatus === "loading" || !uploaderUrl
-                      }
+                      onClick={handleValidatePlex}
+                      disabled={validating || !plexUrl || !plexToken}
                       className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
-                        uploaderTestStatus === "ok"
+                        plexValid === true
                           ? "bg-green-600 hover:bg-green-700 text-white"
-                          : uploaderTestStatus === "fail"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                          : plexValid === false
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
                       }`}
                     >
-                      {uploaderTestStatus === "loading" ? (
+                      {validating ? (
                         <span className="flex items-center justify-center gap-2">
                           <svg
                             className="animate-spin h-4 w-4"
@@ -1212,98 +1200,1005 @@ export default function Settings() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          {t("uploaderSettings.testing", {
-                            defaultValue: "Testing...",
-                          })}
+                          {t("plex.validating")}
                         </span>
-                      ) : uploaderTestStatus === "ok" ? (
+                      ) : plexValid === true ? (
                         <span className="flex items-center justify-center gap-2">
                           <CheckCircle size={16} />
-                          {t("uploaderSettings.connectionOk", {
-                            defaultValue: "Connected",
-                          })}
+                          {t("plex.validated")}
                         </span>
                       ) : (
-                        t("uploaderSettings.testConnection", {
-                          defaultValue: "Test Connection",
-                        })
+                        t("plex.validate")
                       )}
                     </button>
                   </div>
 
-                  {uploaderTestStatus === "fail" && (
-                    <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
+                  {plexValid === false && (
+                    <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
                       <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <p>
-                        Cannot connect to Uploader. Check the URL is correct and
-                        the service is running.
-                      </p>
+                      <p>{t("plex.validationFailedMessage")}</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Sonarr/Radarr Instances */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Film className="w-5 h-5" />
+        {/* Overseerr Configuration */}
+        {activeTab === "overseerr" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Server className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("settings.overseerrSettings") || "Overseerr Configuration"}
+                </h3>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("arr.instancesTitle", {
-                  defaultValue: "Sonarr/Radarr Instances",
-                })}
-              </h3>
-              <p className="text-sm text-theme-muted">
-                {t("arr.instancesSubtitle", {
-                  defaultValue:
-                    "Configure multiple Sonarr and Radarr instances (e.g., 1080p and 4K).",
-                })}
-              </p>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              {/* Decorative gradient overlay */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("settings.overseerrUrl") || "Overseerr API URL"}
+                    </label>
+                    <input
+                      type="text"
+                      value={overseerrUrl}
+                      onChange={(e) => {
+                        setOverseerrUrl(e.target.value);
+                        setOverseerrValid(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="https://overseerr.example.com/api/v1/user"
+                    />
+                    <p className="mt-2 text-xs text-theme-muted">
+                      {t("settings.overseerrUrlHelp") ||
+                        "Full API endpoint URL for creating users"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("settings.overseerrApiKey") || "Overseerr API Key"}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showOverseerrKey ? "text" : "password"}
+                        value={overseerrApiKey}
+                        onChange={(e) => {
+                          setOverseerrApiKey(e.target.value);
+                          setOverseerrValid(null);
+                          setPendingChanges(true);
+                        }}
+                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOverseerrKey(!showOverseerrKey)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                      >
+                        {showOverseerrKey ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-theme-muted">
+                      {t("settings.overseerrApiKeyHelp") ||
+                        "API key from Overseerr settings"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("settings.defaultEmailDomain") ||
+                        "Default Email Domain"}
+                    </label>
+                    <input
+                      type="text"
+                      value={defaultEmailDomain}
+                      onChange={(e) => {
+                        setDefaultEmailDomain(e.target.value);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="example.com"
+                    />
+                    <p className="mt-2 text-xs text-theme-muted">
+                      {t("settings.defaultEmailDomainHelp") ||
+                        "Default domain for user emails (username@domain.com)"}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleValidateOverseerr}
+                      disabled={
+                        validatingOverseerr || !overseerrUrl || !overseerrApiKey
+                      }
+                      className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                        overseerrValid === true
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : overseerrValid === false
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                      }`}
+                    >
+                      {validatingOverseerr ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg
+                            className="animate-spin h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          {t("settings.overseerrValidating") || "Testing..."}
+                        </span>
+                      ) : overseerrValid === true ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <CheckCircle size={16} />
+                          {t("settings.overseerrValidated") || "Connected"}
+                        </span>
+                      ) : (
+                        t("settings.overseerrValidate") || "Test Connection"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+        )}
 
-            <div className="relative space-y-6">
-              {/* Existing instances */}
-              {arrInstances.length === 0 ? (
-                <div className="text-sm text-theme-muted">
-                  {t("arr.noInstances", {
-                    defaultValue: "No instances configured yet.",
+        {/* Uploader Settings */}
+        {activeTab === "uploader" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Upload className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("uploaderSettings.settings", {
+                    defaultValue: "Uploader Settings",
                   })}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {arrInstances.map((inst, idx) => (
-                    <div
-                      key={inst.id || idx}
-                      className="p-4 bg-theme-hover/50 border border-theme rounded-lg"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 text-xs rounded bg-theme-hover border border-theme text-theme-text">
-                            {inst.type?.toUpperCase()}
-                          </span>
-                          <span className="text-sm text-theme-text font-medium">
-                            {inst.name}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeArrInstance(idx)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title={t("arr.remove", { defaultValue: "Remove" })}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                </h3>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      {t("uploaderSettings.baseUrl", {
+                        defaultValue: "Uploader Base URL",
+                      })}
+                    </label>
+                    <input
+                      type="url"
+                      value={uploaderUrl}
+                      onChange={(e) => {
+                        setUploaderUrl(e.target.value);
+                        setUploaderTestStatus(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="http://uploader:8080"
+                    />
+                    <p className="mt-2 text-xs text-theme-muted">
+                      {t("uploaderSettings.baseUrlHelp", {
+                        defaultValue:
+                          "Set the URL of your Uploader service (container or external).",
+                      })}
+                    </p>
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!uploaderUrl) {
+                            toast.error("Please enter Uploader URL");
+                            return;
+                          }
+                          setUploaderTestStatus("loading");
+                          console.log("Testing Uploader connection...", {
+                            url: uploaderUrl,
+                          });
+                          try {
+                            const result = await api.get("/uploader/status");
+                            console.log(
+                              "Uploader connection successful",
+                              result,
+                            );
+                            setUploaderTestStatus("ok");
+                            toast.success("Uploader connection successful");
+                          } catch (e) {
+                            console.error("Uploader connection failed:", e);
+                            setUploaderTestStatus("fail");
+                            toast.error(
+                              e.message || "Cannot connect to Uploader",
+                            );
+                          }
+                        }}
+                        disabled={
+                          uploaderTestStatus === "loading" || !uploaderUrl
+                        }
+                        className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                          uploaderTestStatus === "ok"
+                            ? "bg-green-600 hover:bg-green-700 text-white"
+                            : uploaderTestStatus === "fail"
+                              ? "bg-red-600 hover:bg-red-700 text-white"
+                              : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                        }`}
+                      >
+                        {uploaderTestStatus === "loading" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            {t("uploaderSettings.testing", {
+                              defaultValue: "Testing...",
+                            })}
+                          </span>
+                        ) : uploaderTestStatus === "ok" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} />
+                            {t("uploaderSettings.connectionOk", {
+                              defaultValue: "Connected",
+                            })}
+                          </span>
+                        ) : (
+                          t("uploaderSettings.testConnection", {
+                            defaultValue: "Test Connection",
+                          })
+                        )}
+                      </button>
+                    </div>
+
+                    {uploaderTestStatus === "fail" && (
+                      <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <p>
+                          Cannot connect to Uploader. Check the URL is correct
+                          and the service is running.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VPN-Proxy Manager Settings */}
+        {activeTab === "vpn_proxy" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  VPN-Proxy Manager
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  Connect to your VPN Proxy Manager instance to view VPN
+                  container status
+                </p>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    VPN Proxy Manager URL
+                  </label>
+                  <input
+                    type="url"
+                    value={vpnProxyUrl}
+                    onChange={(e) => {
+                      setVpnProxyUrl(e.target.value);
+                      setVpnProxyTestStatus(null);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="http://vpn-proxy:5000"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    The URL of your VPN Proxy Manager instance (e.g.
+                    http://vpn-proxy:5000 or http://192.168.1.100:5000)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    API Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showVpnProxyKey ? "text" : "password"}
+                      value={vpnProxyApiKey}
+                      onChange={(e) => {
+                        setVpnProxyApiKey(e.target.value);
+                        setVpnProxyTestStatus(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm"
+                      placeholder="Paste your API key from VPN Proxy Manager Settings"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowVpnProxyKey(!showVpnProxyKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                    >
+                      {showVpnProxyKey ? (
+                        <EyeOff size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    Generate an API key in VPN Proxy Manager → Settings → API
+                    Keys
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!vpnProxyUrl || !vpnProxyApiKey) {
+                        toast.error("Please enter URL and API Key");
+                        return;
+                      }
+                      setVpnProxyTestStatus("loading");
+                      try {
+                        const result = await api.get("/vpn-proxy/status");
+                        if (result.connected) {
+                          setVpnProxyTestStatus("ok");
+                          toast.success("VPN Proxy Manager connected");
+                        } else {
+                          setVpnProxyTestStatus("fail");
+                          toast.error(result.error || "Connection failed");
+                        }
+                      } catch (e) {
+                        setVpnProxyTestStatus("fail");
+                        toast.error(
+                          e.message || "Cannot connect to VPN Proxy Manager",
+                        );
+                      }
+                    }}
+                    disabled={
+                      vpnProxyTestStatus === "loading" ||
+                      !vpnProxyUrl ||
+                      !vpnProxyApiKey
+                    }
+                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      vpnProxyTestStatus === "ok"
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : vpnProxyTestStatus === "fail"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                    }`}
+                  >
+                    {vpnProxyTestStatus === "loading" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Testing...
+                      </span>
+                    ) : vpnProxyTestStatus === "ok" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        Connected
+                      </span>
+                    ) : (
+                      "Test Connection"
+                    )}
+                  </button>
+                </div>
+
+                {vpnProxyTestStatus === "fail" && (
+                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>
+                      Cannot connect to VPN Proxy Manager. Check the URL and API
+                      Key are correct and the service is running.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Telegram Notifications */}
+        {activeTab === "notifications" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("settings.telegramNotifications") ||
+                    "Telegram Notifications"}
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  {t("settings.telegramDescription") ||
+                    "Get notified when services go offline or have problems"}
+                </p>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative space-y-4">
+                {/* Enable Toggle */}
+                <div className="flex items-center justify-between p-3 bg-theme-hover/50 border border-theme rounded-lg">
+                  <div>
+                    <span className="text-sm font-medium text-theme-text">
+                      {t("settings.enableTelegram") ||
+                        "Enable Telegram Notifications"}
+                    </span>
+                    <p className="text-xs text-theme-muted mt-1">
+                      {t("settings.enableTelegramHelp") ||
+                        "Send alerts when service status changes"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTelegramEnabled(!telegramEnabled);
+                      setPendingChanges(true);
+                    }}
+                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                      telegramEnabled ? "bg-green-500" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                        telegramEnabled ? "translate-x-6" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Bot Token */}
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.telegramBotToken") || "Bot Token"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showTelegramToken ? "text" : "password"}
+                      value={telegramBotToken}
+                      onChange={(e) => {
+                        setTelegramBotToken(e.target.value);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTelegramToken(!showTelegramToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {showTelegramToken ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.telegramBotTokenHelp") ||
+                      "Create a bot via @BotFather on Telegram to get your token"}
+                  </p>
+                </div>
+
+                {/* Chat ID */}
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.telegramChatId") || "Chat ID"}
+                  </label>
+                  <input
+                    type="text"
+                    value={telegramChatId}
+                    onChange={(e) => {
+                      setTelegramChatId(e.target.value);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="-1001234567890"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    {t("settings.telegramChatIdHelp") ||
+                      "Your personal chat ID or group/channel ID (use @userinfobot to find it)"}
+                  </p>
+                </div>
+
+                {/* Notification Preferences */}
+                <div className="space-y-3 pt-2">
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("settings.notificationTypes") || "Notification Types"}
+                  </span>
+
+                  <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      <span className="text-sm text-theme-text">
+                        {t("settings.notifyOffline") || "Service Offline"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTelegramNotifyOffline(!telegramNotifyOffline);
+                        setPendingChanges(true);
+                      }}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        telegramNotifyOffline ? "bg-green-500" : "bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                          telegramNotifyOffline ? "translate-x-5" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                      <span className="text-sm text-theme-text">
+                        {t("settings.notifyProblem") ||
+                          "Service Problems (Slow Response)"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTelegramNotifyProblem(!telegramNotifyProblem);
+                        setPendingChanges(true);
+                      }}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        telegramNotifyProblem ? "bg-green-500" : "bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                          telegramNotifyProblem ? "translate-x-5" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span className="text-sm text-theme-text">
+                        {t("settings.notifyRecovery") || "Service Recovery"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTelegramNotifyRecovery(!telegramNotifyRecovery);
+                        setPendingChanges(true);
+                      }}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        telegramNotifyRecovery ? "bg-green-500" : "bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                          telegramNotifyRecovery ? "translate-x-5" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Test Button */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={handleTestTelegram}
+                    disabled={
+                      telegramTesting ||
+                      !telegramEnabled ||
+                      !telegramBotToken ||
+                      !telegramChatId
+                    }
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial disabled:opacity-50 disabled:cursor-not-allowed ${
+                      telegramTestStatus === "ok"
+                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                        : telegramTestStatus === "fail"
+                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                          : ""
+                    }`}
+                  >
+                    {telegramTesting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t("settings.testing") || "Testing..."}
+                      </span>
+                    ) : telegramTestStatus === "ok" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        {t("settings.testSuccess") || "Test Sent!"}
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <Send className="w-4 h-4" />
+                        {t("settings.testTelegram") || "Send Test"}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {telegramTestStatus === "fail" && (
+                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>
+                      {t("settings.telegramTestFailed") ||
+                        "Failed to send test notification. Check your bot token and chat ID."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sonarr/Radarr Instances */}
+        {activeTab === "arr" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Film className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  {t("arr.instancesTitle", {
+                    defaultValue: "Sonarr/Radarr Instances",
+                  })}
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  {t("arr.instancesSubtitle", {
+                    defaultValue:
+                      "Configure multiple Sonarr and Radarr instances (e.g., 1080p and 4K).",
+                  })}
+                </p>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative space-y-6">
+                {/* Existing instances */}
+                {arrInstances.length === 0 ? (
+                  <div className="text-sm text-theme-muted">
+                    {t("arr.noInstances", {
+                      defaultValue: "No instances configured yet.",
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {arrInstances.map((inst, idx) => (
+                      <div
+                        key={inst.id || idx}
+                        className="p-4 bg-theme-hover/50 border border-theme rounded-lg"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 text-xs rounded bg-theme-hover border border-theme text-theme-text">
+                              {inst.type?.toUpperCase()}
+                            </span>
+                            <span className="text-sm text-theme-text font-medium">
+                              {inst.name}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeArrInstance(idx)}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                            title={t("arr.remove", { defaultValue: "Remove" })}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              {t("arr.instanceName", {
+                                defaultValue: "Instance Name",
+                              })}
+                            </label>
+                            <input
+                              type="text"
+                              value={inst.name || ""}
+                              onChange={(e) =>
+                                updateArrInstanceField(
+                                  idx,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="Sonarr 4K"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              {t("arr.instanceType", { defaultValue: "Type" })}
+                            </label>
+                            <select
+                              value={inst.type || "sonarr"}
+                              onChange={(e) =>
+                                updateArrInstanceField(
+                                  idx,
+                                  "type",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            >
+                              <option value="sonarr">Sonarr</option>
+                              <option value="radarr">Radarr</option>
+                            </select>
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              {t("arr.instanceUrl", {
+                                defaultValue: "Base URL",
+                              })}
+                            </label>
+                            <input
+                              type="url"
+                              value={inst.url || ""}
+                              onChange={(e) =>
+                                updateArrInstanceField(
+                                  idx,
+                                  "url",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="http://localhost:8989"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              {t("arr.accessUrl", {
+                                defaultValue: "Access URL",
+                              })}
+                            </label>
+                            <input
+                              type="url"
+                              value={inst.access_url || ""}
+                              onChange={(e) =>
+                                updateArrInstanceField(
+                                  idx,
+                                  "access_url",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="https://radarr.example.com"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              {t("arr.instanceApiKey", {
+                                defaultValue: "API Key",
+                              })}
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={
+                                  showArrKeys[inst.id] ? "text" : "password"
+                                }
+                                value={inst.api_key || ""}
+                                onChange={(e) =>
+                                  updateArrInstanceField(
+                                    idx,
+                                    "api_key",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                                placeholder="XXXXXXXXXXXXXXXXXXXX"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => toggleShowInstanceKey(inst.id)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                              >
+                                {showArrKeys[inst.id] ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
+                              </button>
+                            </div>
+                            <div className="flex gap-3 mt-3">
+                              <button
+                                type="button"
+                                onClick={() => testArrInstance(inst)}
+                                disabled={
+                                  arrTestStatus[inst.id] === "loading" ||
+                                  !inst.url ||
+                                  !inst.api_key
+                                }
+                                className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                                  arrTestStatus[inst.id] === "ok"
+                                    ? "bg-green-600 hover:bg-green-700 text-white"
+                                    : arrTestStatus[inst.id] === "fail"
+                                      ? "bg-red-600 hover:bg-red-700 text-white"
+                                      : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                                }`}
+                              >
+                                {arrTestStatus[inst.id] === "loading" ? (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <svg
+                                      className="animate-spin h-4 w-4"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                      ></circle>
+                                      <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                      ></path>
+                                    </svg>
+                                    {t("arr.testing", {
+                                      defaultValue: "Testing...",
+                                    })}
+                                  </span>
+                                ) : arrTestStatus[inst.id] === "ok" ? (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <CheckCircle size={16} />
+                                    {t("arr.connectionOk", {
+                                      defaultValue: "Connected",
+                                    })}
+                                  </span>
+                                ) : (
+                                  t("arr.testConnection", {
+                                    defaultValue: "Test Connection",
+                                  })
+                                )}
+                              </button>
+                            </div>
+                            {arrTestStatus[inst.id] === "fail" && (
+                              <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
+                                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                <p>
+                                  Cannot connect to {inst.name}. Check the URL
+                                  and API key are correct.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add new instance */}
+                <div className="pt-2">
+                  {!showAddArr ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowAddArr(true)}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
+                    >
+                      <Plus className="w-4 h-4 text-theme-primary" />
+                      {t("arr.addInstance", { defaultValue: "Add Instance" })}
+                    </button>
+                  ) : (
+                    <div className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-sm font-medium text-theme-text mb-2">
                             {t("arr.instanceName", {
@@ -1312,334 +2207,91 @@ export default function Settings() {
                           </label>
                           <input
                             type="text"
-                            value={inst.name || ""}
-                            onChange={(e) =>
-                              updateArrInstanceField(
-                                idx,
-                                "name",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                            placeholder="Sonarr 4K"
+                            value={newArrName}
+                            onChange={(e) => setNewArrName(e.target.value)}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="Radarr 4K"
                           />
                         </div>
-
                         <div>
                           <label className="block text-sm font-medium text-theme-text mb-2">
                             {t("arr.instanceType", { defaultValue: "Type" })}
                           </label>
                           <select
-                            value={inst.type || "sonarr"}
-                            onChange={(e) =>
-                              updateArrInstanceField(
-                                idx,
-                                "type",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            value={newArrType}
+                            onChange={(e) => setNewArrType(e.target.value)}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                           >
                             <option value="sonarr">Sonarr</option>
                             <option value="radarr">Radarr</option>
                           </select>
                         </div>
-
                         <div className="sm:col-span-2">
                           <label className="block text-sm font-medium text-theme-text mb-2">
                             {t("arr.instanceUrl", { defaultValue: "Base URL" })}
                           </label>
                           <input
                             type="url"
-                            value={inst.url || ""}
-                            onChange={(e) =>
-                              updateArrInstanceField(idx, "url", e.target.value)
-                            }
-                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                            placeholder="http://localhost:8989"
+                            value={newArrUrl}
+                            onChange={(e) => setNewArrUrl(e.target.value)}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="http://localhost:7878"
                           />
                         </div>
-
+                        <div className="sm:col-span-2">
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            {t("arr.accessUrl", {
+                              defaultValue: "Access URL",
+                            })}
+                          </label>
+                          <input
+                            type="url"
+                            value={newArrAccessUrl}
+                            onChange={(e) => setNewArrAccessUrl(e.target.value)}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="https://radarr.example.com"
+                          />
+                        </div>
                         <div className="sm:col-span-2">
                           <label className="block text-sm font-medium text-theme-text mb-2">
                             {t("arr.instanceApiKey", {
                               defaultValue: "API Key",
                             })}
                           </label>
-                          <div className="relative">
-                            <input
-                              type={showArrKeys[inst.id] ? "text" : "password"}
-                              value={inst.api_key || ""}
-                              onChange={(e) =>
-                                updateArrInstanceField(
-                                  idx,
-                                  "api_key",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                              placeholder="XXXXXXXXXXXXXXXXXXXX"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => toggleShowInstanceKey(inst.id)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                            >
-                              {showArrKeys[inst.id] ? (
-                                <EyeOff className="w-4 h-4" />
-                              ) : (
-                                <Eye className="w-4 h-4" />
-                              )}
-                            </button>
-                          </div>
-                          <div className="flex gap-3 mt-3">
-                            <button
-                              type="button"
-                              onClick={() => testArrInstance(inst)}
-                              disabled={
-                                arrTestStatus[inst.id] === "loading" ||
-                                !inst.url ||
-                                !inst.api_key
-                              }
-                              className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
-                                arrTestStatus[inst.id] === "ok"
-                                  ? "bg-green-600 hover:bg-green-700 text-white"
-                                  : arrTestStatus[inst.id] === "fail"
-                                  ? "bg-red-600 hover:bg-red-700 text-white"
-                                  : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
-                              }`}
-                            >
-                              {arrTestStatus[inst.id] === "loading" ? (
-                                <span className="flex items-center justify-center gap-2">
-                                  <svg
-                                    className="animate-spin h-4 w-4"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <circle
-                                      className="opacity-25"
-                                      cx="12"
-                                      cy="12"
-                                      r="10"
-                                      stroke="currentColor"
-                                      strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                      className="opacity-75"
-                                      fill="currentColor"
-                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    ></path>
-                                  </svg>
-                                  {t("arr.testing", {
-                                    defaultValue: "Testing...",
-                                  })}
-                                </span>
-                              ) : arrTestStatus[inst.id] === "ok" ? (
-                                <span className="flex items-center justify-center gap-2">
-                                  <CheckCircle size={16} />
-                                  {t("arr.connectionOk", {
-                                    defaultValue: "Connected",
-                                  })}
-                                </span>
-                              ) : (
-                                t("arr.testConnection", {
-                                  defaultValue: "Test Connection",
-                                })
-                              )}
-                            </button>
-                          </div>
-                          {arrTestStatus[inst.id] === "fail" && (
-                            <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
-                              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                              <p>
-                                Cannot connect to {inst.name}. Check the URL and
-                                API key are correct.
-                              </p>
-                            </div>
-                          )}
+                          <input
+                            type="text"
+                            value={newArrApiKey}
+                            onChange={(e) => setNewArrApiKey(e.target.value)}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="XXXXXXXXXXXXXXXXXXXX"
+                          />
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
 
-              {/* Add new instance */}
-              <div className="pt-2">
-                {!showAddArr ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowAddArr(true)}
-                    className="flex items-center gap-2 px-3 py-2 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary/50 hover:bg-theme-primary/10 transition-all"
-                  >
-                    <Plus className="w-4 h-4 text-theme-primary" />
-                    {t("arr.addInstance", { defaultValue: "Add Instance" })}
-                  </button>
-                ) : (
-                  <div className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-theme-text mb-2">
-                          {t("arr.instanceName", {
-                            defaultValue: "Instance Name",
-                          })}
-                        </label>
-                        <input
-                          type="text"
-                          value={newArrName}
-                          onChange={(e) => setNewArrName(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                          placeholder="Radarr 4K"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-theme-text mb-2">
-                          {t("arr.instanceType", { defaultValue: "Type" })}
-                        </label>
-                        <select
-                          value={newArrType}
-                          onChange={(e) => setNewArrType(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={addArrInstance}
+                          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
                         >
-                          <option value="sonarr">Sonarr</option>
-                          <option value="radarr">Radarr</option>
-                        </select>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-theme-text mb-2">
-                          {t("arr.instanceUrl", { defaultValue: "Base URL" })}
-                        </label>
-                        <input
-                          type="url"
-                          value={newArrUrl}
-                          onChange={(e) => setNewArrUrl(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                          placeholder="http://localhost:7878"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-theme-text mb-2">
-                          {t("arr.instanceApiKey", { defaultValue: "API Key" })}
-                        </label>
-                        <input
-                          type="text"
-                          value={newArrApiKey}
-                          onChange={(e) => setNewArrApiKey(e.target.value)}
-                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                          placeholder="XXXXXXXXXXXXXXXXXXXX"
-                        />
+                          <Plus className="w-4 h-4 text-theme-primary" />
+                          {t("arr.add", { defaultValue: "Add" })}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddArr(false)}
+                          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
+                        >
+                          {t("arr.cancel", { defaultValue: "Cancel" })}
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={addArrInstance}
-                        className="px-3 py-2 bg-theme-primary text-white rounded-lg text-sm hover:bg-theme-primary/90 transition-colors"
-                      >
-                        {t("arr.add", { defaultValue: "Add" })}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddArr(false)}
-                        className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text"
-                      >
-                        {t("arr.cancel", { defaultValue: "Cancel" })}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* API Configuration */}
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-              <Key className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-theme-text">
-                {t("settings.apiConfiguration")}
-              </h3>
-            </div>
-          </div>
-          <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-            {/* Decorative gradient overlay */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-            <div className="relative">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.githubToken")}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showGithubToken ? "text" : "password"}
-                      value={githubToken}
-                      onChange={(e) => {
-                        setGithubToken(e.target.value);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowGithubToken(!showGithubToken)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                    >
-                      {showGithubToken ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.githubTokenHelp")}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.tmdbApiKey")}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showTmdbKey ? "text" : "password"}
-                      value={tmdbApiKey}
-                      onChange={(e) => {
-                        setTmdbApiKey(e.target.value);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowTmdbKey(!showTmdbKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                    >
-                      {showTmdbKey ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.tmdbApiKeyHelp")}
-                  </p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

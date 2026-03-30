@@ -16,6 +16,10 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8000",
         changeOrigin: true,
+        ws: true,
+        configure: (proxy) => {
+          proxy.on("error", () => {});
+        },
       },
       "/docs": {
         target: "http://localhost:8000",

@@ -43,7 +43,7 @@ KOMANDORR_URL = "https://komandorr.mystreamnet.club"
 SERVICE_ID = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # How often to send data (in seconds)
-UPDATE_INTERVAL = 5
+UPDATE_INTERVAL = 2
 
 # Network interface to monitor (None = all interfaces, or specify like 'eth0', 'ens18')
 NETWORK_INTERFACE = None
@@ -158,13 +158,40 @@ class TrafficMonitor:
                         f"Could not detect speed for interface {NETWORK_INTERFACE}"
                     )
             else:
-                # Find the fastest active interface
+                # Find the fastest active physical interface
                 max_speed = 0
                 detected_interface = None
 
+                # Known virtual interface prefixes/patterns to skip
+                virtual_prefixes = (
+                    "lo",
+                    "docker",
+                    "br-",
+                    "veth",
+                    "virbr",
+                    "vnet",
+                    "tun",
+                    "tap",
+                    "wg",
+                    "tailscale",
+                    "nordlynx",
+                    "vmnet",
+                    "vboxnet",
+                    "ham",
+                    "isatap",
+                    "teredo",
+                )
+
                 for iface_name, iface_stats in psutil.net_if_stats().items():
-                    # Skip loopback interfaces
-                    if iface_name.startswith("lo") or "loopback" in iface_name.lower():
+                    name_lower = iface_name.lower()
+
+                    # Skip loopback
+                    if "loopback" in name_lower:
+                        continue
+
+                    # Skip virtual interfaces
+                    if any(name_lower.startswith(p) for p in virtual_prefixes):
+                        logger.debug(f"Skipping virtual interface: {iface_name}")
                         continue
 
                     # Check if interface is up and has speed info
@@ -274,6 +301,10 @@ class TrafficMonitor:
         # Save state periodically
         self._save_state()
 
+        # Collect CPU and memory usage
+        cpu_percent = psutil.cpu_percent(interval=None)
+        memory = psutil.virtual_memory()
+
         return {
             "service_id": SERVICE_ID,
             "bandwidth_up": round(bandwidth_up, 2),
@@ -283,6 +314,8 @@ class TrafficMonitor:
             # Double the max_bandwidth since UI calculates percentage on combined up+down
             # Full-duplex NIC: 10 Gbps up + 10 Gbps down = 20 Gbps total capacity
             "max_bandwidth": self.max_bandwidth * 2,
+            "cpu_percent": round(cpu_percent, 1),
+            "memory_percent": round(memory.percent, 1),
         }
 
     def send_to_komandorr(self, traffic_data: Dict) -> bool:

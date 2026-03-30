@@ -4,6 +4,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Palette, Check } from "lucide-react";
 
 const themeColors = {
+  original: "#d8ed18",
   dark: "#7a7a7a",
   plex: "#e5a00d",
   jellyfin: "#aa5cc3",
@@ -38,7 +39,7 @@ export default function ThemeDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
+        className="flex items-center justify-center w-10 h-10 rounded-lg border border-transparent hover:border-theme-primary hover:bg-theme-hover transition-colors text-theme-text"
         aria-label="Select theme"
       >
         <Palette className="w-5 h-5" />
@@ -64,8 +65,8 @@ export default function ThemeDropdown() {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                     theme === themeName
-                      ? "bg-theme-primary text-white"
-                      : "text-theme-text-muted hover:bg-theme-hover"
+                      ? "bg-theme-primary text-black font-medium"
+                      : "text-theme-text-muted hover:bg-theme-hover hover:text-theme-primary"
                   }`}
                 >
                   <span>{t(`settings.themes.${themeName}`)}</span>
