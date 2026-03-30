@@ -150,14 +150,6 @@ export default function VpnProxy() {
   if (!connectionStatus?.connected && !isLoading) {
     return (
       <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-text">
-            VPN-Proxy Manager
-          </h1>
-          <p className="text-theme-text-muted mt-1 text-sm">
-            Manage Gluetun VPN containers
-          </p>
-        </div>
         <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
           <WifiOff className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-theme-text mb-2">
@@ -178,39 +170,28 @@ export default function VpnProxy() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-text">
-            VPN-Proxy Manager
-          </h1>
-          <p className="text-theme-text-muted mt-1 text-sm">
-            {containers.length} container{containers.length !== 1 ? "s" : ""} ·{" "}
-            {runningCount} running · {stoppedCount} stopped
-          </p>
+      {/* Search Bar & Refresh */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="relative w-full sm:w-auto sm:min-w-[300px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+          <input
+            type="text"
+            placeholder="Search containers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 text-sm bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted transition-colors focus:outline-none focus:border-theme-primary"
+          />
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-            <input
-              type="text"
-              placeholder="Search containers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
-            />
-          </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw
-              className={`w-4 h-4 text-theme-primary ${isFetching ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </button>
-        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw
+            className={`w-4 h-4 text-theme-primary ${isFetching ? "animate-spin" : ""}`}
+          />
+          Refresh
+        </button>
       </div>
 
       {/* Stats Cards */}

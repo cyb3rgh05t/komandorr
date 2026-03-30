@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,8 @@ import {
   ArrowDown,
   Upload,
   Download,
+  Shield,
+  Globe,
 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import { api } from "@/services/api";
@@ -31,6 +33,8 @@ import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
 import DashboardServiceTable from "@/components/DashboardServiceTable";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
+import DashboardVpnTable from "@/components/DashboardVpnTable";
+import DashboardVpnMap from "@/components/DashboardVpnMap";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -95,6 +99,61 @@ export default function Dashboard() {
     placeholderData: (previousData) => previousData,
   });
 
+  // VPN Proxy data
+  const { data: vpnContainers = [] } = useQuery({
+    queryKey: ["vpn-proxy-containers"],
+    queryFn: () => api.get("/vpn-proxy/containers"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: vpnInfoMap = {} } = useQuery({
+    queryKey: ["vpn-proxy-vpn-info"],
+    queryFn: () => api.get("/vpn-proxy/containers/vpn-info-batch"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: vpnDependentsRaw = [] } = useQuery({
+    queryKey: ["vpn-proxy-dependents"],
+    queryFn: () => api.get("/vpn-proxy/containers/dependents"),
+    staleTime: 15000,
+    refetchInterval: 20000,
+    placeholderData: (prev) => prev,
+  });
+
+  const { data: vpnConnectionStatus } = useQuery({
+    queryKey: ["vpn-proxy-status"],
+    queryFn: () => api.get("/vpn-proxy/status"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+
+  // Build VPN dependents map
+  const vpnDepsMap = useMemo(() => {
+    const map = {};
+    if (!Array.isArray(vpnDependentsRaw)) return map;
+    vpnDependentsRaw.forEach((dep) => {
+      const vpnParent = dep.vpn_container_name || dep.vpn_parent;
+      if (!vpnParent) return;
+      const parent = vpnContainers.find(
+        (c) =>
+          c.name === vpnParent ||
+          c.docker_name === vpnParent ||
+          vpnParent === `gluetun-${c.name}` ||
+          dep.network_mode?.includes(c.name) ||
+          dep.network_mode?.includes(c.container_id?.slice(0, 12)),
+      );
+      if (parent) {
+        if (!map[parent.id]) map[parent.id] = [];
+        map[parent.id].push(dep);
+      }
+    });
+    return map;
+  }, [vpnDependentsRaw, vpnContainers]);
+
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,6 +177,8 @@ export default function Dashboard() {
           stats: true,
           trafficChart: true,
           services: true,
+          vpnList: true,
+          vpnMap: true,
         };
   });
   const [version, setVersion] = useState({
@@ -562,6 +623,72 @@ export default function Dashboard() {
                   />
                 </button>
               </div>
+
+              {/* VPN List Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.vpnList ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showVpnList", "VPN Proxy List")}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      vpnList: !dashboardVisibility.vpnList,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.vpnList
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.vpnList ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* VPN Map Toggle */}
+              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                <div className="flex items-center gap-3">
+                  {dashboardVisibility.vpnMap ? (
+                    <Eye size={18} className="text-green-500" />
+                  ) : (
+                    <EyeOff size={18} className="text-gray-500" />
+                  )}
+                  <span className="text-sm font-medium text-theme-text">
+                    {t("dashboard.showVpnMap", "VPN Connection Map")}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    setDashboardVisibility({
+                      ...dashboardVisibility,
+                      vpnMap: !dashboardVisibility.vpnMap,
+                    })
+                  }
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    dashboardVisibility.vpnMap
+                      ? "bg-theme-primary"
+                      : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      dashboardVisibility.vpnMap ? "translate-x-6" : ""
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Footer */}
@@ -658,67 +785,79 @@ export default function Dashboard() {
 
           {/* Avg Response Time */}
           <div
-            onClick={() => navigate("/monitor")}
+            onClick={() => navigate("/vpn-proxy")}
             className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all cursor-pointer flex items-center gap-2"
           >
-            <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <Shield className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div className="text-left min-w-0">
               <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.avgResponse")}
+                VPN Total
               </p>
               <p className="text-lg font-bold text-blue-500 leading-tight">
-                {stats.avgResponseTime}
-                <span className="text-xs text-blue-400 ml-0.5">ms</span>
+                {vpnContainers.length}
               </p>
             </div>
           </div>
 
-          {/* Active (5min) */}
+          {/* VPN Running */}
           <div
-            onClick={() => navigate("/monitor")}
+            onClick={() => navigate("/vpn-proxy")}
             className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all cursor-pointer flex items-center gap-2"
           >
             <Activity className="w-5 h-5 text-purple-500 flex-shrink-0" />
             <div className="text-left min-w-0">
               <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.active5min")}
+                VPN Running
               </p>
               <p className="text-lg font-bold text-purple-500 leading-tight">
-                {stats.recentlyChecked}
+                {
+                  vpnContainers.filter((c) => {
+                    const s = (c.docker_status || c.status || "").toLowerCase();
+                    return s === "running" || s === "healthy";
+                  }).length
+                }
               </p>
             </div>
           </div>
 
-          {/* Upload Speed */}
+          {/* VPN Countries */}
           <div
-            onClick={() => navigate("/traffic")}
+            onClick={() => navigate("/vpn-proxy")}
             className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all cursor-pointer flex items-center gap-2"
           >
-            <ArrowUp className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <Globe className="w-5 h-5 text-orange-500 flex-shrink-0" />
             <div className="text-left min-w-0">
               <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.uploadSpeed")}
+                Countries
               </p>
               <p className="text-lg font-bold text-orange-500 leading-tight">
-                {stats.uploadSpeed.toFixed(1)}
-                <span className="text-xs text-orange-400 ml-0.5">MB/s</span>
+                {
+                  new Set(
+                    vpnContainers
+                      .map((c) => vpnInfoMap?.[c.id]?.country)
+                      .filter(Boolean),
+                  ).size
+                }
               </p>
             </div>
           </div>
 
-          {/* Download Speed */}
+          {/* VPN Providers */}
           <div
-            onClick={() => navigate("/traffic")}
+            onClick={() => navigate("/vpn-proxy")}
             className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all cursor-pointer flex items-center gap-2"
           >
-            <ArrowDown className="w-5 h-5 text-cyan-500 flex-shrink-0" />
+            <Network className="w-5 h-5 text-cyan-500 flex-shrink-0" />
             <div className="text-left min-w-0">
               <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.downloadSpeed")}
+                Providers
               </p>
               <p className="text-lg font-bold text-cyan-500 leading-tight">
-                {stats.downloadSpeed.toFixed(1)}
-                <span className="text-xs text-cyan-400 ml-0.5">MB/s</span>
+                {
+                  new Set(
+                    vpnContainers.map((c) => c.vpn_provider).filter(Boolean),
+                  ).size
+                }
               </p>
             </div>
           </div>
@@ -919,12 +1058,35 @@ export default function Dashboard() {
                     <div className="space-y-6">
                       {/* Traffic Chart */}
                       {dashboardVisibility.trafficChart && (
-                        <div className="flex justify-center w-full my-8">
-                          <DashboardTrafficCards
-                            trafficData={filteredTrafficData}
-                            onRefresh={handleRefreshTraffic}
-                            refreshing={trafficFetching}
+                        <DashboardTrafficCards
+                          trafficData={filteredTrafficData}
+                          onRefresh={handleRefreshTraffic}
+                          refreshing={trafficFetching}
+                        />
+                      )}
+
+                      {/* VPN World Map */}
+                      {vpnConnectionStatus?.connected &&
+                        dashboardVisibility.vpnMap && (
+                          <DashboardVpnMap
+                            containers={vpnContainers}
+                            vpnInfoMap={vpnInfoMap}
                           />
+                        )}
+
+                      {/* Service Header */}
+                      {dashboardVisibility.services && (
+                        <div
+                          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate("/services")}
+                        >
+                          <Server className="w-5 h-5 text-theme-primary" />
+                          <span className="text-lg font-semibold text-theme-text">
+                            {t("dashboard.services", "Services")}
+                          </span>
+                          <span className="text-sm text-theme-text-muted">
+                            ({filteredServices.length})
+                          </span>
                         </div>
                       )}
 
@@ -1007,12 +1169,35 @@ export default function Dashboard() {
 
                     {/* Traffic Chart - filtered by active tab */}
                     {dashboardVisibility.trafficChart && (
-                      <div className="flex justify-center w-full my-8">
-                        <DashboardTrafficCards
-                          trafficData={filteredTrafficData}
-                          onRefresh={handleRefreshTraffic}
-                          refreshing={trafficFetching}
+                      <DashboardTrafficCards
+                        trafficData={filteredTrafficData}
+                        onRefresh={handleRefreshTraffic}
+                        refreshing={trafficFetching}
+                      />
+                    )}
+
+                    {/* VPN World Map */}
+                    {vpnConnectionStatus?.connected &&
+                      dashboardVisibility.vpnMap && (
+                        <DashboardVpnMap
+                          containers={vpnContainers}
+                          vpnInfoMap={vpnInfoMap}
                         />
+                      )}
+
+                    {/* Service Header */}
+                    {dashboardVisibility.services && (
+                      <div
+                        className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => navigate("/services")}
+                      >
+                        <Server className="w-5 h-5 text-theme-primary" />
+                        <span className="text-lg font-semibold text-theme-text">
+                          {t("dashboard.services", "Services")}
+                        </span>
+                        <span className="text-sm text-theme-text-muted">
+                          ({filteredServices.length})
+                        </span>
                       </div>
                     )}
 
@@ -1039,6 +1224,16 @@ export default function Dashboard() {
             </>
           )}
         </>
+      )}
+
+      {/* VPN Proxy Table */}
+      {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
+        <DashboardVpnTable
+          containers={vpnContainers}
+          vpnInfoMap={vpnInfoMap}
+          depsMap={vpnDepsMap}
+          connected={vpnConnectionStatus?.connected}
+        />
       )}
 
       {/* Modal */}

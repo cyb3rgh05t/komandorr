@@ -92,18 +92,12 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   useState(() => {
     const calculateCardsPerPage = () => {
       const width = window.innerWidth;
-      // Each card is roughly 280px wide with gaps (32px gap between cards)
-      // Calculate maximum cards that can fit in the available width
-      const cardWidth = 280;
-      const gapWidth = 32;
-      const chevronWidth = 120; // Space for chevrons on sides (increased for better spacing)
-      const availableWidth = width - chevronWidth;
-      const maxCards = Math.floor(
-        (availableWidth + gapWidth) / (cardWidth + gapWidth),
-      );
-
-      // Ensure at least 1 card, maximum based on screen width
-      return Math.max(1, maxCards);
+      if (width < 640) return 1;
+      if (width < 768) return 2;
+      if (width < 1024) return 3;
+      if (width < 1280) return 4;
+      if (width < 1536) return 5;
+      return 6;
     };
 
     setCardsPerPage(calculateCardsPerPage());
@@ -273,140 +267,175 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   };
 
   return topServices.length > 0 ? (
-    <div className="flex items-center justify-center gap-4 w-full">
-      {/* Left Chevron */}
-      {hasMoreCards && (
-        <button
-          onClick={handlePrevious}
-          className="p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
-          title={t("common.previous") || "Previous"}
-        >
-          <ChevronLeft size={20} className="text-theme-primary" />
-        </button>
-      )}
-
-      {/* Cards Container - NO WRAPPING */}
-      <div className="flex justify-center gap-14 flex-1 overflow-hidden">
-        {topServices.map((service, index) => {
-          const serviceBandwidth =
-            (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
-
-          // Calculate percentage based on configured max_bandwidth or relative to highest
-          let percentage;
-          const maxBandwidthValue =
-            service.traffic?.max_bandwidth || service.max_bandwidth;
-
-          if (maxBandwidthValue && maxBandwidthValue > 0) {
-            // Absolute percentage based on configured maximum
-            percentage = Math.round(
-              (serviceBandwidth / maxBandwidthValue) * 100,
-            );
-          } else {
-            // Relative percentage (fallback)
-            percentage = Math.round((serviceBandwidth / maxBandwidth) * 100);
-          }
-
-          // Cap at 100% for display
-          percentage = Math.min(percentage, 100);
-
-          const colorScheme = colors[index % colors.length];
-
-          const cpuPercent = Math.min(
-            Math.round(
-              service.traffic?.cpu_percent ?? service.cpu_percent ?? 0,
-            ),
-            100,
-          );
-          const memPercent = Math.min(
-            Math.round(
-              service.traffic?.memory_percent ?? service.memory_percent ?? 0,
-            ),
-            100,
-          );
-
-          return (
-            <div
-              key={service.id || index}
-              className="relative group transition-all duration-300"
+    <div className="w-full bg-theme-card border border-theme rounded-xl p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-theme-primary" />
+          <span className="text-sm font-semibold text-theme-text">
+            {t("dashboard.trafficChart") || "Traffic Overview"}
+          </span>
+          <span className="text-xs text-theme-text-muted">
+            ({allServices.length})
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {hasMoreCards && (
+            <span className="text-[10px] text-theme-text-muted">
+              {carouselIndex + 1}/{maxIndex + 1}
+            </span>
+          )}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={refreshing}
+              className="p-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md group"
+              title={t("traffic.refreshData")}
             >
-              {/* Circles row: CPU - Traffic - RAM */}
-              <div className="flex items-center justify-center gap-4 mb-4">
-                {/* CPU Circle (left) */}
-                <div className="flex-shrink-0 self-end mb-2">
-                  <CircularProgress
-                    percentage={cpuPercent}
-                    color="#f59e0b"
-                    size={80}
-                    label="CPU"
-                  />
-                </div>
-
-                {/* Main Traffic Circle (center) */}
-                <CircularProgress
-                  percentage={percentage}
-                  color={colorScheme.primary}
-                  size={180}
-                >
-                  <span className="text-[10px] font-medium text-theme-text-muted uppercase tracking-wider">
-                    Traffic
-                  </span>
-                  <div className="text-3xl font-bold text-theme-text">
-                    {percentage}%
-                  </div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <ArrowUp className="w-3 h-3 text-blue-400" />
-                    <span className="font-mono font-semibold text-[11px] text-blue-400">
-                      {formatBandwidth(service.bandwidth_up || 0)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3 text-green-400" />
-                    <span className="font-mono font-semibold text-[11px] text-green-400">
-                      {formatBandwidth(service.bandwidth_down || 0)}
-                    </span>
-                  </div>
-                </CircularProgress>
-
-                {/* RAM Circle (right) */}
-                <div className="flex-shrink-0 self-end mb-2">
-                  <CircularProgress
-                    percentage={memPercent}
-                    color="#06b6d4"
-                    size={80}
-                    label="RAM"
-                  />
-                </div>
-              </div>
-
-              {/* Service Name */}
-              <div className="text-center mb-1">
-                <div className="text-xl font-semibold text-theme-text truncate group-hover:text-theme-primary transition-colors">
-                  {service.name}
-                </div>
-              </div>
-
-              {/* Total Traffic */}
-              <div className="flex items-center justify-center gap-1">
-                <Activity className="w-3 h-3 text-purple-400" />
-                <span className="font-mono font-semibold text-sm text-purple-400">
-                  {formatBandwidth(serviceBandwidth)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+              <RefreshCw
+                size={14}
+                className={`text-theme-primary transition-transform duration-300 ${
+                  refreshing ? "animate-spin" : "group-hover:rotate-180"
+                }`}
+              />
+            </button>
+          )}
+        </div>
       </div>
+      <div className="flex items-center justify-center gap-2 sm:gap-4">
+        {/* Left Chevron */}
+        {hasMoreCards && (
+          <button
+            onClick={handlePrevious}
+            className="p-1.5 sm:p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
+            title={t("common.previous") || "Previous"}
+          >
+            <ChevronLeft size={18} className="text-theme-primary" />
+          </button>
+        )}
 
-      {/* Right Chevron */}
-      {hasMoreCards && (
-        <button
-          onClick={handleNext}
-          className="p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
-          title={t("common.next") || "Next"}
-        >
-          <ChevronRight size={20} className="text-theme-primary" />
-        </button>
-      )}
+        {/* Cards Container */}
+        <div className="flex justify-center gap-4 sm:gap-8 lg:gap-14 flex-1 overflow-hidden">
+          {topServices.map((service, index) => {
+            const serviceBandwidth =
+              (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
+
+            // Calculate percentage based on configured max_bandwidth or relative to highest
+            let percentage;
+            const maxBandwidthValue =
+              service.traffic?.max_bandwidth || service.max_bandwidth;
+
+            if (maxBandwidthValue && maxBandwidthValue > 0) {
+              // Absolute percentage based on configured maximum
+              percentage = Math.round(
+                (serviceBandwidth / maxBandwidthValue) * 100,
+              );
+            } else {
+              // Relative percentage (fallback)
+              percentage = Math.round((serviceBandwidth / maxBandwidth) * 100);
+            }
+
+            // Cap at 100% for display
+            percentage = Math.min(percentage, 100);
+
+            const colorScheme = colors[index % colors.length];
+
+            const cpuPercent = Math.min(
+              Math.round(
+                service.traffic?.cpu_percent ?? service.cpu_percent ?? 0,
+              ),
+              100,
+            );
+            const memPercent = Math.min(
+              Math.round(
+                service.traffic?.memory_percent ?? service.memory_percent ?? 0,
+              ),
+              100,
+            );
+
+            return (
+              <div
+                key={service.id || index}
+                className="relative group transition-all duration-300"
+              >
+                {/* Circles row: CPU - Traffic - RAM */}
+                <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+                  {/* CPU Circle (left) */}
+                  <div className="flex-shrink-0 self-end mb-2">
+                    <CircularProgress
+                      percentage={cpuPercent}
+                      color="#f59e0b"
+                      size={60}
+                      label="CPU"
+                    />
+                  </div>
+
+                  {/* Main Traffic Circle (center) */}
+                  <CircularProgress
+                    percentage={percentage}
+                    color={colorScheme.primary}
+                    size={140}
+                  >
+                    <span className="text-[9px] sm:text-[10px] font-medium text-theme-text-muted uppercase tracking-wider">
+                      Traffic
+                    </span>
+                    <div className="text-2xl sm:text-3xl font-bold text-theme-text">
+                      {percentage}%
+                    </div>
+                    <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
+                      <ArrowUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
+                      <span className="font-mono font-semibold text-[10px] sm:text-[11px] text-blue-400">
+                        {formatBandwidth(service.bandwidth_up || 0)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ArrowDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-400" />
+                      <span className="font-mono font-semibold text-[10px] sm:text-[11px] text-green-400">
+                        {formatBandwidth(service.bandwidth_down || 0)}
+                      </span>
+                    </div>
+                  </CircularProgress>
+
+                  {/* RAM Circle (right) */}
+                  <div className="flex-shrink-0 self-end mb-2">
+                    <CircularProgress
+                      percentage={memPercent}
+                      color="#06b6d4"
+                      size={60}
+                      label="RAM"
+                    />
+                  </div>
+                </div>
+
+                {/* Service Name */}
+                <div className="text-center mb-1">
+                  <div className="text-sm sm:text-base font-semibold text-theme-text truncate group-hover:text-theme-primary transition-colors max-w-[180px] mx-auto">
+                    {service.name}
+                  </div>
+                </div>
+
+                {/* Total Traffic */}
+                <div className="flex items-center justify-center gap-1">
+                  <Activity className="w-3 h-3 text-purple-400" />
+                  <span className="font-mono font-semibold text-xs sm:text-sm text-purple-400">
+                    {formatBandwidth(serviceBandwidth)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Right Chevron */}
+        {hasMoreCards && (
+          <button
+            onClick={handleNext}
+            className="p-1.5 sm:p-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
+            title={t("common.next") || "Next"}
+          >
+            <ChevronRight size={18} className="text-theme-primary" />
+          </button>
+        )}
+      </div>
     </div>
   ) : null;
 };

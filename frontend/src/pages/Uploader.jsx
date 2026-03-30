@@ -74,6 +74,18 @@ const percentageToNumber = (value) => {
   return Number.isNaN(num) ? 0 : num;
 };
 
+const formatUptime = (str) => {
+  if (!str) return null;
+  const d = str.match(/(\d+)\s*day/i);
+  const h = str.match(/(\d+)\s*hour/i);
+  const m = str.match(/(\d+)\s*min/i);
+  const parts = [];
+  if (d) parts.push(`${d[1]}d`);
+  if (h) parts.push(`${h[1]}h`);
+  if (m) parts.push(`${m[1]}m`);
+  return parts.join(" ") || str;
+};
+
 export default function Uploader() {
   const { t } = useTranslation();
   const toast = useToast();
@@ -345,151 +357,164 @@ export default function Uploader() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-theme-card border border-theme rounded-lg py-2.5 pl-10 pr-3 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
-              placeholder={t("common.search", "Search...")}
-            />
-          </div>
-          <button
-            onClick={refreshAll}
-            disabled={isRefreshing}
-            className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCcw
-              className={`w-4 h-4 transition-transform duration-500 ${
-                isRefreshing ? "animate-spin" : ""
-              }`}
-            />
-            {isRefreshing
-              ? t("common.refreshing", "Refreshing...")
-              : t("common.refresh", "Refresh")}
-          </button>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-theme-card border border-theme rounded-lg py-2.5 pl-10 pr-3 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+            placeholder={t("common.search", "Search...")}
+          />
         </div>
+        <button
+          onClick={refreshAll}
+          disabled={isRefreshing}
+          className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCcw
+            className={`w-4 h-4 transition-transform duration-500 ${
+              isRefreshing ? "animate-spin" : ""
+            }`}
+          />
+          {isRefreshing
+            ? t("common.refreshing", "Refreshing...")
+            : t("common.refresh", "Refresh")}
+        </button>
+      </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
-          <div
-            className={`relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md ${statusTone.bg}`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  {React.createElement(statusIcon, {
-                    className: `w-3 h-3 ${statusTone.color}`,
-                  })}
-                  {t("uploader.systemStatus", "System Status")}
-                </p>
-                <p className={`text-2xl font-bold mt-1 ${statusTone.color}`}>
-                  {statusLabel}
-                </p>
-              </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
+        <div
+          className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${statusTone.bg}`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                {React.createElement(statusIcon, {
+                  className: `w-3 h-3 ${statusTone.color}`,
+                })}
+                {t("uploader.systemStatus", "System Status")}
+              </p>
+              <p className={`text-2xl font-bold ${statusTone.color}`}>
+                {statusLabel}
+              </p>
+            </div>
+            <div className={`p-2 rounded-lg ${statusTone.bg}`}>
               {React.createElement(statusIcon, {
-                className: `w-8 h-8 ${statusTone.color}`,
+                className: `w-5 h-5 ${statusTone.color}`,
               })}
             </div>
           </div>
+        </div>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-indigo-500/10 hover:border-indigo-500/50">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-indigo-500" />
-                  {t("uploader.uptime", "Uptime")}
-                </p>
-                <p className="text-2xl font-bold text-indigo-500 mt-1">
-                  {uploaderStatus?.uptime || t("uploader.unknown", "Unknown")}
-                </p>
-              </div>
-              <Clock className="w-8 h-8 text-indigo-500" />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-indigo-500/40">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Clock className="w-3 h-3 text-indigo-500" />
+                {t("uploader.uptime", "Uptime")}
+              </p>
+              <p className="text-2xl font-bold text-indigo-500">
+                {formatUptime(uploaderStatus?.uptime) ||
+                  t("uploader.unknown", "Unknown")}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+              <Clock className="w-5 h-5" />
             </div>
           </div>
+        </div>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <HardDrive className="w-3 h-3 text-orange-500" />
-                  {t("uploader.storage", "Storage")}
-                </p>
-                <p className="text-2xl font-bold text-orange-500 mt-1">
-                  {uploaderStatus?.storage || t("uploader.unknown", "Unknown")}
-                </p>
-              </div>
-              <HardDrive className="w-8 h-8 text-orange-500" />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-orange-500/40">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <HardDrive className="w-3 h-3 text-orange-500" />
+                {t("uploader.storage", "Storage")}
+              </p>
+              <p className="text-2xl font-bold text-orange-500">
+                {uploaderStatus?.storage || t("uploader.unknown", "Unknown")}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
+              <HardDrive className="w-5 h-5" />
             </div>
           </div>
+        </div>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Gauge className="w-3 h-3 text-cyan-500" />
-                  {t("uploader.mini.rate")}
-                </p>
-                <p className="text-2xl font-bold text-cyan-500 mt-1">
-                  {totalActiveSpeed.toFixed(2)}
-                  <span className="text-sm text-cyan-400 ml-1">MB/s</span>
-                </p>
-              </div>
-              <Gauge className="w-8 h-8 text-cyan-500" />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-cyan-500/40">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Gauge className="w-3 h-3 text-cyan-500" />
+                {t("uploader.mini.rate")}
+              </p>
+              <p className="text-2xl font-bold text-cyan-500">
+                {totalActiveSpeed.toFixed(2)}
+                <span className="text-sm text-cyan-400 ml-1">MB/s</span>
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-500">
+              <Gauge className="w-5 h-5" />
             </div>
           </div>
+        </div>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Upload className="w-3 h-3 text-blue-500" />
-                  {t("uploader.activeUploads")}
-                </p>
-                <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {inProgressJobs.length}
-                </p>
-              </div>
-              <Upload className="w-8 h-8 text-blue-500" />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-blue-500/40">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Upload className="w-3 h-3 text-blue-500" />
+                {t("uploader.activeUploads")}
+              </p>
+              <p className="text-2xl font-bold text-blue-500">
+                {inProgressJobs.length}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+              <Upload className="w-5 h-5" />
             </div>
           </div>
+        </div>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Activity className="w-3 h-3 text-purple-500" />
-                  {t("uploader.queue")}
-                </p>
-                <p className="text-2xl font-bold text-purple-500 mt-1">
-                  {queueFiles.length}
-                </p>
-                <div className="text-[10px] text-theme-text-muted/70 mt-0.5">
-                  {formatSize(queueTotalSize)}
-                </div>
-              </div>
-              <Activity className="w-8 h-8 text-purple-500" />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-purple-500/40">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <Activity className="w-3 h-3 text-purple-500" />
+                {t("uploader.queue")}
+              </p>
+              <p className="text-2xl font-bold text-purple-500">
+                {queueFiles.length}
+              </p>
+              <p className="text-[10px] text-theme-text-muted/70">
+                {formatSize(queueTotalSize)}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+              <Activity className="w-5 h-5" />
             </div>
           </div>
+        </div>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3 text-green-500" />
-                  {t("uploader.completed")}
-                </p>
-                <p className="text-2xl font-bold text-green-500 mt-1">
-                  {totalCompleted}
-                </p>
-                <div className="text-[10px] text-theme-text-muted/70 mt-0.5">
-                  {t("uploader.mini.completedToday")}:{" "}
-                  {completedToday?.count || 0}
-                </div>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-green-500/40">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-green-500" />
+                {t("uploader.completed")}
+              </p>
+              <p className="text-2xl font-bold text-green-500">
+                {totalCompleted}
+              </p>
+              <p className="text-[10px] text-theme-text-muted/70">
+                {t("uploader.mini.completedToday")}:{" "}
+                {completedToday?.count || 0}
+              </p>
+            </div>
+            <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
+              <CheckCircle className="w-5 h-5" />
             </div>
           </div>
         </div>
