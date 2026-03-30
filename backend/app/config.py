@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     # Uploader Configuration
     UPLOADER_BASE_URL: str = ""
 
+    # VPN Proxy Manager Configuration
+    VPN_PROXY_URL: str = ""
+    VPN_PROXY_API_KEY: str = ""
+
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
 
@@ -105,6 +109,12 @@ class Settings(BaseSettings):
             uploader_config = config_data["uploader"]
             self.UPLOADER_BASE_URL = uploader_config.get(
                 "base_url", self.UPLOADER_BASE_URL
+            )
+        if "vpn_proxy" in config_data:
+            vpn_proxy_config = config_data["vpn_proxy"]
+            self.VPN_PROXY_URL = vpn_proxy_config.get("url", self.VPN_PROXY_URL)
+            self.VPN_PROXY_API_KEY = vpn_proxy_config.get(
+                "api_key", self.VPN_PROXY_API_KEY
             )
 
     @property

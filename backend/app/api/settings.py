@@ -42,6 +42,11 @@ class UploaderSettings(BaseModel):
     base_url: str
 
 
+class VpnProxySettings(BaseModel):
+    url: str
+    api_key: str
+
+
 class ArrInstance(BaseModel):
     id: str
     name: str
@@ -62,6 +67,7 @@ class SettingsResponse(BaseModel):
     plex: PlexSettings
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
+    vpn_proxy: Optional[VpnProxySettings] = None
     arr: Optional[ArrSettings] = None
 
 
@@ -72,6 +78,7 @@ class SettingsUpdate(BaseModel):
     plex: Optional[PlexSettings] = None
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
+    vpn_proxy: Optional[VpnProxySettings] = None
     arr: Optional[ArrSettings] = None
 
 
@@ -159,6 +166,15 @@ async def get_settings(username: str = Depends(require_auth)):
         )
     )
 
+    # Get VPN Proxy Manager settings from config or defaults
+    vpn_proxy_config = config_data.get("vpn_proxy", {})
+    vpn_proxy_settings = VpnProxySettings(
+        url=vpn_proxy_config.get("url", getattr(settings, "VPN_PROXY_URL", "")),
+        api_key=vpn_proxy_config.get(
+            "api_key", getattr(settings, "VPN_PROXY_API_KEY", "")
+        ),
+    )
+
     # Get *arr settings from config - support both old and legacy formats
     arr_config = config_data.get("arr", {})
     arr_settings = None
@@ -219,6 +235,7 @@ async def get_settings(username: str = Depends(require_auth)):
         plex=plex_settings,
         overseerr=overseerr_settings,
         uploader=uploader_settings,
+        vpn_proxy=vpn_proxy_settings,
         arr=arr_settings,
     )
 
@@ -290,6 +307,17 @@ async def update_settings(
         # Update runtime settings
         settings.UPLOADER_BASE_URL = updates.uploader.base_url
         logger.info(f"Updated Uploader base_url to: {updates.uploader.base_url}")
+
+    # Update VPN Proxy Manager settings
+    if updates.vpn_proxy is not None:
+        config_data["vpn_proxy"] = {
+            "url": updates.vpn_proxy.url,
+            "api_key": updates.vpn_proxy.api_key,
+        }
+        # Update runtime settings
+        settings.VPN_PROXY_URL = updates.vpn_proxy.url
+        settings.VPN_PROXY_API_KEY = updates.vpn_proxy.api_key
+        logger.info(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
 
     # Update *arr settings
     if updates.arr is not None:

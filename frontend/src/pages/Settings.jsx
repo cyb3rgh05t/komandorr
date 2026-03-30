@@ -73,6 +73,12 @@ export default function Settings() {
   const [uploaderUrl, setUploaderUrl] = useState("");
   const [uploaderTestStatus, setUploaderTestStatus] = useState(null);
 
+  // VPN Proxy Manager settings state
+  const [vpnProxyUrl, setVpnProxyUrl] = useState("");
+  const [vpnProxyApiKey, setVpnProxyApiKey] = useState("");
+  const [vpnProxyTestStatus, setVpnProxyTestStatus] = useState(null);
+  const [showVpnProxyKey, setShowVpnProxyKey] = useState(false);
+
   // *arr instances state
   const [arrInstances, setArrInstances] = useState([]);
   const [showAddArr, setShowAddArr] = useState(false);
@@ -144,6 +150,10 @@ export default function Settings() {
       if (data.uploader) {
         setUploaderUrl(data.uploader.base_url || "");
       }
+      if (data.vpn_proxy) {
+        setVpnProxyUrl(data.vpn_proxy.url || "");
+        setVpnProxyApiKey(data.vpn_proxy.api_key || "");
+      }
       if (data.arr || data.instances) {
         setArrInstances(
           (data.arr && data.arr.instances) || data.instances || [],
@@ -159,6 +169,9 @@ export default function Settings() {
       }
       if (data.uploader?.base_url) {
         validateUploaderOnLoad();
+      }
+      if (data.vpn_proxy?.url && data.vpn_proxy?.api_key) {
+        validateVpnProxyOnLoad();
       }
       if (data.arr?.instances || data.instances) {
         const instances =
@@ -208,6 +221,15 @@ export default function Settings() {
       setUploaderTestStatus("ok");
     } catch (error) {
       setUploaderTestStatus("fail");
+    }
+  };
+
+  const validateVpnProxyOnLoad = async () => {
+    try {
+      const result = await api.get("/vpn-proxy/status");
+      setVpnProxyTestStatus(result.connected ? "ok" : "fail");
+    } catch (error) {
+      setVpnProxyTestStatus("fail");
     }
   };
 
@@ -497,6 +519,10 @@ export default function Settings() {
         uploader: {
           base_url: uploaderUrl || "",
         },
+        vpn_proxy: {
+          url: vpnProxyUrl || "",
+          api_key: vpnProxyApiKey || "",
+        },
         arr: {
           instances: instancesPayload || [],
         },
@@ -638,6 +664,7 @@ export default function Settings() {
       label: t("uploaderSettings.settings", "Uploader"),
       icon: Upload,
     },
+    { id: "vpn_proxy", label: "VPN-Proxy", icon: Shield },
     { id: "arr", label: "*arr Instances", icon: Film },
     {
       id: "notifications",
@@ -1481,6 +1508,169 @@ export default function Settings() {
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VPN-Proxy Manager Settings */}
+        {activeTab === "vpn_proxy" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  VPN-Proxy Manager
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  Connect to your VPN Proxy Manager instance to view VPN
+                  container status
+                </p>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    VPN Proxy Manager URL
+                  </label>
+                  <input
+                    type="url"
+                    value={vpnProxyUrl}
+                    onChange={(e) => {
+                      setVpnProxyUrl(e.target.value);
+                      setVpnProxyTestStatus(null);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="http://vpn-proxy:5000"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    The URL of your VPN Proxy Manager instance (e.g.
+                    http://vpn-proxy:5000 or http://192.168.1.100:5000)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    API Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showVpnProxyKey ? "text" : "password"}
+                      value={vpnProxyApiKey}
+                      onChange={(e) => {
+                        setVpnProxyApiKey(e.target.value);
+                        setVpnProxyTestStatus(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm"
+                      placeholder="Paste your API key from VPN Proxy Manager Settings"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowVpnProxyKey(!showVpnProxyKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                    >
+                      {showVpnProxyKey ? (
+                        <EyeOff size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    Generate an API key in VPN Proxy Manager → Settings → API
+                    Keys
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!vpnProxyUrl || !vpnProxyApiKey) {
+                        toast.error("Please enter URL and API Key");
+                        return;
+                      }
+                      setVpnProxyTestStatus("loading");
+                      try {
+                        const result = await api.get("/vpn-proxy/status");
+                        if (result.connected) {
+                          setVpnProxyTestStatus("ok");
+                          toast.success("VPN Proxy Manager connected");
+                        } else {
+                          setVpnProxyTestStatus("fail");
+                          toast.error(result.error || "Connection failed");
+                        }
+                      } catch (e) {
+                        setVpnProxyTestStatus("fail");
+                        toast.error(
+                          e.message || "Cannot connect to VPN Proxy Manager",
+                        );
+                      }
+                    }}
+                    disabled={
+                      vpnProxyTestStatus === "loading" ||
+                      !vpnProxyUrl ||
+                      !vpnProxyApiKey
+                    }
+                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      vpnProxyTestStatus === "ok"
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : vpnProxyTestStatus === "fail"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                    }`}
+                  >
+                    {vpnProxyTestStatus === "loading" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Testing...
+                      </span>
+                    ) : vpnProxyTestStatus === "ok" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        Connected
+                      </span>
+                    ) : (
+                      "Test Connection"
+                    )}
+                  </button>
+                </div>
+
+                {vpnProxyTestStatus === "fail" && (
+                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>
+                      Cannot connect to VPN Proxy Manager. Check the URL and API
+                      Key are correct and the service is running.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

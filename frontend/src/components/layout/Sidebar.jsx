@@ -295,7 +295,7 @@ export default function Sidebar() {
     {
       label: "VPN-Proxy Manager",
       icon: Shield,
-      external: "http://50.7.224.34:5000/",
+      path: "/vpn-proxy",
     },
     {
       label: t("nav.plex"),
