@@ -20,6 +20,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  History,
+  XCircle,
+  Trash2,
+  FileDown,
+  FolderUp,
 } from "lucide-react";
 import { arrActivityApi } from "../services/arrActivityApi";
 
@@ -176,6 +181,28 @@ export default function ArrActivity() {
     placeholderData: (previousData) => previousData,
   });
 
+  // History pagination state
+  const [historyPage, setHistoryPage] = usePersistedState(
+    "komandorr_arrHistory_page",
+    1,
+  );
+  const [historyPageSize, setHistoryPageSize] = usePersistedState(
+    "komandorr_arrHistory_pageSize",
+    50,
+  );
+
+  const {
+    data: historyData,
+    refetch: refetchHistory,
+    isFetching: isFetchingHistory,
+  } = useQuery({
+    queryKey: ["arr-activity", "history", historyPage, historyPageSize],
+    queryFn: () => arrActivityApi.getHistory(historyPage, historyPageSize),
+    enabled: activeTab === "history",
+    refetchInterval: 30000,
+    placeholderData: (previousData) => previousData,
+  });
+
   const instancesList = useMemo(() => {
     if (!queueData) return [];
     return Object.entries(queueData).map(([id, data]) => ({ id, ...data }));
@@ -194,11 +221,13 @@ export default function ArrActivity() {
   const refreshAll = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([
+      const promises = [
         refetchQueue(),
         refetchQueueStatus(),
         refetchSystemStatus(),
-      ]);
+      ];
+      if (activeTab === "history") promises.push(refetchHistory());
+      await Promise.all(promises);
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
     }
@@ -426,7 +455,8 @@ export default function ArrActivity() {
             isRefreshing ||
             isFetchingQueue ||
             isFetchingStatus ||
-            isFetchingSystem
+            isFetchingSystem ||
+            isFetchingHistory
           }
           className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -435,7 +465,8 @@ export default function ArrActivity() {
               isRefreshing ||
               isFetchingQueue ||
               isFetchingStatus ||
-              isFetchingSystem
+              isFetchingSystem ||
+              isFetchingHistory
                 ? "animate-spin"
                 : ""
             }`}
@@ -443,284 +474,291 @@ export default function ArrActivity() {
           {isRefreshing ||
           isFetchingQueue ||
           isFetchingStatus ||
-          isFetchingSystem
+          isFetchingSystem ||
+          isFetchingHistory
             ? t("common.refreshing", "Refreshing")
             : t("common.refresh", "Refresh")}
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50">
-          <div className="flex items-center justify-between">
-            <div className="text-left">
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Tv className="w-3 h-3 text-purple-500" />
-                Sonarr
-              </p>
-              <p className="text-2xl font-bold text-purple-500 mt-1">
-                {sonarrTotalQueue}
-              </p>
+      {activeTab !== "history" && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Tv className="w-3 h-3 text-purple-500" />
+                  Sonarr
+                </p>
+                <p className="text-2xl font-bold text-purple-500 mt-1">
+                  {sonarrTotalQueue}
+                </p>
+              </div>
+              <Tv className="w-8 h-8 text-purple-500" />
             </div>
-            <Tv className="w-8 h-8 text-purple-500" />
           </div>
-        </div>
 
-        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50">
-          <div className="flex items-center justify-between">
-            <div className="text-left">
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Film className="w-3 h-3 text-blue-500" />
-                Radarr
-              </p>
-              <p className="text-2xl font-bold text-blue-500 mt-1">
-                {radarrTotalQueue}
-              </p>
+          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Film className="w-3 h-3 text-blue-500" />
+                  Radarr
+                </p>
+                <p className="text-2xl font-bold text-blue-500 mt-1">
+                  {radarrTotalQueue}
+                </p>
+              </div>
+              <Film className="w-8 h-8 text-blue-500" />
             </div>
-            <Film className="w-8 h-8 text-blue-500" />
           </div>
-        </div>
 
-        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50">
-          <div className="flex items-center justify-between">
-            <div className="text-left">
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Download className="w-3 h-3 text-green-500" />
-                {t("arrActivity.totalQueue", "Total Queue")}
-              </p>
-              <p className="text-2xl font-bold text-green-500 mt-1">
-                {sonarrTotalQueue + radarrTotalQueue}
-              </p>
+          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Download className="w-3 h-3 text-green-500" />
+                  {t("arrActivity.totalQueue", "Total Queue")}
+                </p>
+                <p className="text-2xl font-bold text-green-500 mt-1">
+                  {sonarrTotalQueue + radarrTotalQueue}
+                </p>
+              </div>
+              <Download className="w-8 h-8 text-green-500" />
             </div>
-            <Download className="w-8 h-8 text-green-500" />
           </div>
-        </div>
 
-        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50">
-          <div className="flex items-center justify-between">
-            <div className="text-left">
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Server className="w-3 h-3 text-orange-500" />
-                {t("arrActivity.services", "Services")}
-              </p>
-              <p className="text-2xl font-bold text-orange-500 mt-1">
-                {enabledCount}/{totalInstances || 0}
-              </p>
+          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Server className="w-3 h-3 text-orange-500" />
+                  {t("arrActivity.services", "Services")}
+                </p>
+                <p className="text-2xl font-bold text-orange-500 mt-1">
+                  {enabledCount}/{totalInstances || 0}
+                </p>
+              </div>
+              <Server className="w-8 h-8 text-orange-500" />
             </div>
-            <Server className="w-8 h-8 text-orange-500" />
           </div>
         </div>
-      </div>
+      )}
 
       {/* Instance Queues - Filtered by Tab */}
-      {filteredInstances
-        .filter((inst) => {
-          if (!inst.enabled) return false;
-          if (activeTab === "tvshows") return inst.type === "sonarr";
-          if (activeTab === "movies") return inst.type === "radarr";
-          return true;
-        })
-        .map((inst) => {
-          const allRecords = inst.records || [];
-          const totalRecords = allRecords.length;
-          const paginatedRecords = getPaginatedRecords(allRecords, inst.id);
-          const currentPage = getInstancePage(inst.id);
-          const itemsPerPage = getInstanceItemsPerPage(inst.id);
-          const totalPages = getTotalPages(totalRecords, inst.id);
+      {activeTab !== "history" &&
+        filteredInstances
+          .filter((inst) => {
+            if (!inst.enabled) return false;
+            if (activeTab === "tvshows") return inst.type === "sonarr";
+            if (activeTab === "movies") return inst.type === "radarr";
+            return true;
+          })
+          .map((inst) => {
+            const allRecords = inst.records || [];
+            const totalRecords = allRecords.length;
+            const paginatedRecords = getPaginatedRecords(allRecords, inst.id);
+            const currentPage = getInstancePage(inst.id);
+            const itemsPerPage = getInstanceItemsPerPage(inst.id);
+            const totalPages = getTotalPages(totalRecords, inst.id);
 
-          const isSonarr = inst.type === "sonarr";
-          const borderColor = "border-theme";
-          const headerBg = "bg-theme-primary/10";
-          const iconColor = "text-theme-primary";
-          const badgeBg = "bg-theme-primary/20";
-          const badgeText = "text-theme-primary";
+            const isSonarr = inst.type === "sonarr";
+            const borderColor = "border-theme";
+            const headerBg = "bg-theme-primary/10";
+            const iconColor = "text-theme-primary";
+            const badgeBg = "bg-theme-primary/20";
+            const badgeText = "text-theme-primary";
 
-          return (
-            <div key={inst.id}>
-              {inst.error ? (
-                <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-                  <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {isSonarr ? (
-                        <Tv className="w-5 h-5 text-theme-primary" />
-                      ) : (
-                        <Film className="w-5 h-5 text-theme-primary" />
-                      )}
-                      <h3 className="text-lg font-semibold text-theme-text">
-                        {inst.name}
-                      </h3>
-                      <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
-                        {t("arrActivity.error", "Error")}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 text-red-400">
-                      <AlertCircle className="w-5 h-5" />
-                      <div>
-                        <p className="font-medium">
-                          Unable to connect to {inst.name}
-                        </p>
-                        <p className="text-sm text-theme-text-muted mt-1">
-                          {inst.error}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div
-                    className={`bg-theme-card rounded-xl border ${borderColor} shadow-lg overflow-hidden`}
-                  >
-                    {/* Header */}
-                    <div
-                      className={`${headerBg} border-b ${borderColor} px-4 py-3`}
-                    >
+            return (
+              <div key={inst.id}>
+                {inst.error ? (
+                  <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+                    <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
                       <div className="flex items-center gap-2">
                         {isSonarr ? (
-                          <Tv className={`w-5 h-5 ${iconColor}`} />
+                          <Tv className="w-5 h-5 text-theme-primary" />
                         ) : (
-                          <Film className={`w-5 h-5 ${iconColor}`} />
+                          <Film className="w-5 h-5 text-theme-primary" />
                         )}
                         <h3 className="text-lg font-semibold text-theme-text">
                           {inst.name}
                         </h3>
-                        <span
-                          className={`ml-2 px-2 py-0.5 ${badgeBg} ${badgeText} text-xs font-medium rounded-full`}
-                        >
-                          {totalRecords}{" "}
-                          {t("arrActivity.downloads", "downloads")}
+                        <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
+                          {t("arrActivity.error", "Error")}
                         </span>
                       </div>
                     </div>
-                    {renderQueueTable(
-                      paginatedRecords,
-                      inst.type,
-                      inst.access_url,
-                    )}
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 text-red-400">
+                        <AlertCircle className="w-5 h-5" />
+                        <div>
+                          <p className="font-medium">
+                            Unable to connect to {inst.name}
+                          </p>
+                          <p className="text-sm text-theme-text-muted mt-1">
+                            {inst.error}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div
+                      className={`bg-theme-card rounded-xl border ${borderColor} shadow-lg overflow-hidden`}
+                    >
+                      {/* Header */}
+                      <div
+                        className={`${headerBg} border-b ${borderColor} px-4 py-3`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isSonarr ? (
+                            <Tv className={`w-5 h-5 ${iconColor}`} />
+                          ) : (
+                            <Film className={`w-5 h-5 ${iconColor}`} />
+                          )}
+                          <h3 className="text-lg font-semibold text-theme-text">
+                            {inst.name}
+                          </h3>
+                          <span
+                            className={`ml-2 px-2 py-0.5 ${badgeBg} ${badgeText} text-xs font-medium rounded-full`}
+                          >
+                            {totalRecords}{" "}
+                            {t("arrActivity.downloads", "downloads")}
+                          </span>
+                        </div>
+                      </div>
+                      {renderQueueTable(
+                        paginatedRecords,
+                        inst.type,
+                        inst.access_url,
+                      )}
+                    </div>
 
-                  {/* Pagination for this instance */}
-                  {totalRecords > 0 && (
-                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="text-sm font-medium text-theme-text-muted">
-                          {t("arrActivity.pagination.showing", "Showing")}{" "}
-                          <span className="text-theme-text font-semibold">
-                            {totalRecords > 0
-                              ? (currentPage - 1) * itemsPerPage + 1
-                              : 0}
-                          </span>{" "}
-                          {t("arrActivity.pagination.to", "to")}{" "}
-                          <span className="text-theme-text font-semibold">
-                            {Math.min(currentPage * itemsPerPage, totalRecords)}
-                          </span>{" "}
-                          {t("arrActivity.pagination.of", "of")}{" "}
-                          <span className="text-theme-text font-semibold">
-                            {totalRecords}
-                          </span>{" "}
-                          {t("arrActivity.pagination.items", "items")}
+                    {/* Pagination for this instance */}
+                    {totalRecords > 0 && (
+                      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="text-sm font-medium text-theme-text-muted">
+                            {t("arrActivity.pagination.showing", "Showing")}{" "}
+                            <span className="text-theme-text font-semibold">
+                              {totalRecords > 0
+                                ? (currentPage - 1) * itemsPerPage + 1
+                                : 0}
+                            </span>{" "}
+                            {t("arrActivity.pagination.to", "to")}{" "}
+                            <span className="text-theme-text font-semibold">
+                              {Math.min(
+                                currentPage * itemsPerPage,
+                                totalRecords,
+                              )}
+                            </span>{" "}
+                            {t("arrActivity.pagination.of", "of")}{" "}
+                            <span className="text-theme-text font-semibold">
+                              {totalRecords}
+                            </span>{" "}
+                            {t("arrActivity.pagination.items", "items")}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-theme-text-muted">
+                              {t(
+                                "arrActivity.pagination.itemsPerPage",
+                                "Items per page:",
+                              )}
+                            </span>
+                            <select
+                              value={itemsPerPage}
+                              onChange={(e) =>
+                                setInstanceItemsPerPageValue(
+                                  inst.id,
+                                  Number(e.target.value),
+                                )
+                              }
+                              className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                            >
+                              <option value="10">10</option>
+                              <option value="25">25</option>
+                              <option value="50">50</option>
+                              <option value="100">100</option>
+                            </select>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-theme-text-muted">
-                            {t(
-                              "arrActivity.pagination.itemsPerPage",
-                              "Items per page:",
-                            )}
-                          </span>
-                          <select
-                            value={itemsPerPage}
-                            onChange={(e) =>
-                              setInstanceItemsPerPageValue(
-                                inst.id,
-                                Number(e.target.value),
-                              )
+                          <button
+                            onClick={() =>
+                              setInstancePage(inst.id, currentPage - 1)
                             }
-                            className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                            disabled={currentPage === 1}
+                            className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                            title={t("common.previous")}
                           >
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                          </select>
+                            <ChevronLeft size={20} />
+                          </button>
+
+                          <div className="flex items-center gap-1.5">
+                            {Array.from({ length: totalPages }).map(
+                              (_, index) => {
+                                const page = index + 1;
+                                if (
+                                  page === 1 ||
+                                  page === totalPages ||
+                                  (page >= currentPage - 1 &&
+                                    page <= currentPage + 1)
+                                ) {
+                                  return (
+                                    <button
+                                      key={page}
+                                      onClick={() =>
+                                        setInstancePage(inst.id, page)
+                                      }
+                                      className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
+                                        currentPage === page
+                                          ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
+                                          : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
+                                      }`}
+                                    >
+                                      {page}
+                                    </button>
+                                  );
+                                } else if (
+                                  page === currentPage - 2 ||
+                                  page === currentPage + 2
+                                ) {
+                                  return (
+                                    <span
+                                      key={page}
+                                      className="text-theme-text-muted px-2"
+                                    >
+                                      •••
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              },
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              setInstancePage(inst.id, currentPage + 1)
+                            }
+                            disabled={currentPage === totalPages}
+                            className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
+                            title={t("common.next")}
+                          >
+                            <ChevronRight size={20} />
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            setInstancePage(inst.id, currentPage - 1)
-                          }
-                          disabled={currentPage === 1}
-                          className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-                          title={t("common.previous")}
-                        >
-                          <ChevronLeft size={20} />
-                        </button>
-
-                        <div className="flex items-center gap-1.5">
-                          {Array.from({ length: totalPages }).map(
-                            (_, index) => {
-                              const page = index + 1;
-                              if (
-                                page === 1 ||
-                                page === totalPages ||
-                                (page >= currentPage - 1 &&
-                                  page <= currentPage + 1)
-                              ) {
-                                return (
-                                  <button
-                                    key={page}
-                                    onClick={() =>
-                                      setInstancePage(inst.id, page)
-                                    }
-                                    className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 ${
-                                      currentPage === page
-                                        ? "bg-theme border border-theme-primary text-white shadow-md scale-105"
-                                        : "bg-theme-hover hover:bg-theme border border-theme text-theme-text hover:text-theme-primary hover:border-theme-primary"
-                                    }`}
-                                  >
-                                    {page}
-                                  </button>
-                                );
-                              } else if (
-                                page === currentPage - 2 ||
-                                page === currentPage + 2
-                              ) {
-                                return (
-                                  <span
-                                    key={page}
-                                    className="text-theme-text-muted px-2"
-                                  >
-                                    •••
-                                  </span>
-                                );
-                              }
-                              return null;
-                            },
-                          )}
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            setInstancePage(inst.id, currentPage + 1)
-                          }
-                          disabled={currentPage === totalPages}
-                          className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-theme-hover disabled:hover:text-theme-text transition-all shadow-sm hover:shadow active:scale-95"
-                          title={t("common.next")}
-                        >
-                          <ChevronRight size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })}
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
 
       {/* No Sonarr Services Configured (TV Shows tab) */}
       {activeTab === "tvshows" &&
@@ -767,7 +805,7 @@ export default function ArrActivity() {
         )}
 
       {/* No Services Configured (fallback) */}
-      {enabledCount === 0 && (
+      {enabledCount === 0 && activeTab !== "history" && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
           <Server className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
           <h3 className="text-lg font-semibold text-theme-text mb-2">
@@ -781,6 +819,342 @@ export default function ArrActivity() {
           </p>
         </div>
       )}
+
+      {/* History Tab Content */}
+      {activeTab === "history" &&
+        (() => {
+          const historyInstances = historyData
+            ? Object.entries(historyData).map(([id, data]) => ({ id, ...data }))
+            : [];
+          const filteredHistoryInstances = historyInstances.filter(
+            (inst) => inst.enabled,
+          );
+
+          const getEventIcon = (eventType) => {
+            const et = (eventType || "").toLowerCase();
+            if (et.includes("grab"))
+              return {
+                icon: FileDown,
+                color: "text-blue-400",
+                bg: "bg-gradient-to-br from-blue-500/20 to-blue-500/10",
+                border: "border-blue-500/30",
+                label: "Grabbed",
+              };
+            if (et.includes("import") || et.includes("download"))
+              return {
+                icon: FolderUp,
+                color: "text-green-400",
+                bg: "bg-gradient-to-br from-green-500/20 to-green-500/10",
+                border: "border-green-500/30",
+                label: "Imported",
+              };
+            if (et.includes("fail"))
+              return {
+                icon: XCircle,
+                color: "text-red-400",
+                bg: "bg-gradient-to-br from-red-500/20 to-red-500/10",
+                border: "border-red-500/30",
+                label: "Failed",
+              };
+            if (et.includes("delete") || et.includes("remove"))
+              return {
+                icon: Trash2,
+                color: "text-orange-400",
+                bg: "bg-gradient-to-br from-orange-500/20 to-orange-500/10",
+                border: "border-orange-500/30",
+                label: "Deleted",
+              };
+            if (et.includes("upgrade"))
+              return {
+                icon: UploadIcon,
+                color: "text-purple-400",
+                bg: "bg-gradient-to-br from-purple-500/20 to-purple-500/10",
+                border: "border-purple-500/30",
+                label: "Upgraded",
+              };
+            if (et.includes("rename"))
+              return {
+                icon: FileDown,
+                color: "text-cyan-400",
+                bg: "bg-gradient-to-br from-cyan-500/20 to-cyan-500/10",
+                border: "border-cyan-500/30",
+                label: "Renamed",
+              };
+            return {
+              icon: Clock,
+              color: "text-gray-400",
+              bg: "bg-gradient-to-br from-gray-500/20 to-gray-500/10",
+              border: "border-gray-500/30",
+              label: eventType || "Unknown",
+            };
+          };
+
+          const formatDate = (dateStr) => {
+            if (!dateStr) return "—";
+            try {
+              const d = new Date(dateStr);
+              return d.toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+            } catch {
+              return dateStr;
+            }
+          };
+
+          if (filteredHistoryInstances.length === 0 && !isFetchingHistory) {
+            return (
+              <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+                <History className="w-16 h-16 mx-auto text-theme-text-muted/50 mb-4" />
+                <h3 className="text-lg font-semibold text-theme-text mb-2">
+                  No History Available
+                </h3>
+                <p className="text-theme-text-muted max-w-md mx-auto">
+                  Configure Sonarr/Radarr instances in settings to view download
+                  history.
+                </p>
+              </div>
+            );
+          }
+
+          return filteredHistoryInstances.map((inst) => {
+            const records = inst.records || [];
+            const totalRecords = inst.totalRecords || records.length;
+            const isSonarr = inst.type === "sonarr";
+
+            // Filter by search
+            const filteredRecords = normalizedSearch
+              ? records.filter((r) => {
+                  const haystack =
+                    `${r.sourceTitle || ""} ${r.downloadClient || ""} ${r.indexer || ""} ${r.eventType || ""}`.toLowerCase();
+                  return haystack.includes(normalizedSearch);
+                })
+              : records;
+
+            return (
+              <div key={inst.id}>
+                <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {isSonarr ? (
+                        <Tv className="w-5 h-5 text-theme-primary" />
+                      ) : (
+                        <Film className="w-5 h-5 text-theme-primary" />
+                      )}
+                      <h3 className="text-lg font-semibold text-theme-text">
+                        {inst.name}
+                      </h3>
+                      <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                        {totalRecords} records
+                      </span>
+                    </div>
+                  </div>
+
+                  {inst.error ? (
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 text-red-400">
+                        <AlertCircle className="w-5 h-5" />
+                        <div>
+                          <p className="font-medium">
+                            Unable to connect to {inst.name}
+                          </p>
+                          <p className="text-sm text-theme-text-muted mt-1">
+                            {inst.error}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : filteredRecords.length === 0 ? (
+                    <div className="py-12 text-center text-theme-text-muted">
+                      <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No history records</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[900px] text-sm">
+                          <thead>
+                            <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                              <th className="text-left py-3 px-4 font-semibold text-black">
+                                Event
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-black">
+                                Title
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-black">
+                                Quality
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-black">
+                                Client
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-black">
+                                Indexer
+                              </th>
+                              <th className="text-right py-3 px-4 font-semibold text-black">
+                                Date
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredRecords.map((record, idx) => {
+                              const evt = getEventIcon(record.eventType);
+                              const EvtIcon = evt.icon;
+                              return (
+                                <tr
+                                  key={record.id || idx}
+                                  className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                                >
+                                  <td className="py-3 px-4">
+                                    <div
+                                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ${evt.bg} ${evt.color} border ${evt.border} shadow-sm`}
+                                    >
+                                      <EvtIcon size={12} />
+                                      <span className="text-[11px] font-semibold whitespace-nowrap">
+                                        {evt.label}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="min-w-0">
+                                      <div className="font-medium text-theme-text truncate max-w-[300px] group-hover:text-theme-primary transition-colors">
+                                        {record.sourceTitle ||
+                                          record.title ||
+                                          "Unknown"}
+                                      </div>
+                                      {isSonarr && record.episode && (
+                                        <div className="text-xs text-theme-text-muted">
+                                          S
+                                          {String(
+                                            record.episode.seasonNumber || 0,
+                                          ).padStart(2, "0")}
+                                          E
+                                          {String(
+                                            record.episode.episodeNumber || 0,
+                                          ).padStart(2, "0")}
+                                          {record.episode.title &&
+                                            ` - ${record.episode.title}`}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="text-sm text-theme-text">
+                                      {record.quality?.quality?.name || "—"}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    {record.downloadClient ? (
+                                      <div className="flex items-center gap-1">
+                                        <HardDrive className="w-3 h-3 text-theme-text-muted" />
+                                        <span className="text-theme-text text-sm">
+                                          {record.downloadClient}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs text-theme-text-muted">
+                                        —
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    {record.indexer ? (
+                                      <span className="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                        {record.indexer}
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-theme-text-muted">
+                                        —
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <div className="flex items-center gap-1 justify-end">
+                                      <Clock className="w-3 h-3 text-theme-text-muted" />
+                                      <span className="text-sm text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
+                                        {formatDate(record.date)}
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* History Pagination */}
+                {totalRecords > historyPageSize && (
+                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm font-medium text-theme-text-muted">
+                        Page{" "}
+                        <span className="text-theme-text font-semibold">
+                          {historyPage}
+                        </span>{" "}
+                        of{" "}
+                        <span className="text-theme-text font-semibold">
+                          {Math.ceil(totalRecords / historyPageSize)}
+                        </span>{" "}
+                        ({totalRecords} total)
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-theme-text-muted">
+                          Per page:
+                        </span>
+                        <select
+                          value={historyPageSize}
+                          onChange={(e) => {
+                            setHistoryPageSize(Number(e.target.value));
+                            setHistoryPage(1);
+                          }}
+                          className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                        >
+                          <option value="25">25</option>
+                          <option value="50">50</option>
+                          <option value="100">100</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          setHistoryPage((p) => Math.max(1, p - 1))
+                        }
+                        disabled={historyPage === 1}
+                        className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow active:scale-95"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setHistoryPage((p) =>
+                            Math.min(
+                              Math.ceil(totalRecords / historyPageSize),
+                              p + 1,
+                            ),
+                          )
+                        }
+                        disabled={
+                          historyPage >=
+                          Math.ceil(totalRecords / historyPageSize)
+                        }
+                        className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow active:scale-95"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })()}
     </div>
   );
 }

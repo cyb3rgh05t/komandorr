@@ -31,6 +31,7 @@ import {
   ListOrdered,
   Shield,
   Palette,
+  History,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -384,6 +385,11 @@ export default function Sidebar() {
           path: "/arr-activity?tab=movies",
           label: t("arrActivity.tabs.movies", "Movies"),
           icon: Film,
+        },
+        {
+          path: "/arr-activity?tab=history",
+          label: t("arrActivity.tabs.history", "History"),
+          icon: History,
         },
       ],
     },
