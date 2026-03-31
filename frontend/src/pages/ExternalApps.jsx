@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import {
@@ -31,6 +33,7 @@ import {
   Layers,
   Zap,
   BookOpen,
+  Search,
 } from "lucide-react";
 
 // Map icon names to lucide components
@@ -79,6 +82,14 @@ export default function ExternalApps() {
   });
 
   const apps = settingsData?.external_apps?.apps || [];
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredApps = apps.filter(
+    (app) =>
+      !searchQuery ||
+      app.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.url?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const getIcon = (iconName) => {
     if (!iconName) return AppWindow;
@@ -87,9 +98,37 @@ export default function ExternalApps() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Refresh Button */}
-      <div className="flex items-center justify-between">
-        <div />
+      {/* Not Configured Banner */}
+      {apps.length === 0 && !isFetching && (
+        <Link
+          to="/settings?tab=external_apps"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <AppWindow className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                {t("externalApps.notConfigured")}
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {/* Search & Refresh */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+          <input
+            type="text"
+            placeholder={t("externalApps.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          />
+        </div>
         <button
           onClick={() => refetch()}
           disabled={isFetching}
@@ -114,16 +153,25 @@ export default function ExternalApps() {
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
           <AppWindow className="w-16 h-16 mx-auto text-theme-text-muted/50 mb-4" />
           <h3 className="text-lg font-semibold text-theme-text mb-2">
-            No External Apps Configured
+            {t("externalApps.noApps")}
           </h3>
           <p className="text-theme-text-muted max-w-md mx-auto">
-            Add external apps in Settings to see them here. Each app will appear
-            as a card with a link to its panel.
+            {t("externalApps.noAppsDesc")}
+          </p>
+        </div>
+      ) : filteredApps.length === 0 ? (
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+          <Search className="w-16 h-16 mx-auto text-theme-text-muted/50 mb-4" />
+          <h3 className="text-lg font-semibold text-theme-text mb-2">
+            {t("externalApps.noResults")}
+          </h3>
+          <p className="text-theme-text-muted max-w-md mx-auto">
+            {t("externalApps.noResultsDesc")}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-          {apps.map((app) => {
+          {filteredApps.map((app) => {
             const IconComponent = getIcon(app.icon);
             const isImageUrl =
               app.icon &&

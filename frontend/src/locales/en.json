@@ -1056,5 +1056,14 @@
     "zfsPoolDetails": "ZFS Pool Details",
     "lastUpdated": "Last updated",
     "noDataYet": "Waiting for data..."
+  },
+  "externalApps": {
+    "notConfigured": "External Apps are not configured",
+    "notConfiguredDesc": "Click here to add external apps in Settings",
+    "noApps": "No External Apps Configured",
+    "noAppsDesc": "Add external apps in Settings to see them here. Each app will appear as a card with a link to its panel.",
+    "noResults": "No Matching Apps",
+    "noResultsDesc": "No external apps match your search. Try a different query.",
+    "searchPlaceholder": "Search apps..."
   }
 }

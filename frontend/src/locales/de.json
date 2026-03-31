@@ -1051,5 +1051,14 @@
     "zfsPoolDetails": "ZFS-Pool-Details",
     "lastUpdated": "Zuletzt aktualisiert",
     "noDataYet": "Warte auf Daten..."
+  },
+  "externalApps": {
+    "notConfigured": "Externe Apps sind nicht konfiguriert",
+    "notConfiguredDesc": "Klicken Sie hier, um externe Apps in den Einstellungen hinzuzufügen",
+    "noApps": "Keine externen Apps konfiguriert",
+    "noAppsDesc": "Fügen Sie externe Apps in den Einstellungen hinzu, um sie hier anzuzeigen. Jede App wird als Karte mit einem Link angezeigt.",
+    "noResults": "Keine passenden Apps",
+    "noResultsDesc": "Keine externen Apps entsprechen Ihrer Suche. Versuchen Sie eine andere Abfrage.",
+    "searchPlaceholder": "Apps suchen..."
   }
 }

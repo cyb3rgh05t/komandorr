@@ -2055,10 +2055,10 @@ export default function Settings() {
                                 };
                                 input.click();
                               }}
-                              className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded-lg transition-all"
+                              className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
                               title="Upload icon"
                             >
-                              <Upload size={16} />
+                              <Upload className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -2071,10 +2071,10 @@ export default function Settings() {
                           );
                           setPendingChanges(true);
                         }}
-                        className="self-end sm:self-center p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="self-end sm:self-center p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
                         title="Remove app"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -2155,10 +2155,10 @@ export default function Settings() {
                             };
                             input.click();
                           }}
-                          className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded-lg transition-all"
+                          className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
                           title="Upload icon"
                         >
-                          <Upload size={16} />
+                          <Upload className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -2194,7 +2194,7 @@ export default function Settings() {
                       disabled={!newAppName || !newAppUrl}
                       className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Plus size={16} />
+                      <Plus size={16} className="text-theme-primary" />
                       Add App
                     </button>
                     <button
@@ -2218,7 +2218,7 @@ export default function Settings() {
                 onClick={() => setShowAddApp(true)}
                 className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
               >
-                <Plus size={16} />
+                <Plus size={16} className="text-theme-primary" />
                 Add External App
               </button>
             )}
