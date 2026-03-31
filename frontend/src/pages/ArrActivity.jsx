@@ -1009,15 +1009,20 @@ export default function ArrActivity() {
                             {filteredRecords.map((record, idx) => {
                               const evt = getEventIcon(record.eventType);
                               const seriesTitle = isSonarr
-                                ? record.series?.title || record.sourceTitle || "Unknown"
-                                : record.movie?.title || record.sourceTitle || "Unknown";
+                                ? record.series?.title ||
+                                  record.sourceTitle ||
+                                  "Unknown"
+                                : record.movie?.title ||
+                                  record.sourceTitle ||
+                                  "Unknown";
                               const episodeCode = record.episode
                                 ? `S${String(record.episode.seasonNumber || 0).padStart(2, "0")}E${String(record.episode.episodeNumber || 0).padStart(2, "0")}`
                                 : "—";
                               const episodeTitle = record.episode?.title || "—";
-                              const customFormats = record.customFormats
-                                ?.map((f) => f.name)
-                                .join(", ") || "—";
+                              const customFormats =
+                                record.customFormats
+                                  ?.map((f) => f.name)
+                                  .join(", ") || "—";
 
                               return (
                                 <tr
