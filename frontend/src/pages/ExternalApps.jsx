@@ -118,35 +118,19 @@ export default function ExternalApps() {
         </Link>
       )}
 
-      {/* Header with Search & Refresh */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-theme-primary/10 border border-theme-primary/20">
-            <AppWindow className="w-5 h-5 text-theme-primary" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-theme-text">
-              {t("externalApps.title", "External Apps")}
-            </h1>
-            {apps.length > 0 && (
-              <p className="text-xs text-theme-text-muted">
-                {filteredApps.length} {t("externalApps.appsCount", "apps")}
-                {searchQuery && ` — ${t("externalApps.filtered", "filtered")}`}
-              </p>
-            )}
-          </div>
+      {/* Search & Actions */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+          <input
+            type="text"
+            placeholder={t("externalApps.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          />
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-            <input
-              type="text"
-              placeholder={t("externalApps.searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-            />
-          </div>
+        <div className="flex items-center gap-3">
           <Link
             to="/settings?tab=external_apps"
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
