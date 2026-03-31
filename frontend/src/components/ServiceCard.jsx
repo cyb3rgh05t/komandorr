@@ -195,21 +195,17 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-1.5 pt-3 border-t border-theme/50">
+      <div className="flex items-center gap-2 pt-3 border-t border-theme/50">
         <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             onCheck(service.id);
           }}
-          className="flex-1 px-2 py-1.5 bg-theme-hover hover:from-theme-primary/30 hover:to-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all duration-200 text-[10px] font-semibold text-theme-primary hover:text-theme-primary-hover flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md group"
+          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
           title={t("service.checkNow")}
         >
-          <RefreshCw
-            size={12}
-            className="group-hover:rotate-180 transition-transform duration-300"
-          />
-          {t("service.checkNow")}
+          <RefreshCw className="w-4 h-4" />
         </button>
         <button
           onClick={(e) => {
@@ -217,13 +213,10 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
             e.stopPropagation();
             onEdit(service);
           }}
-          className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-lg transition-all duration-200 border border-theme hover:border-theme-primary shadow-sm hover:shadow-md hover:shadow-theme-primary/10 group"
+          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
           title={t("service.edit")}
         >
-          <Edit
-            className="text-theme-text-muted group-hover:text-theme-primary transition-colors"
-            size={14}
-          />
+          <Edit className="w-4 h-4" />
         </button>
         <button
           onClick={(e) => {
@@ -231,13 +224,10 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
             e.stopPropagation();
             onDelete(service.id);
           }}
-          className="p-1.5 bg-theme-hover hover:bg-red-500/10 rounded-lg transition-all duration-200 border border-theme hover:border-red-500/50 shadow-sm hover:shadow-md hover:shadow-red-500/20 group"
+          className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
           title={t("service.delete")}
         >
-          <Trash2
-            className="text-theme-text-muted group-hover:text-red-400 transition-colors"
-            size={14}
-          />
+          <Trash2 className="w-4 h-4" />
         </button>
       </div>
     </a>

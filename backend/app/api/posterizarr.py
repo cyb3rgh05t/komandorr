@@ -7,6 +7,9 @@ from app.utils.logger import logger
 
 router = APIRouter(prefix="/api/posterizarr", tags=["posterizarr"])
 
+# Track whether we already logged the "not configured" message
+_logged_not_configured = False
+
 
 def get_posterizarr_config() -> tuple[str, str]:
     """Return (base_url, api_key) from runtime settings."""
@@ -15,15 +18,20 @@ def get_posterizarr_config() -> tuple[str, str]:
     return url, api_key
 
 
+def _is_configured() -> bool:
+    url, api_key = get_posterizarr_config()
+    return bool(url and api_key)
+
+
 async def proxy_get(path: str, params: Optional[dict] = None):
     """Forward a GET request to the Posterizarr API."""
     base_url, api_key = get_posterizarr_config()
-    if not base_url:
-        raise HTTPException(status_code=503, detail="Posterizarr URL not configured")
-    if not api_key:
-        raise HTTPException(
-            status_code=503, detail="Posterizarr API key not configured"
-        )
+    if not base_url or not api_key:
+        global _logged_not_configured
+        if not _logged_not_configured:
+            logger.info("Posterizarr not configured — skipping request")
+            _logged_not_configured = True
+        return None
 
     url = f"{base_url.rstrip('/')}/api{path}"
     query_params = {"api_key": api_key}
@@ -62,31 +70,41 @@ async def posterizarr_status(username: str = Depends(require_auth)):
 @router.get("/dashboard")
 async def get_dashboard(username: str = Depends(require_auth)):
     """Get combined dashboard data (Status + Version + System Info)."""
-    return await proxy_get("/dashboard/all")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/dashboard/all") or {}
 
 
 @router.get("/system-info")
 async def get_system_info(username: str = Depends(require_auth)):
     """Get hardware and OS information."""
-    return await proxy_get("/system-info")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/system-info") or {}
 
 
 @router.get("/version")
 async def get_version(username: str = Depends(require_auth)):
     """Check installed version against remote."""
-    return await proxy_get("/version")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/version") or {}
 
 
 @router.get("/execution-status")
 async def get_execution_status(username: str = Depends(require_auth)):
     """Get current execution status."""
-    return await proxy_get("/status")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/status") or {}
 
 
 @router.get("/scheduler")
 async def get_scheduler(username: str = Depends(require_auth)):
     """Get scheduler status, next run times, active jobs."""
-    return await proxy_get("/scheduler/status")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/scheduler/status") or {}
 
 
 @router.get("/runtime-history")
@@ -95,28 +113,36 @@ async def get_runtime_history(
     username: str = Depends(require_auth),
 ):
     """Get history of previous script executions."""
+    if not _is_configured():
+        return {"not_configured": True, "runs": []}
     params = {}
     if limit is not None:
         params["limit"] = limit
-    return await proxy_get("/runtime-history", params=params)
+    return await proxy_get("/runtime-history", params=params) or {}
 
 
 @router.get("/assets/overview")
 async def get_assets_overview(username: str = Depends(require_auth)):
     """Get categorized overview of assets."""
-    return await proxy_get("/assets/overview")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/assets/overview") or {}
 
 
 @router.get("/assets/stats")
 async def get_assets_stats(username: str = Depends(require_auth)):
     """Get storage usage and file counts per library folder."""
-    return await proxy_get("/assets/stats")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/assets/stats") or {}
 
 
 @router.get("/plex-export/statistics")
 async def get_plex_export_stats(username: str = Depends(require_auth)):
     """Get Plex library export statistics."""
-    return await proxy_get("/plex-export/statistics")
+    if not _is_configured():
+        return {"not_configured": True}
+    return await proxy_get("/plex-export/statistics") or {}
 
 
 @router.get("/plex-export/runs")

@@ -65,6 +65,17 @@ class ArrSettings(BaseModel):
     instances: list[ArrInstance] = []
 
 
+class ExternalApp(BaseModel):
+    id: str
+    name: str
+    url: str
+    icon: str = ""  # lucide icon name or URL to image
+
+
+class ExternalAppsSettings(BaseModel):
+    apps: list[ExternalApp] = []
+
+
 class SettingsResponse(BaseModel):
     logging: LoggingSettings
     general: GeneralSettings
@@ -75,6 +86,7 @@ class SettingsResponse(BaseModel):
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
     arr: Optional[ArrSettings] = None
+    external_apps: Optional[ExternalAppsSettings] = None
 
 
 class SettingsUpdate(BaseModel):
@@ -87,6 +99,7 @@ class SettingsUpdate(BaseModel):
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
     arr: Optional[ArrSettings] = None
+    external_apps: Optional[ExternalAppsSettings] = None
 
 
 def get_config_path():
@@ -244,6 +257,12 @@ async def get_settings(username: str = Depends(require_auth)):
             except Exception:
                 pass
 
+    # Get external apps settings from config
+    external_apps_config = config_data.get("external_apps", {})
+    external_apps_settings = ExternalAppsSettings(
+        apps=[ExternalApp(**app) for app in external_apps_config.get("apps", [])]
+    )
+
     return SettingsResponse(
         logging=logging_settings,
         general=general_settings,
@@ -254,6 +273,7 @@ async def get_settings(username: str = Depends(require_auth)):
         vpn_proxy=vpn_proxy_settings,
         posterizarr=posterizarr_settings,
         arr=arr_settings,
+        external_apps=external_apps_settings,
     )
 
 
@@ -370,6 +390,21 @@ async def update_settings(
             except Exception:
                 pass
         logger.info(f"Updated arr instances: {len(updates.arr.instances)} instances")
+
+    # Update External Apps settings
+    if updates.external_apps is not None:
+        config_data["external_apps"] = {
+            "apps": [
+                {
+                    "id": app.id,
+                    "name": app.name,
+                    "url": app.url,
+                    "icon": app.icon,
+                }
+                for app in updates.external_apps.apps
+            ]
+        }
+        logger.info(f"Updated external apps: {len(updates.external_apps.apps)} apps")
 
     # Save to config.json
     logger.info("Calling save_config...")

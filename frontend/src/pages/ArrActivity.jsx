@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { usePersistedState } from "../utils/usePersistedState";
 import {
   Activity,
@@ -437,6 +437,25 @@ export default function ArrActivity() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Not Configured Banner */}
+      {enabledCount === 0 && totalInstances === 0 && (
+        <Link
+          to="/settings?tab=arr"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Activity className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                Arr Services are not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Header Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="relative w-full sm:w-72">

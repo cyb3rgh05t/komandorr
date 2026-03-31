@@ -566,8 +566,31 @@ export default function VODStreams() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const plexNotConfigured = error?.message
+    ?.toLowerCase()
+    .includes("not configured");
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Not Configured Banner */}
+      {plexNotConfigured && (
+        <Link
+          to="/settings?tab=plex"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Server className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                Plex is not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Search Bar, Live Indicator & Refresh Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
@@ -1047,7 +1070,7 @@ export default function VODStreams() {
                         {t("vodStreams.plexNotConfigured.description")}
                       </p>
                       <Link
-                        to="/settings"
+                        to="/settings?tab=plex"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
                       >
                         <Server size={20} />

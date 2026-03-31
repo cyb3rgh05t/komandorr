@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/context/ToastContext";
 import { clearTimezoneCache } from "@/utils/dateUtils";
 import CustomDropdown from "@/components/CustomDropdown";
@@ -22,7 +23,7 @@ import {
   Send,
   Palette,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   testPlexConnection,
   getPlexConfig,
@@ -97,6 +98,47 @@ export default function Settings() {
   const [showArrKeys, setShowArrKeys] = useState({});
   const [arrTestStatus, setArrTestStatus] = useState({});
 
+  // External Apps settings state
+  const [externalApps, setExternalApps] = useState([]);
+  const [showAddApp, setShowAddApp] = useState(false);
+  const [newAppName, setNewAppName] = useState("");
+  const [newAppUrl, setNewAppUrl] = useState("");
+  const [newAppIcon, setNewAppIcon] = useState("");
+  const appIconInputRef = useRef(null);
+
+  const handleAppIconUpload = async (file, callback) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File size must be less than 2MB");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const credentials = sessionStorage.getItem("auth_credentials");
+      const response = await fetch("/api/upload-icon", {
+        method: "POST",
+        headers: {
+          ...(credentials && { Authorization: `Basic ${credentials}` }),
+        },
+        body: formData,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        callback(data.path);
+        toast.success("Icon uploaded successfully");
+      } else {
+        toast.error("Failed to upload icon");
+      }
+    } catch {
+      toast.error("Failed to upload icon");
+    }
+  };
+
   // Telegram notification settings state
   const [telegramEnabled, setTelegramEnabled] = useState(false);
   const [telegramBotToken, setTelegramBotToken] = useState("");
@@ -112,7 +154,23 @@ export default function Settings() {
   const [pendingChanges, setPendingChanges] = useState(false);
 
   // Tab navigation state
-  const [activeTab, setActiveTab] = useState("general");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabParam = searchParams.get("tab");
+    const validTabs = [
+      "general",
+      "auth",
+      "plex",
+      "overseerr",
+      "uploader",
+      "vpn_proxy",
+      "posterizarr",
+      "external_apps",
+      "notifications",
+      "arr",
+    ];
+    return validTabs.includes(tabParam) ? tabParam : "general";
+  });
 
   useEffect(() => {
     // Check auth status
@@ -169,6 +227,9 @@ export default function Settings() {
         setArrInstances(
           (data.arr && data.arr.instances) || data.instances || [],
         );
+      }
+      if (data.external_apps) {
+        setExternalApps(data.external_apps.apps || []);
       }
 
       // Auto-validate connections if configured
@@ -553,6 +614,9 @@ export default function Settings() {
         arr: {
           instances: instancesPayload || [],
         },
+        external_apps: {
+          apps: externalApps || [],
+        },
       };
 
       console.log("Saving settings payload:", payload);
@@ -694,6 +758,7 @@ export default function Settings() {
     { id: "vpn_proxy", label: "VPN-Proxy", icon: Shield },
     { id: "posterizarr", label: "Posterizarr", icon: Palette },
     { id: "arr", label: "*arr Instances", icon: Film },
+    { id: "external_apps", label: "External Apps", icon: Globe },
     {
       id: "notifications",
       label: t("settings.notifications", "Notifications"),
@@ -889,7 +954,7 @@ export default function Settings() {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 text-white font-medium rounded-lg transition-all disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {loading
                           ? t("auth.updating")
@@ -1198,12 +1263,12 @@ export default function Settings() {
                     <button
                       onClick={handleValidatePlex}
                       disabled={validating || !plexUrl || !plexToken}
-                      className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                         plexValid === true
-                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                           : plexValid === false
-                            ? "bg-red-600 hover:bg-red-700 text-white"
-                            : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                            ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                            : ""
                       }`}
                     >
                       {validating ? (
@@ -1354,12 +1419,12 @@ export default function Settings() {
                       disabled={
                         validatingOverseerr || !overseerrUrl || !overseerrApiKey
                       }
-                      className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                      className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                         overseerrValid === true
-                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                           : overseerrValid === false
-                            ? "bg-red-600 hover:bg-red-700 text-white"
-                            : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                            ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                            : ""
                       }`}
                     >
                       {validatingOverseerr ? (
@@ -1476,12 +1541,12 @@ export default function Settings() {
                         disabled={
                           uploaderTestStatus === "loading" || !uploaderUrl
                         }
-                        className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                           uploaderTestStatus === "ok"
-                            ? "bg-green-600 hover:bg-green-700 text-white"
+                            ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                             : uploaderTestStatus === "fail"
-                              ? "bg-red-600 hover:bg-red-700 text-white"
-                              : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                              ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                              : ""
                         }`}
                       >
                         {uploaderTestStatus === "loading" ? (
@@ -1647,12 +1712,12 @@ export default function Settings() {
                       !vpnProxyUrl ||
                       !vpnProxyApiKey
                     }
-                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       vpnProxyTestStatus === "ok"
-                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                         : vpnProxyTestStatus === "fail"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                          : ""
                     }`}
                   >
                     {vpnProxyTestStatus === "loading" ? (
@@ -1809,12 +1874,12 @@ export default function Settings() {
                       !posterizarrUrl ||
                       !posterizarrApiKey
                     }
-                    className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       posterizarrTestStatus === "ok"
-                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                         : posterizarrTestStatus === "fail"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                          : ""
                     }`}
                   >
                     {posterizarrTestStatus === "loading" ? (
@@ -1863,6 +1928,299 @@ export default function Settings() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* External Apps */}
+        {activeTab === "external_apps" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <Globe className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  External Apps
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  Add links to external panels and apps that will appear on the
+                  External Apps page
+                </p>
+              </div>
+            </div>
+
+            {/* Existing apps list */}
+            {externalApps.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {externalApps.map((app, idx) => (
+                  <div
+                    key={app.id}
+                    className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                            App Name
+                          </label>
+                          <input
+                            type="text"
+                            value={app.name}
+                            onChange={(e) => {
+                              const updated = [...externalApps];
+                              updated[idx] = {
+                                ...updated[idx],
+                                name: e.target.value,
+                              };
+                              setExternalApps(updated);
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="App name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                            URL
+                          </label>
+                          <input
+                            type="url"
+                            value={app.url}
+                            onChange={(e) => {
+                              const updated = [...externalApps];
+                              updated[idx] = {
+                                ...updated[idx],
+                                url: e.target.value,
+                              };
+                              setExternalApps(updated);
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="https://app.example.com"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                            Icon (name, URL or upload)
+                          </label>
+                          <div className="flex gap-2">
+                            {app.icon &&
+                              (app.icon.startsWith("/") ||
+                                app.icon.startsWith("http")) && (
+                                <img
+                                  src={app.icon}
+                                  alt=""
+                                  className="w-9 h-9 rounded-lg object-contain bg-theme-hover border border-theme flex-shrink-0"
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                  }}
+                                />
+                              )}
+                            <input
+                              type="text"
+                              value={app.icon}
+                              onChange={(e) => {
+                                const updated = [...externalApps];
+                                updated[idx] = {
+                                  ...updated[idx],
+                                  icon: e.target.value,
+                                };
+                                setExternalApps(updated);
+                                setPendingChanges(true);
+                              }}
+                              className="flex-1 min-w-0 px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="globe, server, or https://..."
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const input = document.createElement("input");
+                                input.type = "file";
+                                input.accept = "image/*";
+                                input.onchange = (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    handleAppIconUpload(file, (path) => {
+                                      const updated = [...externalApps];
+                                      updated[idx] = {
+                                        ...updated[idx],
+                                        icon: path,
+                                      };
+                                      setExternalApps(updated);
+                                      setPendingChanges(true);
+                                    });
+                                  }
+                                };
+                                input.click();
+                              }}
+                              className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded-lg transition-all"
+                              title="Upload icon"
+                            >
+                              <Upload size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExternalApps(
+                            externalApps.filter((_, i) => i !== idx),
+                          );
+                          setPendingChanges(true);
+                        }}
+                        className="self-end sm:self-center p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        title="Remove app"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new app */}
+            {showAddApp ? (
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                <div className="relative space-y-4">
+                  <h4 className="text-sm font-semibold text-theme-text">
+                    Add New App
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                        App Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newAppName}
+                        onChange={(e) => setNewAppName(e.target.value)}
+                        className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="e.g. Portainer"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                        URL
+                      </label>
+                      <input
+                        type="url"
+                        value={newAppUrl}
+                        onChange={(e) => setNewAppUrl(e.target.value)}
+                        className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="https://portainer.example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                        Icon (name, URL or upload)
+                      </label>
+                      <div className="flex gap-2">
+                        {newAppIcon &&
+                          (newAppIcon.startsWith("/") ||
+                            newAppIcon.startsWith("http")) && (
+                            <img
+                              src={newAppIcon}
+                              alt=""
+                              className="w-9 h-9 rounded-lg object-contain bg-theme-hover border border-theme flex-shrink-0"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          )}
+                        <input
+                          type="text"
+                          value={newAppIcon}
+                          onChange={(e) => setNewAppIcon(e.target.value)}
+                          className="flex-1 min-w-0 px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="server, database, or https://..."
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "image/*";
+                            input.onchange = (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleAppIconUpload(file, (path) => {
+                                  setNewAppIcon(path);
+                                });
+                              }
+                            };
+                            input.click();
+                          }}
+                          className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded-lg transition-all"
+                          title="Upload icon"
+                        >
+                          <Upload size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-theme-muted">
+                    Available icons: globe, server, shield, database, monitor,
+                    cloud, tv, film, music, download, upload, harddrive, wifi,
+                    terminal, image, mail, message, git, box, layers, zap, book,
+                    app — or paste an image URL / upload a custom icon
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newAppName && newAppUrl) {
+                          const id = `app-${newAppName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+                          setExternalApps([
+                            ...externalApps,
+                            {
+                              id,
+                              name: newAppName,
+                              url: newAppUrl,
+                              icon: newAppIcon || "app",
+                            },
+                          ]);
+                          setNewAppName("");
+                          setNewAppUrl("");
+                          setNewAppIcon("");
+                          setShowAddApp(false);
+                          setPendingChanges(true);
+                        }
+                      }}
+                      disabled={!newAppName || !newAppUrl}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus size={16} />
+                      Add App
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddApp(false);
+                        setNewAppName("");
+                        setNewAppUrl("");
+                        setNewAppIcon("");
+                      }}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAddApp(true)}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+              >
+                <Plus size={16} />
+                Add External App
+              </button>
+            )}
           </div>
         )}
 
@@ -2311,12 +2669,12 @@ export default function Settings() {
                                   !inst.url ||
                                   !inst.api_key
                                 }
-                                className={`py-2 px-6 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${
+                                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                                   arrTestStatus[inst.id] === "ok"
-                                    ? "bg-green-600 hover:bg-green-700 text-white"
+                                    ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
                                     : arrTestStatus[inst.id] === "fail"
-                                      ? "bg-red-600 hover:bg-red-700 text-white"
-                                      : "bg-theme-hover/50 backdrop-blur-sm hover:bg-theme-primary hover:text-white text-theme-text border border-theme"
+                                      ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                                      : ""
                                 }`}
                               >
                                 {arrTestStatus[inst.id] === "loading" ? (

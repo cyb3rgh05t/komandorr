@@ -163,7 +163,7 @@ export default function DashboardServiceListItem({
 
       {/* Action Buttons */}
       <div
-        className="flex items-center gap-1 flex-shrink-0"
+        className="flex items-center gap-2 flex-shrink-0"
         onClick={(e) => e.preventDefault()}
       >
         <button
@@ -172,13 +172,10 @@ export default function DashboardServiceListItem({
             e.stopPropagation();
             onCheck(service.id);
           }}
-          className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-md transition-all duration-200 border border-theme hover:border-theme-primary shadow-sm hover:shadow-md group/btn"
+          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
           title={t("service.checkNow")}
         >
-          <RefreshCw
-            size={13}
-            className="text-theme-text-muted group-hover/btn:text-theme-primary group-hover/btn:rotate-180 transition-all duration-300"
-          />
+          <RefreshCw className="w-4 h-4" />
         </button>
         <button
           onClick={(e) => {
@@ -186,13 +183,10 @@ export default function DashboardServiceListItem({
             e.stopPropagation();
             onEdit(service);
           }}
-          className="p-1.5 hover:bg-theme-hover rounded-md transition-colors border border-theme hover:border-theme-primary"
+          className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
           title={t("service.edit")}
         >
-          <Edit
-            className="text-theme-text-muted group-hover/btn:text-theme-primary transition-colors"
-            size={13}
-          />
+          <Edit className="w-4 h-4" />
         </button>
         <button
           onClick={(e) => {
@@ -200,13 +194,10 @@ export default function DashboardServiceListItem({
             e.stopPropagation();
             onDelete(service.id);
           }}
-          className="p-1.5 hover:bg-theme-hover rounded-md transition-colors border border-theme hover:border-red-500/50"
+          className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
           title={t("service.delete")}
         >
-          <Trash2
-            className="text-theme-text-muted group-hover/btn:text-red-400 transition-colors"
-            size={13}
-          />
+          <Trash2 className="w-4 h-4" />
         </button>
       </div>
     </a>

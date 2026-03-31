@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   RefreshCw,
@@ -147,30 +148,30 @@ export default function Posterizarr() {
   // { success, statistics: { total_runs, total_library_records, total_episode_records, latest_run } }
   const plexStatistics = plexExport?.statistics || {};
 
-  // Not connected
-  if (!connStatus?.connected && !dashLoading) {
-    return (
-      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
-          <WifiOff className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-theme-text mb-2">
-            Not Connected
-          </h2>
-          <p className="text-theme-text-muted text-sm mb-4">
-            {connStatus?.error ||
-              "Posterizarr is not configured or unreachable."}
-          </p>
-          <p className="text-theme-text-muted text-xs">
-            Configure the URL and API Key in{" "}
-            <span className="text-theme-primary">Settings</span> to connect.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const posterizarrNotConfigured = !connStatus?.connected && !dashLoading;
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Not Configured Banner */}
+      {posterizarrNotConfigured && (
+        <Link
+          to="/settings?tab=posterizarr"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <WifiOff className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                {"Posterizarr is " +
+                  (connStatus?.error || "Posterizarr is not configured")}
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Refresh button */}
       <div className="flex justify-end">
         <button
@@ -661,6 +662,20 @@ export default function Posterizarr() {
             </div>
           )}
         </>
+      )}
+
+      {/* Not Configured State */}
+      {posterizarrNotConfigured && (
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+          <WifiOff className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+          <h3 className="text-lg font-semibold text-theme-text mb-2">
+            Posterizarr Not Configured
+          </h3>
+          <p className="text-theme-text-muted max-w-md mx-auto">
+            Configure the Posterizarr URL and API Key in the settings to view
+            poster management data.
+          </p>
+        </div>
       )}
     </div>
   );

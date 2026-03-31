@@ -32,6 +32,7 @@ import {
   Shield,
   Palette,
   History,
+  AppWindow,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -58,9 +59,16 @@ export default function Sidebar() {
   // Fetch invites to count expired/unused
   const { data: invites = [] } = useQuery({
     queryKey: ["invites"],
-    queryFn: () => api.get("/invites/"),
+    queryFn: async () => {
+      try {
+        return await api.get("/invites/");
+      } catch {
+        return [];
+      }
+    },
     staleTime: 10000,
     refetchInterval: 10000,
+    retry: false,
     placeholderData: (previousData) => previousData,
   });
 
@@ -240,9 +248,16 @@ export default function Sidebar() {
   // Fetch services for status badges
   const { data: services = [] } = useQuery({
     queryKey: ["services"],
-    queryFn: () => api.getServices(),
+    queryFn: async () => {
+      try {
+        return await api.getServices();
+      } catch {
+        return [];
+      }
+    },
     staleTime: 10000,
     refetchInterval: 10000,
+    retry: false,
     placeholderData: (previousData) => previousData,
   });
 
@@ -255,9 +270,16 @@ export default function Sidebar() {
   // Fetch VPN proxy containers for error badge
   const { data: vpnContainers = [] } = useQuery({
     queryKey: ["vpn-proxy-containers-sidebar"],
-    queryFn: () => api.get("/vpn-proxy/containers"),
+    queryFn: async () => {
+      try {
+        return await api.get("/vpn-proxy/containers");
+      } catch {
+        return [];
+      }
+    },
     staleTime: 10000,
-    refetchInterval: 15000,
+    refetchInterval: 30000,
+    retry: false,
     placeholderData: (previousData) => previousData,
   });
 
@@ -397,6 +419,11 @@ export default function Sidebar() {
       label: "Posterizarr",
       icon: Palette,
       path: "/posterizarr",
+    },
+    {
+      label: "External Apps",
+      icon: AppWindow,
+      path: "/external-apps",
     },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },

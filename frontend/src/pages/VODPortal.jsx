@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useItemsPerPage } from "../utils/usePersistedState";
 import {
   UserPlus,
@@ -373,7 +374,10 @@ export default function VODPortal() {
       {/* Overseerr Status - Only show if not configured or not reachable */}
       {overseerrStatus &&
         (!overseerrStatus.configured || !overseerrStatus.reachable) && (
-          <div className="p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30">
+          <Link
+            to="/settings?tab=overseerr"
+            className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
                 <Server className="w-5 h-5 text-yellow-500" />
@@ -384,7 +388,7 @@ export default function VODPortal() {
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         )}
 
       {/* Header with Search & Refresh */}
