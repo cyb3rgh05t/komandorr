@@ -1058,6 +1058,10 @@
     "noDataYet": "Waiting for data..."
   },
   "externalApps": {
+    "title": "External Apps",
+    "appsCount": "apps",
+    "filtered": "filtered",
+    "open": "Open",
     "notConfigured": "External Apps are not configured",
     "notConfiguredDesc": "Click here to add external apps in Settings",
     "noApps": "No External Apps Configured",

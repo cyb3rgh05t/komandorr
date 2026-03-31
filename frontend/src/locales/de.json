@@ -1053,6 +1053,10 @@
     "noDataYet": "Warte auf Daten..."
   },
   "externalApps": {
+    "title": "Externe Apps",
+    "appsCount": "Apps",
+    "filtered": "gefiltert",
+    "open": "Öffnen",
     "notConfigured": "Externe Apps sind nicht konfiguriert",
     "notConfiguredDesc": "Klicken Sie hier, um externe Apps in den Einstellungen hinzuzufügen",
     "noApps": "Keine externen Apps konfiguriert",

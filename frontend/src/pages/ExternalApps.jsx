@@ -34,6 +34,7 @@ import {
   Zap,
   BookOpen,
   Search,
+  Plus,
 } from "lucide-react";
 
 // Map icon names to lucide components
@@ -117,35 +118,60 @@ export default function ExternalApps() {
         </Link>
       )}
 
-      {/* Search & Refresh */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-          <input
-            type="text"
-            placeholder={t("externalApps.searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-          />
+      {/* Header with Search & Refresh */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-theme-primary/10 border border-theme-primary/20">
+            <AppWindow className="w-5 h-5 text-theme-primary" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-theme-text">
+              {t("externalApps.title", "External Apps")}
+            </h1>
+            {apps.length > 0 && (
+              <p className="text-xs text-theme-text-muted">
+                {filteredApps.length} {t("externalApps.appsCount", "apps")}
+                {searchQuery && ` — ${t("externalApps.filtered", "filtered")}`}
+              </p>
+            )}
+          </div>
         </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCw
-            size={16}
-            className={`text-theme-primary transition-transform duration-500 ${
-              isFetching ? "animate-spin" : ""
-            }`}
-          />
-          <span className="text-xs sm:text-sm">
-            {isFetching
-              ? t("common.refreshing", "Refreshing")
-              : t("common.refresh", "Refresh")}
-          </span>
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64 sm:flex-none">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+            <input
+              type="text"
+              placeholder={t("externalApps.searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            />
+          </div>
+          <Link
+            to="/settings?tab=external_apps"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <Plus size={16} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm">External App</span>
+          </Link>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw
+              size={16}
+              className={`text-theme-primary transition-transform duration-500 ${
+                isFetching ? "animate-spin" : ""
+              }`}
+            />
+            <span className="text-xs sm:text-sm">
+              {isFetching
+                ? t("common.refreshing", "Refreshing")
+                : t("common.refresh", "Refresh")}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Apps Grid */}
@@ -170,7 +196,7 @@ export default function ExternalApps() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
           {filteredApps.map((app) => {
             const IconComponent = getIcon(app.icon);
             const isImageUrl =
@@ -179,24 +205,34 @@ export default function ExternalApps() {
                 app.icon.startsWith("https://") ||
                 app.icon.startsWith("/"));
 
+            // Extract hostname from URL for display
+            let displayUrl = "";
+            try {
+              const url = new URL(app.url);
+              displayUrl = url.hostname + (url.port ? `:${url.port}` : "");
+            } catch {
+              displayUrl = app.url;
+            }
+
             return (
               <a
                 key={app.id}
                 href={app.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group bg-theme-card border border-theme rounded-xl p-5 flex flex-col items-center gap-3 hover:border-theme-primary hover:shadow-lg hover:shadow-theme-primary/10 transition-all duration-300 relative overflow-hidden"
+                className="group bg-theme-card border border-theme rounded-xl p-5 flex flex-col items-center gap-4 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 transition-all duration-300 relative overflow-hidden"
               >
-                {/* Hover glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-transparent transition-all duration-300" />
+                {/* Background glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 via-transparent to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-theme-primary/3 transition-all duration-500" />
+                <div className="absolute -top-12 -right-12 w-32 h-32 bg-theme-primary/0 group-hover:bg-theme-primary/5 rounded-full blur-2xl transition-all duration-500" />
 
                 {/* Icon */}
-                <div className="relative w-14 h-14 rounded-xl bg-theme-hover border border-theme group-hover:border-theme-primary/50 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-theme-hover to-theme-card border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
                   {isImageUrl ? (
                     <img
                       src={app.icon}
                       alt={app.name}
-                      className="w-8 h-8 object-contain rounded"
+                      className="w-9 h-9 object-contain rounded-lg"
                       onError={(e) => {
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
@@ -204,7 +240,7 @@ export default function ExternalApps() {
                     />
                   ) : (
                     <IconComponent
-                      size={28}
+                      size={30}
                       className="text-theme-primary transition-colors"
                     />
                   )}
@@ -214,23 +250,33 @@ export default function ExternalApps() {
                       style={{ display: "none" }}
                     >
                       <AppWindow
-                        size={28}
+                        size={30}
                         className="text-theme-primary transition-colors"
                       />
                     </div>
                   )}
                 </div>
 
-                {/* Name */}
-                <span className="relative text-sm font-semibold text-theme-text text-center group-hover:text-theme-primary transition-colors line-clamp-2">
-                  {app.name}
-                </span>
+                {/* Name & URL */}
+                <div className="relative text-center space-y-1 w-full">
+                  <h3 className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors line-clamp-1">
+                    {app.name}
+                  </h3>
+                  <p className="text-[11px] text-theme-text-muted truncate px-1">
+                    {displayUrl}
+                  </p>
+                </div>
 
-                {/* External link indicator */}
-                <ExternalLink
-                  size={12}
-                  className="absolute top-2.5 right-2.5 text-theme-text-muted/40 group-hover:text-theme-primary transition-colors"
-                />
+                {/* Open link badge */}
+                <div className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-hover/50 border border-theme group-hover:border-theme-primary/30 group-hover:bg-theme-primary/10 transition-all duration-300">
+                  <ExternalLink
+                    size={12}
+                    className="text-theme-text-muted group-hover:text-theme-primary transition-colors"
+                  />
+                  <span className="text-[10px] font-medium text-theme-text-muted group-hover:text-theme-primary transition-colors uppercase tracking-wider">
+                    {t("externalApps.open", "Open")}
+                  </span>
+                </div>
               </a>
             );
           })}
