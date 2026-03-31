@@ -19,6 +19,7 @@ import {
   Film,
   Plus,
   Trash2,
+  Pencil,
   Bell,
   Send,
   Palette,
@@ -101,6 +102,7 @@ export default function Settings() {
   // External Apps settings state
   const [externalApps, setExternalApps] = useState([]);
   const [showAddApp, setShowAddApp] = useState(false);
+  const [editingAppIdx, setEditingAppIdx] = useState(null);
   const [newAppName, setNewAppName] = useState("");
   const [newAppUrl, setNewAppUrl] = useState("");
   const [newAppIcon, setNewAppIcon] = useState("");
@@ -1959,65 +1961,139 @@ export default function Settings() {
                     className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-theme-text-muted mb-1">
-                            App Name
-                          </label>
-                          <input
-                            type="text"
-                            value={app.name}
-                            onChange={(e) => {
-                              const updated = [...externalApps];
-                              updated[idx] = {
-                                ...updated[idx],
-                                name: e.target.value,
+                    <div className="relative flex flex-col gap-3">
+                      {/* Compact view */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {app.icon &&
+                          (app.icon.startsWith("/") ||
+                            app.icon.startsWith("http")) ? (
+                            <img
+                              src={app.icon}
+                              alt=""
+                              className="w-9 h-9 rounded-lg object-contain bg-theme-hover border border-theme"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-lg bg-theme-hover border border-theme flex items-center justify-center">
+                              <Globe className="w-4 h-4 text-theme-text-muted" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-theme-text truncate">
+                            {app.name || "Unnamed App"}
+                          </p>
+                          <p className="text-xs text-theme-text-muted truncate">
+                            {app.url || "No URL"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditingAppIdx(
+                                editingAppIdx === idx ? null : idx,
+                              )
+                            }
+                            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+                            title="Edit app"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = "image/*";
+                              input.onchange = (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handleAppIconUpload(file, (path) => {
+                                    const updated = [...externalApps];
+                                    updated[idx] = {
+                                      ...updated[idx],
+                                      icon: path,
+                                    };
+                                    setExternalApps(updated);
+                                    setPendingChanges(true);
+                                  });
+                                }
                               };
-                              setExternalApps(updated);
+                              input.click();
+                            }}
+                            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+                            title="Upload icon"
+                          >
+                            <Upload className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExternalApps(
+                                externalApps.filter((_, i) => i !== idx),
+                              );
+                              if (editingAppIdx === idx) setEditingAppIdx(null);
                               setPendingChanges(true);
                             }}
-                            className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                            placeholder="App name"
-                          />
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
+                            title="Remove app"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-theme-text-muted mb-1">
-                            URL
-                          </label>
-                          <input
-                            type="url"
-                            value={app.url}
-                            onChange={(e) => {
-                              const updated = [...externalApps];
-                              updated[idx] = {
-                                ...updated[idx],
-                                url: e.target.value,
-                              };
-                              setExternalApps(updated);
-                              setPendingChanges(true);
-                            }}
-                            className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                            placeholder="https://app.example.com"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-theme-text-muted mb-1">
-                            Icon (name, URL or upload)
-                          </label>
-                          <div className="flex gap-2">
-                            {app.icon &&
-                              (app.icon.startsWith("/") ||
-                                app.icon.startsWith("http")) && (
-                                <img
-                                  src={app.icon}
-                                  alt=""
-                                  className="w-9 h-9 rounded-lg object-contain bg-theme-hover border border-theme flex-shrink-0"
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                  }}
-                                />
-                              )}
+                      </div>
+
+                      {/* Expanded edit view */}
+                      {editingAppIdx === idx && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-theme">
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                              App Name
+                            </label>
+                            <input
+                              type="text"
+                              value={app.name}
+                              onChange={(e) => {
+                                const updated = [...externalApps];
+                                updated[idx] = {
+                                  ...updated[idx],
+                                  name: e.target.value,
+                                };
+                                setExternalApps(updated);
+                                setPendingChanges(true);
+                              }}
+                              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="App name"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                              URL
+                            </label>
+                            <input
+                              type="url"
+                              value={app.url}
+                              onChange={(e) => {
+                                const updated = [...externalApps];
+                                updated[idx] = {
+                                  ...updated[idx],
+                                  url: e.target.value,
+                                };
+                                setExternalApps(updated);
+                                setPendingChanges(true);
+                              }}
+                              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="https://app.example.com"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                              Icon (name, URL or upload)
+                            </label>
                             <input
                               type="text"
                               value={app.icon}
@@ -2030,52 +2106,12 @@ export default function Settings() {
                                 setExternalApps(updated);
                                 setPendingChanges(true);
                               }}
-                              className="flex-1 min-w-0 px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                               placeholder="globe, server, or https://..."
                             />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const input = document.createElement("input");
-                                input.type = "file";
-                                input.accept = "image/*";
-                                input.onchange = (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    handleAppIconUpload(file, (path) => {
-                                      const updated = [...externalApps];
-                                      updated[idx] = {
-                                        ...updated[idx],
-                                        icon: path,
-                                      };
-                                      setExternalApps(updated);
-                                      setPendingChanges(true);
-                                    });
-                                  }
-                                };
-                                input.click();
-                              }}
-                              className="flex-shrink-0 p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
-                              title="Upload icon"
-                            >
-                              <Upload className="w-4 h-4" />
-                            </button>
                           </div>
                         </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setExternalApps(
-                            externalApps.filter((_, i) => i !== idx),
-                          );
-                          setPendingChanges(true);
-                        }}
-                        className="self-end sm:self-center p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
-                        title="Remove app"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      )}
                     </div>
                   </div>
                 ))}
