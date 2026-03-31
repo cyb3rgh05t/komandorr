@@ -237,6 +237,9 @@ async def get_recent_history(
                 "pageSize": page_size,
                 "sortKey": "date",
                 "sortDirection": "descending",
+                "includeSeries": "true",
+                "includeEpisode": "true",
+                "includeMovie": "true",
             },
         )
 

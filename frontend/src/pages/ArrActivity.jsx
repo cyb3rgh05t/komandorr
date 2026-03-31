@@ -982,19 +982,23 @@ export default function ArrActivity() {
                           <thead>
                             <tr className="bg-theme-primary-80 border-b border-theme-primary">
                               <th className="text-left py-3 px-4 font-semibold text-black">
-                                Event
+                                {isSonarr ? "Series" : "Movie"}
                               </th>
-                              <th className="text-left py-3 px-4 font-semibold text-black">
-                                Title
-                              </th>
+                              {isSonarr && (
+                                <th className="text-left py-3 px-4 font-semibold text-black">
+                                  Episode
+                                </th>
+                              )}
+                              {isSonarr && (
+                                <th className="text-left py-3 px-4 font-semibold text-black">
+                                  Episode Title
+                                </th>
+                              )}
                               <th className="text-left py-3 px-4 font-semibold text-black">
                                 Quality
                               </th>
                               <th className="text-left py-3 px-4 font-semibold text-black">
-                                Client
-                              </th>
-                              <th className="text-left py-3 px-4 font-semibold text-black">
-                                Indexer
+                                Formats
                               </th>
                               <th className="text-right py-3 px-4 font-semibold text-black">
                                 Date
@@ -1004,69 +1008,69 @@ export default function ArrActivity() {
                           <tbody>
                             {filteredRecords.map((record, idx) => {
                               const evt = getEventIcon(record.eventType);
-                              const EvtIcon = evt.icon;
+                              const seriesTitle = isSonarr
+                                ? record.series?.title || record.sourceTitle || "Unknown"
+                                : record.movie?.title || record.sourceTitle || "Unknown";
+                              const episodeCode = record.episode
+                                ? `S${String(record.episode.seasonNumber || 0).padStart(2, "0")}E${String(record.episode.episodeNumber || 0).padStart(2, "0")}`
+                                : "—";
+                              const episodeTitle = record.episode?.title || "—";
+                              const customFormats = record.customFormats
+                                ?.map((f) => f.name)
+                                .join(", ") || "—";
+
                               return (
                                 <tr
                                   key={record.id || idx}
                                   className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                                 >
                                   <td className="py-3 px-4">
-                                    <div
-                                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ${evt.bg} ${evt.color} border ${evt.border} shadow-sm`}
-                                    >
-                                      <EvtIcon size={12} />
-                                      <span className="text-[11px] font-semibold whitespace-nowrap">
-                                        {evt.label}
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div
+                                        className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded ${evt.bg} ${evt.color} border ${evt.border}`}
+                                        title={evt.label}
+                                      >
+                                        {(() => {
+                                          const EvtIcon = evt.icon;
+                                          return <EvtIcon size={11} />;
+                                        })()}
+                                      </div>
+                                      <span className="font-medium text-theme-text truncate max-w-[250px] group-hover:text-theme-primary transition-colors">
+                                        {seriesTitle}
                                       </span>
                                     </div>
                                   </td>
-                                  <td className="py-3 px-4">
-                                    <div className="min-w-0">
-                                      <div className="font-medium text-theme-text truncate max-w-[300px] group-hover:text-theme-primary transition-colors">
-                                        {record.sourceTitle ||
-                                          record.title ||
-                                          "Unknown"}
-                                      </div>
-                                      {isSonarr && record.episode && (
-                                        <div className="text-xs text-theme-text-muted">
-                                          S
-                                          {String(
-                                            record.episode.seasonNumber || 0,
-                                          ).padStart(2, "0")}
-                                          E
-                                          {String(
-                                            record.episode.episodeNumber || 0,
-                                          ).padStart(2, "0")}
-                                          {record.episode.title &&
-                                            ` - ${record.episode.title}`}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
+                                  {isSonarr && (
+                                    <td className="py-3 px-4">
+                                      <span className="text-sm text-theme-text font-mono">
+                                        {episodeCode}
+                                      </span>
+                                    </td>
+                                  )}
+                                  {isSonarr && (
+                                    <td className="py-3 px-4">
+                                      <span className="text-sm text-theme-text truncate max-w-[200px] block">
+                                        {episodeTitle}
+                                      </span>
+                                    </td>
+                                  )}
                                   <td className="py-3 px-4">
                                     <span className="text-sm text-theme-text">
                                       {record.quality?.quality?.name || "—"}
                                     </span>
                                   </td>
                                   <td className="py-3 px-4">
-                                    {record.downloadClient ? (
-                                      <div className="flex items-center gap-1">
-                                        <HardDrive className="w-3 h-3 text-theme-text-muted" />
-                                        <span className="text-theme-text text-sm">
-                                          {record.downloadClient}
-                                        </span>
+                                    {customFormats !== "—" ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {record.customFormats.map((f, i) => (
+                                          <span
+                                            key={i}
+                                            className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                          >
+                                            {f.name}
+                                          </span>
+                                        ))}
                                       </div>
-                                    ) : (
-                                      <span className="text-xs text-theme-text-muted">
-                                        —
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    {record.indexer ? (
-                                      <span className="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                                        {record.indexer}
-                                      </span>
                                     ) : (
                                       <span className="text-xs text-theme-text-muted">
                                         —
