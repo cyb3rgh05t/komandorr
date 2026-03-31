@@ -64,7 +64,7 @@ export default function Settings() {
   const [showTmdbKey, setShowTmdbKey] = useState(false);
   const [showOverseerrKey, setShowOverseerrKey] = useState(false);
 
-  // Overseerr settings state
+  // VoDWisharr settings state
   const [overseerrUrl, setOverseerrUrl] = useState("");
   const [overseerrApiKey, setOverseerrApiKey] = useState("");
   const [defaultEmailDomain, setDefaultEmailDomain] = useState("");
@@ -532,18 +532,18 @@ export default function Settings() {
         setOverseerrValid(true);
         toast.success(
           t("settings.overseerrValidationSuccess") ||
-            "Overseerr connection successful",
+            "VoDWisharr connection successful",
         );
       } else {
         setOverseerrValid(false);
         toast.error(
           result.message ||
             t("settings.overseerrValidationFailed") ||
-            "Cannot connect to Overseerr",
+            "Cannot connect to VoDWisharr",
         );
       }
     } catch (error) {
-      console.error("Failed to validate Overseerr:", error);
+      console.error("Failed to validate VoDWisharr:", error);
       setOverseerrValid(false);
       toast.error(
         error.message ||
@@ -1318,7 +1318,7 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Overseerr Configuration */}
+        {/* VoDWisharr Configuration */}
         {activeTab === "overseerr" && (
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -1327,7 +1327,8 @@ export default function Settings() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-theme-text">
-                  {t("settings.overseerrSettings") || "Overseerr Configuration"}
+                  {t("settings.overseerrSettings") ||
+                    "VoDWisharr Configuration"}
                 </h3>
               </div>
             </div>
@@ -1339,7 +1340,7 @@ export default function Settings() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("settings.overseerrUrl") || "Overseerr API URL"}
+                      {t("settings.overseerrUrl") || "VoDWisharr API URL"}
                     </label>
                     <input
                       type="text"
@@ -1360,7 +1361,7 @@ export default function Settings() {
 
                   <div>
                     <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("settings.overseerrApiKey") || "Overseerr API Key"}
+                      {t("settings.overseerrApiKey") || "VoDWisharr API Key"}
                     </label>
                     <div className="relative">
                       <input
@@ -1388,7 +1389,7 @@ export default function Settings() {
                     </div>
                     <p className="mt-2 text-xs text-theme-muted">
                       {t("settings.overseerrApiKeyHelp") ||
-                        "API key from Overseerr settings"}
+                        "API key from VoDWisharr settings"}
                     </p>
                   </div>
 

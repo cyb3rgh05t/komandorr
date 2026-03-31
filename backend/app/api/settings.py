@@ -166,7 +166,7 @@ async def get_settings(username: str = Depends(require_auth)):
         server_name=plex_config.get("server_name", settings.PLEX_SERVER_NAME),
     )
 
-    # Get Overseerr settings from config or defaults
+    # Get VoDWisharr settings from config or defaults
     overseerr_config = config_data.get("overseerr", {})
     overseerr_settings = None
     if overseerr_config or settings.OVERSEERR_URL:
@@ -324,7 +324,7 @@ async def update_settings(
         settings.PLEX_SERVER_TOKEN = updates.plex.server_token
         settings.PLEX_SERVER_NAME = updates.plex.server_name
 
-    # Update Overseerr settings
+    # Update VoDWisharr settings
     if updates.overseerr:
         config_data["overseerr"] = {
             "url": updates.overseerr.url,

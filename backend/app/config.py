@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # TMDB Configuration (for invite redemption backgrounds)
     TMDB_API_KEY: str = ""
 
-    # Overseerr Configuration (optional)
+    # VoDWisharr Configuration (optional)
     OVERSEERR_URL: str = ""
     OVERSEERR_API_KEY: str = ""
     DEFAULT_EMAIL_DOMAIN: str = ""

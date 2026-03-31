@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/overseerr", tags=["overseerr"])
 
 
 class OverseerrUserCreate(BaseModel):
-    """Model for creating Overseerr user"""
+    """Model for creating VoDWisharr user"""
 
     username: str
     password: str
@@ -20,7 +20,7 @@ class OverseerrUserCreate(BaseModel):
 
 
 class OverseerrUserResponse(BaseModel):
-    """Response from Overseerr user creation"""
+    """Response from VoDWisharr user creation"""
 
     success: bool
     message: str
@@ -28,7 +28,7 @@ class OverseerrUserResponse(BaseModel):
 
 
 class OverseerrUser(BaseModel):
-    """Model for Overseerr user in list"""
+    """Model for VoDWisharr user in list"""
 
     id: int
     email: str
@@ -45,13 +45,13 @@ class OverseerrUser(BaseModel):
 async def create_overseerr_user(
     user_data: OverseerrUserCreate, username: str = Depends(require_auth)
 ):
-    """Create a user in Overseerr"""
+    """Create a user in VoDWisharr"""
     try:
-        # Check if Overseerr is configured
+        # Check if VoDWisharr is configured
         if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Overseerr is not configured. Please set OVERSEERR_URL and OVERSEERR_API_KEY in config.json",
+                detail="VoDWisharr is not configured. Please set OVERSEERR_URL and OVERSEERR_API_KEY in config.json",
             )
 
         # Construct email
@@ -70,7 +70,7 @@ async def create_overseerr_user(
                     detail="Email or email_domain is required",
                 )
 
-        # Prepare request to Overseerr
+        # Prepare request to VoDWisharr
         headers = {
             "accept": "application/json",
             "Content-Type": "application/json",
@@ -84,7 +84,7 @@ async def create_overseerr_user(
             "permissions": 0,
         }
 
-        # Make request to Overseerr
+        # Make request to VoDWisharr
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 settings.OVERSEERR_URL, json=payload, headers=headers
@@ -92,7 +92,7 @@ async def create_overseerr_user(
 
             if response.status_code == 201:
                 logger.info(
-                    f"User {user_data.username} created in Overseerr by {username}"
+                    f"User {user_data.username} created in VoDWisharr by {username}"
                 )
                 return OverseerrUserResponse(
                     success=True,
@@ -100,36 +100,38 @@ async def create_overseerr_user(
                     username=user_data.username,
                 )
             elif response.status_code == 409:
-                logger.warning(f"User {user_data.username} already exists in Overseerr")
+                logger.warning(
+                    f"User {user_data.username} already exists in VoDWisharr"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail=f"User {user_data.username} already exists in Overseerr",
+                    detail=f"User {user_data.username} already exists in VoDWisharr",
                 )
             else:
                 logger.error(
-                    f"Failed to create Overseerr user: {response.status_code} - {response.text}"
+                    f"Failed to create VoDWisharr user: {response.status_code} - {response.text}"
                 )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Overseerr API error: {response.text}",
+                    detail=f"VoDWisharr API error: {response.text}",
                 )
 
     except httpx.TimeoutException:
-        logger.error("Timeout connecting to Overseerr")
+        logger.error("Timeout connecting to VoDWisharr")
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="Timeout connecting to Overseerr",
+            detail="Timeout connecting to VoDWisharr",
         )
     except httpx.RequestError as e:
-        logger.error(f"Error connecting to Overseerr: {e}")
+        logger.error(f"Error connecting to VoDWisharr: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Failed to connect to Overseerr: {str(e)}",
+            detail=f"Failed to connect to VoDWisharr: {str(e)}",
         )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error creating Overseerr user: {e}", exc_info=True)
+        logger.error(f"Unexpected error creating VoDWisharr user: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Unexpected error: {str(e)}",
@@ -138,16 +140,16 @@ async def create_overseerr_user(
 
 @router.get("/status")
 async def check_overseerr_status(username: str = Depends(require_auth)):
-    """Check if Overseerr is configured and reachable"""
+    """Check if VoDWisharr is configured and reachable"""
     try:
         if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
             return {
                 "configured": False,
                 "reachable": False,
-                "message": "Overseerr is not configured",
+                "message": "VoDWisharr is not configured",
             }
 
-        # Try to reach Overseerr status endpoint
+        # Try to reach VoDWisharr status endpoint
         base_url = settings.OVERSEERR_URL.rsplit("/user", 1)[0]
         status_url = f"{base_url}/status"
 
@@ -163,17 +165,17 @@ async def check_overseerr_status(username: str = Depends(require_auth)):
                 return {
                     "configured": True,
                     "reachable": True,
-                    "message": "Overseerr is configured and reachable",
+                    "message": "VoDWisharr is configured and reachable",
                 }
             else:
                 return {
                     "configured": True,
                     "reachable": False,
-                    "message": f"Overseerr returned status code: {response.status_code}",
+                    "message": f"VoDWisharr returned status code: {response.status_code}",
                 }
 
     except Exception as e:
-        logger.error(f"Error checking Overseerr status: {e}")
+        logger.error(f"Error checking VoDWisharr status: {e}")
         return {
             "configured": True,
             "reachable": False,
@@ -185,13 +187,13 @@ async def check_overseerr_status(username: str = Depends(require_auth)):
 async def get_overseerr_users(
     username: str = Depends(require_auth), search: Optional[str] = None
 ):
-    """Get list of users from Overseerr with optional search"""
+    """Get list of users from VoDWisharr with optional search"""
     try:
-        # Check if Overseerr is configured
+        # Check if VoDWisharr is configured
         if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Overseerr is not configured",
+                detail="VoDWisharr is not configured",
             )
 
         # Prepare request
@@ -210,7 +212,7 @@ async def get_overseerr_users(
 
             # Always fetch ALL users using pagination
             logger.info(
-                f"Fetching Overseerr users{' with search: ' + search if search else ''}..."
+                f"Fetching VoDWisharr users{' with search: ' + search if search else ''}..."
             )
 
             while True:
@@ -254,14 +256,14 @@ async def get_overseerr_users(
                     page += 1
                 else:
                     logger.error(
-                        f"Failed to fetch Overseerr users: {response.status_code} - {response.text}"
+                        f"Failed to fetch VoDWisharr users: {response.status_code} - {response.text}"
                     )
                     raise HTTPException(
                         status_code=status.HTTP_502_BAD_GATEWAY,
-                        detail=f"Overseerr API returned status code: {response.status_code}",
+                        detail=f"VoDWisharr API returned status code: {response.status_code}",
                     )
 
-            logger.info(f"Fetched total of {len(all_users)} users from Overseerr")
+            logger.info(f"Fetched total of {len(all_users)} users from VoDWisharr")
 
             # Apply search filter if provided
             if search:
@@ -285,7 +287,7 @@ async def get_overseerr_users(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching Overseerr users: {e}")
+        logger.error(f"Error fetching VoDWisharr users: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch users: {str(e)}",
@@ -294,13 +296,13 @@ async def get_overseerr_users(
 
 @router.get("/requests")
 async def get_overseerr_requests(username: str = Depends(require_auth)):
-    """Get all requests from Overseerr"""
+    """Get all requests from VoDWisharr"""
     try:
-        # Check if Overseerr is configured
+        # Check if VoDWisharr is configured
         if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Overseerr is not configured",
+                detail="VoDWisharr is not configured",
             )
 
         # Prepare request
@@ -341,7 +343,7 @@ async def get_overseerr_requests(username: str = Depends(require_auth)):
                     page += 1
                 else:
                     logger.error(
-                        f"Overseerr returned status {response.status_code} for requests"
+                        f"VoDWisharr returned status {response.status_code} for requests"
                     )
                     break
 
@@ -350,13 +352,13 @@ async def get_overseerr_requests(username: str = Depends(require_auth)):
     except HTTPException:
         raise
     except httpx.RequestError as e:
-        logger.error(f"Network error fetching Overseerr requests: {e}")
+        logger.error(f"Network error fetching VoDWisharr requests: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Could not connect to Overseerr: {str(e)}",
+            detail=f"Could not connect to VoDWisharr: {str(e)}",
         )
     except Exception as e:
-        logger.error(f"Error fetching Overseerr requests: {e}")
+        logger.error(f"Error fetching VoDWisharr requests: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch requests: {str(e)}",
@@ -365,13 +367,13 @@ async def get_overseerr_requests(username: str = Depends(require_auth)):
 
 @router.delete("/users/{user_id}")
 async def delete_overseerr_user(user_id: int, username: str = Depends(require_auth)):
-    """Delete a user from Overseerr"""
+    """Delete a user from VoDWisharr"""
     try:
-        # Check if Overseerr is configured
+        # Check if VoDWisharr is configured
         if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Overseerr is not configured",
+                detail="VoDWisharr is not configured",
             )
 
         # Prepare request
@@ -388,7 +390,7 @@ async def delete_overseerr_user(user_id: int, username: str = Depends(require_au
             response = await client.delete(delete_url, headers=headers)
 
             if response.status_code in [200, 204]:
-                logger.info(f"User {user_id} deleted from Overseerr by {username}")
+                logger.info(f"User {user_id} deleted from VoDWisharr by {username}")
                 return {
                     "success": True,
                     "message": "User deleted successfully",
@@ -396,13 +398,13 @@ async def delete_overseerr_user(user_id: int, username: str = Depends(require_au
             else:
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Overseerr returned status {response.status_code}",
+                    detail=f"VoDWisharr returned status {response.status_code}",
                 )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting Overseerr user: {e}")
+        logger.error(f"Error deleting VoDWisharr user: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete user: {str(e)}",

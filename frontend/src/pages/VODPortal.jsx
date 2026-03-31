@@ -51,7 +51,7 @@ export default function VODPortal() {
   useEffect(() => {
     console.log("[VODPortal] Component mounted, users.length:", users.length);
 
-    // Check Overseerr status and load settings first
+    // Check VoDWisharr status and load settings first
     checkOverseerrStatus();
     loadSettings();
 
@@ -168,7 +168,7 @@ export default function VODPortal() {
       const data = await api.get("/overseerr/status");
       setOverseerrStatus(data);
     } catch (err) {
-      console.error("Failed to check Overseerr status:", err);
+      console.error("Failed to check VoDWisharr status:", err);
     }
   };
 
@@ -287,7 +287,7 @@ export default function VODPortal() {
         );
       }
     } catch (err) {
-      console.error("Failed to fetch Overseerr users:", err);
+      console.error("Failed to fetch VoDWisharr users:", err);
       toast.error(t("vodPortal.fetchUsersError") || "Failed to fetch users");
     } finally {
       // Only clear loading state if we set it
@@ -319,7 +319,7 @@ export default function VODPortal() {
 
       toast.success(
         t("vodPortal.userCreated") ||
-          `User ${data.username} has been added to Overseerr`,
+          `User ${data.username} has been added to VoDWisharr`,
       );
       // Reset form
       setFormData({
@@ -371,7 +371,7 @@ export default function VODPortal() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Overseerr Status - Only show if not configured or not reachable */}
+      {/* VoDWisharr Status - Only show if not configured or not reachable */}
       {overseerrStatus &&
         (!overseerrStatus.configured || !overseerrStatus.reachable) && (
           <Link
