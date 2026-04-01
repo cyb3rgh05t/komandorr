@@ -296,48 +296,76 @@ export default function VpnProxyMonitor() {
       </div>
 
       {/* System Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-theme-text-muted text-sm mb-1">
-            <ArrowDownToLine className="w-4 h-4" />
-            Bandwidth In
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <ArrowDownToLine className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Bandwidth In
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-green-400">
+                {monitorData?.TotalBwIn
+                  ? monitorData.TotalBwIn.replace("Mbps", " Mbps")
+                  : "—"}
+              </p>
+            </div>
+            <ArrowDownToLine className="w-6 h-6 text-green-400" />
           </div>
-          <p className="text-2xl font-bold text-green-400">
-            {monitorData?.TotalBwIn
-              ? monitorData.TotalBwIn.replace("Mbps", " Mbps")
-              : "—"}
-          </p>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-theme-text-muted text-sm mb-1">
-            <ArrowUpFromLine className="w-4 h-4" />
-            Bandwidth Out
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <ArrowUpFromLine className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Bandwidth Out
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-blue-400">
+                {monitorData?.TotalBwOut
+                  ? monitorData.TotalBwOut.replace("Mbps", " Mbps")
+                  : "—"}
+              </p>
+            </div>
+            <ArrowUpFromLine className="w-6 h-6 text-blue-400" />
           </div>
-          <p className="text-2xl font-bold text-blue-400">
-            {monitorData?.TotalBwOut
-              ? monitorData.TotalBwOut.replace("Mbps", " Mbps")
-              : "—"}
-          </p>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-theme-text-muted text-sm mb-1">
-            <Cpu className="w-4 h-4" />
-            CPU Load
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Cpu className={`w-3.5 h-3.5 ${bwColorClass(monitorData?.CpuLoadColor)}`} />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  CPU Load
+                </span>
+              </div>
+              <p
+                className={`text-2xl font-bold ${bwColorClass(monitorData?.CpuLoadColor)}`}
+              >
+                {monitorData?.CpuLoad || "—"}
+              </p>
+            </div>
+            <Cpu className={`w-6 h-6 ${bwColorClass(monitorData?.CpuLoadColor)}`} />
           </div>
-          <p
-            className={`text-2xl font-bold ${bwColorClass(monitorData?.CpuLoadColor)}`}
-          >
-            {monitorData?.CpuLoad || "—"}
-          </p>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-theme-text-muted text-sm mb-1">
-            <HardDrive className="w-4 h-4" />
-            Memory
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Memory
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-purple-400">
+                {monitorData?.Memory || "—"}
+              </p>
+            </div>
+            <HardDrive className="w-6 h-6 text-purple-400" />
           </div>
-          <p className="text-2xl font-bold text-purple-400">
-            {monitorData?.Memory || "—"}
-          </p>
         </div>
       </div>
 

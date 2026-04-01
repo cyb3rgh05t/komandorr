@@ -334,7 +334,7 @@ export default function Sidebar() {
       ],
     },
     {
-      label: "VPN-Proxy Manager",
+      label: "VPN Manager",
       icon: Shield,
       isTab: true,
       tabName: "vpnproxy",
@@ -547,6 +547,10 @@ export default function Sidebar() {
                   const hasStuckDownloadsBadge =
                     item.tabName === "downloads" && totalStuckDownloads > 0;
 
+                  // Check if VPN Proxy tab has any error containers
+                  const hasVpnProxyBadge =
+                    item.tabName === "vpnproxy" && vpnErrorCount > 0;
+
                   return (
                     <div key={item.label}>
                       <button
@@ -582,6 +586,24 @@ export default function Sidebar() {
                             }`}
                           >
                             !
+                          </span>
+                        )}{" "}
+                        {hasVpnProxyBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vpnErrorCount}
+                          </span>
+                        )}{" "}
+                        {hasVpnProxyBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vpnErrorCount}
                           </span>
                         )}
                         {hasPlexActivityBadge && (

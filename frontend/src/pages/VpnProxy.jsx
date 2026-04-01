@@ -11,9 +11,10 @@ import {
   RefreshCw,
   Search,
   ExternalLink,
-  Copy,
   Network,
-  Lock,
+  CheckCircle2,
+  Power,
+  LayoutGrid,
 } from "lucide-react";
 import { api } from "../services/api";
 
@@ -58,8 +59,8 @@ const StatusBadge = ({ status }) => {
 
 export default function VpnProxy() {
   const [search, setSearch] = useState("");
-  const [copiedProxy, setCopiedProxy] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(null);
 
   // Fetch VPN containers
   const {
@@ -135,13 +136,24 @@ export default function VpnProxy() {
     );
   }, [containers]);
 
-  // Filter containers by tab + search
+  // Filter containers by tab + status + search
   const filtered = useMemo(() => {
     let result = containers;
     if (activeTab !== "all") {
       result = result.filter(
         (c) => (c.vpn_provider || "").toLowerCase() === activeTab.toLowerCase(),
       );
+    }
+    if (statusFilter === "running") {
+      result = result.filter((c) =>
+        isActiveStatus(c.docker_status || c.status),
+      );
+    } else if (statusFilter === "stopped") {
+      result = result.filter(
+        (c) => !isActiveStatus(c.docker_status || c.status),
+      );
+    } else if (statusFilter === "clients") {
+      result = result.filter((c) => (depsMap[c.id] || []).length > 0);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -154,19 +166,13 @@ export default function VpnProxy() {
       );
     }
     return result;
-  }, [containers, activeTab, search, vpnInfoMap]);
+  }, [containers, activeTab, statusFilter, search, vpnInfoMap, depsMap]);
 
   // Stats
   const runningCount = containers.filter((c) =>
     isActiveStatus(c.docker_status || c.status),
   ).length;
   const stoppedCount = containers.length - runningCount;
-
-  const copyProxy = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedProxy(id);
-    setTimeout(() => setCopiedProxy(null), 2000);
-  };
 
   const vpnNotConfigured = !connectionStatus?.connected && !isLoading;
 
@@ -216,66 +222,98 @@ export default function VpnProxy() {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+      {/* Stats Cards (clickable filters) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button
+          onClick={() => setStatusFilter(statusFilter === null ? null : null)}
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+            statusFilter === null
+              ? "border-theme-text-muted/50 ring-1 ring-theme-text-muted/30"
+              : "border-theme hover:border-theme-text-muted/40"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-                Total
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <LayoutGrid className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Total
+                </span>
+              </div>
               <p className="text-2xl font-bold text-theme-text">
                 {containers.length}
               </p>
             </div>
-            <div className="p-2 rounded-lg bg-theme-text-muted/10">
-              <Server className="w-5 h-5 text-theme-text-muted" />
-            </div>
+            <LayoutGrid className="w-6 h-6 text-yellow-400" />
           </div>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-green-500/40 transition-all">
+        </button>
+        <button
+          onClick={() => setStatusFilter(statusFilter === "running" ? null : "running")}
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+            statusFilter === "running"
+              ? "border-green-500/60 ring-1 ring-green-500/30"
+              : "border-theme hover:border-green-500/40"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-                Running
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Online
+                </span>
+              </div>
               <p className="text-2xl font-bold text-green-400">
                 {runningCount}
               </p>
             </div>
-            <div className="p-2 rounded-lg bg-green-500/10">
-              <Activity className="w-5 h-5 text-green-400" />
-            </div>
+            <CheckCircle2 className="w-6 h-6 text-green-400" />
           </div>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-red-500/40 transition-all">
+        </button>
+        <button
+          onClick={() => setStatusFilter(statusFilter === "stopped" ? null : "stopped")}
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+            statusFilter === "stopped"
+              ? "border-red-500/60 ring-1 ring-red-500/30"
+              : "border-theme hover:border-red-500/40"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-                Stopped
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Power className="w-3.5 h-3.5 text-red-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Offline
+                </span>
+              </div>
               <p className="text-2xl font-bold text-red-400">{stoppedCount}</p>
             </div>
-            <div className="p-2 rounded-lg bg-red-500/10">
-              <Server className="w-5 h-5 text-red-400" />
-            </div>
+            <Power className="w-6 h-6 text-red-400" />
           </div>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary/40 transition-all">
+        </button>
+        <button
+          onClick={() => setStatusFilter(statusFilter === "clients" ? null : "clients")}
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+            statusFilter === "clients"
+              ? "border-theme-primary/60 ring-1 ring-theme-primary/30"
+              : "border-theme hover:border-theme-primary/40"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-theme-text-muted uppercase tracking-wider">
-                Clients
-              </span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Network className="w-3.5 h-3.5 text-theme-primary" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Clients
+                </span>
+              </div>
               <p className="text-2xl font-bold text-theme-primary">
                 {Object.values(depsMap).reduce((sum, d) => sum + d.length, 0)}
               </p>
             </div>
-            <div className="p-2 rounded-lg bg-theme-primary/10">
-              <Network className="w-5 h-5 text-theme-primary" />
-            </div>
+            <Network className="w-6 h-6 text-theme-primary" />
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Provider Tabs */}
@@ -350,174 +388,129 @@ export default function VpnProxy() {
             const status =
               container.docker_status || container.status || "unknown";
             const isRunning = isActiveStatus(status);
-            const proxyUrl = container.port_http_proxy
-              ? `http://${window.location.hostname}:${container.port_http_proxy}`
-              : null;
-
             return (
               <div
                 key={container.id}
-                className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary hover:shadow-lg transition-all"
+                className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary/60 hover:shadow-lg transition-all"
               >
                 {/* Card Header */}
-                <div className="p-4 border-b border-theme">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Shield className="w-4 h-4 text-theme-primary flex-shrink-0" />
-                      <h3 className="text-sm font-semibold text-theme-text truncate">
-                        {container.name}
-                      </h3>
-                    </div>
-                    <StatusBadge status={status} />
-                  </div>
-                  {container.description && (
-                    <p className="text-xs text-theme-text-muted truncate">
-                      {container.description}
-                    </p>
-                  )}
+                <div className="px-4 py-3 bg-theme-hover/30 border-b border-theme flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-theme-primary truncate">
+                    {container.name}
+                  </h3>
+                  <StatusBadge status={status} />
                 </div>
 
-                {/* VPN Info */}
-                <div className="p-4 space-y-3">
-                  {/* Provider & Type */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-theme-text-muted">Provider</span>
-                    <span className="text-theme-text font-medium capitalize">
-                      {container.vpn_provider || "—"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-theme-text-muted">Type</span>
-                    <span className="text-theme-text font-medium uppercase">
-                      {container.vpn_type || "—"}
-                    </span>
-                  </div>
-
-                  {/* IP & Location (only when running) */}
-                  {isRunning && info.public_ip && (
-                    <>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-theme-text-muted flex items-center gap-1">
-                          <Globe className="w-3 h-3" />
-                          Public IP
-                        </span>
-                        <span className="text-theme-text font-mono">
-                          {info.public_ip}
-                        </span>
-                      </div>
-                      {(info.country || info.region) && (
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-theme-text-muted">
-                            Location
-                          </span>
-                          <span className="text-theme-text">
-                            {[info.country, info.region]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* VPN Status */}
-                  {isRunning && info.vpn_status && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-theme-text-muted">VPN Status</span>
-                      <span
-                        className={`font-medium ${
-                          info.vpn_status === "running"
-                            ? "text-green-400"
-                            : "text-yellow-400"
-                        }`}
-                      >
-                        {info.vpn_status}
+                {/* Info Section */}
+                <div className="px-4 py-3 border-b border-theme space-y-2">
+                  {/* Provider · Type + VPN Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-theme-text-muted min-w-0">
+                      <Shield className="w-3.5 h-3.5 text-theme-primary flex-shrink-0" />
+                      <span className="font-medium text-theme-text capitalize truncate">
+                        {container.vpn_provider || "—"}
+                      </span>
+                      <span className="text-theme-text-muted">·</span>
+                      <span className="uppercase text-theme-text-muted font-medium">
+                        {container.vpn_type || "—"}
                       </span>
                     </div>
-                  )}
-
-                  {/* Port Forwarding */}
-                  {isRunning &&
-                    info.port_forwarded &&
-                    info.port_forwarded > 0 && (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-theme-text-muted">
-                          Port Forward
-                        </span>
-                        <span className="text-theme-primary font-mono">
-                          {info.port_forwarded}
-                        </span>
-                      </div>
+                    {isRunning && info.vpn_status && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-green-400 flex-shrink-0 ml-2">
+                        <Wifi className="w-3.5 h-3.5" />
+                        {info.vpn_status === "running" ? "Connected" : info.vpn_status}
+                      </span>
                     )}
+                  </div>
 
-                  {/* HTTP Proxy (hide when container has network-mode clients) */}
-                  {proxyUrl && deps.length === 0 && (
-                    <div className="mt-2 pt-2 border-t border-theme">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-theme-text-muted flex items-center gap-1">
-                          <Lock className="w-3 h-3" />
-                          HTTP Proxy
+                  {/* IP & Location */}
+                  {isRunning && info.public_ip && (
+                    <div className="flex items-center gap-3 text-xs text-theme-text-muted">
+                      <span className="flex items-center gap-1 font-mono">
+                        <Globe className="w-3.5 h-3.5" />
+                        {info.public_ip}
+                      </span>
+                      {(info.country || info.region) && (
+                        <span className="flex items-center gap-1">
+                          ⊙{" "}
+                          {[info.country, info.region]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </span>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-theme-text font-mono">
-                            :{container.port_http_proxy}
-                          </span>
-                          <button
-                            onClick={() => copyProxy(proxyUrl, container.id)}
-                            className="p-1 text-theme-text-muted hover:text-theme-primary transition-colors"
-                            title="Copy proxy URL"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                          {copiedProxy === container.id && (
-                            <span className="text-[10px] text-green-400">
-                              Copied!
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Dependent Containers */}
-                  {deps.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-theme">
-                      <p className="text-xs text-theme-text-muted mb-2">
-                        Clients ({deps.length})
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {deps.slice(0, 5).map((dep, i) => {
-                          const depStatus = (
-                            dep.status ||
-                            dep.state ||
-                            ""
-                          ).toLowerCase();
-                          const depActive = isActiveStatus(depStatus);
-                          return (
-                            <span
-                              key={i}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border ${
-                                depActive
-                                  ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                  : "bg-red-500/10 text-red-400 border-red-500/20"
-                              }`}
-                            >
-                              <span
-                                className={`w-1 h-1 rounded-full ${depActive ? "bg-green-400" : "bg-red-400"}`}
-                              />
-                              {dep.name || dep.container_name}
-                            </span>
-                          );
-                        })}
-                        {deps.length > 5 && (
-                          <span className="text-[10px] text-theme-text-muted px-2 py-0.5">
-                            +{deps.length - 5} more
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
+
+                {/* Port Forwarding */}
+                {isRunning &&
+                  info.port_forwarded &&
+                  info.port_forwarded > 0 && (
+                    <div className="mx-3 mt-3 bg-theme-hover/40 border border-theme rounded-lg px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-0.5">
+                        Port Forward
+                      </p>
+                      <p className="text-xs text-theme-primary font-mono">
+                        {info.port_forwarded}
+                      </p>
+                    </div>
+                  )}
+
+                {/* Clients / Network Section */}
+                {deps.length > 0 && (
+                  <div className="mx-3 mt-3 mb-3 bg-theme-hover/40 border border-theme rounded-lg border-l-2 border-l-green-500/60 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-1.5">
+                      Clients ({deps.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {deps.slice(0, 5).map((dep, i) => {
+                        const depStatus = (
+                          dep.status ||
+                          dep.state ||
+                          ""
+                        ).toLowerCase();
+                        const depActive = isActiveStatus(depStatus);
+                        return (
+                          <span
+                            key={i}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border ${
+                              depActive
+                                ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                : "bg-red-500/10 text-red-400 border-red-500/20"
+                            }`}
+                          >
+                            <span
+                              className={`w-1 h-1 rounded-full ${depActive ? "bg-green-400" : "bg-red-400"}`}
+                            />
+                            {dep.name || dep.container_name}
+                          </span>
+                        );
+                      })}
+                      {deps.length > 5 && (
+                        <span className="text-[10px] text-theme-text-muted px-2 py-0.5">
+                          +{deps.length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Network name */}
+                {container.network_name && (
+                  <div className={`mx-3 ${deps.length > 0 ? "mb-3" : "mt-3 mb-3"} bg-theme-hover/40 border border-theme rounded-lg border-l-2 border-l-theme-primary/60 px-3 py-2`}>
+                    <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-0.5">
+                      Network
+                    </p>
+                    <p className="text-xs text-theme-text font-medium">
+                      {container.network_name}
+                    </p>
+                  </div>
+                )}
+
+                {/* Bottom spacing when no sections below info */}
+                {!deps.length && !container.network_name && !(isRunning && info.port_forwarded > 0) && (
+                  <div className="pb-1" />
+                )}
               </div>
             );
           })}
