@@ -180,14 +180,13 @@ function NetworkUsageGrid({ usage, category }) {
 
             {/* Streams List */}
             {streamCount > 0 && (
-              <div className="px-4 pb-4 pt-2 border-t border-theme/20">
+              <div className="px-4 pb-4 pt-2 border-t border-theme/10">
                 <div className="flex flex-wrap gap-1.5">
                   {row.streams.map((s, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-theme-primary bg-theme-primary/10 px-2.5 py-1 rounded-md border border-theme-primary/20"
+                      className="text-xs text-theme-text-muted bg-theme-bg-dark px-2 py-1 rounded border border-theme/30"
                     >
-                      <Tv className="w-3 h-3" />
                       {s}
                     </span>
                   ))}
