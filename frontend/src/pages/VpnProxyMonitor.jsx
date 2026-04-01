@@ -110,7 +110,9 @@ function NetworkUsageGrid({ usage, category }) {
                   className={`inline-flex items-center gap-1.5 text-sm font-bold ${isActive ? "text-green-400" : "text-theme-text-muted"}`}
                 >
                   <Gauge className="w-3.5 h-3.5" />
-                  {row.mbpsFormatted || "0.0Mbps"}
+                  {row.mbpsFormatted
+                    ? row.mbpsFormatted.replace("Mbps", " Mbps")
+                    : "0.0 Mbps"}
                 </span>
               </div>
             </div>
@@ -301,7 +303,9 @@ export default function VpnProxyMonitor() {
             Bandwidth In
           </div>
           <p className="text-2xl font-bold text-green-400">
-            {monitorData?.TotalBwIn || "—"}
+            {monitorData?.TotalBwIn
+              ? monitorData.TotalBwIn.replace("Mbps", " Mbps")
+              : "—"}
           </p>
         </div>
         <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
@@ -310,7 +314,9 @@ export default function VpnProxyMonitor() {
             Bandwidth Out
           </div>
           <p className="text-2xl font-bold text-blue-400">
-            {monitorData?.TotalBwOut || "—"}
+            {monitorData?.TotalBwOut
+              ? monitorData.TotalBwOut.replace("Mbps", " Mbps")
+              : "—"}
           </p>
         </div>
         <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm">
