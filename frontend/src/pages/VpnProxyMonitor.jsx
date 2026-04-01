@@ -337,7 +337,9 @@ export default function VpnProxyMonitor() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
-                <Cpu className={`w-3.5 h-3.5 ${bwColorClass(monitorData?.CpuLoadColor)}`} />
+                <Cpu
+                  className={`w-3.5 h-3.5 ${bwColorClass(monitorData?.CpuLoadColor)}`}
+                />
                 <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
                   CPU Load
                 </span>
@@ -348,7 +350,9 @@ export default function VpnProxyMonitor() {
                 {monitorData?.CpuLoad || "—"}
               </p>
             </div>
-            <Cpu className={`w-6 h-6 ${bwColorClass(monitorData?.CpuLoadColor)}`} />
+            <Cpu
+              className={`w-6 h-6 ${bwColorClass(monitorData?.CpuLoadColor)}`}
+            />
           </div>
         </div>
         <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">

@@ -248,7 +248,9 @@ export default function VpnProxy() {
           </div>
         </button>
         <button
-          onClick={() => setStatusFilter(statusFilter === "running" ? null : "running")}
+          onClick={() =>
+            setStatusFilter(statusFilter === "running" ? null : "running")
+          }
           className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
             statusFilter === "running"
               ? "border-green-500/60 ring-1 ring-green-500/30"
@@ -271,7 +273,9 @@ export default function VpnProxy() {
           </div>
         </button>
         <button
-          onClick={() => setStatusFilter(statusFilter === "stopped" ? null : "stopped")}
+          onClick={() =>
+            setStatusFilter(statusFilter === "stopped" ? null : "stopped")
+          }
           className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
             statusFilter === "stopped"
               ? "border-red-500/60 ring-1 ring-red-500/30"
@@ -292,7 +296,9 @@ export default function VpnProxy() {
           </div>
         </button>
         <button
-          onClick={() => setStatusFilter(statusFilter === "clients" ? null : "clients")}
+          onClick={() =>
+            setStatusFilter(statusFilter === "clients" ? null : "clients")
+          }
           className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
             statusFilter === "clients"
               ? "border-theme-primary/60 ring-1 ring-theme-primary/30"
@@ -418,7 +424,9 @@ export default function VpnProxy() {
                     {isRunning && info.vpn_status && (
                       <span className="flex items-center gap-1 text-xs font-medium text-green-400 flex-shrink-0 ml-2">
                         <Wifi className="w-3.5 h-3.5" />
-                        {info.vpn_status === "running" ? "Connected" : info.vpn_status}
+                        {info.vpn_status === "running"
+                          ? "Connected"
+                          : info.vpn_status}
                       </span>
                     )}
                   </div>
@@ -497,7 +505,9 @@ export default function VpnProxy() {
 
                 {/* Network name */}
                 {container.network_name && (
-                  <div className={`mx-3 ${deps.length > 0 ? "mb-3" : "mt-3 mb-3"} bg-theme-hover/40 border border-theme rounded-lg border-l-2 border-l-theme-primary/60 px-3 py-2`}>
+                  <div
+                    className={`mx-3 ${deps.length > 0 ? "mb-3" : "mt-3 mb-3"} bg-theme-hover/40 border border-theme rounded-lg border-l-2 border-l-theme-primary/60 px-3 py-2`}
+                  >
                     <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-0.5">
                       Network
                     </p>
@@ -508,9 +518,11 @@ export default function VpnProxy() {
                 )}
 
                 {/* Bottom spacing when no sections below info */}
-                {!deps.length && !container.network_name && !(isRunning && info.port_forwarded > 0) && (
-                  <div className="pb-1" />
-                )}
+                {!deps.length &&
+                  !container.network_name &&
+                  !(isRunning && info.port_forwarded > 0) && (
+                    <div className="pb-1" />
+                  )}
               </div>
             );
           })}
