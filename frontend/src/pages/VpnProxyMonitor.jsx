@@ -101,7 +101,9 @@ function NetworkUsageGrid({ usage, category }) {
             {/* Card Header */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${catDotColors[row.category]}`} />
+                <span
+                  className={`w-2 h-2 rounded-full ${catDotColors[row.category]}`}
+                />
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${catColors[row.category]}`}
                 >
@@ -147,7 +149,9 @@ function NetworkUsageGrid({ usage, category }) {
               <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-dark rounded-lg border border-theme">
                 <MonitorPlay className="w-3.5 h-3.5 text-theme-text-muted" />
                 <span className="text-xs text-theme-text-muted">Streams</span>
-                <span className={`text-sm font-bold ${streamCount > 0 ? "text-theme-primary" : "text-white"}`}>
+                <span
+                  className={`text-sm font-bold ${streamCount > 0 ? "text-theme-primary" : "text-white"}`}
+                >
                   {streamCount}
                 </span>
               </div>
@@ -219,10 +223,7 @@ export default function VpnProxyMonitor() {
 
   const configured = statusData?.configured ?? null;
 
-  const {
-    data: monitorData,
-    isFetching: monitorFetching,
-  } = useQuery({
+  const { data: monitorData, isFetching: monitorFetching } = useQuery({
     queryKey: ["vpn-monitor-data"],
     queryFn: () => api.get("/vpn-proxy/monitoring"),
     enabled: configured === true,
@@ -231,10 +232,7 @@ export default function VpnProxyMonitor() {
     placeholderData: (prev) => prev,
   });
 
-  const {
-    data: networkData,
-    isFetching: networkFetching,
-  } = useQuery({
+  const { data: networkData, isFetching: networkFetching } = useQuery({
     queryKey: ["vpn-monitor-network", providerId],
     queryFn: () =>
       api.get(`/vpn-proxy/monitoring/network-usage?provider=${providerId}`),
