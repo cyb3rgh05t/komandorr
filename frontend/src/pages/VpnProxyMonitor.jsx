@@ -91,11 +91,7 @@ function NetworkUsageGrid({ usage, category }) {
         return (
           <div
             key={key}
-            className={`bg-theme-card border rounded-xl overflow-hidden transition-all ${
-              isActive
-                ? "border-green-500/30 shadow-[0_0_12px_-3px_rgba(34,197,94,0.15)]"
-                : "border-theme hover:border-theme-primary/30"
-            }`}
+            className="bg-theme-card border border-theme rounded-xl overflow-hidden transition-all hover:border-theme-primary/30"
           >
             {/* Card Header */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
@@ -180,12 +176,12 @@ function NetworkUsageGrid({ usage, category }) {
 
             {/* Streams List */}
             {streamCount > 0 && (
-              <div className="px-4 pb-4 pt-2 border-t border-theme/10">
+              <div className="px-4 pb-4 pt-2 border-t border-theme">
                 <div className="flex flex-wrap gap-1.5">
                   {row.streams.map((s, i) => (
                     <span
                       key={i}
-                      className="text-xs text-theme-text-muted bg-theme-bg-dark px-2 py-1 rounded border border-theme/30"
+                      className="text-xs text-theme-text-muted bg-theme-bg-dark px-2 py-1 rounded border border-theme"
                     >
                       {s}
                     </span>
@@ -460,57 +456,75 @@ export default function VpnProxyMonitor() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-theme text-theme-text-muted text-left">
-                        <th className="px-4 py-3 font-medium">Stream</th>
-                        <th className="px-4 py-3 font-medium">Provider</th>
-                        <th className="px-4 py-3 font-medium">Quality</th>
-                        <th className="px-4 py-3 font-medium">↓ Down</th>
-                        <th className="px-4 py-3 font-medium">↑ Up</th>
-                        <th className="px-4 py-3 font-medium">Uptime</th>
-                        <th className="px-4 py-3 font-medium">Errors</th>
+                      <tr className="bg-theme-primary-80 border-b border-theme-primary">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          Stream
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          Provider
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          Quality
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          ↓ Down
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          ↑ Up
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          Uptime
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                          Errors
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredReaders.map((r, i) => (
                         <tr
                           key={`${r.StreamName}-${r.User}-${i}`}
-                          className="border-b border-theme/50 hover:bg-white/[0.02] transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
-                          <td className="px-4 py-3 text-white font-medium">
-                            {r.StreamName}
+                          <td className="py-3 px-4">
+                            <span className="font-medium text-theme-text group-hover:text-theme-primary transition-colors">
+                              {r.StreamName}
+                            </span>
                           </td>
-                          <td className="px-4 py-3 text-theme-text-muted">
+                          <td className="py-3 px-4 text-theme-text-muted">
                             {r.ProviderName}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-3 px-4">
                             <span className="px-2 py-0.5 bg-theme-primary/10 text-theme-primary text-xs font-medium rounded">
                               {r.Quality}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-3 px-4">
                             {(() => {
                               const parts = (r.Bw || "").split("/");
                               return (
                                 <span className="font-medium text-green-400">
-                                  {parts[0] || "—"}
+                                  {parts[0] ? `${parts[0]} Mbps` : "—"}
                                 </span>
                               );
                             })()}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-3 px-4">
                             {(() => {
                               const parts = (r.Bw || "").split("/");
                               return (
                                 <span className="font-medium text-blue-400">
-                                  {parts[1] || "—"}
+                                  {parts[1]
+                                    ? parts[1].replace("Mbps", " Mbps")
+                                    : "—"}
                                 </span>
                               );
                             })()}
                           </td>
-                          <td className="px-4 py-3 text-theme-text">
+                          <td className="py-3 px-4 text-theme-text">
                             {r.Uptime}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-3 px-4">
                             <span
                               className={`font-medium ${bwColorClass(r.ErrorsColor)}`}
                             >

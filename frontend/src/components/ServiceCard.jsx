@@ -195,7 +195,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2 pt-3 border-t border-theme/10">
+      <div className="flex items-center gap-2 pt-3 border-t border-theme">
         <button
           onClick={(e) => {
             e.preventDefault();
