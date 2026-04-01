@@ -336,7 +336,12 @@ export default function Sidebar() {
     {
       label: "VPN-Proxy Manager",
       icon: Shield,
-      path: "/vpn-proxy",
+      isTab: true,
+      tabName: "vpnproxy",
+      items: [
+        { path: "/vpn-proxy", label: "VPN-Proxies", icon: Shield },
+        { path: "/vpn-proxy-monitor", label: "Monitor", icon: Activity },
+      ],
     },
     {
       label: t("nav.plex"),
@@ -703,6 +708,11 @@ export default function Sidebar() {
                             const failedUploadsBadge =
                               isFailedItems && failedUploadsCount > 0;
 
+                            // VPN Proxy error badge
+                            const vpnProxyBadge =
+                              subItem.path === "/vpn-proxy" &&
+                              vpnErrorCount > 0;
+
                             // Build array of badges to show
                             const badges = [];
 
@@ -778,6 +788,12 @@ export default function Sidebar() {
                             if (failedUploadsBadge) {
                               badges.push({
                                 count: failedUploadsCount,
+                                color: "bg-red-500",
+                              });
+                            }
+                            if (vpnProxyBadge) {
+                              badges.push({
+                                count: vpnErrorCount,
                                 color: "bg-red-500",
                               });
                             }
@@ -874,10 +890,6 @@ export default function Sidebar() {
                   const isStorage = item.path === "/storage";
                   const showStorageBadge = isStorage && storageIssuesCount > 0;
 
-                  // Check for VPN Proxy error badge
-                  const isVpnProxy = item.path === "/vpn-proxy";
-                  const showVpnErrorBadge = isVpnProxy && vpnErrorCount > 0;
-
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -923,15 +935,6 @@ export default function Sidebar() {
                             }`}
                           >
                             {storageIssuesCount}
-                          </span>
-                        )}
-                        {showVpnErrorBadge && (
-                          <span
-                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
-                              isOpen ? "" : "md:hidden 2xl:inline-flex"
-                            }`}
-                          >
-                            {vpnErrorCount}
                           </span>
                         )}
                       </Link>

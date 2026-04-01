@@ -114,3 +114,35 @@ async def get_docker_status(username: str = Depends(require_auth)):
     if not _is_configured():
         return {"error": "Not configured"}
     return await proxy_get("/system/docker-status")
+
+
+# --- Monitoring endpoints (proxy to VPN-Proxy Manager's monitoring API) ---
+
+
+@router.get("/monitoring/status")
+async def get_monitoring_status(username: str = Depends(require_auth)):
+    """Check if O11 monitoring is configured."""
+    if not _is_configured():
+        return {"configured": False}
+    try:
+        return await proxy_get("/monitoring/status")
+    except Exception:
+        return {"configured": False}
+
+
+@router.get("/monitoring")
+async def get_monitoring(username: str = Depends(require_auth)):
+    """Get monitoring data (readers, system stats)."""
+    if not _is_configured():
+        return {}
+    return await proxy_get("/monitoring") or {}
+
+
+@router.get("/monitoring/network-usage")
+async def get_network_usage(
+    provider: str = "demagentatv", username: str = Depends(require_auth)
+):
+    """Get network usage data for a provider."""
+    if not _is_configured():
+        return {}
+    return await proxy_get(f"/monitoring/network-usage?provider={provider}") or {}
