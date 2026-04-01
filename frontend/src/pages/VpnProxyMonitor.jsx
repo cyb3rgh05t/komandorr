@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   RefreshCw,
@@ -14,10 +15,11 @@ import {
   Gauge,
   Copy,
   Check,
+  Radio,
+  Zap,
 } from "lucide-react";
 import { api } from "../services/api";
 
-const AUTO_REFRESH_INTERVAL = 5000;
 const CATEGORIES = ["Script", "Manifest", "Media"];
 
 function bwColorClass(color) {
@@ -66,6 +68,12 @@ function NetworkUsageGrid({ usage, category }) {
     Media: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   };
 
+  const catDotColors = {
+    Script: "bg-blue-400",
+    Manifest: "bg-purple-400",
+    Media: "bg-amber-400",
+  };
+
   if (rows.length === 0) {
     return (
       <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
@@ -80,57 +88,102 @@ function NetworkUsageGrid({ usage, category }) {
       {rows.map((row) => {
         const key = `${row.category}-${row.url}`;
         const streamCount = row.streams.length;
+        const isActive = row.mbps > 0;
         return (
           <div
             key={key}
-            className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/30 transition-colors"
+            className={`bg-theme-card border rounded-xl overflow-hidden transition-all ${
+              isActive
+                ? "border-green-500/30 shadow-[0_0_12px_-3px_rgba(34,197,94,0.15)]"
+                : "border-theme hover:border-theme-primary/30"
+            }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${catColors[row.category]}`}
-              >
-                {row.category}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1.5 text-sm font-bold ${row.mbps > 0 ? "text-green-400" : "text-red-400"}`}
-              >
-                <Gauge className="w-3.5 h-3.5" />
-                {row.mbpsFormatted || "—"}
-              </span>
+            {/* Card Header */}
+            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${catDotColors[row.category]}`} />
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${catColors[row.category]}`}
+                >
+                  {row.category}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {isActive && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20">
+                    <Radio className="w-2.5 h-2.5 animate-pulse" />
+                    Live
+                  </span>
+                )}
+                <span
+                  className={`inline-flex items-center gap-1.5 text-sm font-bold ${isActive ? "text-green-400" : "text-theme-text-muted"}`}
+                >
+                  <Gauge className="w-3.5 h-3.5" />
+                  {row.mbpsFormatted || "0.0Mbps"}
+                </span>
+              </div>
             </div>
 
-            <button
-              onClick={() => copyUrl(row.url)}
-              className="group flex items-center gap-2 w-full bg-theme-bg-dark border border-theme rounded-lg px-3 py-2 mb-3 hover:border-theme-primary/50 transition-colors"
-              title="Click to copy"
-            >
-              <span className="text-theme-primary font-mono text-xs truncate flex-1 text-left">
-                {row.url}
-              </span>
-              {copiedUrl === row.url ? (
-                <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-              ) : (
-                <Copy className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-primary shrink-0 transition-colors" />
+            {/* Proxy URL */}
+            <div className="px-4 pb-3">
+              <button
+                onClick={() => copyUrl(row.url)}
+                className="group flex items-center gap-2 w-full bg-theme-bg-dark border border-theme rounded-lg px-3 py-2 hover:border-theme-primary/50 transition-colors"
+                title="Click to copy"
+              >
+                <span className="text-theme-primary font-mono text-xs truncate flex-1 text-left">
+                  {row.url}
+                </span>
+                {copiedUrl === row.url ? (
+                  <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-primary shrink-0 transition-colors" />
+                )}
+              </button>
+            </div>
+
+            {/* Stats Row */}
+            <div className="px-4 pb-3 flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-dark rounded-lg border border-theme">
+                <MonitorPlay className="w-3.5 h-3.5 text-theme-text-muted" />
+                <span className="text-xs text-theme-text-muted">Streams</span>
+                <span className={`text-sm font-bold ${streamCount > 0 ? "text-theme-primary" : "text-white"}`}>
+                  {streamCount}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-dark rounded-lg border border-theme">
+                <Zap className="w-3.5 h-3.5 text-theme-text-muted" />
+                <span className="text-xs text-theme-text-muted">Max</span>
+                <span className="text-sm font-bold text-white">
+                  {row.maxStreams}
+                </span>
+              </div>
+              {streamCount > 0 && row.maxStreams > 0 && (
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-theme-bg-dark rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        streamCount / row.maxStreams > 0.8
+                          ? "bg-red-500"
+                          : streamCount / row.maxStreams > 0.5
+                            ? "bg-yellow-500"
+                            : "bg-theme-primary"
+                      }`}
+                      style={{
+                        width: `${Math.min(100, (streamCount / row.maxStreams) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-theme-text-muted">
+                    {Math.round((streamCount / row.maxStreams) * 100)}%
+                  </span>
+                </div>
               )}
-            </button>
-
-            <div className="flex items-center gap-4 mb-3">
-              <div>
-                <p className="text-[10px] text-theme-text-muted uppercase tracking-wider">
-                  Streams
-                </p>
-                <p className="text-sm font-bold text-white">{streamCount}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-theme-text-muted uppercase tracking-wider">
-                  Max
-                </p>
-                <p className="text-sm font-bold text-white">{row.maxStreams}</p>
-              </div>
             </div>
 
+            {/* Streams List */}
             {streamCount > 0 && (
-              <div className="pt-3 border-t border-theme/50">
+              <div className="px-4 pb-4 pt-2 border-t border-theme/50">
                 <div className="flex flex-wrap gap-1.5">
                   {row.streams.map((s, i) => (
                     <span
@@ -151,62 +204,52 @@ function NetworkUsageGrid({ usage, category }) {
 }
 
 export default function VpnProxyMonitor() {
-  const [monitorData, setMonitorData] = useState(null);
-  const [networkData, setNetworkData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [configured, setConfigured] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [providerId, setProviderId] = useState("demagentatv");
   const [tab, setTab] = useState("network");
   const [networkTab, setNetworkTab] = useState("all");
-  const intervalRef = useRef(null);
 
-  const fetchData = useCallback(
-    async (silent = false) => {
-      try {
-        if (!silent) setRefreshing(true);
-        const [monRes, netRes] = await Promise.all([
-          api.get("/vpn-proxy/monitoring"),
-          api.get(`/vpn-proxy/monitoring/network-usage?provider=${providerId}`),
-        ]);
-        setMonitorData(monRes);
-        setNetworkData(netRes);
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [providerId],
-  );
+  const { data: statusData, isLoading: statusLoading } = useQuery({
+    queryKey: ["vpn-monitor-status"],
+    queryFn: () => api.get("/vpn-proxy/monitoring/status"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
 
-  const checkStatus = useCallback(async () => {
-    try {
-      const res = await api.get("/vpn-proxy/monitoring/status");
-      setConfigured(res.configured);
-      if (res.configured) fetchData();
-      else setLoading(false);
-    } catch {
-      setConfigured(false);
-      setLoading(false);
-    }
-  }, [fetchData]);
+  const configured = statusData?.configured ?? null;
 
-  useEffect(() => {
-    checkStatus();
-  }, [checkStatus]);
+  const {
+    data: monitorData,
+    isFetching: monitorFetching,
+  } = useQuery({
+    queryKey: ["vpn-monitor-data"],
+    queryFn: () => api.get("/vpn-proxy/monitoring"),
+    enabled: configured === true,
+    staleTime: 3000,
+    refetchInterval: 5000,
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => {
-    if (!autoRefresh || !configured) return;
-    intervalRef.current = setInterval(
-      () => fetchData(true),
-      AUTO_REFRESH_INTERVAL,
-    );
-    return () => clearInterval(intervalRef.current);
-  }, [autoRefresh, configured, fetchData]);
+  const {
+    data: networkData,
+    isFetching: networkFetching,
+  } = useQuery({
+    queryKey: ["vpn-monitor-network", providerId],
+    queryFn: () =>
+      api.get(`/vpn-proxy/monitoring/network-usage?provider=${providerId}`),
+    enabled: configured === true && providerId.length > 0,
+    staleTime: 3000,
+    refetchInterval: 5000,
+    placeholderData: (prev) => prev,
+  });
+
+  const refreshing = monitorFetching || networkFetching;
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["vpn-monitor-data"] });
+    queryClient.invalidateQueries({ queryKey: ["vpn-monitor-network"] });
+  };
 
   const readers = monitorData?.Readers || [];
   const filteredReaders = readers.filter((r) => {
@@ -222,7 +265,7 @@ export default function VpnProxyMonitor() {
 
   const usage = networkData?.Usage || {};
 
-  if (loading) {
+  if (statusLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-theme-primary" />
@@ -230,7 +273,7 @@ export default function VpnProxyMonitor() {
     );
   }
 
-  if (!configured) {
+  if (configured === false) {
     return (
       <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-6">
         <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
@@ -252,7 +295,7 @@ export default function VpnProxyMonitor() {
       {/* Header */}
       <div className="flex items-center justify-end">
         <button
-          onClick={() => fetchData()}
+          onClick={handleRefresh}
           disabled={refreshing}
           className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -388,8 +431,6 @@ export default function VpnProxyMonitor() {
                   placeholder="Provider ID..."
                   value={providerId}
                   onChange={(e) => setProviderId(e.target.value)}
-                  onBlur={() => fetchData()}
-                  onKeyDown={(e) => e.key === "Enter" && fetchData()}
                   className="w-48 pl-9 pr-4 py-2 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted text-sm focus:outline-none focus:border-theme-primary"
                 />
               </div>
