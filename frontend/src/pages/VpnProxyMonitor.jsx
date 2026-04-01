@@ -135,7 +135,7 @@ function NetworkUsageGrid({ usage, category }) {
                   {row.streams.map((s, i) => (
                     <span
                       key={i}
-                      className="text-xs text-theme-text bg-theme-bg-dark px-2 py-1 rounded border border-theme/50"
+                      className="text-xs text-theme-primary bg-theme-primary/10 px-2 py-1 rounded border border-theme-primary/30"
                     >
                       {s}
                     </span>
@@ -307,71 +307,79 @@ export default function VpnProxyMonitor() {
 
       {/* Tabs */}
       <div className="space-y-4">
-        <div className="flex items-center gap-1 border-b border-theme">
-          <button
-            onClick={() => setTab("network")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === "network"
-                ? "border-theme-primary text-theme-primary"
-                : "border-transparent text-theme-text-muted hover:text-theme-text"
-            }`}
-          >
-            <Wifi className="w-4 h-4" />
-            Network Usage
-          </button>
-          <button
-            onClick={() => setTab("streams")}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === "streams"
-                ? "border-theme-primary text-theme-primary"
-                : "border-transparent text-theme-text-muted hover:text-theme-text"
-            }`}
-          >
-            <MonitorPlay className="w-4 h-4" />
-            Active Streams
-            <span className="px-1.5 py-0.5 bg-theme-primary/10 text-theme-primary text-xs font-bold rounded-full">
-              {readers.length}
-            </span>
-          </button>
+        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            <button
+              onClick={() => setTab("network")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                tab === "network"
+                  ? "bg-theme-primary text-black shadow-md"
+                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+              }`}
+            >
+              <Wifi className="w-4 h-4" />
+              Network Usage
+            </button>
+            <button
+              onClick={() => setTab("streams")}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                tab === "streams"
+                  ? "bg-theme-primary text-black shadow-md"
+                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+              }`}
+            >
+              <MonitorPlay className="w-4 h-4" />
+              Active Streams
+              <span
+                className={`ml-2 text-xs ${
+                  tab === "streams" ? "text-black/70" : "text-theme-text-muted"
+                }`}
+              >
+                ({readers.length})
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Network Usage Tab */}
         {tab === "network" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="inline-flex gap-1 bg-theme-card border border-theme rounded-lg p-1">
-                {["all", ...CATEGORIES].map((cat) => {
-                  const count =
-                    cat === "all"
-                      ? CATEGORIES.reduce(
-                          (sum, c) =>
-                            sum + Object.keys(usage[c]?.Proxy || {}).length,
-                          0,
-                        )
-                      : Object.keys(usage[cat]?.Proxy || {}).length;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setNetworkTab(cat)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                        networkTab === cat
-                          ? "bg-theme-primary text-black"
-                          : "text-theme-text-muted hover:text-theme-text"
-                      }`}
-                    >
-                      {cat === "all" ? "All" : cat}
-                      <span
-                        className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+                <div className="flex gap-2 min-w-max">
+                  {["all", ...CATEGORIES].map((cat) => {
+                    const count =
+                      cat === "all"
+                        ? CATEGORIES.reduce(
+                            (sum, c) =>
+                              sum + Object.keys(usage[c]?.Proxy || {}).length,
+                            0,
+                          )
+                        : Object.keys(usage[cat]?.Proxy || {}).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setNetworkTab(cat)}
+                        className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                           networkTab === cat
-                            ? "bg-black/20 text-black"
-                            : "bg-theme-bg-dark text-theme-text-muted"
+                            ? "bg-theme-primary text-black shadow-md"
+                            : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
                         }`}
                       >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
+                        {cat === "all" ? "All" : cat}
+                        <span
+                          className={`ml-2 text-xs ${
+                            networkTab === cat
+                              ? "text-black/70"
+                              : "text-theme-text-muted"
+                          }`}
+                        >
+                          ({count})
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
