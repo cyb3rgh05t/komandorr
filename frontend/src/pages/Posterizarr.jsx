@@ -45,7 +45,32 @@ function formatTimestamp(ts) {
     return ts;
   }
 }
+function formatDate(ts) {
+  if (!ts) return "\u2014";
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return ts;
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  } catch {
+    return ts;
+  }
+}
 
+function formatTime(ts) {
+  if (!ts) return "\u2014";
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return ts;
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  } catch {
+    return ts;
+  }
+}
 export default function Posterizarr() {
   // Connection check
   const { data: connStatus } = useQuery({
@@ -555,6 +580,9 @@ export default function Posterizarr() {
                   <thead>
                     <tr className="bg-theme-primary-80 border-b border-theme-primary">
                       <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Date
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
                         Time
                       </th>
                       <th className="text-left py-3 px-4 text-sm font-semibold text-black">
@@ -586,7 +614,12 @@ export default function Posterizarr() {
                         >
                           <td className="px-3 py-2.5">
                             <span className="text-sm font-bold text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                              {formatTimestamp(item.timestamp)}
+                              {formatDate(item.timestamp)}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="text-sm font-bold text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
+                              {formatTime(item.timestamp)}
                             </span>
                           </td>
                           <td className="px-3 py-2.5">
