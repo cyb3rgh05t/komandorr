@@ -913,6 +913,23 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Traffic Chart */}
+      {dashboardVisibility.trafficChart && trafficData && (
+        <DashboardTrafficCards
+          trafficData={trafficData}
+          onRefresh={handleRefreshTraffic}
+          refreshing={trafficFetching}
+        />
+      )}
+
+      {/* VPN World Map */}
+      {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
+        <DashboardVpnMap
+          containers={vpnContainers}
+          vpnInfoMap={vpnInfoMap}
+        />
+      )}
+
       {/* Tabbed View: Services / VPN Proxy */}
       {(dashboardVisibility.services ||
         (vpnConnectionStatus?.connected && dashboardVisibility.vpnList)) && (
@@ -1124,40 +1141,6 @@ export default function Dashboard() {
                     if (!hasMultipleGroups) {
                       return (
                         <div className="space-y-6">
-                          {/* Traffic Chart */}
-                          {dashboardVisibility.trafficChart && (
-                            <DashboardTrafficCards
-                              trafficData={filteredTrafficData}
-                              onRefresh={handleRefreshTraffic}
-                              refreshing={trafficFetching}
-                            />
-                          )}
-
-                          {/* VPN World Map */}
-                          {vpnConnectionStatus?.connected &&
-                            dashboardVisibility.vpnMap && (
-                              <DashboardVpnMap
-                                containers={vpnContainers}
-                                vpnInfoMap={vpnInfoMap}
-                              />
-                            )}
-
-                          {/* Service Header */}
-                          {dashboardVisibility.services && (
-                            <div
-                              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => navigate("/services")}
-                            >
-                              <Server className="w-5 h-5 text-theme-primary" />
-                              <span className="text-lg font-semibold text-theme-text">
-                                {t("dashboard.services", "Services")}
-                              </span>
-                              <span className="text-sm text-theme-text-muted">
-                                ({filteredServices.length})
-                              </span>
-                            </div>
-                          )}
-
                           {Object.entries(grouped).map(
                             ([groupName, groupServices]) => (
                               <div key={groupName} className="space-y-4">
@@ -1235,40 +1218,6 @@ export default function Dashboard() {
                             ))}
                           </div>
                         </div>
-
-                        {/* Traffic Chart - filtered by active tab */}
-                        {dashboardVisibility.trafficChart && (
-                          <DashboardTrafficCards
-                            trafficData={filteredTrafficData}
-                            onRefresh={handleRefreshTraffic}
-                            refreshing={trafficFetching}
-                          />
-                        )}
-
-                        {/* VPN World Map */}
-                        {vpnConnectionStatus?.connected &&
-                          dashboardVisibility.vpnMap && (
-                            <DashboardVpnMap
-                              containers={vpnContainers}
-                              vpnInfoMap={vpnInfoMap}
-                            />
-                          )}
-
-                        {/* Service Header */}
-                        {dashboardVisibility.services && (
-                          <div
-                            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => navigate("/services")}
-                          >
-                            <Server className="w-5 h-5 text-theme-primary" />
-                            <span className="text-lg font-semibold text-theme-text">
-                              {t("dashboard.services", "Services")}
-                            </span>
-                            <span className="text-sm text-theme-text-muted">
-                              ({filteredServices.length})
-                            </span>
-                          </div>
-                        )}
 
                         {/* Active Tab Content */}
                         {activeTab &&
