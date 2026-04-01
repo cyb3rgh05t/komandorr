@@ -924,10 +924,7 @@ export default function Dashboard() {
 
       {/* VPN World Map */}
       {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
-        <DashboardVpnMap
-          containers={vpnContainers}
-          vpnInfoMap={vpnInfoMap}
-        />
+        <DashboardVpnMap containers={vpnContainers} vpnInfoMap={vpnInfoMap} />
       )}
 
       {/* Tabbed View: Services / VPN Proxy */}
