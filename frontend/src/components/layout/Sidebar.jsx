@@ -500,7 +500,7 @@ export default function Sidebar() {
 
           {/* Navigation */}
           <nav
-            className={`flex-1 transition-all ${
+            className={`flex-1 overflow-y-auto overflow-x-hidden transition-all scrollbar-thin scrollbar-thumb-theme-border scrollbar-track-transparent ${
               isOpen ? "p-4" : "md:p-2 2xl:p-4"
             }`}
           >
