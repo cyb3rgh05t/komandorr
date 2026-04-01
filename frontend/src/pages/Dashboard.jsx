@@ -160,6 +160,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
+  const [dashboardMainTab, setDashboardMainTab] = useState("services");
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState({
@@ -912,12 +913,65 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Services Grid */}
-      {dashboardVisibility.services && (
-        <>
-          {loading ? (
-            <div className="space-y-6">
-              {/* Service Table Loading */}
+      {/* Tabbed View: Services / VPN Proxy */}
+      {(dashboardVisibility.services || (vpnConnectionStatus?.connected && dashboardVisibility.vpnList)) && (
+        <div className="space-y-6">
+          {/* Tab Header */}
+          <div className="border-b border-theme">
+            <div className="flex gap-6">
+              {dashboardVisibility.services && (
+                <button
+                  onClick={() => setDashboardMainTab("services")}
+                  className={`flex items-center gap-2 pb-3 px-1 text-sm font-semibold transition-all border-b-2 ${
+                    dashboardMainTab === "services"
+                      ? "border-theme-primary text-theme-primary"
+                      : "border-transparent text-theme-text-muted hover:text-theme-text hover:border-theme-text-muted/30"
+                  }`}
+                >
+                  <Server className="w-4 h-4" />
+                  {t("dashboard.services", "Services")}
+                  <span
+                    className={`ml-1 px-2 py-0.5 rounded-md text-xs font-bold ${
+                      dashboardMainTab === "services"
+                        ? "bg-theme-primary/20 text-theme-primary"
+                        : "bg-theme-hover text-theme-text-muted"
+                    }`}
+                  >
+                    {services.length}
+                  </span>
+                </button>
+              )}
+              {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
+                <button
+                  onClick={() => setDashboardMainTab("vpn")}
+                  className={`flex items-center gap-2 pb-3 px-1 text-sm font-semibold transition-all border-b-2 ${
+                    dashboardMainTab === "vpn"
+                      ? "border-theme-primary text-theme-primary"
+                      : "border-transparent text-theme-text-muted hover:text-theme-text hover:border-theme-text-muted/30"
+                  }`}
+                >
+                  <Shield className="w-4 h-4" />
+                  VPN Proxy
+                  <span
+                    className={`ml-1 px-2 py-0.5 rounded-md text-xs font-bold ${
+                      dashboardMainTab === "vpn"
+                        ? "bg-theme-primary/20 text-theme-primary"
+                        : "bg-theme-hover text-theme-text-muted"
+                    }`}
+                  >
+                    {vpnContainers.length}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {dashboardMainTab === "services" && dashboardVisibility.services && (
+            <>
+              {loading ? (
+                <div className="space-y-6">
+                  {/* Service Table Loading */}
               <LoadingTableSkeleton />
             </div>
           ) : services.length === 0 ? (
@@ -1223,17 +1277,16 @@ export default function Dashboard() {
               })()}
             </>
           )}
-        </>
-      )}
 
-      {/* VPN Proxy Table */}
-      {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
-        <DashboardVpnTable
-          containers={vpnContainers}
-          vpnInfoMap={vpnInfoMap}
-          depsMap={vpnDepsMap}
-          connected={vpnConnectionStatus?.connected}
-        />
+          {dashboardMainTab === "vpn" && vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
+            <DashboardVpnTable
+              containers={vpnContainers}
+              vpnInfoMap={vpnInfoMap}
+              depsMap={vpnDepsMap}
+              connected={vpnConnectionStatus?.connected}
+            />
+          )}
+        </div>
       )}
 
       {/* Modal */}
