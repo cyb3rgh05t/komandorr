@@ -226,10 +226,10 @@ export default function VpnProxy() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
           onClick={() => setStatusFilter(statusFilter === null ? null : null)}
-          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-yellow-500/10 ${
             statusFilter === null
-              ? "border-theme-text-muted/50 ring-1 ring-theme-text-muted/30"
-              : "border-theme hover:border-theme-text-muted/40"
+              ? "border-yellow-500 ring-1 ring-yellow-500/20"
+              : "border-theme hover:border-yellow-500/50"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -251,10 +251,10 @@ export default function VpnProxy() {
           onClick={() =>
             setStatusFilter(statusFilter === "running" ? null : "running")
           }
-          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-green-500/10 ${
             statusFilter === "running"
-              ? "border-green-500/60 ring-1 ring-green-500/30"
-              : "border-theme hover:border-green-500/40"
+              ? "border-green-500 ring-1 ring-green-500/20"
+              : "border-theme hover:border-green-500/50"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -276,10 +276,10 @@ export default function VpnProxy() {
           onClick={() =>
             setStatusFilter(statusFilter === "stopped" ? null : "stopped")
           }
-          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-red-500/10 ${
             statusFilter === "stopped"
-              ? "border-red-500/60 ring-1 ring-red-500/30"
-              : "border-theme hover:border-red-500/40"
+              ? "border-red-500 ring-1 ring-red-500/20"
+              : "border-theme hover:border-red-500/50"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -299,10 +299,10 @@ export default function VpnProxy() {
           onClick={() =>
             setStatusFilter(statusFilter === "clients" ? null : "clients")
           }
-          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer ${
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-theme-primary/10 ${
             statusFilter === "clients"
-              ? "border-theme-primary/60 ring-1 ring-theme-primary/30"
-              : "border-theme hover:border-theme-primary/40"
+              ? "border-theme-primary ring-1 ring-theme-primary/20"
+              : "border-theme hover:border-theme-primary/50"
           }`}
         >
           <div className="flex items-center justify-between">

@@ -223,7 +223,7 @@ export default function Posterizarr() {
           {/* ── Stat Cards ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {/* Status */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary hover:bg-theme-primary-10 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -248,7 +248,7 @@ export default function Posterizarr() {
             </div>
 
             {/* Version */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary hover:bg-theme-primary-10 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -276,7 +276,7 @@ export default function Posterizarr() {
             </div>
 
             {/* Next Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary hover:bg-theme-primary-10 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -295,7 +295,7 @@ export default function Posterizarr() {
             </div>
 
             {/* Last Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md hover:border-theme-primary hover:bg-theme-primary-10 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">

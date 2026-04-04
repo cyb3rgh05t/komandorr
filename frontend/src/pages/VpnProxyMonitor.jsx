@@ -297,7 +297,7 @@ export default function VpnProxyMonitor() {
 
       {/* System Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3 hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
@@ -315,7 +315,7 @@ export default function VpnProxyMonitor() {
             <ArrowDownToLine className="w-6 h-6 text-green-400" />
           </div>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3 hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
@@ -333,7 +333,7 @@ export default function VpnProxyMonitor() {
             <ArrowUpFromLine className="w-6 h-6 text-blue-400" />
           </div>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3 hover:shadow-md transition-all hover:border-theme-primary/50 hover:bg-theme-primary/10">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
@@ -355,7 +355,7 @@ export default function VpnProxyMonitor() {
             />
           </div>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3">
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3 hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">

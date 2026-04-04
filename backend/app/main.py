@@ -416,8 +416,8 @@ async def upload_icon(
         )
 
     # Create icons directory if it doesn't exist
-    icons_dir = Path(__file__).parent.parent / "icons"
-    icons_dir.mkdir(exist_ok=True)
+    icons_dir = Path(__file__).parent.parent / "data" / "icons"
+    icons_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate unique filename
     file_extension = Path(file.filename or "icon.png").suffix
@@ -438,8 +438,8 @@ async def upload_icon(
 
 
 # Mount icons directory for serving uploaded icons
-icons_dir = Path(__file__).parent.parent / "icons"
-icons_dir.mkdir(exist_ok=True)
+icons_dir = Path(__file__).parent.parent / "data" / "icons"
+icons_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/icons", StaticFiles(directory=str(icons_dir)), name="icons")
 
 # Mount static files for frontend (if dist folder exists)

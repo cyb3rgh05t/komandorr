@@ -482,7 +482,7 @@ const InvitesManager = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             <div
               onClick={() => setFilter("all")}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
+              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -498,7 +498,7 @@ const InvitesManager = () => {
               </div>
             </div>
 
-            <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -539,9 +539,9 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("active")}
-              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-green-500/10 ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:bg-green-500/10 ${
                 filter === "active"
-                  ? "border-green-500 ring-2 ring-green-500/20"
+                  ? "border-green-500 ring-1 ring-green-500/20"
                   : "border-theme hover:border-green-500/50"
               }`}
             >
@@ -586,9 +586,9 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("redeemed")}
-              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-blue-500/10 ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:bg-blue-500/10 ${
                 filter === "redeemed"
-                  ? "border-blue-500 ring-2 ring-blue-500/20"
+                  ? "border-blue-500 ring-1 ring-blue-500/20"
                   : "border-theme hover:border-blue-500/50"
               }`}
             >
@@ -635,9 +635,9 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("used-up")}
-              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-orange-500/10 ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:bg-orange-500/10 ${
                 filter === "used-up"
-                  ? "border-orange-500 ring-2 ring-orange-500/20"
+                  ? "border-orange-500 ring-1 ring-orange-500/20"
                   : "border-theme hover:border-orange-500/50"
               }`}
             >
@@ -657,9 +657,9 @@ const InvitesManager = () => {
 
             <div
               onClick={() => setFilter("expired")}
-              className={`bg-theme-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-red-500/10 ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:bg-red-500/10 ${
                 filter === "expired"
-                  ? "border-red-500 ring-2 ring-red-500/20"
+                  ? "border-red-500 ring-1 ring-red-500/20"
                   : "border-theme hover:border-red-500/50"
               }`}
             >
