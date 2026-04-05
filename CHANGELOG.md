@@ -81,13 +81,13 @@
 
 **Settings Page Improvements**
 • **Section reorganization**
-◦ Reordered settings cards: Auth → General → Plex → Overseerr → \*arr → Uploader → API
+◦ Reordered settings cards: Auth → General → Plex → VoDWisharr → \*arr → Uploader → API
 ◦ Logical grouping for better user experience
 
 • **Auto-test on load**
 ◦ Added automatic connection testing for Uploader service on settings page load
 ◦ Added automatic connection testing for all \*arr instances on settings page load
-◦ Feature parity with Plex and Overseerr connection testing
+◦ Feature parity with Plex and VoDWisharr connection testing
 ◦ Immediate feedback on service health without manual testing
 
 • **Unsaved changes warning**

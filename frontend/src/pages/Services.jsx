@@ -328,7 +328,7 @@ export default function Services() {
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-theme-primary/40"
+              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-theme-primary hover:bg-theme-primary/10"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">
@@ -348,10 +348,10 @@ export default function Services() {
 
             <button
               onClick={() => setStatusFilter("online")}
-              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all text-left hover:bg-green-500/10 ${
                 statusFilter === "online"
-                  ? "border-green-500/70 ring-2 ring-green-500/15 bg-green-500/5"
-                  : "hover:border-green-500/40"
+                  ? "border-green-500 ring-1 ring-green-500/20"
+                  : "border-theme hover:border-green-500/50"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -372,10 +372,10 @@ export default function Services() {
 
             <button
               onClick={() => setStatusFilter("offline")}
-              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all text-left hover:bg-red-500/10 ${
                 statusFilter === "offline"
-                  ? "border-red-500/70 ring-2 ring-red-500/15 bg-red-500/5"
-                  : "hover:border-red-500/40"
+                  ? "border-red-500 ring-1 ring-red-500/20"
+                  : "border-theme hover:border-red-500/50"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -396,10 +396,10 @@ export default function Services() {
 
             <button
               onClick={() => setStatusFilter("problem")}
-              className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${
+              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all text-left hover:bg-amber-500/10 ${
                 statusFilter === "problem"
-                  ? "border-amber-500/70 ring-2 ring-amber-500/15 bg-amber-500/5"
-                  : "hover:border-amber-500/40"
+                  ? "border-amber-500 ring-1 ring-amber-500/20"
+                  : "border-theme hover:border-amber-500/50"
               }`}
             >
               <div className="flex items-center justify-between gap-3">

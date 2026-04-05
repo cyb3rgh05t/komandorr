@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
@@ -497,8 +498,31 @@ const UserAccounts = () => {
     }
   };
 
+  const plexNotConfigured = plexLiveStatsData?.error
+    ?.toLowerCase()
+    .includes("not configured");
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Not Configured Banner */}
+      {plexNotConfigured && (
+        <Link
+          to="/settings?tab=plex"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Users className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                Plex is not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Header with Search & Refresh */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
@@ -927,7 +951,7 @@ const UserAccounts = () => {
                   return paginatedUsers.map((user) => (
                     <tr
                       key={user.id}
-                      className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                     >
                       {/* User Column (Avatar + Username) */}
                       <td className="py-3 px-4">

@@ -14,6 +14,9 @@ from app.services.redis_cache import cache_get, cache_set, cache_delete
 
 router = APIRouter(prefix="/api/plex", tags=["plex"])
 
+# Track whether we already logged the "not configured" message
+_logged_not_configured = False
+
 # Module-level cache for Plex activities
 _activity_cache: Dict[str, Any] = {
     "data": None,
@@ -593,7 +596,10 @@ async def get_plex_activities():
     config = load_plex_config()
 
     if not config:
-        logger.warning("Plex not configured - no config file found")
+        global _logged_not_configured
+        if not _logged_not_configured:
+            logger.info("Plex not configured — skipping request")
+            _logged_not_configured = True
         return {"error": True, "message": "Plex not configured", "activities": []}
 
     # Check Redis cache first
@@ -956,10 +962,7 @@ async def get_recent_media():
     try:
         config = load_plex_config()
         if not config:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Plex server not configured",
-            )
+            return {"items": [], "not_configured": True}
 
         url = config["url"]
         token = config["token"]

@@ -30,6 +30,9 @@ import {
   Clock,
   ListOrdered,
   Shield,
+  Palette,
+  History,
+  AppWindow,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -56,9 +59,16 @@ export default function Sidebar() {
   // Fetch invites to count expired/unused
   const { data: invites = [] } = useQuery({
     queryKey: ["invites"],
-    queryFn: () => api.get("/invites/"),
+    queryFn: async () => {
+      try {
+        return await api.get("/invites/");
+      } catch {
+        return [];
+      }
+    },
     staleTime: 10000,
     refetchInterval: 10000,
+    retry: false,
     placeholderData: (previousData) => previousData,
   });
 
@@ -238,9 +248,16 @@ export default function Sidebar() {
   // Fetch services for status badges
   const { data: services = [] } = useQuery({
     queryKey: ["services"],
-    queryFn: () => api.getServices(),
+    queryFn: async () => {
+      try {
+        return await api.getServices();
+      } catch {
+        return [];
+      }
+    },
     staleTime: 10000,
     refetchInterval: 10000,
+    retry: false,
     placeholderData: (previousData) => previousData,
   });
 
@@ -253,9 +270,16 @@ export default function Sidebar() {
   // Fetch VPN proxy containers for error badge
   const { data: vpnContainers = [] } = useQuery({
     queryKey: ["vpn-proxy-containers-sidebar"],
-    queryFn: () => api.get("/vpn-proxy/containers"),
+    queryFn: async () => {
+      try {
+        return await api.get("/vpn-proxy/containers");
+      } catch {
+        return [];
+      }
+    },
     staleTime: 10000,
-    refetchInterval: 15000,
+    refetchInterval: 30000,
+    retry: false,
     placeholderData: (previousData) => previousData,
   });
 
@@ -310,9 +334,14 @@ export default function Sidebar() {
       ],
     },
     {
-      label: "VPN-Proxy Manager",
+      label: "VPN Manager",
       icon: Shield,
-      path: "/vpn-proxy",
+      isTab: true,
+      tabName: "vpnproxy",
+      items: [
+        { path: "/vpn-proxy", label: "VPN-Proxies", icon: Shield },
+        { path: "/vpn-proxy-monitor", label: "Monitor", icon: Activity },
+      ],
     },
     {
       label: t("nav.plex"),
@@ -384,7 +413,22 @@ export default function Sidebar() {
           label: t("arrActivity.tabs.movies", "Movies"),
           icon: Film,
         },
+        {
+          path: "/arr-activity?tab=history",
+          label: t("arrActivity.tabs.history", "History"),
+          icon: History,
+        },
       ],
+    },
+    {
+      label: "Posterizarr",
+      icon: Palette,
+      path: "/posterizarr",
+    },
+    {
+      label: "External Apps",
+      icon: AppWindow,
+      path: "/external-apps",
     },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
@@ -456,7 +500,7 @@ export default function Sidebar() {
 
           {/* Navigation */}
           <nav
-            className={`flex-1 transition-all ${
+            className={`flex-1 overflow-y-auto overflow-x-hidden transition-all scrollbar-thin scrollbar-thumb-theme-border scrollbar-track-transparent ${
               isOpen ? "p-4" : "md:p-2 2xl:p-4"
             }`}
           >
@@ -503,6 +547,10 @@ export default function Sidebar() {
                   const hasStuckDownloadsBadge =
                     item.tabName === "downloads" && totalStuckDownloads > 0;
 
+                  // Check if VPN Proxy tab has any error containers
+                  const hasVpnProxyBadge =
+                    item.tabName === "vpnproxy" && vpnErrorCount > 0;
+
                   return (
                     <div key={item.label}>
                       <button
@@ -539,7 +587,16 @@ export default function Sidebar() {
                           >
                             !
                           </span>
-                        )}
+                        )}{" "}
+                        {hasVpnProxyBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vpnErrorCount}
+                          </span>
+                        )}{" "}
                         {hasPlexActivityBadge && (
                           <span
                             className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
@@ -664,6 +721,11 @@ export default function Sidebar() {
                             const failedUploadsBadge =
                               isFailedItems && failedUploadsCount > 0;
 
+                            // VPN Proxy error badge
+                            const vpnProxyBadge =
+                              subItem.path === "/vpn-proxy" &&
+                              vpnErrorCount > 0;
+
                             // Build array of badges to show
                             const badges = [];
 
@@ -739,6 +801,12 @@ export default function Sidebar() {
                             if (failedUploadsBadge) {
                               badges.push({
                                 count: failedUploadsCount,
+                                color: "bg-red-500",
+                              });
+                            }
+                            if (vpnProxyBadge) {
+                              badges.push({
+                                count: vpnErrorCount,
                                 color: "bg-red-500",
                               });
                             }
@@ -835,10 +903,6 @@ export default function Sidebar() {
                   const isStorage = item.path === "/storage";
                   const showStorageBadge = isStorage && storageIssuesCount > 0;
 
-                  // Check for VPN Proxy error badge
-                  const isVpnProxy = item.path === "/vpn-proxy";
-                  const showVpnErrorBadge = isVpnProxy && vpnErrorCount > 0;
-
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -884,15 +948,6 @@ export default function Sidebar() {
                             }`}
                           >
                             {storageIssuesCount}
-                          </span>
-                        )}
-                        {showVpnErrorBadge && (
-                          <span
-                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
-                              isOpen ? "" : "md:hidden 2xl:inline-flex"
-                            }`}
-                          >
-                            {vpnErrorCount}
                           </span>
                         )}
                       </Link>

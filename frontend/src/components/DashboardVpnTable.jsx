@@ -9,6 +9,76 @@ import {
   WifiOff,
 } from "lucide-react";
 
+const providerConfig = {
+  nordvpn: {
+    color: "text-blue-400",
+    bgColor: "bg-gradient-to-br from-blue-500/20 to-blue-500/10",
+    borderColor: "border-blue-500/30",
+    shadowColor: "shadow-blue-500/20",
+  },
+  surfshark: {
+    color: "text-cyan-400",
+    bgColor: "bg-gradient-to-br from-cyan-500/20 to-cyan-500/10",
+    borderColor: "border-cyan-500/30",
+    shadowColor: "shadow-cyan-500/20",
+  },
+  expressvpn: {
+    color: "text-red-400",
+    bgColor: "bg-gradient-to-br from-red-500/20 to-red-500/10",
+    borderColor: "border-red-500/30",
+    shadowColor: "shadow-red-500/20",
+  },
+  mullvad: {
+    color: "text-yellow-400",
+    bgColor: "bg-gradient-to-br from-yellow-500/20 to-yellow-500/10",
+    borderColor: "border-yellow-500/30",
+    shadowColor: "shadow-yellow-500/20",
+  },
+  protonvpn: {
+    color: "text-purple-400",
+    bgColor: "bg-gradient-to-br from-purple-500/20 to-purple-500/10",
+    borderColor: "border-purple-500/30",
+    shadowColor: "shadow-purple-500/20",
+  },
+  pia: {
+    color: "text-green-400",
+    bgColor: "bg-gradient-to-br from-green-500/20 to-green-500/10",
+    borderColor: "border-green-500/30",
+    shadowColor: "shadow-green-500/20",
+  },
+  cyberghost: {
+    color: "text-amber-400",
+    bgColor: "bg-gradient-to-br from-amber-500/20 to-amber-500/10",
+    borderColor: "border-amber-500/30",
+    shadowColor: "shadow-amber-500/20",
+  },
+  ivpn: {
+    color: "text-indigo-400",
+    bgColor: "bg-gradient-to-br from-indigo-500/20 to-indigo-500/10",
+    borderColor: "border-indigo-500/30",
+    shadowColor: "shadow-indigo-500/20",
+  },
+  windscribe: {
+    color: "text-teal-400",
+    bgColor: "bg-gradient-to-br from-teal-500/20 to-teal-500/10",
+    borderColor: "border-teal-500/30",
+    shadowColor: "shadow-teal-500/20",
+  },
+  ipvanish: {
+    color: "text-emerald-400",
+    bgColor: "bg-gradient-to-br from-emerald-500/20 to-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+    shadowColor: "shadow-emerald-500/20",
+  },
+};
+
+const defaultProviderConfig = {
+  color: "text-sky-400",
+  bgColor: "bg-gradient-to-br from-sky-500/20 to-sky-500/10",
+  borderColor: "border-sky-500/30",
+  shadowColor: "shadow-sky-500/20",
+};
+
 const isActiveStatus = (s) => {
   const lower = (s || "").toLowerCase();
   return lower === "running" || lower === "healthy" || lower === "starting";
@@ -78,7 +148,7 @@ function VpnRow({ container, vpnInfo, deps }) {
 
   return (
     <tr
-      className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors cursor-pointer"
+      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors cursor-pointer"
       onClick={() => navigate("/vpn-proxy")}
     >
       {/* Name */}
@@ -93,9 +163,26 @@ function VpnRow({ container, vpnInfo, deps }) {
 
       {/* Provider */}
       <td className="px-3 py-2.5 hidden sm:table-cell">
-        <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted capitalize">
-          {container.vpn_provider || "—"}
-        </span>
+        {container.vpn_provider ? (
+          (() => {
+            const pKey = container.vpn_provider
+              .toLowerCase()
+              .replace(/[^a-z]/g, "");
+            const pc = providerConfig[pKey] || defaultProviderConfig;
+            return (
+              <div
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ${pc.bgColor} ${pc.color} border ${pc.borderColor} shadow-sm ${pc.shadowColor}`}
+              >
+                <Shield size={11} />
+                <span className="text-[11px] font-semibold capitalize whitespace-nowrap">
+                  {container.vpn_provider}
+                </span>
+              </div>
+            );
+          })()
+        ) : (
+          <span className="text-xs text-theme-text-muted">—</span>
+        )}
       </td>
 
       {/* Status */}

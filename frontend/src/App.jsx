@@ -21,6 +21,9 @@ import UserAccounts from "./pages/UserAccounts";
 import Uploader from "./pages/Uploader";
 import ArrActivity from "./pages/ArrActivity";
 import VpnProxy from "./pages/VpnProxy";
+import VpnProxyMonitor from "./pages/VpnProxyMonitor";
+import Posterizarr from "./pages/Posterizarr";
+import ExternalApps from "./pages/ExternalApps";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -173,6 +176,12 @@ function App() {
                       <Route path="/uploader" element={<Uploader />} />
                       <Route path="/arr-activity" element={<ArrActivity />} />
                       <Route path="/vpn-proxy" element={<VpnProxy />} />
+                      <Route
+                        path="/vpn-proxy-monitor"
+                        element={<VpnProxyMonitor />}
+                      />
+                      <Route path="/posterizarr" element={<Posterizarr />} />
+                      <Route path="/external-apps" element={<ExternalApps />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>

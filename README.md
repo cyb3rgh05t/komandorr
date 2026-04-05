@@ -313,7 +313,6 @@ python migrate_to_sqlite.py
 Komandorr uses a **two-tier configuration system**:
 
 1. **Environment Variables** (`.env` file) - Server-level settings:
-
    - `HOST` - Server host (default: 0.0.0.0)
    - `PORT` - Server port (default: 8000)
    - `DEBUG` - Debug mode (default: false)
@@ -398,7 +397,7 @@ Komandorr includes 11 beautiful themes to match your preference:
 | **Dark** 🌑          | Gray tones     | Default modern dark    |
 | **Plex** 🟠          | Orange/Yellow  | Plex Media Server      |
 | **Jellyfin** 🟣      | Purple/Violet  | Jellyfin Media         |
-| **Seerr** 🔵         | Indigo/Blue    | Overseerr/Jellyseerr   |
+| **Seerr** 🔵         | Indigo/Blue    | VoDWisharr/Jellyseerr  |
 | **Emby** 🟢          | Green          | Emby Media Server      |
 | **Mind Stone** 💛    | Yellow         | Marvel Infinity Stones |
 | **Power Stone** 💜   | Magenta/Purple | Marvel Infinity Stones |

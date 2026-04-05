@@ -160,6 +160,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
+  const [dashboardMainTab, setDashboardMainTab] = useState("services");
 
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState({
@@ -912,328 +913,345 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Services Grid */}
-      {dashboardVisibility.services && (
-        <>
-          {loading ? (
-            <div className="space-y-6">
-              {/* Service Table Loading */}
-              <LoadingTableSkeleton />
+      {/* Traffic Chart */}
+      {dashboardVisibility.trafficChart && trafficData && (
+        <DashboardTrafficCards
+          trafficData={trafficData}
+          onRefresh={handleRefreshTraffic}
+          refreshing={trafficFetching}
+        />
+      )}
+
+      {/* VPN World Map */}
+      {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
+        <DashboardVpnMap containers={vpnContainers} vpnInfoMap={vpnInfoMap} />
+      )}
+
+      {/* Tabbed View: Services / VPN Proxy */}
+      {(dashboardVisibility.services ||
+        (vpnConnectionStatus?.connected && dashboardVisibility.vpnList)) && (
+        <div className="space-y-6">
+          {/* Tab Header */}
+          <div className="border-b border-theme">
+            <div className="flex gap-6">
+              {dashboardVisibility.services && (
+                <button
+                  onClick={() => setDashboardMainTab("services")}
+                  className={`flex items-center gap-2 pb-3 px-1 text-sm font-semibold transition-all border-b-2 ${
+                    dashboardMainTab === "services"
+                      ? "border-theme-primary text-theme-primary"
+                      : "border-transparent text-theme-text-muted hover:text-theme-text hover:border-theme-text-muted/30"
+                  }`}
+                >
+                  <Server className="w-4 h-4" />
+                  {t("dashboard.services", "Services")}
+                  <span
+                    className={`ml-1 px-2 py-0.5 rounded-md text-xs font-bold ${
+                      dashboardMainTab === "services"
+                        ? "bg-theme-primary/20 text-theme-primary"
+                        : "bg-theme-hover text-theme-text-muted"
+                    }`}
+                  >
+                    {services.length}
+                  </span>
+                </button>
+              )}
+              {vpnConnectionStatus?.connected &&
+                dashboardVisibility.vpnList && (
+                  <button
+                    onClick={() => setDashboardMainTab("vpn")}
+                    className={`flex items-center gap-2 pb-3 px-1 text-sm font-semibold transition-all border-b-2 ${
+                      dashboardMainTab === "vpn"
+                        ? "border-theme-primary text-theme-primary"
+                        : "border-transparent text-theme-text-muted hover:text-theme-text hover:border-theme-text-muted/30"
+                    }`}
+                  >
+                    <Shield className="w-4 h-4" />
+                    VPN Proxy
+                    <span
+                      className={`ml-1 px-2 py-0.5 rounded-md text-xs font-bold ${
+                        dashboardMainTab === "vpn"
+                          ? "bg-theme-primary/20 text-theme-primary"
+                          : "bg-theme-hover text-theme-text-muted"
+                      }`}
+                    >
+                      {vpnContainers.length}
+                    </span>
+                  </button>
+                )}
             </div>
-          ) : services.length === 0 ? (
-            <div className="bg-theme-card border border-theme rounded-lg p-6 md:p-8 text-center shadow-sm">
-              <Server
-                size={48}
-                className="mx-auto mb-4 text-theme-text-muted"
-              />
-              <h3 className="text-base md:text-lg font-semibold text-theme-text mb-2">
-                {t("dashboard.noServices")}
-              </h3>
-              <p className="text-sm md:text-base text-theme-text-muted mb-6">
-                Get started by adding your first service to monitor
-              </p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-              >
-                <Plus size={20} className="text-theme-primary" />
-                <span className="text-sm">{t("dashboard.addService")}</span>
-              </button>
-            </div>
-          ) : (
+          </div>
+
+          {/* Tab Content */}
+          {dashboardMainTab === "services" && dashboardVisibility.services && (
             <>
-              {/* Group services by group field */}
-              {(() => {
-                // Filter services based on search term and status filter
-                const filteredServices = services.filter((service) => {
-                  const searchLower = searchTerm.toLowerCase();
-                  const matchesSearch =
-                    service.name.toLowerCase().includes(searchLower) ||
-                    service.url.toLowerCase().includes(searchLower) ||
-                    service.type.toLowerCase().includes(searchLower) ||
-                    (service.group &&
-                      service.group.toLowerCase().includes(searchLower));
+              {loading ? (
+                <div className="space-y-6">
+                  {/* Service Table Loading */}
+                  <LoadingTableSkeleton />
+                </div>
+              ) : services.length === 0 ? (
+                <div className="bg-theme-card border border-theme rounded-lg p-6 md:p-8 text-center shadow-sm">
+                  <Server
+                    size={48}
+                    className="mx-auto mb-4 text-theme-text-muted"
+                  />
+                  <h3 className="text-base md:text-lg font-semibold text-theme-text mb-2">
+                    {t("dashboard.noServices")}
+                  </h3>
+                  <p className="text-sm md:text-base text-theme-text-muted mb-6">
+                    Get started by adding your first service to monitor
+                  </p>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                  >
+                    <Plus size={20} className="text-theme-primary" />
+                    <span className="text-sm">{t("dashboard.addService")}</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Group services by group field */}
+                  {(() => {
+                    // Filter services based on search term and status filter
+                    const filteredServices = services.filter((service) => {
+                      const searchLower = searchTerm.toLowerCase();
+                      const matchesSearch =
+                        service.name.toLowerCase().includes(searchLower) ||
+                        service.url.toLowerCase().includes(searchLower) ||
+                        service.type.toLowerCase().includes(searchLower) ||
+                        (service.group &&
+                          service.group.toLowerCase().includes(searchLower));
 
-                  const matchesStatus =
-                    statusFilter === null || service.status === statusFilter;
+                      const matchesStatus =
+                        statusFilter === null ||
+                        service.status === statusFilter;
 
-                  return matchesSearch && matchesStatus;
-                });
+                      return matchesSearch && matchesStatus;
+                    });
 
-                // Show empty state if no services match the filter
-                if (filteredServices.length === 0 && statusFilter !== null) {
-                  const emptyStates = {
-                    online: {
-                      icon: CheckCircle,
-                      iconColor: "text-green-500",
-                      bgColor: "bg-green-500/10",
-                      title: t("dashboard.emptyStates.noOnline.title"),
-                      message: t("dashboard.emptyStates.noOnline.message"),
-                      buttonText: "View All Services",
-                    },
-                    offline: {
-                      icon: AlertCircle,
-                      iconColor: "text-red-500",
-                      bgColor: "bg-red-500/10",
-                      title: t("dashboard.emptyStates.noOffline.title"),
-                      message: t("dashboard.emptyStates.noOffline.message"),
-                      buttonText: "View All Services",
-                    },
-                    problem: {
-                      icon: AlertCircle,
-                      iconColor: "text-yellow-500",
-                      bgColor: "bg-yellow-500/10",
-                      title: t("dashboard.emptyStates.noProblems.title"),
-                      message: t("dashboard.emptyStates.noProblems.message"),
-                      buttonText: "View All Services",
-                    },
-                  };
+                    // Show empty state if no services match the filter
+                    if (
+                      filteredServices.length === 0 &&
+                      statusFilter !== null
+                    ) {
+                      const emptyStates = {
+                        online: {
+                          icon: CheckCircle,
+                          iconColor: "text-green-500",
+                          bgColor: "bg-green-500/10",
+                          title: t("dashboard.emptyStates.noOnline.title"),
+                          message: t("dashboard.emptyStates.noOnline.message"),
+                          buttonText: "View All Services",
+                        },
+                        offline: {
+                          icon: AlertCircle,
+                          iconColor: "text-red-500",
+                          bgColor: "bg-red-500/10",
+                          title: t("dashboard.emptyStates.noOffline.title"),
+                          message: t("dashboard.emptyStates.noOffline.message"),
+                          buttonText: "View All Services",
+                        },
+                        problem: {
+                          icon: AlertCircle,
+                          iconColor: "text-yellow-500",
+                          bgColor: "bg-yellow-500/10",
+                          title: t("dashboard.emptyStates.noProblems.title"),
+                          message: t(
+                            "dashboard.emptyStates.noProblems.message",
+                          ),
+                          buttonText: "View All Services",
+                        },
+                      };
 
-                  const state = emptyStates[statusFilter];
-                  const IconComponent = state.icon;
+                      const state = emptyStates[statusFilter];
+                      const IconComponent = state.icon;
 
-                  return (
-                    <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                      <div className="max-w-md mx-auto">
-                        <div
-                          className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
-                        >
-                          <IconComponent
-                            size={32}
-                            className={state.iconColor}
-                          />
+                      return (
+                        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
+                          <div className="max-w-md mx-auto">
+                            <div
+                              className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
+                            >
+                              <IconComponent
+                                size={32}
+                                className={state.iconColor}
+                              />
+                            </div>
+                            <h3 className="text-xl font-bold text-theme-text mb-2">
+                              {state.title}
+                            </h3>
+                            <p className="text-theme-muted mb-6">
+                              {state.message}
+                            </p>
+                            <button
+                              onClick={() => setStatusFilter(null)}
+                              className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+                            >
+                              <Server
+                                size={20}
+                                className="text-theme-primary"
+                              />
+                              <span>{state.buttonText}</span>
+                            </button>
+                          </div>
                         </div>
-                        <h3 className="text-xl font-bold text-theme-text mb-2">
-                          {state.title}
-                        </h3>
-                        <p className="text-theme-muted mb-6">{state.message}</p>
-                        <button
-                          onClick={() => setStatusFilter(null)}
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-                        >
-                          <Server size={20} className="text-theme-primary" />
-                          <span>{state.buttonText}</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                const grouped = filteredServices.reduce((acc, service) => {
-                  const groupName =
-                    service.group || t("dashboard.groupUngrouped");
-                  if (!acc[groupName]) acc[groupName] = [];
-                  acc[groupName].push(service);
-                  return acc;
-                }, {});
-
-                const groupNames = Object.keys(grouped);
-                const hasMultipleGroups = groupNames.length > 1;
-
-                // Filter traffic data by active group
-                const filteredTrafficData = trafficData
-                  ? {
-                      ...trafficData,
-                      services:
-                        trafficData.services?.filter((service) => {
-                          // If activeTab is "ALL", show all services
-                          if (!activeTab || activeTab === "ALL") return true;
-
-                          // Find the service in the filtered services list to get its group
-                          const matchingService = filteredServices.find(
-                            (s) => s.id === service.id,
-                          );
-                          if (!matchingService) return false;
-                          const serviceGroup =
-                            matchingService.group ||
-                            t("dashboard.groupUngrouped");
-                          return serviceGroup === activeTab;
-                        }) || [],
+                      );
                     }
-                  : null;
 
-                // If only one group or no groups, show simple list
-                if (!hasMultipleGroups) {
-                  return (
-                    <div className="space-y-6">
-                      {/* Traffic Chart */}
-                      {dashboardVisibility.trafficChart && (
-                        <DashboardTrafficCards
-                          trafficData={filteredTrafficData}
-                          onRefresh={handleRefreshTraffic}
-                          refreshing={trafficFetching}
-                        />
-                      )}
+                    const grouped = filteredServices.reduce((acc, service) => {
+                      const groupName =
+                        service.group || t("dashboard.groupUngrouped");
+                      if (!acc[groupName]) acc[groupName] = [];
+                      acc[groupName].push(service);
+                      return acc;
+                    }, {});
 
-                      {/* VPN World Map */}
-                      {vpnConnectionStatus?.connected &&
-                        dashboardVisibility.vpnMap && (
-                          <DashboardVpnMap
-                            containers={vpnContainers}
-                            vpnInfoMap={vpnInfoMap}
-                          />
-                        )}
+                    const groupNames = Object.keys(grouped);
+                    const hasMultipleGroups = groupNames.length > 1;
 
-                      {/* Service Header */}
-                      {dashboardVisibility.services && (
-                        <div
-                          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => navigate("/services")}
-                        >
-                          <Server className="w-5 h-5 text-theme-primary" />
-                          <span className="text-lg font-semibold text-theme-text">
-                            {t("dashboard.services", "Services")}
-                          </span>
-                          <span className="text-sm text-theme-text-muted">
-                            ({filteredServices.length})
-                          </span>
-                        </div>
-                      )}
+                    // Filter traffic data by active group
+                    const filteredTrafficData = trafficData
+                      ? {
+                          ...trafficData,
+                          services:
+                            trafficData.services?.filter((service) => {
+                              // If activeTab is "ALL", show all services
+                              if (!activeTab || activeTab === "ALL")
+                                return true;
 
-                      {Object.entries(grouped).map(
-                        ([groupName, groupServices]) => (
-                          <div key={groupName} className="space-y-4">
-                            {groupName !== t("dashboard.groupUngrouped") && (
-                              <div className="bg-theme-card border border-theme rounded-lg p-4">
-                                <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
-                                  <span>{groupName}</span>
-                                  <span className="text-sm text-theme-text-muted font-normal">
-                                    ({groupServices.length})
-                                  </span>
-                                </h2>
+                              // Find the service in the filtered services list to get its group
+                              const matchingService = filteredServices.find(
+                                (s) => s.id === service.id,
+                              );
+                              if (!matchingService) return false;
+                              const serviceGroup =
+                                matchingService.group ||
+                                t("dashboard.groupUngrouped");
+                              return serviceGroup === activeTab;
+                            }) || [],
+                        }
+                      : null;
+
+                    // If only one group or no groups, show simple list
+                    if (!hasMultipleGroups) {
+                      return (
+                        <div className="space-y-6">
+                          {Object.entries(grouped).map(
+                            ([groupName, groupServices]) => (
+                              <div key={groupName} className="space-y-4">
+                                {groupName !==
+                                  t("dashboard.groupUngrouped") && (
+                                  <div className="bg-theme-card border border-theme rounded-lg p-4">
+                                    <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+                                      <span>{groupName}</span>
+                                      <span className="text-sm text-theme-text-muted font-normal">
+                                        ({groupServices.length})
+                                      </span>
+                                    </h2>
+                                  </div>
+                                )}
+                                <DashboardServiceTable
+                                  services={groupServices}
+                                  trafficData={trafficData}
+                                  onCheck={handleCheckService}
+                                  onEdit={handleEditService}
+                                  onDelete={handleDeleteService}
+                                />
                               </div>
-                            )}
+                            ),
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Multiple groups - show tabs
+                    return (
+                      <div className="space-y-6">
+                        {/* Tabs */}
+                        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+                          <div className="flex gap-2 min-w-max">
+                            <button
+                              onClick={() => setActiveTab("ALL")}
+                              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                                activeTab === "ALL"
+                                  ? "bg-theme-primary text-black shadow-md"
+                                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                              }`}
+                            >
+                              {t("dashboard.all")}
+                              <span
+                                className={`ml-2 text-xs ${
+                                  activeTab === "ALL"
+                                    ? "text-black/70"
+                                    : "text-theme-text-muted"
+                                }`}
+                              >
+                                ({filteredServices.length})
+                              </span>
+                            </button>
+                            {groupNames.map((groupName) => (
+                              <button
+                                key={groupName}
+                                onClick={() => setActiveTab(groupName)}
+                                className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                                  activeTab === groupName
+                                    ? "bg-theme-primary text-black shadow-md"
+                                    : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                                }`}
+                              >
+                                {groupName}
+                                <span
+                                  className={`ml-2 text-xs ${
+                                    activeTab === groupName
+                                      ? "text-black/70"
+                                      : "text-theme-text-muted"
+                                  }`}
+                                >
+                                  ({grouped[groupName].length})
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Active Tab Content */}
+                        {activeTab &&
+                          (activeTab === "ALL"
+                            ? filteredServices
+                            : grouped[activeTab]) && (
                             <DashboardServiceTable
-                              services={groupServices}
+                              services={
+                                activeTab === "ALL"
+                                  ? filteredServices
+                                  : grouped[activeTab]
+                              }
                               trafficData={trafficData}
                               onCheck={handleCheckService}
                               onEdit={handleEditService}
                               onDelete={handleDeleteService}
                             />
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  );
-                }
-
-                // Multiple groups - show tabs
-                return (
-                  <div className="space-y-6">
-                    {/* Tabs */}
-                    <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-                      <div className="flex gap-2 min-w-max">
-                        <button
-                          onClick={() => setActiveTab("ALL")}
-                          className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                            activeTab === "ALL"
-                              ? "bg-theme-primary text-black shadow-md"
-                              : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
-                          }`}
-                        >
-                          {t("dashboard.all")}
-                          <span
-                            className={`ml-2 text-xs ${
-                              activeTab === "ALL"
-                                ? "text-black/70"
-                                : "text-theme-text-muted"
-                            }`}
-                          >
-                            ({filteredServices.length})
-                          </span>
-                        </button>
-                        {groupNames.map((groupName) => (
-                          <button
-                            key={groupName}
-                            onClick={() => setActiveTab(groupName)}
-                            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                              activeTab === groupName
-                                ? "bg-theme-primary text-black shadow-md"
-                                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
-                            }`}
-                          >
-                            {groupName}
-                            <span
-                              className={`ml-2 text-xs ${
-                                activeTab === groupName
-                                  ? "text-black/70"
-                                  : "text-theme-text-muted"
-                              }`}
-                            >
-                              ({grouped[groupName].length})
-                            </span>
-                          </button>
-                        ))}
+                          )}
                       </div>
-                    </div>
-
-                    {/* Traffic Chart - filtered by active tab */}
-                    {dashboardVisibility.trafficChart && (
-                      <DashboardTrafficCards
-                        trafficData={filteredTrafficData}
-                        onRefresh={handleRefreshTraffic}
-                        refreshing={trafficFetching}
-                      />
-                    )}
-
-                    {/* VPN World Map */}
-                    {vpnConnectionStatus?.connected &&
-                      dashboardVisibility.vpnMap && (
-                        <DashboardVpnMap
-                          containers={vpnContainers}
-                          vpnInfoMap={vpnInfoMap}
-                        />
-                      )}
-
-                    {/* Service Header */}
-                    {dashboardVisibility.services && (
-                      <div
-                        className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => navigate("/services")}
-                      >
-                        <Server className="w-5 h-5 text-theme-primary" />
-                        <span className="text-lg font-semibold text-theme-text">
-                          {t("dashboard.services", "Services")}
-                        </span>
-                        <span className="text-sm text-theme-text-muted">
-                          ({filteredServices.length})
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Active Tab Content */}
-                    {activeTab &&
-                      (activeTab === "ALL"
-                        ? filteredServices
-                        : grouped[activeTab]) && (
-                        <DashboardServiceTable
-                          services={
-                            activeTab === "ALL"
-                              ? filteredServices
-                              : grouped[activeTab]
-                          }
-                          trafficData={trafficData}
-                          onCheck={handleCheckService}
-                          onEdit={handleEditService}
-                          onDelete={handleDeleteService}
-                        />
-                      )}
-                  </div>
-                );
-              })()}
+                    );
+                  })()}
+                </>
+              )}
             </>
           )}
-        </>
-      )}
 
-      {/* VPN Proxy Table */}
-      {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
-        <DashboardVpnTable
-          containers={vpnContainers}
-          vpnInfoMap={vpnInfoMap}
-          depsMap={vpnDepsMap}
-          connected={vpnConnectionStatus?.connected}
-        />
+          {dashboardMainTab === "vpn" &&
+            vpnConnectionStatus?.connected &&
+            dashboardVisibility.vpnList && (
+              <DashboardVpnTable
+                containers={vpnContainers}
+                vpnInfoMap={vpnInfoMap}
+                depsMap={vpnDepsMap}
+                connected={vpnConnectionStatus?.connected}
+              />
+            )}
+        </div>
       )}
 
       {/* Modal */}
