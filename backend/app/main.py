@@ -123,7 +123,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Komandorr Dashboard API",
     description="Backend API for monitoring apps, websites, panels, and projects",
-    version="3.0.0",
+    version="3.3.0",
     lifespan=lifespan,
     swagger_ui_parameters={
         "syntaxHighlight.theme": "monokai",

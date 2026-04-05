@@ -1,5 +1,82 @@
 # CHANGELOG.md
 
+# [3.3.0](https://github.com/cyb3rgh05t/komandorr/compare/v3.2.0...v3.3.0) (2026-04-05)
+
+### ✨ New Features
+
+**VPN Proxy Monitoring**
+• New VPN Proxy page with connection status, protocol info, and server details
+• VPN Proxy Monitor page with real-time connection tracking
+• Dashboard VPN Map component with geographic server visualization
+• Dashboard VPN Table with active connection overview
+• Backend API endpoint for VPN/proxy data aggregation
+
+**Posterizarr Integration**
+• New Posterizarr page for poster management
+• Backend API for Posterizarr service communication
+
+**External Apps**
+• New External Apps page supporting external application links and monitoring
+• Backend model extension for external app service types
+
+**Push Notifications**
+• Push notification system with backend notification service
+• New notifications API endpoint for managing notification preferences
+• Frontend notification settings integration
+
+**Dashboard Enhancements**
+• Tabbed view mode with new `DashboardServiceTable` component
+• List view mode with new `DashboardServiceListItem` component
+• Added active uploads and downloads stat cards
+• Compact dashboard stats card layout
+• Alphabetical sorting for traffic chart entries
+
+**Settings Overhaul**
+• Major Settings page redesign with expanded configuration sections
+• Personal theme customization support
+• Improved settings UI layout and organization
+
+### 🎨 UI/UX Improvements
+
+**Sidebar**
+• Improved sidebar scrolling behavior
+• Updated sidebar styling and navigation structure
+
+**Restyled Pages**
+• VPN Proxy page with styled connection cards
+• Arr Activity page improvements with pagination and history view
+• Uploader page layout refinements
+• Invites Manager UI updates
+• User Accounts page styling enhancements
+• VOD Portal and VOD Streams visual updates
+• Storage page with separated UnionFS and RAID/ZFS sections
+
+**General UI**
+• Updated dropdown components (Custom, Language, Theme)
+• Improved service card and modal styling
+• Enhanced About page layout
+• Refined Traffic page with WebSocket-based real-time updates
+
+### 🔧 Backend Improvements
+
+• Added Traffic WebSocket support for real-time data streaming
+• Improved service monitor with enhanced health check logic
+• Extended Overseerr API integration
+• Updated traffic API with additional data endpoints
+• Expanded config module with new service settings
+• Updated requirements with new dependencies
+
+### 🌐 Localization
+
+• Added German and English translations for VPN Proxy, Posterizarr, External Apps, and Notifications
+• Updated existing translation keys for restyled pages
+
+### 🐳 Infrastructure
+
+• Updated Dockerfile build configuration
+• Updated docker-compose.yml with new service ports and configuration
+• Bumped project version to 3.3.0 across backend, frontend, and release metadata
+
 # [3.2.0](https://github.com/cyb3rgh05t/komandorr/compare/v3.1.0...v3.2.0) (2026-01-14)
 
 ### 🎨 UI/UX Improvements
