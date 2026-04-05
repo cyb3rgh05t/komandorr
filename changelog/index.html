@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1541,8 +1541,67 @@
 
 
 <h1 id="changelogmd">CHANGELOG.md<a class="headerlink" href="#changelogmd" title="Permanent link">&para;</a></h1>
-<h1 id="320-2026-01-14"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.1.0...v3.2.0">3.2.0</a> (2026-01-14)<a class="headerlink" href="#320-2026-01-14" title="Permanent link">&para;</a></h1>
+<h1 id="330-2026-04-05"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.2.0...v3.3.0">3.3.0</a> (2026-04-05)<a class="headerlink" href="#330-2026-04-05" title="Permanent link">&para;</a></h1>
+<h3 id="new-features">✨ New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h3>
+<p><strong>VPN Proxy Monitoring</strong>
+• New VPN Proxy page with connection status, protocol info, and server details
+• VPN Proxy Monitor page with real-time connection tracking
+• Dashboard VPN Map component with geographic server visualization
+• Dashboard VPN Table with active connection overview
+• Backend API endpoint for VPN/proxy data aggregation</p>
+<p><strong>Posterizarr Integration</strong>
+• New Posterizarr page for poster management
+• Backend API for Posterizarr service communication</p>
+<p><strong>External Apps</strong>
+• New External Apps page supporting external application links and monitoring
+• Backend model extension for external app service types</p>
+<p><strong>Push Notifications</strong>
+• Push notification system with backend notification service
+• New notifications API endpoint for managing notification preferences
+• Frontend notification settings integration</p>
+<p><strong>Dashboard Enhancements</strong>
+• Tabbed view mode with new <code>DashboardServiceTable</code> component
+• List view mode with new <code>DashboardServiceListItem</code> component
+• Added active uploads and downloads stat cards
+• Compact dashboard stats card layout
+• Alphabetical sorting for traffic chart entries</p>
+<p><strong>Settings Overhaul</strong>
+• Major Settings page redesign with expanded configuration sections
+• Personal theme customization support
+• Improved settings UI layout and organization</p>
 <h3 id="uiux-improvements">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<p><strong>Sidebar</strong>
+• Improved sidebar scrolling behavior
+• Updated sidebar styling and navigation structure</p>
+<p><strong>Restyled Pages</strong>
+• VPN Proxy page with styled connection cards
+• Arr Activity page improvements with pagination and history view
+• Uploader page layout refinements
+• Invites Manager UI updates
+• User Accounts page styling enhancements
+• VOD Portal and VOD Streams visual updates
+• Storage page with separated UnionFS and RAID/ZFS sections</p>
+<p><strong>General UI</strong>
+• Updated dropdown components (Custom, Language, Theme)
+• Improved service card and modal styling
+• Enhanced About page layout
+• Refined Traffic page with WebSocket-based real-time updates</p>
+<h3 id="backend-improvements">🔧 Backend Improvements<a class="headerlink" href="#backend-improvements" title="Permanent link">&para;</a></h3>
+<p>• Added Traffic WebSocket support for real-time data streaming
+• Improved service monitor with enhanced health check logic
+• Extended Overseerr API integration
+• Updated traffic API with additional data endpoints
+• Expanded config module with new service settings
+• Updated requirements with new dependencies</p>
+<h3 id="localization">🌐 Localization<a class="headerlink" href="#localization" title="Permanent link">&para;</a></h3>
+<p>• Added German and English translations for VPN Proxy, Posterizarr, External Apps, and Notifications
+• Updated existing translation keys for restyled pages</p>
+<h3 id="infrastructure">🐳 Infrastructure<a class="headerlink" href="#infrastructure" title="Permanent link">&para;</a></h3>
+<p>• Updated Dockerfile build configuration
+• Updated docker-compose.yml with new service ports and configuration
+• Bumped project version to 3.3.0 across backend, frontend, and release metadata</p>
+<h1 id="320-2026-01-14"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.1.0...v3.2.0">3.2.0</a> (2026-01-14)<a class="headerlink" href="#320-2026-01-14" title="Permanent link">&para;</a></h1>
+<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
 <p><strong>Colored Table Headers</strong>
 • <strong>Unified table styling across all pages</strong>
 ◦ Added colored headers with icons and badges to all major tables
@@ -1576,7 +1635,7 @@
 <p><strong>InvitesManager</strong>
 • Reordered stats cards: Total Invites now first in the row
 • Purple themed header with Mail icon and count badge</p>
-<h3 id="localization">🌐 Localization<a class="headerlink" href="#localization" title="Permanent link">&para;</a></h3>
+<h3 id="localization_1">🌐 Localization<a class="headerlink" href="#localization_1" title="Permanent link">&para;</a></h3>
 <p>• Added <code>uploader.sections.*</code> translations (active, queue, completed, failed)
 • Added <code>traffic.emptyState.*</code> translations (title, description, setupGuide)
 • Added <code>storage.emptyState.*</code> translations for empty states
@@ -1588,7 +1647,7 @@
 • All translations available in English and German</p>
 <hr />
 <h1 id="310-2025-12-24"><a href="https://github.com/cyb3rgh05t/komandorr/compare/v3.0.0...v3.1.0">3.1.0</a> (2025-12-24)<a class="headerlink" href="#310-2025-12-24" title="Permanent link">&para;</a></h1>
-<h3 id="uiux-improvements_1">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_1" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
 <p><strong>ArrActivity Page Enhancements</strong>
 • <strong>Enhanced download table</strong>
 ◦ Added Quality and Protocol columns for better download visibility
@@ -1605,12 +1664,12 @@
 ◦ Protocol badge now uses blue color scheme for visual consistency</p>
 <p><strong>Settings Page Improvements</strong>
 • <strong>Section reorganization</strong>
-◦ Reordered settings cards: Auth → General → Plex → Overseerr → *arr → Uploader → API
+◦ Reordered settings cards: Auth → General → Plex → VoDWisharr → *arr → Uploader → API
 ◦ Logical grouping for better user experience</p>
 <p>• <strong>Auto-test on load</strong>
 ◦ Added automatic connection testing for Uploader service on settings page load
 ◦ Added automatic connection testing for all *arr instances on settings page load
-◦ Feature parity with Plex and Overseerr connection testing
+◦ Feature parity with Plex and VoDWisharr connection testing
 ◦ Immediate feedback on service health without manual testing</p>
 <p>• <strong>Unsaved changes warning</strong>
 ◦ Removed auto-save functionality for better user control
@@ -1746,7 +1805,7 @@
 ◦ Prevents orphaned invite codes cluttering the dashboard
 ◦ Delete user action now checks for remaining users on invite
 ◦ Cascade deletion keeps invite database clean</p>
-<h3 id="uiux-improvements_2">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_2" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_3">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_3" title="Permanent link">&para;</a></h3>
 <p><strong>Navigation Updates</strong></p>
 <p>• <strong>nav: Plex-specific naming</strong>
 ◦ "VOD Activity" renamed to "Plex Activity"
@@ -1955,7 +2014,7 @@
 ◦ <code>POST /api/invites/users/{id}/refresh</code> - Refresh user info from Plex
 ◦ <code>DELETE /api/invites/users/{id}</code> - Remove user from Plex
 ◦ <code>PUT /api/invites/users/{id}/expiration</code> - Update user expiration</p>
-<h3 id="uiux-improvements_3">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_3" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_4">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_4" title="Permanent link">&para;</a></h3>
 <p>• <strong>skeleton-loading: Enhanced loading states</strong>
 ◦ Replaced spinner loaders with skeleton cards across UserAccounts page
 ◦ Skeleton cards match actual card layouts (avatar, text, badges, buttons)
@@ -2088,7 +2147,7 @@
 ◦ Kept only essential container params (PGID, PUID, TZ, TERM, HOST, PORT, DEBUG)
 ◦ CORS moved back to environment variables (deployment-level security setting)
 ◦ Simplified .env.example to server parameters only with migration comments</p>
-<h3 id="uiux-improvements_4">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_4" title="Permanent link">&para;</a></h3>
+<h3 id="uiux-improvements_5">🎨 UI/UX Improvements<a class="headerlink" href="#uiux-improvements_5" title="Permanent link">&para;</a></h3>
 <p><strong>New Features</strong></p>
 <p>• <strong>monitor: Clickable service cards</strong>
 ◦ Service cards now link directly to service URLs
