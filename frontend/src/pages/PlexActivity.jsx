@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import {
@@ -380,8 +381,31 @@ const PlexActivity = () => {
     (s) => s.playback.state === "paused",
   ).length;
 
+  const plexNotConfigured = data?.message
+    ?.toLowerCase()
+    .includes("not configured");
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Not Configured Banner */}
+      {plexNotConfigured && (
+        <Link
+          to="/settings?tab=plex"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Server className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                Plex is not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Search Bar, Live Indicator & Refresh Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
@@ -433,7 +457,7 @@ const PlexActivity = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -448,7 +472,7 @@ const PlexActivity = () => {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -463,7 +487,7 @@ const PlexActivity = () => {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-orange-500/50 hover:bg-orange-500/10">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -478,7 +502,7 @@ const PlexActivity = () => {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-cyan-500/50 hover:bg-cyan-500/10">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">

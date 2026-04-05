@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # TMDB Configuration (for invite redemption backgrounds)
     TMDB_API_KEY: str = ""
 
-    # Overseerr Configuration (optional)
+    # VoDWisharr Configuration (optional)
     OVERSEERR_URL: str = ""
     OVERSEERR_API_KEY: str = ""
     DEFAULT_EMAIL_DOMAIN: str = ""
@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     # VPN Proxy Manager Configuration
     VPN_PROXY_URL: str = ""
     VPN_PROXY_API_KEY: str = ""
+
+    # Posterizarr Configuration
+    POSTERIZARR_URL: str = ""
+    POSTERIZARR_API_KEY: str = ""
 
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
@@ -115,6 +119,12 @@ class Settings(BaseSettings):
             self.VPN_PROXY_URL = vpn_proxy_config.get("url", self.VPN_PROXY_URL)
             self.VPN_PROXY_API_KEY = vpn_proxy_config.get(
                 "api_key", self.VPN_PROXY_API_KEY
+            )
+        if "posterizarr" in config_data:
+            posterizarr_config = config_data["posterizarr"]
+            self.POSTERIZARR_URL = posterizarr_config.get("url", self.POSTERIZARR_URL)
+            self.POSTERIZARR_API_KEY = posterizarr_config.get(
+                "api_key", self.POSTERIZARR_API_KEY
             )
 
     @property

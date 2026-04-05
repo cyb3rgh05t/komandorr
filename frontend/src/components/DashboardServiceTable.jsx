@@ -10,8 +10,128 @@ import {
   ArrowDown,
   Zap,
   Clock,
+  Globe,
+  Server,
+  Layout,
+  Code,
+  Database,
+  Wifi,
+  Terminal,
+  Radio,
+  Search,
+  Layers,
+  Settings,
 } from "lucide-react";
 import { formatDistanceToNow } from "@/utils/dateUtils";
+
+const typeConfig = {
+  app: {
+    icon: Layout,
+    color: "text-blue-400",
+    bgColor: "bg-gradient-to-br from-blue-500/20 to-blue-500/10",
+    borderColor: "border-blue-500/30",
+    shadowColor: "shadow-blue-500/20",
+  },
+  website: {
+    icon: Globe,
+    color: "text-cyan-400",
+    bgColor: "bg-gradient-to-br from-cyan-500/20 to-cyan-500/10",
+    borderColor: "border-cyan-500/30",
+    shadowColor: "shadow-cyan-500/20",
+  },
+  panel: {
+    icon: Layout,
+    color: "text-purple-400",
+    bgColor: "bg-gradient-to-br from-purple-500/20 to-purple-500/10",
+    borderColor: "border-purple-500/30",
+    shadowColor: "shadow-purple-500/20",
+  },
+  project: {
+    icon: Layers,
+    color: "text-indigo-400",
+    bgColor: "bg-gradient-to-br from-indigo-500/20 to-indigo-500/10",
+    borderColor: "border-indigo-500/30",
+    shadowColor: "shadow-indigo-500/20",
+  },
+  server: {
+    icon: Server,
+    color: "text-emerald-400",
+    bgColor: "bg-gradient-to-br from-emerald-500/20 to-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+    shadowColor: "shadow-emerald-500/20",
+  },
+  http: {
+    icon: Globe,
+    color: "text-orange-400",
+    bgColor: "bg-gradient-to-br from-orange-500/20 to-orange-500/10",
+    borderColor: "border-orange-500/30",
+    shadowColor: "shadow-orange-500/20",
+  },
+  https: {
+    icon: Globe,
+    color: "text-green-400",
+    bgColor: "bg-gradient-to-br from-green-500/20 to-green-500/10",
+    borderColor: "border-green-500/30",
+    shadowColor: "shadow-green-500/20",
+  },
+  tcp: {
+    icon: Terminal,
+    color: "text-amber-400",
+    bgColor: "bg-gradient-to-br from-amber-500/20 to-amber-500/10",
+    borderColor: "border-amber-500/30",
+    shadowColor: "shadow-amber-500/20",
+  },
+  ping: {
+    icon: Radio,
+    color: "text-teal-400",
+    bgColor: "bg-gradient-to-br from-teal-500/20 to-teal-500/10",
+    borderColor: "border-teal-500/30",
+    shadowColor: "shadow-teal-500/20",
+  },
+  dns: {
+    icon: Search,
+    color: "text-sky-400",
+    bgColor: "bg-gradient-to-br from-sky-500/20 to-sky-500/10",
+    borderColor: "border-sky-500/30",
+    shadowColor: "shadow-sky-500/20",
+  },
+  api: {
+    icon: Code,
+    color: "text-pink-400",
+    bgColor: "bg-gradient-to-br from-pink-500/20 to-pink-500/10",
+    borderColor: "border-pink-500/30",
+    shadowColor: "shadow-pink-500/20",
+  },
+  websocket: {
+    icon: Wifi,
+    color: "text-violet-400",
+    bgColor: "bg-gradient-to-br from-violet-500/20 to-violet-500/10",
+    borderColor: "border-violet-500/30",
+    shadowColor: "shadow-violet-500/20",
+  },
+  database: {
+    icon: Database,
+    color: "text-rose-400",
+    bgColor: "bg-gradient-to-br from-rose-500/20 to-rose-500/10",
+    borderColor: "border-rose-500/30",
+    shadowColor: "shadow-rose-500/20",
+  },
+  custom: {
+    icon: Settings,
+    color: "text-gray-400",
+    bgColor: "bg-gradient-to-br from-gray-500/20 to-gray-500/10",
+    borderColor: "border-gray-500/30",
+    shadowColor: "shadow-gray-500/20",
+  },
+};
+
+const defaultTypeConfig = {
+  icon: Layers,
+  color: "text-gray-400",
+  bgColor: "bg-gradient-to-br from-gray-500/20 to-gray-500/10",
+  borderColor: "border-gray-500/30",
+  shadowColor: "shadow-gray-500/20",
+};
 
 const statusConfig = {
   online: {
@@ -56,7 +176,7 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
 
   return (
     <tr
-      className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors cursor-pointer"
+      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors cursor-pointer"
       onClick={() => window.open(service.url, "_blank", "noopener,noreferrer")}
     >
       {/* Service Name + Icon */}
@@ -86,9 +206,20 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
               {service.description}
             </span>
           )}
-          <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted whitespace-nowrap">
-            {t(`service.types.${service.type}`)}
-          </span>
+          {(() => {
+            const tc = typeConfig[service.type] || defaultTypeConfig;
+            const TypeIcon = tc.icon;
+            return (
+              <div
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ${tc.bgColor} ${tc.color} border ${tc.borderColor} shadow-sm ${tc.shadowColor}`}
+              >
+                <TypeIcon size={11} />
+                <span className="text-[11px] font-semibold whitespace-nowrap">
+                  {t(`service.types.${service.type}`)}
+                </span>
+              </div>
+            );
+          })()}
         </div>
       </td>
 
@@ -173,7 +304,7 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
       {/* Actions */}
       <td className="px-3 py-2.5">
         <div
-          className="flex items-center gap-1 justify-end"
+          className="flex items-center gap-2 justify-end"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -185,13 +316,10 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
               e.stopPropagation();
               onCheck(service.id);
             }}
-            className="p-1.5 bg-theme-hover hover:bg-theme-primary/10 rounded-md transition-all duration-200 border border-theme hover:border-theme-primary shadow-sm hover:shadow-md group/btn"
+            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
             title={t("service.checkNow")}
           >
-            <RefreshCw
-              size={13}
-              className="text-theme-text-muted group-hover/btn:text-theme-primary group-hover/btn:rotate-180 transition-all duration-300"
-            />
+            <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={(e) => {
@@ -199,13 +327,10 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
               e.stopPropagation();
               onEdit(service);
             }}
-            className="p-1.5 hover:bg-theme-hover rounded-md transition-colors border border-theme hover:border-theme-primary group/btn"
+            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
             title={t("service.edit")}
           >
-            <Edit
-              className="text-theme-text-muted group-hover/btn:text-theme-primary transition-colors"
-              size={13}
-            />
+            <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={(e) => {
@@ -213,13 +338,10 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
               e.stopPropagation();
               onDelete(service.id);
             }}
-            className="p-1.5 hover:bg-theme-hover rounded-md transition-colors border border-theme hover:border-red-500/50 group/btn"
+            className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
             title={t("service.delete")}
           >
-            <Trash2
-              className="text-theme-text-muted group-hover/btn:text-red-400 transition-colors"
-              size={13}
-            />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </td>

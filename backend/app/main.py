@@ -29,6 +29,7 @@ from app.api.uploader import router as uploader_router
 from app.api.arr_activity import router as arr_activity_router
 from app.api.notifications import router as notifications_router
 from app.api.vpn_proxy import router as vpn_proxy_router
+from app.api.posterizarr import router as posterizarr_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -180,6 +181,7 @@ app.include_router(uploader_router)
 app.include_router(arr_activity_router)
 app.include_router(notifications_router)
 app.include_router(vpn_proxy_router)
+app.include_router(posterizarr_router)
 
 
 @app.get("/docs", include_in_schema=False)
@@ -414,8 +416,8 @@ async def upload_icon(
         )
 
     # Create icons directory if it doesn't exist
-    icons_dir = Path(__file__).parent.parent / "icons"
-    icons_dir.mkdir(exist_ok=True)
+    icons_dir = Path(__file__).parent.parent / "data" / "icons"
+    icons_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate unique filename
     file_extension = Path(file.filename or "icon.png").suffix
@@ -436,8 +438,8 @@ async def upload_icon(
 
 
 # Mount icons directory for serving uploaded icons
-icons_dir = Path(__file__).parent.parent / "icons"
-icons_dir.mkdir(exist_ok=True)
+icons_dir = Path(__file__).parent.parent / "data" / "icons"
+icons_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/icons", StaticFiles(directory=str(icons_dir)), name="icons")
 
 # Mount static files for frontend (if dist folder exists)

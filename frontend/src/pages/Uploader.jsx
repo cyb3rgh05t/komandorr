@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useItemsPerPage } from "../utils/usePersistedState";
@@ -355,8 +355,31 @@ export default function Uploader() {
     setPageNumber((prev) => Math.max(prev - 1, 1));
   };
 
+  const uploaderNotConfigured =
+    uploaderStatus?.connected === false &&
+    uploaderStatus?.error === "Not configured";
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Not Configured Banner */}
+      {uploaderNotConfigured && (
+        <Link
+          to="/settings?tab=uploader"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Upload className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                Uploader is not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
@@ -374,7 +397,7 @@ export default function Uploader() {
           className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCcw
-            className={`w-4 h-4 transition-transform duration-500 ${
+            className={`w-4 h-4 text-theme-primary transition-transform duration-500 ${
               isRefreshing ? "animate-spin" : ""
             }`}
           />
@@ -386,7 +409,7 @@ export default function Uploader() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
         <div
-          className={`bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left ${statusTone.bg}`}
+          className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left ${statusTone.bg}`}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
@@ -408,7 +431,7 @@ export default function Uploader() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-indigo-500/40">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-indigo-500/50 hover:bg-indigo-500/10">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -426,7 +449,7 @@ export default function Uploader() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-orange-500/40">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-orange-500/50 hover:bg-orange-500/10">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -443,7 +466,7 @@ export default function Uploader() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-cyan-500/40">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-cyan-500/50 hover:bg-cyan-500/10">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -461,7 +484,7 @@ export default function Uploader() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-blue-500/40">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-blue-500/50 hover:bg-blue-500/10">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -478,7 +501,7 @@ export default function Uploader() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-purple-500/40">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-purple-500/50 hover:bg-purple-500/10">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -498,7 +521,7 @@ export default function Uploader() {
           </div>
         </div>
 
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all text-left hover:border-green-500/40">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-green-500/50 hover:bg-green-500/10">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -592,7 +615,7 @@ export default function Uploader() {
                       return (
                         <tr
                           key={`${job.file_name}-${index}`}
-                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="py-3 px-4 font-medium truncate max-w-[220px]">
                             {job.file_name}
@@ -707,7 +730,7 @@ export default function Uploader() {
                       return (
                         <tr
                           key={`${file.filename}-${index}`}
-                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="py-3 px-4 whitespace-nowrap">
                             {rowNumber}
@@ -903,7 +926,7 @@ export default function Uploader() {
                       return (
                         <tr
                           key={`${job.file_name}-${index}`}
-                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="py-3 px-4 font-medium truncate max-w-[300px]">
                             {job.file_name}
@@ -1093,7 +1116,7 @@ export default function Uploader() {
                       return (
                         <tr
                           key={`${job.file_name}-${index}`}
-                          className="border-b border-theme hover:bg-theme-hover/30 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="py-3 px-4 font-medium truncate max-w-[220px]">
                             {job.file_name}

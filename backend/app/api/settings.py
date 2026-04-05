@@ -47,6 +47,11 @@ class VpnProxySettings(BaseModel):
     api_key: str
 
 
+class PosterizarrSettings(BaseModel):
+    url: str
+    api_key: str
+
+
 class ArrInstance(BaseModel):
     id: str
     name: str
@@ -60,6 +65,17 @@ class ArrSettings(BaseModel):
     instances: list[ArrInstance] = []
 
 
+class ExternalApp(BaseModel):
+    id: str
+    name: str
+    url: str
+    icon: str = ""  # lucide icon name or URL to image
+
+
+class ExternalAppsSettings(BaseModel):
+    apps: list[ExternalApp] = []
+
+
 class SettingsResponse(BaseModel):
     logging: LoggingSettings
     general: GeneralSettings
@@ -68,7 +84,9 @@ class SettingsResponse(BaseModel):
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
+    posterizarr: Optional[PosterizarrSettings] = None
     arr: Optional[ArrSettings] = None
+    external_apps: Optional[ExternalAppsSettings] = None
 
 
 class SettingsUpdate(BaseModel):
@@ -79,7 +97,9 @@ class SettingsUpdate(BaseModel):
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
+    posterizarr: Optional[PosterizarrSettings] = None
     arr: Optional[ArrSettings] = None
+    external_apps: Optional[ExternalAppsSettings] = None
 
 
 def get_config_path():
@@ -146,7 +166,7 @@ async def get_settings(username: str = Depends(require_auth)):
         server_name=plex_config.get("server_name", settings.PLEX_SERVER_NAME),
     )
 
-    # Get Overseerr settings from config or defaults
+    # Get VoDWisharr settings from config or defaults
     overseerr_config = config_data.get("overseerr", {})
     overseerr_settings = None
     if overseerr_config or settings.OVERSEERR_URL:
@@ -172,6 +192,15 @@ async def get_settings(username: str = Depends(require_auth)):
         url=vpn_proxy_config.get("url", getattr(settings, "VPN_PROXY_URL", "")),
         api_key=vpn_proxy_config.get(
             "api_key", getattr(settings, "VPN_PROXY_API_KEY", "")
+        ),
+    )
+
+    # Get Posterizarr settings from config or defaults
+    posterizarr_config = config_data.get("posterizarr", {})
+    posterizarr_settings = PosterizarrSettings(
+        url=posterizarr_config.get("url", getattr(settings, "POSTERIZARR_URL", "")),
+        api_key=posterizarr_config.get(
+            "api_key", getattr(settings, "POSTERIZARR_API_KEY", "")
         ),
     )
 
@@ -228,6 +257,12 @@ async def get_settings(username: str = Depends(require_auth)):
             except Exception:
                 pass
 
+    # Get external apps settings from config
+    external_apps_config = config_data.get("external_apps", {})
+    external_apps_settings = ExternalAppsSettings(
+        apps=[ExternalApp(**app) for app in external_apps_config.get("apps", [])]
+    )
+
     return SettingsResponse(
         logging=logging_settings,
         general=general_settings,
@@ -236,7 +271,9 @@ async def get_settings(username: str = Depends(require_auth)):
         overseerr=overseerr_settings,
         uploader=uploader_settings,
         vpn_proxy=vpn_proxy_settings,
+        posterizarr=posterizarr_settings,
         arr=arr_settings,
+        external_apps=external_apps_settings,
     )
 
 
@@ -287,7 +324,7 @@ async def update_settings(
         settings.PLEX_SERVER_TOKEN = updates.plex.server_token
         settings.PLEX_SERVER_NAME = updates.plex.server_name
 
-    # Update Overseerr settings
+    # Update VoDWisharr settings
     if updates.overseerr:
         config_data["overseerr"] = {
             "url": updates.overseerr.url,
@@ -319,6 +356,17 @@ async def update_settings(
         settings.VPN_PROXY_API_KEY = updates.vpn_proxy.api_key
         logger.info(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
 
+    # Update Posterizarr settings
+    if updates.posterizarr is not None:
+        config_data["posterizarr"] = {
+            "url": updates.posterizarr.url,
+            "api_key": updates.posterizarr.api_key,
+        }
+        # Update runtime settings
+        settings.POSTERIZARR_URL = updates.posterizarr.url
+        settings.POSTERIZARR_API_KEY = updates.posterizarr.api_key
+        logger.info(f"Updated Posterizarr URL to: {updates.posterizarr.url}")
+
     # Update *arr settings
     if updates.arr is not None:
         config_data["arr"] = {
@@ -342,6 +390,21 @@ async def update_settings(
             except Exception:
                 pass
         logger.info(f"Updated arr instances: {len(updates.arr.instances)} instances")
+
+    # Update External Apps settings
+    if updates.external_apps is not None:
+        config_data["external_apps"] = {
+            "apps": [
+                {
+                    "id": app.id,
+                    "name": app.name,
+                    "url": app.url,
+                    "icon": app.icon,
+                }
+                for app in updates.external_apps.apps
+            ]
+        }
+        logger.info(f"Updated external apps: {len(updates.external_apps.apps)} apps")
 
     # Save to config.json
     logger.info("Calling save_config...")

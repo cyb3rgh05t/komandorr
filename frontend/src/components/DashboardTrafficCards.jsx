@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ArrowUp,
@@ -89,7 +89,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   const [cardsPerPage, setCardsPerPage] = useState(6);
 
   // Calculate how many cards can fit based on screen width
-  useState(() => {
+  useEffect(() => {
     const calculateCardsPerPage = () => {
       const width = window.innerWidth;
       if (width < 640) return 1;
@@ -97,7 +97,10 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
       if (width < 1024) return 3;
       if (width < 1280) return 4;
       if (width < 1536) return 5;
-      return 6;
+      if (width < 1920) return 6;
+      if (width < 2560) return 7;
+      if (width < 3440) return 9;
+      return 11;
     };
 
     setCardsPerPage(calculateCardsPerPage());

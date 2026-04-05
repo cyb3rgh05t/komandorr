@@ -38,7 +38,7 @@ COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 COPY frontend/public/release.txt ./frontend/dist/release.txt
 
 # Create necessary directories with proper permissions
-RUN mkdir -p logs data
+RUN mkdir -p logs data/icons
 
 # Create startup script
 COPY <<'EOF' /app/start.sh
@@ -46,7 +46,7 @@ COPY <<'EOF' /app/start.sh
 set -e
 
 # Ensure directories exist
-mkdir -p /app/logs /app/data
+mkdir -p /app/logs /app/data /app/data/icons
 
 # Use APP_PORT environment variable, or default to 8000
 INTERNAL_PORT=${APP_PORT:-8000}
