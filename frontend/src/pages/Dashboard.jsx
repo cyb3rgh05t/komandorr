@@ -34,6 +34,7 @@ import { arrActivityApi } from "@/services/arrActivityApi";
 import DashboardServiceTable from "@/components/DashboardServiceTable";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import DashboardVpnTable from "@/components/DashboardVpnTable";
+import DashboardVpnProviders from "@/components/DashboardVpnProviders";
 import DashboardVpnMap from "@/components/DashboardVpnMap";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
@@ -1244,12 +1245,19 @@ export default function Dashboard() {
           {dashboardMainTab === "vpn" &&
             vpnConnectionStatus?.connected &&
             dashboardVisibility.vpnList && (
-              <DashboardVpnTable
-                containers={vpnContainers}
-                vpnInfoMap={vpnInfoMap}
-                depsMap={vpnDepsMap}
-                connected={vpnConnectionStatus?.connected}
-              />
+              <div className="space-y-6">
+                <DashboardVpnProviders
+                  containers={vpnContainers}
+                  vpnInfoMap={vpnInfoMap}
+                  depsMap={vpnDepsMap}
+                />
+                <DashboardVpnTable
+                  containers={vpnContainers}
+                  vpnInfoMap={vpnInfoMap}
+                  depsMap={vpnDepsMap}
+                  connected={vpnConnectionStatus?.connected}
+                />
+              </div>
             )}
         </div>
       )}
