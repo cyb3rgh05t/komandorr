@@ -25,6 +25,7 @@ import {
   Palette,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   testPlexConnection,
   getPlexConfig,
@@ -35,6 +36,7 @@ import { api } from "@/services/api";
 export default function Settings() {
   const { t } = useTranslation();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   // Auth state
   const [authEnabled, setAuthEnabled] = useState(false);
@@ -106,9 +108,14 @@ export default function Settings() {
   const [newAppName, setNewAppName] = useState("");
   const [newAppUrl, setNewAppUrl] = useState("");
   const [newAppIcon, setNewAppIcon] = useState("");
+  const [newAppGroup, setNewAppGroup] = useState("");
   const appIconInputRef = useRef(null);
 
-  const handleAppIconUpload = async (file, callback) => {
+  const handleAppIconUpload = async (
+    file,
+    callback,
+    getAutoSaveApps = null,
+  ) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
@@ -133,6 +140,21 @@ export default function Settings() {
         const data = await response.json();
         callback(data.path);
         toast.success("Icon uploaded successfully");
+        // If getAutoSaveApps provided, build the updated apps array and save immediately
+        if (typeof getAutoSaveApps === "function") {
+          try {
+            const appsToSave = getAutoSaveApps(data.path);
+            const currentSettings = await api.get("/settings");
+            await api.post("/settings", {
+              ...currentSettings,
+              external_apps: { apps: appsToSave },
+            });
+          } catch {
+            // Ignore auto-save errors - user can save manually
+          }
+        }
+        // Invalidate external apps query so the page updates instantly
+        queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
       } else {
         toast.error("Failed to upload icon");
       }
@@ -659,6 +681,8 @@ export default function Settings() {
       console.log("Reloading settings from backend...");
       await loadSettings();
       console.log("Settings reloaded successfully");
+      // Invalidate external apps query so the page updates instantly
+      queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
     } catch (error) {
       console.error("Failed to save settings:", error);
       toast.error(t("settings.saveError"));
@@ -1990,6 +2014,11 @@ export default function Settings() {
                             {app.url || "No URL"}
                           </p>
                         </div>
+                        {app.group && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-theme-hover border border-theme text-theme-text-muted flex-shrink-0">
+                            {app.group}
+                          </span>
+                        )}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button
                             type="button"
@@ -2012,15 +2041,26 @@ export default function Settings() {
                               input.onchange = (e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  handleAppIconUpload(file, (path) => {
-                                    const updated = [...externalApps];
-                                    updated[idx] = {
-                                      ...updated[idx],
-                                      icon: path,
-                                    };
-                                    setExternalApps(updated);
-                                    setPendingChanges(true);
-                                  });
+                                  handleAppIconUpload(
+                                    file,
+                                    (path) => {
+                                      const updated = [...externalApps];
+                                      updated[idx] = {
+                                        ...updated[idx],
+                                        icon: path,
+                                      };
+                                      setExternalApps(updated);
+                                      setPendingChanges(true);
+                                    },
+                                    (path) => {
+                                      const updated = [...externalApps];
+                                      updated[idx] = {
+                                        ...updated[idx],
+                                        icon: path,
+                                      };
+                                      return updated;
+                                    },
+                                  );
                                 }
                               };
                               input.click();
@@ -2049,7 +2089,7 @@ export default function Settings() {
 
                       {/* Expanded edit view */}
                       {editingAppIdx === idx && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-theme">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-theme">
                           <div>
                             <label className="block text-xs font-medium text-theme-text-muted mb-1">
                               App Name
@@ -2110,6 +2150,27 @@ export default function Settings() {
                               placeholder="globe, server, or https://..."
                             />
                           </div>
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                              Group
+                            </label>
+                            <input
+                              type="text"
+                              value={app.group || ""}
+                              onChange={(e) => {
+                                const updated = [...externalApps];
+                                updated[idx] = {
+                                  ...updated[idx],
+                                  group: e.target.value,
+                                };
+                                setExternalApps(updated);
+                                setPendingChanges(true);
+                              }}
+                              list="app-groups-list"
+                              className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="e.g. Media, Tools..."
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -2126,7 +2187,7 @@ export default function Settings() {
                   <h4 className="text-sm font-semibold text-theme-text">
                     Add New App
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-theme-text-muted mb-1">
                         App Name
@@ -2198,7 +2259,29 @@ export default function Settings() {
                         </button>
                       </div>
                     </div>
+                    <div>
+                      <label className="block text-xs font-medium text-theme-text-muted mb-1">
+                        Group
+                      </label>
+                      <input
+                        type="text"
+                        value={newAppGroup}
+                        onChange={(e) => setNewAppGroup(e.target.value)}
+                        list="app-groups-list"
+                        className="w-full px-3 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="e.g. Media, Tools..."
+                      />
+                    </div>
                   </div>
+                  <datalist id="app-groups-list">
+                    {[
+                      ...new Set(
+                        externalApps.map((a) => a.group).filter(Boolean),
+                      ),
+                    ].map((g) => (
+                      <option key={g} value={g} />
+                    ))}
+                  </datalist>
                   <p className="text-xs text-theme-muted">
                     Available icons: globe, server, shield, database, monitor,
                     cloud, tv, film, music, download, upload, harddrive, wifi,
@@ -2218,11 +2301,13 @@ export default function Settings() {
                               name: newAppName,
                               url: newAppUrl,
                               icon: newAppIcon || "app",
+                              group: newAppGroup || "",
                             },
                           ]);
                           setNewAppName("");
                           setNewAppUrl("");
                           setNewAppIcon("");
+                          setNewAppGroup("");
                           setShowAddApp(false);
                           setPendingChanges(true);
                         }
@@ -2240,6 +2325,7 @@ export default function Settings() {
                         setNewAppName("");
                         setNewAppUrl("");
                         setNewAppIcon("");
+                        setNewAppGroup("");
                       }}
                       className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
                     >

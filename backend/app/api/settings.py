@@ -70,6 +70,7 @@ class ExternalApp(BaseModel):
     name: str
     url: str
     icon: str = ""  # lucide icon name or URL to image
+    group: str = ""  # optional group name for categorization
 
 
 class ExternalAppsSettings(BaseModel):
@@ -400,6 +401,7 @@ async def update_settings(
                     "name": app.name,
                     "url": app.url,
                     "icon": app.icon,
+                    "group": app.group,
                 }
                 for app in updates.external_apps.apps
             ]
