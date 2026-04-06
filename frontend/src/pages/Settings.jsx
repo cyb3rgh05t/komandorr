@@ -1961,6 +1961,14 @@ export default function Settings() {
         {/* External Apps */}
         {activeTab === "external_apps" && (
           <div>
+            {/* Group suggestions datalist - always rendered so both edit and add forms can use it */}
+            <datalist id="app-groups-list">
+              {[
+                ...new Set(externalApps.map((a) => a.group).filter(Boolean)),
+              ].map((g) => (
+                <option key={g} value={g} />
+              ))}
+            </datalist>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
                 <Globe className="w-5 h-5" />
@@ -2273,15 +2281,6 @@ export default function Settings() {
                       />
                     </div>
                   </div>
-                  <datalist id="app-groups-list">
-                    {[
-                      ...new Set(
-                        externalApps.map((a) => a.group).filter(Boolean),
-                      ),
-                    ].map((g) => (
-                      <option key={g} value={g} />
-                    ))}
-                  </datalist>
                   <p className="text-xs text-theme-muted">
                     Available icons: globe, server, shield, database, monitor,
                     cloud, tv, film, music, download, upload, harddrive, wifi,
