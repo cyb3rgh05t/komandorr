@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Shield,
@@ -58,8 +58,11 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function VpnProxy() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("provider") || "all",
+  );
   const [statusFilter, setStatusFilter] = useState(null);
 
   // Fetch VPN containers
@@ -327,7 +330,10 @@ export default function VpnProxy() {
         <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
           <div className="flex gap-2 min-w-max">
             <button
-              onClick={() => setActiveTab("all")}
+              onClick={() => {
+                setActiveTab("all");
+                setSearchParams({});
+              }}
               className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                 activeTab === "all"
                   ? "bg-theme-primary text-black shadow-md"
@@ -356,7 +362,10 @@ export default function VpnProxy() {
               return (
                 <button
                   key={provider}
-                  onClick={() => setActiveTab(provider)}
+                  onClick={() => {
+                    setActiveTab(provider);
+                    setSearchParams({ provider });
+                  }}
                   className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                     isActive
                       ? "bg-theme-primary text-black shadow-md"

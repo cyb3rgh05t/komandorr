@@ -124,7 +124,9 @@ export default function DashboardVpnProviders({
         {providerStats.map((p) => (
           <div
             key={p.name}
-            onClick={() => navigate("/vpn-proxy")}
+            onClick={() =>
+              navigate(`/vpn-proxy?provider=${encodeURIComponent(p.name)}`)
+            }
             className="bg-theme-card border border-theme rounded-lg p-3 hover:border-theme-primary transition-colors cursor-pointer"
           >
             {/* Provider header */}
@@ -255,7 +257,9 @@ export default function DashboardVpnProviders({
                           key={item.id}
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate("/vpn-proxy");
+                            navigate(
+                              `/vpn-proxy?provider=${encodeURIComponent(p.name)}`,
+                            );
                           }}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-colors"
                         >
@@ -279,7 +283,9 @@ export default function DashboardVpnProviders({
                           key={item.id}
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate("/vpn-proxy");
+                            navigate(
+                              `/vpn-proxy?provider=${encodeURIComponent(p.name)}`,
+                            );
                           }}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 transition-colors"
                         >
@@ -303,7 +309,9 @@ export default function DashboardVpnProviders({
                           key={item.id}
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate("/vpn-proxy");
+                            navigate(
+                              `/vpn-proxy?provider=${encodeURIComponent(p.name)}`,
+                            );
                           }}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-gray-500/10 text-theme-text-muted border border-theme hover:bg-gray-500/20 hover:border-theme-primary transition-colors"
                         >
