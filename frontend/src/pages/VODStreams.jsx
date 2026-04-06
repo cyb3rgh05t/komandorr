@@ -268,6 +268,7 @@ export default function VODStreams() {
     data: activities = [],
     isLoading: loading,
     isFetching,
+    error,
   } = useQuery({
     queryKey: ["plexActivities"],
     queryFn: fetchPlexActivities,
