@@ -89,6 +89,9 @@ export default function Sidebar() {
   });
 
   const activeSessions = sessionsData?.sessions || [];
+  const plexConfigured = !sessionsData?.message
+    ?.toLowerCase()
+    .includes("not configured");
 
   // Fetch Plex activities for VOD Streams badge
   const { data: plexActivities = [] } = useQuery({
@@ -521,7 +524,9 @@ export default function Sidebar() {
 
                   // Check if Plex tab has active streams
                   const hasPlexActivityBadge =
-                    item.tabName === "plex" && activeSessions.length > 0;
+                    item.tabName === "plex" &&
+                    plexConfigured &&
+                    activeSessions.length > 0;
 
                   // Check if Services tab has any issues
                   const hasServicesBadge =
@@ -535,7 +540,9 @@ export default function Sidebar() {
 
                   // Check if VoD Media tab has active streams badge
                   const hasVodStreamsBadge =
-                    item.tabName === "vod" && vodStreamsCount > 0;
+                    item.tabName === "vod" &&
+                    plexConfigured &&
+                    vodStreamsCount > 0;
 
                   // Check if Downloads tab has active or stuck downloads (show separate badges)
                   const totalActiveDownloads =

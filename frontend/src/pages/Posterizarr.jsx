@@ -378,15 +378,21 @@ export default function Posterizarr() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-theme-card border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                        Type
+                    <tr className="border-b border-theme-primary">
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Type
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                        Name
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Name
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                        Time
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Time
+                        </span>
                       </th>
                     </tr>
                   </thead>
@@ -508,18 +514,26 @@ export default function Posterizarr() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-theme-card border-b border-theme-primary">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          Library
+                      <tr className="border-b border-theme-primary">
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Library
+                          </span>
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                          Posters
+                        <th className="text-right py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Posters
+                          </span>
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                          Files
+                        <th className="text-right py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Files
+                          </span>
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                          Size
+                        <th className="text-right py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Size
+                          </span>
                         </th>
                       </tr>
                     </thead>
@@ -578,27 +592,41 @@ export default function Posterizarr() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-theme-card border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                        Date
+                    <tr className="border-b border-theme-primary">
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Date
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                        Time
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Time
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                        Mode
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Mode
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                        Duration
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Duration
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                        Images
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Images
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary hidden sm:table-cell">
-                        Errors
+                      <th className="text-right py-3 px-2 hidden sm:table-cell">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Errors
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                        Status
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          Status
+                        </span>
                       </th>
                     </tr>
                   </thead>

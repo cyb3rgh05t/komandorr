@@ -232,12 +232,8 @@ export default function VpnProxy() {
       {/* Stats Cards (clickable filters) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
-          onClick={() => setStatusFilter(statusFilter === null ? null : null)}
-          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-yellow-500/10 ${
-            statusFilter === null
-              ? "border-yellow-500 ring-1 ring-yellow-500/20"
-              : "border-theme hover:border-yellow-500/50"
-          }`}
+          onClick={() => setStatusFilter(null)}
+          className="bg-theme-card border border-theme rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-yellow-500/10 hover:border-yellow-500/50"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -306,25 +302,25 @@ export default function VpnProxy() {
           onClick={() =>
             setStatusFilter(statusFilter === "clients" ? null : "clients")
           }
-          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-theme-primary/10 ${
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-purple-500/10 ${
             statusFilter === "clients"
-              ? "border-theme-primary ring-1 ring-theme-primary/20"
-              : "border-theme hover:border-theme-primary/50"
+              ? "border-purple-500 ring-1 ring-purple-500/20"
+              : "border-theme hover:border-purple-500/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
-                <Network className="w-3.5 h-3.5 text-theme-primary" />
+                <Network className="w-3.5 h-3.5 text-purple-400" />
                 <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
                   Clients
                 </span>
               </div>
-              <p className="text-2xl font-bold text-theme-primary">
+              <p className="text-2xl font-bold text-purple-400">
                 {Object.values(depsMap).reduce((sum, d) => sum + d.length, 0)}
               </p>
             </div>
-            <Network className="w-6 h-6 text-theme-primary" />
+            <Network className="w-6 h-6 text-purple-400" />
           </div>
         </button>
       </div>

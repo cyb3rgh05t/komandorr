@@ -287,24 +287,36 @@ export default function DashboardVpnTable({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-card border-b border-theme-primary">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  Container
+              <tr className="border-b border-theme-primary">
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    Container
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden sm:table-cell">
-                  Provider
+                <th className="text-left py-3 px-2 hidden sm:table-cell">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    Provider
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  Status
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    Status
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden md:table-cell">
-                  IP
+                <th className="text-left py-3 px-2 hidden md:table-cell">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    IP
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden lg:table-cell">
-                  Location
+                <th className="text-left py-3 px-2 hidden lg:table-cell">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    Location
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden xl:table-cell">
-                  Proxy / Clients
+                <th className="text-left py-3 px-2 hidden xl:table-cell">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    Proxy / Clients
+                  </span>
                 </th>
               </tr>
             </thead>

@@ -564,30 +564,46 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-card border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.filename")}
+                    <tr className="border-b border-theme-primary">
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.filename")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.drive")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.drive")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.directory")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.directory")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.key")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.key")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.progress")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.progress")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.size")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.size")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.remaining")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.remaining")}
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.speed")}
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.speed")}
+                        </span>
                       </th>
                     </tr>
                   </thead>
@@ -683,24 +699,36 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-card border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        #
+                    <tr className="border-b border-theme-primary">
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          #
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.filename")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.filename")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.drive")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.drive")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.directory")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.directory")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.size")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.size")}
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.added")}
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.added")}
+                        </span>
                       </th>
                     </tr>
                   </thead>
@@ -878,27 +906,41 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-card border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.filename")}
+                    <tr className="border-b border-theme-primary">
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.filename")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.drive")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.drive")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.directory")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.directory")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.key")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.key")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.size")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.size")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.duration")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.duration")}
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.completedAt")}
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.completedAt")}
+                        </span>
                       </th>
                     </tr>
                   </thead>
@@ -1072,24 +1114,36 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-card border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.filename")}
+                    <tr className="border-b border-theme-primary">
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.filename")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.drive")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.drive")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.directory")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.directory")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.size")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.size")}
+                        </span>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.error", "Error")}
+                      <th className="text-left py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.error", "Error")}
+                        </span>
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-primary">
-                        {t("uploader.table.failedAt", "Failed At")}
+                      <th className="text-right py-3 px-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          {t("uploader.table.failedAt", "Failed At")}
+                        </span>
                       </th>
                     </tr>
                   </thead>

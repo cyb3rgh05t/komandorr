@@ -294,30 +294,46 @@ export default function ArrActivity() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="bg-theme-card border-b border-theme-primary">
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.title", "Title")}
+              <tr className="border-b border-theme-primary">
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.title", "Title")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.quality", "Quality")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.quality", "Quality")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.status", "Status")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.status", "Status")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.size", "Size")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.size", "Size")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.timeLeft", "Time Left")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.timeLeft", "Time Left")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.protocol", "Protocol")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.protocol", "Protocol")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.client", "Client")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.client", "Client")}
+                  </span>
                 </th>
-                <th className="text-right py-3 px-4 font-semibold text-primary">
-                  {t("arrActivity.progress", "Progress")}
+                <th className="text-right py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("arrActivity.progress", "Progress")}
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -999,28 +1015,40 @@ export default function ArrActivity() {
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[900px] text-sm">
                           <thead>
-                            <tr className="bg-theme-card border-b border-theme-primary">
-                              <th className="text-left py-3 px-4 font-semibold text-primary">
-                                {isSonarr ? "Series" : "Movie"}
+                            <tr className="border-b border-theme-primary">
+                              <th className="text-left py-3 px-2">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                  {isSonarr ? "Series" : "Movie"}
+                                </span>
                               </th>
                               {isSonarr && (
-                                <th className="text-left py-3 px-4 font-semibold text-primary">
-                                  Episode
+                                <th className="text-left py-3 px-2">
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                    Episode
+                                  </span>
                                 </th>
                               )}
                               {isSonarr && (
-                                <th className="text-left py-3 px-4 font-semibold text-primary">
-                                  Episode Title
+                                <th className="text-left py-3 px-2">
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                    Episode Title
+                                  </span>
                                 </th>
                               )}
-                              <th className="text-left py-3 px-4 font-semibold text-primary">
-                                Quality
+                              <th className="text-left py-3 px-2">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                  Quality
+                                </span>
                               </th>
-                              <th className="text-left py-3 px-4 font-semibold text-primary">
-                                Formats
+                              <th className="text-left py-3 px-2">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                  Formats
+                                </span>
                               </th>
-                              <th className="text-right py-3 px-4 font-semibold text-primary">
-                                Date
+                              <th className="text-right py-3 px-2">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                  Date
+                                </span>
                               </th>
                             </tr>
                           </thead>

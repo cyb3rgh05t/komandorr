@@ -35,6 +35,7 @@ export default function VODPortal() {
   });
   const [loading, setLoading] = useState(false);
   const [overseerrStatus, setOverseerrStatus] = useState(null);
+  const [plexConfigured, setPlexConfigured] = useState(true);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userRequests, setUserRequests] = useState({});
@@ -157,6 +158,10 @@ export default function VODPortal() {
           ...prev,
           email_domain: data.overseerr.email_domain,
         }));
+      }
+      // Check if Plex is configured
+      if (!data.plex?.server_url || !data.plex?.server_token) {
+        setPlexConfigured(false);
       }
     } catch (err) {
       console.error("Failed to load settings:", err);
@@ -390,6 +395,25 @@ export default function VODPortal() {
             </div>
           </Link>
         )}
+
+      {/* Plex Not Configured Banner */}
+      {!plexConfigured && (
+        <Link
+          to="/settings?tab=plex"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Server className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                Plex is not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Header with Search & Refresh */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -664,33 +688,51 @@ export default function VODPortal() {
             ) : (
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
-                  <tr className="bg-theme-card border-b border-theme-primary">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.username") || "Username"}
+                  <tr className="border-b border-theme-primary">
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.username") || "Username"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.email") || "Email"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.email") || "Email"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.displayName") || "Display Name"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.displayName") || "Display Name"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.userRole") || "User Role"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.userRole") || "User Role"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.userType") || "User Type"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.userType") || "User Type"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.plexId") || "Plex ID"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.plexId") || "Plex ID"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.createdAt") || "Created"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.createdAt") || "Created"}
+                      </span>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.requests") || "Requests"}
+                    <th className="text-left py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.requests") || "Requests"}
+                      </span>
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                      {t("vodPortal.actions") || "Actions"}
+                    <th className="text-right py-3 px-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                        {t("vodPortal.actions") || "Actions"}
+                      </span>
                     </th>
                   </tr>
                 </thead>

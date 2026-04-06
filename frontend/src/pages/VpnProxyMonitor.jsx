@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
@@ -9,6 +10,7 @@ import {
   ArrowUpFromLine,
   Search,
   Wifi,
+  WifiOff,
   AlertTriangle,
   Tv,
   MonitorPlay,
@@ -256,14 +258,29 @@ export default function VpnProxyMonitor() {
   if (configured === false) {
     return (
       <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-6">
-        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
-          <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white mb-2">
+        <Link
+          to="/settings?tab=vpn_proxy"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <WifiOff className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                O11 Monitoring is not configured
+              </p>
+            </div>
+          </div>
+        </Link>
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+          <AlertTriangle className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+          <h3 className="text-lg font-semibold text-theme-text mb-2">
             Monitoring Not Configured
-          </h2>
+          </h3>
           <p className="text-theme-text-muted max-w-md mx-auto">
             Configure O11 monitoring in the VPN-Proxy Manager Settings → System
-            tab.
+            tab to view network usage and active streams.
           </p>
         </div>
       </div>
@@ -324,7 +341,7 @@ export default function VpnProxyMonitor() {
             <ArrowUpFromLine className="w-6 h-6 text-blue-400" />
           </div>
         </div>
-        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3 hover:shadow-md transition-all hover:border-theme-primary/50 hover:bg-theme-primary/10">
+        <div className="bg-theme-card border border-theme rounded-lg px-4 py-3 hover:shadow-md transition-all hover:border-yellow-500/50 hover:bg-yellow-500/10">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
@@ -482,30 +499,55 @@ export default function VpnProxyMonitor() {
               </div>
             ) : (
               <div className="bg-theme-card border border-theme rounded-xl overflow-hidden">
+                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <MonitorPlay className="w-5 h-5 text-theme-primary" />
+                    <h3 className="text-lg font-semibold text-theme-text">
+                      Active Streams
+                    </h3>
+                    <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                      {filteredReaders.length} active
+                    </span>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-theme-card border-b border-theme-primary">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          Stream
+                      <tr className="border-b border-theme-primary">
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Stream
+                          </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          Provider
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Provider
+                          </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          Quality
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Quality
+                          </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          ↓ Down
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            ↓ Down
+                          </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          ↑ Up
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            ↑ Up
+                          </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          Uptime
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Uptime
+                          </span>
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                          Errors
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Errors
+                          </span>
                         </th>
                       </tr>
                     </thead>

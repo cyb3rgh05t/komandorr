@@ -17,6 +17,7 @@ import {
   Activity,
   HardDrive,
 } from "lucide-react";
+import { api } from "@/services/api";
 import {
   fetchPlexActivities,
   getPlexStats,
@@ -267,7 +268,6 @@ export default function VODStreams() {
     data: activities = [],
     isLoading: loading,
     isFetching,
-    error,
   } = useQuery({
     queryKey: ["plexActivities"],
     queryFn: fetchPlexActivities,
@@ -276,10 +276,23 @@ export default function VODStreams() {
     placeholderData: (previousData) => previousData,
   });
 
+  // Check if Plex is configured via sessions endpoint (shared with Sidebar)
+  const { data: sessionsData } = useQuery({
+    queryKey: ["plex-sessions"],
+    queryFn: async () => {
+      try {
+        const response = await api.get("/plex/sessions");
+        return response;
+      } catch {
+        return { sessions: [] };
+      }
+    },
+    staleTime: 3000,
+  });
+
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const refreshInterval = useRef(null);
   const REFRESH_INTERVAL = 5000; // 5 seconds for real-time VOD stream monitoring
-  const [plexConfigured, setPlexConfigured] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -566,14 +579,13 @@ export default function VODStreams() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const plexNotConfigured = error?.message
+  const plexNotConfigured = sessionsData?.message
     ?.toLowerCase()
     .includes("not configured");
 
-  return (
-    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Not Configured Banner */}
-      {plexNotConfigured && (
+  if (plexNotConfigured) {
+    return (
+      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-6">
         <Link
           to="/settings?tab=plex"
           className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
@@ -584,13 +596,32 @@ export default function VODStreams() {
             </div>
             <div>
               <p className="font-medium text-yellow-400">
-                Plex is not configured
+                {t(
+                  "vodStreams.plexNotConfigured.title",
+                  "Plex is not configured",
+                )}
               </p>
             </div>
           </div>
         </Link>
-      )}
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+          <Server className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+          <h3 className="text-lg font-semibold text-theme-text mb-2">
+            {t("vodStreams.plexNotConfigured.title", "Plex is not configured")}
+          </h3>
+          <p className="text-theme-text-muted max-w-md mx-auto">
+            {t(
+              "vodStreams.plexNotConfigured.description",
+              "Configure your Plex server connection in the settings to monitor VOD streams and downloads.",
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
+  return (
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Search Bar, Live Indicator & Refresh Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
@@ -944,18 +975,26 @@ export default function VODStreams() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-theme-card border-b border-theme-primary">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                    {t("vodStreams.libraryScans.library", "Library")}
+                <tr className="border-b border-theme-primary">
+                  <th className="text-left py-3 px-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      {t("vodStreams.libraryScans.library", "Library")}
+                    </span>
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                    {t("vodStreams.libraryScans.details", "Details")}
+                  <th className="text-left py-3 px-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      {t("vodStreams.libraryScans.details", "Details")}
+                    </span>
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                    {t("vodStreams.table.status", "Status")}
+                  <th className="text-left py-3 px-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      {t("vodStreams.table.status", "Status")}
+                    </span>
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                    {t("vodStreams.table.progress", "Progress")}
+                  <th className="text-right py-3 px-2">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      {t("vodStreams.table.progress", "Progress")}
+                    </span>
                   </th>
                 </tr>
               </thead>
@@ -1034,18 +1073,26 @@ export default function VODStreams() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-card border-b border-theme-primary">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("vodStreams.table.media", "Media")}
+              <tr className="border-b border-theme-primary">
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("vodStreams.table.media", "Media")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("vodStreams.table.title", "Title")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("vodStreams.table.title", "Title")}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("vodStreams.table.status", "Status")}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("vodStreams.table.status", "Status")}
+                  </span>
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                  {t("vodStreams.table.progress", "Progress")}
+                <th className="text-right py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("vodStreams.table.progress", "Progress")}
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -1054,29 +1101,6 @@ export default function VODStreams() {
                 <tr>
                   <td colSpan="4" className="py-12 text-center">
                     <LoadingItem />
-                  </td>
-                </tr>
-              ) : !plexConfigured ? (
-                <tr>
-                  <td colSpan="4" className="py-12">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-theme-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Server size={32} className="text-theme-primary" />
-                      </div>
-                      <h3 className="text-xl font-bold text-theme-text mb-2">
-                        {t("vodStreams.plexNotConfigured.title")}
-                      </h3>
-                      <p className="text-theme-muted mb-6">
-                        {t("vodStreams.plexNotConfigured.description")}
-                      </p>
-                      <Link
-                        to="/settings?tab=plex"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg text-sm font-semibold transition-all shadow-lg hover:shadow-xl"
-                      >
-                        <Server size={20} />
-                        {t("vodStreams.plexNotConfigured.goToSettings")}
-                      </Link>
-                    </div>
                   </td>
                 </tr>
               ) : error ? (
@@ -1251,22 +1275,19 @@ export default function VODStreams() {
       </div>
 
       {/* Pagination - Full Width */}
-      {!loading &&
-        !error &&
-        plexConfigured &&
-        filteredActivities?.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            startIndex={startIndex}
-            endIndex={endIndex}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={setItemsPerPage}
-            t={t}
-          />
-        )}
+      {!loading && !error && filteredActivities?.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+          t={t}
+        />
+      )}
     </div>
   );
 }

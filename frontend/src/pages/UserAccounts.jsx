@@ -825,36 +825,56 @@ const UserAccounts = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-card border-b border-theme-primary">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.user") || "User"}
+              <tr className="border-b border-theme-primary">
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.user") || "User"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.email") || "Email"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.email") || "Email"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.status") || "Status"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.status") || "Status"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.inviteCode") || "Invite Code"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.inviteCode") || "Invite Code"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.joined") || "Joined"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.joined") || "Joined"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.expires") || "Expires"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.expires") || "Expires"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.libraries") || "Libraries"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.libraries") || "Libraries"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.permissions") || "Permissions"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.permissions") || "Permissions"}
+                  </span>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.watchTime") || "Watch Time"}
+                <th className="text-left py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.watchTime") || "Watch Time"}
+                  </span>
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
-                  {t("userAccounts.fields.actions") || "Actions"}
+                <th className="text-right py-3 px-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    {t("userAccounts.fields.actions") || "Actions"}
+                  </span>
                 </th>
               </tr>
             </thead>
