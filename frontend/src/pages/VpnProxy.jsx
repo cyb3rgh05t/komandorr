@@ -15,6 +15,10 @@ import {
   CheckCircle2,
   Power,
   LayoutGrid,
+  MapPin,
+  ArrowUpDown,
+  Copy,
+  Check,
 } from "lucide-react";
 import { api } from "../services/api";
 
@@ -403,20 +407,65 @@ export default function VpnProxy() {
             const status =
               container.docker_status || container.status || "unknown";
             const isRunning = isActiveStatus(status);
+            const isConnected = info.vpn_status === "running" && info.public_ip;
+
+            // Parse predefined server locations from config
+            const predefinedLocations = [];
+            if (container.config?.SERVER_COUNTRIES)
+              container.config.SERVER_COUNTRIES.split(",").forEach((s) => {
+                if (s.trim()) predefinedLocations.push(s.trim());
+              });
+            if (container.config?.SERVER_CITIES)
+              container.config.SERVER_CITIES.split(",").forEach((s) => {
+                if (s.trim()) predefinedLocations.push(s.trim());
+              });
+            if (container.config?.SERVER_REGIONS)
+              container.config.SERVER_REGIONS.split(",").forEach((s) => {
+                if (s.trim()) predefinedLocations.push(s.trim());
+              });
+
+            const serverLocation =
+              container.config?.SERVER_COUNTRIES ||
+              container.config?.SERVER_CITIES ||
+              container.config?.SERVER_REGIONS ||
+              null;
+
+            // HTTP Proxy info
+            const httpProxyEnabled =
+              container.config?.HTTPPROXY?.toLowerCase() === "on";
+            const shadowsocksEnabled =
+              container.config?.SHADOWSOCKS?.toLowerCase() === "on";
+
             return (
               <div
                 key={container.id}
-                className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary/60 hover:shadow-lg transition-all"
+                className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary transition-all"
               >
                 {/* Card Header */}
-                <div className="px-4 py-3 bg-theme-hover/30 border-b border-theme flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-theme-primary truncate">
-                    {container.name}
-                  </h3>
+                <div className="px-4 py-3 bg-theme-hover border-b border-theme flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-bold text-theme-primary truncate">
+                        {container.name}
+                      </h3>
+                      {container.description && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 truncate max-w-[150px]">
+                          {container.description}
+                        </span>
+                      )}
+                    </div>
+                    {container.docker_name &&
+                      container.docker_name !== `gluetun-${container.name}` &&
+                      container.docker_name !== container.name && (
+                        <p className="text-[10px] text-amber-400/70 mt-0.5 truncate font-mono">
+                          {container.docker_name}
+                        </p>
+                      )}
+                  </div>
                   <StatusBadge status={status} />
                 </div>
 
-                {/* Info Section */}
+                {/* VPN Connection Info */}
                 <div className="px-4 py-3 border-b border-theme space-y-2">
                   {/* Provider · Type + VPN Status */}
                   <div className="flex items-center justify-between">
@@ -431,56 +480,177 @@ export default function VpnProxy() {
                       </span>
                     </div>
                     {isRunning && info.vpn_status && (
-                      <span className="flex items-center gap-1 text-xs font-medium text-green-400 flex-shrink-0 ml-2">
-                        <Wifi className="w-3.5 h-3.5" />
-                        {info.vpn_status === "running"
-                          ? "Connected"
-                          : info.vpn_status}
+                      <span
+                        className={`flex items-center gap-1 text-xs font-medium flex-shrink-0 ml-2 ${isConnected ? "text-emerald-400" : "text-red-400"}`}
+                      >
+                        {isConnected ? (
+                          <Wifi className="w-3.5 h-3.5" />
+                        ) : (
+                          <WifiOff className="w-3.5 h-3.5" />
+                        )}
+                        {isConnected ? "Connected" : "Disconnected"}
                       </span>
                     )}
                   </div>
 
                   {/* IP & Location */}
-                  {isRunning && info.public_ip && (
-                    <div className="flex items-center gap-3 text-xs text-theme-text-muted">
-                      <span className="flex items-center gap-1 font-mono">
-                        <Globe className="w-3.5 h-3.5" />
-                        {info.public_ip}
-                      </span>
-                      {(info.country || info.region) && (
+                  {(info.public_ip || serverLocation) && (
+                    <div className="flex items-center gap-3 flex-wrap text-xs text-theme-text-muted">
+                      {info.public_ip && (
+                        <span className="flex items-center gap-1 font-mono">
+                          <Globe className="w-3.5 h-3.5 text-theme-primary" />
+                          <span className="text-theme-primary">
+                            {info.public_ip}
+                          </span>
+                        </span>
+                      )}
+                      {(info.country || serverLocation) && (
                         <span className="flex items-center gap-1">
-                          ⊙{" "}
-                          {[info.country, info.region]
-                            .filter(Boolean)
-                            .join(" · ")}
+                          <MapPin className="w-3.5 h-3.5" />
+                          {info.country || serverLocation}
+                          {info.region && (
+                            <span className="text-theme-text-muted">
+                              · {info.region}
+                            </span>
+                          )}
                         </span>
                       )}
                     </div>
                   )}
-                </div>
 
-                {/* Port Forwarding */}
-                {isRunning &&
-                  info.port_forwarded &&
-                  info.port_forwarded > 0 && (
-                    <div className="mx-3 mt-3 bg-theme-hover/40 border border-theme rounded-lg px-3 py-2">
-                      <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-0.5">
-                        Port Forward
-                      </p>
-                      <p className="text-xs text-theme-primary font-mono">
-                        {info.port_forwarded}
-                      </p>
+                  {/* Port Forwarding */}
+                  {info.port_forwarded && info.port_forwarded > 0 && (
+                    <div className="flex items-center gap-1.5 text-xs text-theme-text-muted">
+                      <ArrowUpDown className="w-3 h-3 text-amber-400" />
+                      <span>
+                        Port Forwarded:{" "}
+                        <span className="text-amber-400 font-mono">
+                          {info.port_forwarded}
+                        </span>
+                      </span>
                     </div>
                   )}
 
-                {/* Clients / Network Section */}
+                  {/* Predefined Server Locations */}
+                  {predefinedLocations.length > 0 && (
+                    <div className="flex items-start gap-1.5 pt-1">
+                      <MapPin className="w-3 h-3 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex flex-wrap gap-1">
+                        {predefinedLocations.map((loc, i) => (
+                          <span
+                            key={`${loc}-${i}`}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                          >
+                            {loc}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ports & Network Grid */}
+                {(httpProxyEnabled ||
+                  shadowsocksEnabled ||
+                  container.extra_ports?.length > 0 ||
+                  container.network_name) && (
+                  <div className="px-3 py-3 border-b border-theme">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* HTTP Proxy */}
+                      {httpProxyEnabled &&
+                        (() => {
+                          const internalPort =
+                            container.port_http_proxy || 8888;
+                          const user = container.config?.HTTPPROXY_USER;
+                          const pass = container.config?.HTTPPROXY_PASSWORD;
+                          const authDisplay =
+                            user && pass ? `${user}:***@` : "";
+                          const ip = container.ip_address || "<ip>";
+                          const proxyMapping = container.extra_ports?.find(
+                            (ep) => parseInt(ep.container) === internalPort,
+                          );
+                          const externalPort = proxyMapping
+                            ? parseInt(proxyMapping.host)
+                            : null;
+                          const serverIp = window.location.hostname;
+
+                          return (
+                            <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2 col-span-2 space-y-1">
+                              <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                                HTTP Proxy
+                              </p>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] text-theme-text-muted font-medium uppercase w-12 shrink-0">
+                                  Internal
+                                </span>
+                                <p className="text-[9px] text-emerald-400/70 font-mono truncate flex-1">
+                                  http://{authDisplay}
+                                  {ip}:{internalPort}
+                                </p>
+                              </div>
+                              {externalPort && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[9px] text-theme-text-muted font-medium uppercase w-12 shrink-0">
+                                    External
+                                  </span>
+                                  <p className="text-[9px] text-blue-400/70 font-mono truncate flex-1">
+                                    http://{authDisplay}
+                                    {serverIp}:{externalPort}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                      {/* Shadowsocks */}
+                      {shadowsocksEnabled && (
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
+                          <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                            Shadowsocks
+                          </p>
+                          <p className="text-xs text-theme-text font-mono">
+                            :{container.port_shadowsocks || 8388}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Extra Ports */}
+                      {container.extra_ports?.length > 0 && (
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
+                          <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                            Extra Ports
+                          </p>
+                          <p className="text-xs text-theme-text">
+                            {container.extra_ports.length} mapped
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Network */}
+                      {container.network_name && (
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
+                          <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                            Network
+                          </p>
+                          <p className="text-xs text-theme-text truncate">
+                            {container.network_name}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dependent Containers */}
                 {deps.length > 0 && (
-                  <div className="mx-3 mt-3 mb-3 bg-theme-hover/40 border border-theme rounded-lg border-l-2 border-l-green-500/60 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-1.5">
-                      Clients ({deps.length})
+                  <div className="px-3 py-3">
+                    <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-1.5 flex items-center gap-1">
+                      <Network className="w-3.5 h-3.5" />
+                      Network Clients ({deps.length})
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {deps.slice(0, 5).map((dep, i) => {
+                      {deps.slice(0, 8).map((dep, i) => {
                         const depStatus = (
                           dep.status ||
                           dep.state ||
@@ -503,35 +673,21 @@ export default function VpnProxy() {
                           </span>
                         );
                       })}
-                      {deps.length > 5 && (
+                      {deps.length > 8 && (
                         <span className="text-[10px] text-theme-text-muted px-2 py-0.5">
-                          +{deps.length - 5} more
+                          +{deps.length - 8} more
                         </span>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* Network name */}
-                {container.network_name && (
-                  <div
-                    className={`mx-3 ${deps.length > 0 ? "mb-3" : "mt-3 mb-3"} bg-theme-hover/40 border border-theme rounded-lg border-l-2 border-l-theme-primary/60 px-3 py-2`}
-                  >
-                    <p className="text-[10px] uppercase tracking-wider text-theme-text-muted mb-0.5">
-                      Network
-                    </p>
-                    <p className="text-xs text-theme-text font-medium">
-                      {container.network_name}
-                    </p>
-                  </div>
-                )}
-
-                {/* Bottom spacing when no sections below info */}
+                {/* Bottom spacing when no extra sections */}
                 {!deps.length &&
-                  !container.network_name &&
-                  !(isRunning && info.port_forwarded > 0) && (
-                    <div className="pb-1" />
-                  )}
+                  !httpProxyEnabled &&
+                  !shadowsocksEnabled &&
+                  !container.extra_ports?.length &&
+                  !container.network_name && <div className="pb-1" />}
               </div>
             );
           })}
