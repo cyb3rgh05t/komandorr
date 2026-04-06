@@ -67,12 +67,6 @@ function NetworkUsageGrid({ usage, category }) {
     Media: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   };
 
-  const catDotColors = {
-    Script: "bg-blue-400",
-    Manifest: "bg-purple-400",
-    Media: "bg-amber-400",
-  };
-
   if (rows.length === 0) {
     return (
       <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
@@ -96,9 +90,6 @@ function NetworkUsageGrid({ usage, category }) {
             {/* Card Header */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
               <div className="flex items-center gap-2">
-                <span
-                  className={`w-2 h-2 rounded-full ${catDotColors[row.category]}`}
-                />
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${catColors[row.category]}`}
                 >
