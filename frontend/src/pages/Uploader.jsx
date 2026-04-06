@@ -564,29 +564,29 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                    <tr className="bg-theme-card border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.key")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.progress")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.remaining")}
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-black">
+                      <th className="text-right py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.speed")}
                       </th>
                     </tr>
@@ -683,23 +683,23 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                    <tr className="bg-theme-card border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         #
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-black">
+                      <th className="text-right py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.added")}
                       </th>
                     </tr>
@@ -878,26 +878,26 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                    <tr className="bg-theme-card border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.key")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.duration")}
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-black">
+                      <th className="text-right py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.completedAt")}
                       </th>
                     </tr>
@@ -1072,23 +1072,23 @@ export default function Uploader() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                    <tr className="bg-theme-card border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.filename")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.drive")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.directory")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.size")}
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-black">
+                      <th className="text-left py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.error", "Error")}
                       </th>
-                      <th className="text-right py-3 px-4 font-semibold text-black">
+                      <th className="text-right py-3 px-4 font-semibold text-primary">
                         {t("uploader.table.failedAt", "Failed At")}
                       </th>
                     </tr>

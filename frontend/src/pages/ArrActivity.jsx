@@ -294,29 +294,29 @@ export default function ArrActivity() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
             <thead>
-              <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                <th className="text-left py-3 px-4 font-semibold text-black">
+              <tr className="bg-theme-card border-b border-theme-primary">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.title", "Title")}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-black">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.quality", "Quality")}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-black">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.status", "Status")}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-black">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.size", "Size")}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-black">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.timeLeft", "Time Left")}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-black">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.protocol", "Protocol")}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-black">
+                <th className="text-left py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.client", "Client")}
                 </th>
-                <th className="text-right py-3 px-4 font-semibold text-black">
+                <th className="text-right py-3 px-4 font-semibold text-primary">
                   {t("arrActivity.progress", "Progress")}
                 </th>
               </tr>
@@ -999,27 +999,27 @@ export default function ArrActivity() {
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[900px] text-sm">
                           <thead>
-                            <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                              <th className="text-left py-3 px-4 font-semibold text-black">
+                            <tr className="bg-theme-card border-b border-theme-primary">
+                              <th className="text-left py-3 px-4 font-semibold text-primary">
                                 {isSonarr ? "Series" : "Movie"}
                               </th>
                               {isSonarr && (
-                                <th className="text-left py-3 px-4 font-semibold text-black">
+                                <th className="text-left py-3 px-4 font-semibold text-primary">
                                   Episode
                                 </th>
                               )}
                               {isSonarr && (
-                                <th className="text-left py-3 px-4 font-semibold text-black">
+                                <th className="text-left py-3 px-4 font-semibold text-primary">
                                   Episode Title
                                 </th>
                               )}
-                              <th className="text-left py-3 px-4 font-semibold text-black">
+                              <th className="text-left py-3 px-4 font-semibold text-primary">
                                 Quality
                               </th>
-                              <th className="text-left py-3 px-4 font-semibold text-black">
+                              <th className="text-left py-3 px-4 font-semibold text-primary">
                                 Formats
                               </th>
-                              <th className="text-right py-3 px-4 font-semibold text-black">
+                              <th className="text-right py-3 px-4 font-semibold text-primary">
                                 Date
                               </th>
                             </tr>

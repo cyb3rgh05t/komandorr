@@ -378,14 +378,14 @@ export default function Posterizarr() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <tr className="bg-theme-card border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                         Type
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                         Name
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                         Time
                       </th>
                     </tr>
@@ -508,17 +508,17 @@ export default function Posterizarr() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                      <tr className="bg-theme-card border-b border-theme-primary">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           Library
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                           Posters
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                           Files
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                           Size
                         </th>
                       </tr>
@@ -578,26 +578,26 @@ export default function Posterizarr() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <tr className="bg-theme-card border-b border-theme-primary">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                         Date
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                         Time
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                         Mode
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                         Duration
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                         Images
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-black hidden sm:table-cell">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary hidden sm:table-cell">
                         Errors
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                         Status
                       </th>
                     </tr>

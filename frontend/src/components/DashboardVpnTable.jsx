@@ -287,23 +287,23 @@ export default function DashboardVpnTable({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+              <tr className="bg-theme-card border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   Container
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden sm:table-cell">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden sm:table-cell">
                   Provider
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   Status
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden md:table-cell">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden md:table-cell">
                   IP
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden lg:table-cell">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden lg:table-cell">
                   Location
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden xl:table-cell">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary hidden xl:table-cell">
                   Proxy / Clients
                 </th>
               </tr>

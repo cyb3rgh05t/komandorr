@@ -112,7 +112,7 @@ function NetworkUsageGrid({ usage, category }) {
             <div className="px-4 pb-3">
               <button
                 onClick={() => copyUrl(row.url)}
-                className="group flex items-center gap-2 w-full bg-theme-bg-dark border border-theme rounded-lg px-3 py-2 hover:border-theme-primary/50 transition-colors"
+                className="group flex items-center gap-2 w-full bg-theme-bg-card border border-theme rounded-lg px-3 py-2 hover:border-theme-primary/50 transition-colors"
                 title="Click to copy"
               >
                 <span className="text-theme-primary font-mono text-xs truncate flex-1 text-left">
@@ -121,14 +121,14 @@ function NetworkUsageGrid({ usage, category }) {
                 {copiedUrl === row.url ? (
                   <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-primary shrink-0 transition-colors" />
+                  <Copy className="w-3.5 h-3.5 text-theme-text group-hover:text-theme-primary shrink-0 transition-colors" />
                 )}
               </button>
             </div>
 
             {/* Stats Row */}
             <div className="px-4 pb-3 flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-dark rounded-lg border border-theme">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-card rounded-lg border border-theme">
                 <MonitorPlay className="w-3.5 h-3.5 text-theme-text-muted" />
                 <span className="text-xs text-theme-text-muted">Streams</span>
                 <span
@@ -137,7 +137,7 @@ function NetworkUsageGrid({ usage, category }) {
                   {streamCount}
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-dark rounded-lg border border-theme">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-card rounded-lg border border-theme">
                 <Zap className="w-3.5 h-3.5 text-theme-text-muted" />
                 <span className="text-xs text-theme-text-muted">Max</span>
                 <span className="text-sm font-bold text-white">
@@ -146,7 +146,7 @@ function NetworkUsageGrid({ usage, category }) {
               </div>
               {streamCount > 0 && row.maxStreams > 0 && (
                 <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-theme-bg-dark rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-theme-bg-card rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
                         streamCount / row.maxStreams > 0.8
@@ -174,7 +174,7 @@ function NetworkUsageGrid({ usage, category }) {
                   {row.streams.map((s, i) => (
                     <span
                       key={i}
-                      className="text-xs text-theme-text-muted bg-theme-bg-dark px-2 py-1 rounded border border-theme"
+                      className="text-xs text-theme-text bg-theme-bg-card px-2 py-1 rounded border border-theme"
                     >
                       {s}
                     </span>
@@ -485,26 +485,26 @@ export default function VpnProxyMonitor() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                      <tr className="bg-theme-card border-b border-theme-primary">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           Stream
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           Provider
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           Quality
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           ↓ Down
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           ↑ Up
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           Uptime
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                           Errors
                         </th>
                       </tr>

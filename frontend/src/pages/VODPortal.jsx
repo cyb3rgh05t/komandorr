@@ -664,32 +664,32 @@ export default function VODPortal() {
             ) : (
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
-                  <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                  <tr className="bg-theme-card border-b border-theme-primary">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.username") || "Username"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.email") || "Email"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.displayName") || "Display Name"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.userRole") || "User Role"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.userType") || "User Type"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.plexId") || "Plex ID"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.createdAt") || "Created"}
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.requests") || "Requests"}
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                       {t("vodPortal.actions") || "Actions"}
                     </th>
                   </tr>

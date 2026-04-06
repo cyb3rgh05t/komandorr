@@ -825,35 +825,35 @@ const UserAccounts = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+              <tr className="bg-theme-card border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.user") || "User"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.email") || "Email"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.status") || "Status"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.inviteCode") || "Invite Code"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.joined") || "Joined"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.expires") || "Expires"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.libraries") || "Libraries"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.permissions") || "Permissions"}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.watchTime") || "Watch Time"}
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                   {t("userAccounts.fields.actions") || "Actions"}
                 </th>
               </tr>

@@ -944,17 +944,17 @@ export default function VODStreams() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <tr className="bg-theme-card border-b border-theme-primary">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                     {t("vodStreams.libraryScans.library", "Library")}
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                     {t("vodStreams.libraryScans.details", "Details")}
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                     {t("vodStreams.table.status", "Status")}
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                     {t("vodStreams.table.progress", "Progress")}
                   </th>
                 </tr>
@@ -1034,17 +1034,17 @@ export default function VODStreams() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-theme-primary-80 border-b border-theme-primary">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+              <tr className="bg-theme-card border-b border-theme-primary">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("vodStreams.table.media", "Media")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("vodStreams.table.title", "Title")}
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-primary">
                   {t("vodStreams.table.status", "Status")}
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-black">
+                <th className="text-right py-3 px-4 text-sm font-semibold text-primary">
                   {t("vodStreams.table.progress", "Progress")}
                 </th>
               </tr>
