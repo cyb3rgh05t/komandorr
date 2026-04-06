@@ -21,6 +21,7 @@ import {
   Search,
   Layers,
   Settings,
+  ExternalLink,
 } from "lucide-react";
 import { formatDistanceToNow } from "@/utils/dateUtils";
 
@@ -28,283 +29,279 @@ const typeConfig = {
   app: {
     icon: Layout,
     color: "text-blue-400",
-    bgColor: "bg-gradient-to-br from-blue-500/20 to-blue-500/10",
-    borderColor: "border-blue-500/30",
-    shadowColor: "shadow-blue-500/20",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/20",
   },
   website: {
     icon: Globe,
     color: "text-cyan-400",
-    bgColor: "bg-gradient-to-br from-cyan-500/20 to-cyan-500/10",
-    borderColor: "border-cyan-500/30",
-    shadowColor: "shadow-cyan-500/20",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/20",
   },
   panel: {
     icon: Layout,
     color: "text-purple-400",
-    bgColor: "bg-gradient-to-br from-purple-500/20 to-purple-500/10",
-    borderColor: "border-purple-500/30",
-    shadowColor: "shadow-purple-500/20",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/20",
   },
   project: {
     icon: Layers,
     color: "text-indigo-400",
-    bgColor: "bg-gradient-to-br from-indigo-500/20 to-indigo-500/10",
-    borderColor: "border-indigo-500/30",
-    shadowColor: "shadow-indigo-500/20",
+    bgColor: "bg-indigo-500/10",
+    borderColor: "border-indigo-500/20",
   },
   server: {
     icon: Server,
     color: "text-emerald-400",
-    bgColor: "bg-gradient-to-br from-emerald-500/20 to-emerald-500/10",
-    borderColor: "border-emerald-500/30",
-    shadowColor: "shadow-emerald-500/20",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/20",
   },
   http: {
     icon: Globe,
     color: "text-orange-400",
-    bgColor: "bg-gradient-to-br from-orange-500/20 to-orange-500/10",
-    borderColor: "border-orange-500/30",
-    shadowColor: "shadow-orange-500/20",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500/20",
   },
   https: {
     icon: Globe,
     color: "text-green-400",
-    bgColor: "bg-gradient-to-br from-green-500/20 to-green-500/10",
-    borderColor: "border-green-500/30",
-    shadowColor: "shadow-green-500/20",
+    bgColor: "bg-green-500/10",
+    borderColor: "border-green-500/20",
   },
   tcp: {
     icon: Terminal,
     color: "text-amber-400",
-    bgColor: "bg-gradient-to-br from-amber-500/20 to-amber-500/10",
-    borderColor: "border-amber-500/30",
-    shadowColor: "shadow-amber-500/20",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/20",
   },
   ping: {
     icon: Radio,
     color: "text-teal-400",
-    bgColor: "bg-gradient-to-br from-teal-500/20 to-teal-500/10",
-    borderColor: "border-teal-500/30",
-    shadowColor: "shadow-teal-500/20",
+    bgColor: "bg-teal-500/10",
+    borderColor: "border-teal-500/20",
   },
   dns: {
     icon: Search,
     color: "text-sky-400",
-    bgColor: "bg-gradient-to-br from-sky-500/20 to-sky-500/10",
-    borderColor: "border-sky-500/30",
-    shadowColor: "shadow-sky-500/20",
+    bgColor: "bg-sky-500/10",
+    borderColor: "border-sky-500/20",
   },
   api: {
     icon: Code,
     color: "text-pink-400",
-    bgColor: "bg-gradient-to-br from-pink-500/20 to-pink-500/10",
-    borderColor: "border-pink-500/30",
-    shadowColor: "shadow-pink-500/20",
+    bgColor: "bg-pink-500/10",
+    borderColor: "border-pink-500/20",
   },
   websocket: {
     icon: Wifi,
     color: "text-violet-400",
-    bgColor: "bg-gradient-to-br from-violet-500/20 to-violet-500/10",
-    borderColor: "border-violet-500/30",
-    shadowColor: "shadow-violet-500/20",
+    bgColor: "bg-violet-500/10",
+    borderColor: "border-violet-500/20",
   },
   database: {
     icon: Database,
     color: "text-rose-400",
-    bgColor: "bg-gradient-to-br from-rose-500/20 to-rose-500/10",
-    borderColor: "border-rose-500/30",
-    shadowColor: "shadow-rose-500/20",
+    bgColor: "bg-rose-500/10",
+    borderColor: "border-rose-500/20",
   },
   custom: {
     icon: Settings,
     color: "text-gray-400",
-    bgColor: "bg-gradient-to-br from-gray-500/20 to-gray-500/10",
-    borderColor: "border-gray-500/30",
-    shadowColor: "shadow-gray-500/20",
+    bgColor: "bg-gray-500/10",
+    borderColor: "border-gray-500/20",
   },
 };
 
 const defaultTypeConfig = {
   icon: Layers,
   color: "text-gray-400",
-  bgColor: "bg-gradient-to-br from-gray-500/20 to-gray-500/10",
-  borderColor: "border-gray-500/30",
-  shadowColor: "shadow-gray-500/20",
+  bgColor: "bg-gray-500/10",
+  borderColor: "border-gray-500/20",
 };
 
 const statusConfig = {
   online: {
     icon: CheckCircle2,
     color: "text-green-400",
-    bgColor: "bg-gradient-to-br from-green-500/20 to-green-500/10",
-    borderColor: "border-green-500/30",
-    shadowColor: "shadow-green-500/20",
+    bgColor: "bg-emerald-500/5",
+    borderColor: "border-emerald-500/10",
+    dotColor: "bg-green-400",
   },
   offline: {
     icon: XCircle,
     color: "text-red-400",
-    bgColor: "bg-gradient-to-br from-red-500/20 to-red-500/10",
-    borderColor: "border-red-500/30",
-    shadowColor: "shadow-red-500/20",
+    bgColor: "bg-red-500/5",
+    borderColor: "border-red-500/10",
+    dotColor: "bg-red-400",
   },
   problem: {
     icon: AlertTriangle,
     color: "text-yellow-400",
-    bgColor: "bg-gradient-to-br from-yellow-500/20 to-yellow-500/10",
-    borderColor: "border-yellow-500/30",
-    shadowColor: "shadow-yellow-500/20",
+    bgColor: "bg-yellow-500/5",
+    borderColor: "border-yellow-500/10",
+    dotColor: "bg-yellow-400",
   },
 };
 
 const formatBandwidth = (mbps) => {
-  if (!mbps || mbps === 0) return "0 KB/s";
+  if (!mbps || mbps === 0) return null;
   if (mbps < 1) {
     return `${(mbps * 1024).toFixed(1)} KB/s`;
   }
   return `${mbps.toFixed(1)} MB/s`;
 };
 
-function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
+function ServiceCard({ service, trafficData, onCheck, onEdit, onDelete }) {
   const { t } = useTranslation();
   const config = statusConfig[service.status] || statusConfig.offline;
-  const StatusIcon = config.icon;
-
+  const tc = typeConfig[service.type] || defaultTypeConfig;
+  const TypeIcon = tc.icon;
   const serviceTraffic = trafficData?.services?.find(
     (s) => s.id === service.id,
   );
+  const uploadBw = formatBandwidth(serviceTraffic?.bandwidth_up);
+  const downloadBw = formatBandwidth(serviceTraffic?.bandwidth_down);
 
   return (
-    <tr
-      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors cursor-pointer"
+    <div
       onClick={() => window.open(service.url, "_blank", "noopener,noreferrer")}
+      className="bg-theme-card border border-theme rounded-lg p-3 hover:border-theme-primary transition-colors cursor-pointer group"
     >
-      {/* Service Name + Icon */}
-      <td className="px-3 py-2.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          {service.icon && (
+      {/* Header: Icon + Name + Status */}
+      <div className="flex items-center gap-3 mb-2.5">
+        {service.icon ? (
+          <div className="w-9 h-9 rounded-lg bg-theme-hover flex items-center justify-center flex-shrink-0">
             <img
               src={service.icon}
               alt={service.name}
-              className="w-6 h-6 object-contain flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+              className="w-5 h-5 object-contain transition-transform duration-300 group-hover:scale-110"
               onError={(e) => {
                 e.target.style.display = "none";
+                if (e.target.nextSibling)
+                  e.target.nextSibling.classList.remove("hidden");
               }}
             />
-          )}
-          <span className="text-sm font-bold text-theme-text truncate group-hover:text-theme-primary transition-colors">
-            {service.name}
-          </span>
-        </div>
-      </td>
-
-      {/* Type / Description Badges */}
-      <td className="px-3 py-2.5 hidden sm:table-cell">
-        <div className="flex items-center gap-1.5">
-          {service.description && (
-            <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted truncate max-w-[120px]">
-              {service.description}
-            </span>
-          )}
-          {(() => {
-            const tc = typeConfig[service.type] || defaultTypeConfig;
-            const TypeIcon = tc.icon;
-            return (
-              <div
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ${tc.bgColor} ${tc.color} border ${tc.borderColor} shadow-sm ${tc.shadowColor}`}
-              >
-                <TypeIcon size={11} />
-                <span className="text-[11px] font-semibold whitespace-nowrap">
-                  {t(`service.types.${service.type}`)}
-                </span>
-              </div>
-            );
-          })()}
-        </div>
-      </td>
-
-      {/* Status */}
-      <td className="px-3 py-2.5">
-        <div className="flex items-center gap-1.5">
+            <TypeIcon className={`w-4 h-4 ${tc.color} hidden`} />
+          </div>
+        ) : (
           <div
-            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ${config.bgColor} ${config.color} border ${config.borderColor} shadow-sm ${config.shadowColor}`}
+            className={`w-9 h-9 rounded-lg ${tc.bgColor} flex items-center justify-center flex-shrink-0`}
           >
-            <StatusIcon size={12} />
-            <span className="text-[11px] font-semibold capitalize whitespace-nowrap">
+            <TypeIcon className={`w-4 h-4 ${tc.color}`} />
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-theme-text font-semibold truncate group-hover:text-theme-primary transition-colors">
+              {service.name}
+            </p>
+            {service.description && (
+              <span className="text-[10px] text-theme-text-muted bg-theme-hover px-1.5 py-0.5 rounded-full truncate max-w-[150px] hidden sm:inline">
+                {service.description}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium ${tc.bgColor} ${tc.color} border ${tc.borderColor}`}
+            >
+              <TypeIcon size={9} />
+              {t(`service.types.${service.type}`)}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div
+            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md ${config.bgColor} border ${config.borderColor}`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${config.dotColor} ${service.status === "online" ? "animate-pulse" : ""}`}
+            />
+            <span
+              className={`text-[10px] font-semibold capitalize ${config.color}`}
+            >
               {t(`dashboard.${service.status}`)}
             </span>
           </div>
-          {service.status === "online" && service.response_time > 1000 && (
-            <div className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gradient-to-br from-yellow-500/20 to-yellow-500/10 text-yellow-400 border border-yellow-500/30">
-              <AlertTriangle size={10} />
-              <span className="text-[10px] font-semibold">
-                {t("service.stats.slow")}
-              </span>
-            </div>
-          )}
+          <ExternalLink className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-primary transition-colors" />
         </div>
-      </td>
+      </div>
 
-      {/* Response Time */}
-      <td className="px-3 py-2.5 hidden md:table-cell">
-        {service.response_time ? (
-          <div className="flex items-center gap-1">
-            <Zap size={11} className="text-theme-primary" />
-            <span className="text-xs font-bold text-theme-primary whitespace-nowrap">
-              {Math.round(service.response_time)}ms
-            </span>
+      {/* Info mini-cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-2.5">
+        {service.response_time != null && (
+          <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/10 rounded-lg px-2.5 py-1.5">
+            <Zap className="w-3 h-3 text-amber-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-amber-400 leading-tight">
+                {Math.round(service.response_time)}ms
+              </p>
+              <p className="text-[9px] text-amber-400/60 uppercase tracking-wider">
+                Response
+              </p>
+            </div>
           </div>
-        ) : (
-          <span className="text-xs text-theme-text-muted">—</span>
         )}
-      </td>
-
-      {/* Last Check */}
-      <td className="px-3 py-2.5 hidden lg:table-cell">
-        {service.last_check ? (
-          <div className="flex items-center gap-1">
-            <Clock size={11} className="text-theme-text-muted" />
-            <span className="text-xs font-bold text-theme-text whitespace-nowrap">
-              {formatDistanceToNow(service.last_check)}
-            </span>
+        {service.status === "online" && service.response_time > 1000 && (
+          <div className="flex items-center gap-2 bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-2.5 py-1.5">
+            <AlertTriangle className="w-3 h-3 text-yellow-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-yellow-400 leading-tight">
+                {t("service.stats.slow")}
+              </p>
+              <p className="text-[9px] text-yellow-400/60 uppercase tracking-wider">
+                Warning
+              </p>
+            </div>
           </div>
-        ) : (
-          <span className="text-xs text-theme-text-muted">—</span>
         )}
-      </td>
-
-      {/* Upload */}
-      <td className="px-3 py-2.5 hidden xl:table-cell">
-        {serviceTraffic && serviceTraffic.bandwidth_up > 0 ? (
-          <div className="flex items-center gap-1">
-            <ArrowUp size={11} className="text-blue-400" />
-            <span className="text-xs font-bold text-blue-400 whitespace-nowrap">
-              {formatBandwidth(serviceTraffic.bandwidth_up)}
-            </span>
+        {service.last_check && (
+          <div className="flex items-center gap-2 bg-gray-500/5 border border-gray-500/10 rounded-lg px-2.5 py-1.5">
+            <Clock className="w-3 h-3 text-theme-text-muted flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-theme-text leading-tight truncate">
+                {formatDistanceToNow(service.last_check)}
+              </p>
+              <p className="text-[9px] text-gray-500 uppercase tracking-wider">
+                Last Check
+              </p>
+            </div>
           </div>
-        ) : (
-          <span className="text-xs text-theme-text-muted">—</span>
         )}
-      </td>
-
-      {/* Download */}
-      <td className="px-3 py-2.5 hidden xl:table-cell">
-        {serviceTraffic && serviceTraffic.bandwidth_down > 0 ? (
-          <div className="flex items-center gap-1">
-            <ArrowDown size={11} className="text-green-400" />
-            <span className="text-xs font-bold text-green-400 whitespace-nowrap">
-              {formatBandwidth(serviceTraffic.bandwidth_down)}
-            </span>
+        {uploadBw && (
+          <div className="flex items-center gap-2 bg-blue-500/5 border border-blue-500/10 rounded-lg px-2.5 py-1.5">
+            <ArrowUp className="w-3 h-3 text-blue-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-blue-400 leading-tight font-mono">
+                {uploadBw}
+              </p>
+              <p className="text-[9px] text-blue-400/60 uppercase tracking-wider">
+                Upload
+              </p>
+            </div>
           </div>
-        ) : (
-          <span className="text-xs text-theme-text-muted">—</span>
         )}
-      </td>
+        {downloadBw && (
+          <div className="flex items-center gap-2 bg-green-500/5 border border-green-500/10 rounded-lg px-2.5 py-1.5">
+            <ArrowDown className="w-3 h-3 text-green-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-green-400 leading-tight font-mono">
+                {downloadBw}
+              </p>
+              <p className="text-[9px] text-green-400/60 uppercase tracking-wider">
+                Download
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Actions */}
-      <td className="px-3 py-2.5">
+      <div className="flex items-center gap-1.5 pt-2 border-t border-theme">
         <div
-          className="flex items-center gap-2 justify-end"
+          className="flex items-center gap-1.5 ml-auto"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -316,10 +313,10 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
               e.stopPropagation();
               onCheck(service.id);
             }}
-            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+            className="p-1.5 bg-theme-hover hover:bg-theme-hover border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
             title={t("service.checkNow")}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={(e) => {
@@ -327,25 +324,25 @@ function ServiceRow({ service, trafficData, onCheck, onEdit, onDelete }) {
               e.stopPropagation();
               onEdit(service);
             }}
-            className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+            className="p-1.5 bg-theme-hover hover:bg-theme-hover border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
             title={t("service.edit")}
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onDelete(service.id);
+              onDelete(service);
             }}
-            className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
+            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
             title={t("service.delete")}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
 
@@ -356,54 +353,18 @@ export default function DashboardServiceTable({
   onEdit,
   onDelete,
 }) {
-  const { t } = useTranslation();
-
   return (
-    <div className="bg-theme-card border border-theme rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-theme-primary-80 border-b border-theme-primary">
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                {t("service.name", "Service")}
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden sm:table-cell">
-                {t("service.type", "Type")}
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                {t("service.status", "Status")}
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden md:table-cell">
-                {t("service.stats.response", "Response")}
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden lg:table-cell">
-                {t("service.stats.checked", "Last Check")}
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden xl:table-cell">
-                {t("service.stats.upload", "Upload")}
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-black hidden xl:table-cell">
-                {t("service.stats.download", "Download")}
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-black">
-                {t("service.actions", "Actions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {services.map((service) => (
-              <ServiceRow
-                key={service.id}
-                service={service}
-                trafficData={trafficData}
-                onCheck={onCheck}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="space-y-3">
+      {services.map((service) => (
+        <ServiceCard
+          key={service.id}
+          service={service}
+          trafficData={trafficData}
+          onCheck={onCheck}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ))}
     </div>
   );
 }

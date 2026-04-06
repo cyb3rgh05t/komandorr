@@ -36,7 +36,11 @@ const queryClient = new QueryClient({
       gcTime: 300000, // Keep unused data in cache for 5 minutes (renamed from cacheTime)
       refetchOnWindowFocus: false, // Don't refetch on window focus
       refetchOnMount: false, // Don't refetch on mount if we have data
-      retry: 1, // Retry failed requests once
+      retry: (failureCount, error) => {
+        // Never retry 401 unauthorized errors
+        if (error?.status === 401) return false;
+        return failureCount < 1;
+      },
       networkMode: "online", // Only fetch when online
     },
   },
@@ -109,6 +113,18 @@ function App() {
       });
 
     return () => clearTimeout(minLoadingTime);
+  }, []);
+
+  // Listen for 401 events from API client to reset auth state
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false);
+      setAuthCredentials(null);
+      queryClient.clear();
+    };
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () =>
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
   // Only hide loading screen when auth check is done AND minimum time has passed

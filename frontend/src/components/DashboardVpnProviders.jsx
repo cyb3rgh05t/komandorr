@@ -125,7 +125,7 @@ export default function DashboardVpnProviders({
           <div
             key={p.name}
             onClick={() => navigate("/vpn-proxy")}
-            className="bg-theme-card border border-theme rounded-lg p-3 hover:border-theme-primary/30 transition-colors cursor-pointer"
+            className="bg-theme-card border border-theme rounded-lg p-3 hover:border-theme-primary transition-colors cursor-pointer"
           >
             {/* Provider header */}
             <div className="flex items-center gap-3 mb-2.5">
@@ -196,7 +196,7 @@ export default function DashboardVpnProviders({
                   <p className="text-xs font-bold text-theme-text-muted leading-tight">
                     {p.stopped}
                   </p>
-                  <p className="text-[9px] text-theme-text-muted/60 uppercase tracking-wider">
+                  <p className="text-[9px] text-gray-500 uppercase tracking-wider">
                     Stopped
                   </p>
                 </div>
@@ -293,7 +293,7 @@ export default function DashboardVpnProviders({
                 )}
                 {p.stoppedItems.length > 0 && (
                   <div>
-                    <p className="text-[9px] text-theme-text-muted/60 uppercase tracking-wider font-medium mb-1 flex items-center gap-1">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-1 flex items-center gap-1">
                       <AlertTriangle className="w-2.5 h-2.5" />
                       Stopped
                     </p>
@@ -305,7 +305,7 @@ export default function DashboardVpnProviders({
                             e.stopPropagation();
                             navigate("/vpn-proxy");
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-gray-500/10 text-theme-text-muted border border-theme/50 hover:bg-gray-500/20 hover:border-theme transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-gray-500/10 text-theme-text-muted border border-theme hover:bg-gray-500/20 hover:border-theme-primary transition-colors"
                         >
                           <AlertTriangle className="w-2.5 h-2.5" />
                           {item.name}
@@ -321,14 +321,14 @@ export default function DashboardVpnProviders({
             {/* Info badges */}
             <div className="flex items-center gap-1.5 flex-wrap">
               {p.countries.length > 0 && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] bg-theme-hover text-theme-text-muted border border-theme/50">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] bg-theme-hover text-theme-text-muted border border-theme">
                   <MapPin className="w-2.5 h-2.5" />
                   {p.countries.length}{" "}
                   {p.countries.length === 1 ? "country" : "countries"}
                 </span>
               )}
               {p.cities.length > 0 && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] bg-theme-hover text-theme-text-muted border border-theme/50">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] bg-theme-hover text-theme-text-muted border border-theme">
                   <Globe className="w-2.5 h-2.5" />
                   {p.cities.length}{" "}
                   {p.cities.length === 1 ? "region" : "regions"}
@@ -353,7 +353,7 @@ export default function DashboardVpnProviders({
                 </span>
               )}
               {p.portForwardCount > 0 && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] bg-theme-primary/10 text-theme-primary border border-theme-primary/20">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] bg-teal-500/10 text-teal-400 border border-teal-500/20">
                   <ArrowUpDown className="w-2.5 h-2.5" />
                   {p.portForwardCount} forwarded
                 </span>
@@ -368,11 +368,11 @@ export default function DashboardVpnProviders({
 
             {/* Server locations */}
             {p.serverLocations.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap mt-2 pt-2 border-t border-theme/30">
+              <div className="flex items-center gap-1.5 flex-wrap mt-2 pt-2 border-t border-theme">
                 {p.serverLocations.slice(0, 6).map((loc) => (
                   <span
                     key={loc}
-                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-theme-hover/70 text-theme-text-muted"
+                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-theme-hover text-theme-text-muted"
                   >
                     {loc}
                   </span>

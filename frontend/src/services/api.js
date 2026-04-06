@@ -18,10 +18,13 @@ class APIClient {
       });
 
       if (!response.ok) {
-        // If unauthorized, redirect to login
+        // If unauthorized, trigger logout via custom event (no reload)
         if (response.status === 401) {
           sessionStorage.removeItem("auth_credentials");
-          window.location.reload();
+          window.dispatchEvent(new Event("auth:unauthorized"));
+          const error = new Error("Unauthorized");
+          error.status = 401;
+          throw error;
         }
 
         // Try to get error details from response
