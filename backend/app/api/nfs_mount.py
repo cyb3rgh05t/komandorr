@@ -78,7 +78,7 @@ async def get_dashboard(username: str = Depends(require_auth)):
     vpn_configs = await proxy_get("/vpn/configs") or []
     vpn_statuses = await proxy_get("/vpn/status") or []
     exports = await proxy_get("/nfs/exports") or []
-    export_statuses = await proxy_get("/nfs/exports/status") or []
+    export_statuses = await proxy_get("/nfs/exports-status") or []
 
     # Build status maps
     mount_status_map = {s["id"]: s for s in mount_statuses}
