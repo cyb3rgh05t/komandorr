@@ -569,7 +569,9 @@ export default function NfsMount() {
                             Transfer
                           </p>
                           <p className="text-xs text-theme-text font-mono truncate mt-0.5">
-                            {st?.transfer || "—"}
+                            {st?.transfer
+                              ? `↑ ${st.transfer.sent || "0 B"} / ↓ ${st.transfer.received || "0 B"}`
+                              : "—"}
                           </p>
                         </div>
                         <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
@@ -605,9 +607,9 @@ export default function NfsMount() {
       )}
 
       {/* Loading state */}
-      {isConnected && dashLoading && (
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-6 h-6 text-theme-primary animate-spin" />
+      {isConnected && dashLoading && !dashboard && (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-theme-primary"></div>
         </div>
       )}
     </div>
