@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     POSTERIZARR_URL: str = ""
     POSTERIZARR_API_KEY: str = ""
 
+    # NFS Mount Manager Configuration
+    NFS_MOUNT_URL: str = ""
+    NFS_MOUNT_API_KEY: str = ""
+
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
 
@@ -125,6 +129,12 @@ class Settings(BaseSettings):
             self.POSTERIZARR_URL = posterizarr_config.get("url", self.POSTERIZARR_URL)
             self.POSTERIZARR_API_KEY = posterizarr_config.get(
                 "api_key", self.POSTERIZARR_API_KEY
+            )
+        if "nfs_mount" in config_data:
+            nfs_mount_config = config_data["nfs_mount"]
+            self.NFS_MOUNT_URL = nfs_mount_config.get("url", self.NFS_MOUNT_URL)
+            self.NFS_MOUNT_API_KEY = nfs_mount_config.get(
+                "api_key", self.NFS_MOUNT_API_KEY
             )
 
     @property

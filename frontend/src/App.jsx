@@ -23,6 +23,7 @@ import ArrActivity from "./pages/ArrActivity";
 import VpnProxy from "./pages/VpnProxy";
 import VpnProxyMonitor from "./pages/VpnProxyMonitor";
 import Posterizarr from "./pages/Posterizarr";
+import NfsMount from "./pages/NfsMount";
 import ExternalApps from "./pages/ExternalApps";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
@@ -197,6 +198,7 @@ function App() {
                         element={<VpnProxyMonitor />}
                       />
                       <Route path="/posterizarr" element={<Posterizarr />} />
+                      <Route path="/nfs-mount" element={<NfsMount />} />
                       <Route path="/external-apps" element={<ExternalApps />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />

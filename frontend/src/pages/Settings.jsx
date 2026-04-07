@@ -23,6 +23,7 @@ import {
   Bell,
   Send,
   Palette,
+  HardDrive,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -89,6 +90,12 @@ export default function Settings() {
   const [posterizarrApiKey, setPosterizarrApiKey] = useState("");
   const [posterizarrTestStatus, setPosterizarrTestStatus] = useState(null);
   const [showPosterizarrKey, setShowPosterizarrKey] = useState(false);
+
+  // NFS Mount Manager settings state
+  const [nfsMountUrl, setNfsMountUrl] = useState("");
+  const [nfsMountApiKey, setNfsMountApiKey] = useState("");
+  const [nfsMountTestStatus, setNfsMountTestStatus] = useState(null);
+  const [showNfsMountKey, setShowNfsMountKey] = useState(false);
 
   // *arr instances state
   const [arrInstances, setArrInstances] = useState([]);
@@ -189,6 +196,7 @@ export default function Settings() {
       "uploader",
       "vpn_proxy",
       "posterizarr",
+      "nfs_mount",
       "external_apps",
       "notifications",
       "arr",
@@ -247,6 +255,10 @@ export default function Settings() {
         setPosterizarrUrl(data.posterizarr.url || "");
         setPosterizarrApiKey(data.posterizarr.api_key || "");
       }
+      if (data.nfs_mount) {
+        setNfsMountUrl(data.nfs_mount.url || "");
+        setNfsMountApiKey(data.nfs_mount.api_key || "");
+      }
       if (data.arr || data.instances) {
         setArrInstances(
           (data.arr && data.arr.instances) || data.instances || [],
@@ -271,6 +283,9 @@ export default function Settings() {
       }
       if (data.posterizarr?.url && data.posterizarr?.api_key) {
         validatePosterizarrOnLoad();
+      }
+      if (data.nfs_mount?.url && data.nfs_mount?.api_key) {
+        validateNfsMountOnLoad();
       }
       if (data.arr?.instances || data.instances) {
         const instances =
@@ -338,6 +353,15 @@ export default function Settings() {
       setPosterizarrTestStatus(result.connected ? "ok" : "fail");
     } catch (error) {
       setPosterizarrTestStatus("fail");
+    }
+  };
+
+  const validateNfsMountOnLoad = async () => {
+    try {
+      const result = await api.get("/nfs-mount/status");
+      setNfsMountTestStatus(result.connected ? "ok" : "fail");
+    } catch (error) {
+      setNfsMountTestStatus("fail");
     }
   };
 
@@ -635,6 +659,10 @@ export default function Settings() {
           url: posterizarrUrl || "",
           api_key: posterizarrApiKey || "",
         },
+        nfs_mount: {
+          url: nfsMountUrl || "",
+          api_key: nfsMountApiKey || "",
+        },
         arr: {
           instances: instancesPayload || [],
         },
@@ -783,6 +811,7 @@ export default function Settings() {
     },
     { id: "vpn_proxy", label: "VPN-Proxy", icon: Shield },
     { id: "posterizarr", label: "Posterizarr", icon: Palette },
+    { id: "nfs_mount", label: "NFS Mount", icon: HardDrive },
     { id: "arr", label: "*arr Instances", icon: Film },
     { id: "external_apps", label: "External Apps", icon: Globe },
     {
@@ -1950,6 +1979,169 @@ export default function Settings() {
                     <p>
                       Cannot connect to Posterizarr. Check the URL and API Key
                       are correct and the service is running.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NFS Mount Manager Settings */}
+        {activeTab === "nfs_mount" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <HardDrive className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  NFS Mount Manager
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  Connect to your NFS Mount Manager instance for NFS, MergerFS
+                  and VPN monitoring
+                </p>
+              </div>
+            </div>
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+              <div className="relative space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    NFS Mount Manager URL
+                  </label>
+                  <input
+                    type="url"
+                    value={nfsMountUrl}
+                    onChange={(e) => {
+                      setNfsMountUrl(e.target.value);
+                      setNfsMountTestStatus(null);
+                      setPendingChanges(true);
+                    }}
+                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    placeholder="http://nfs-mount:8550"
+                  />
+                  <p className="mt-2 text-xs text-theme-muted">
+                    The URL of your NFS Mount Manager instance (e.g.
+                    http://nfs-mount:8550 or http://192.168.1.100:8550)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    API Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNfsMountKey ? "text" : "password"}
+                      value={nfsMountApiKey}
+                      onChange={(e) => {
+                        setNfsMountApiKey(e.target.value);
+                        setNfsMountTestStatus(null);
+                        setPendingChanges(true);
+                      }}
+                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm"
+                      placeholder="Paste your NFS Mount Manager API key"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNfsMountKey(!showNfsMountKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                    >
+                      {showNfsMountKey ? (
+                        <EyeOff size={16} />
+                      ) : (
+                        <Eye size={16} />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-theme-muted">
+                    Generate an API key in the NFS Mount Manager Settings → API
+                    Keys
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!nfsMountUrl || !nfsMountApiKey) {
+                        toast.error("Please enter URL and API Key");
+                        return;
+                      }
+                      setNfsMountTestStatus("loading");
+                      try {
+                        const result = await api.get("/nfs-mount/status");
+                        if (result.connected) {
+                          setNfsMountTestStatus("ok");
+                          toast.success("NFS Mount Manager connected");
+                        } else {
+                          setNfsMountTestStatus("fail");
+                          toast.error(result.error || "Connection failed");
+                        }
+                      } catch (e) {
+                        setNfsMountTestStatus("fail");
+                        toast.error(
+                          e.message || "Cannot connect to NFS Mount Manager",
+                        );
+                      }
+                    }}
+                    disabled={
+                      nfsMountTestStatus === "loading" ||
+                      !nfsMountUrl ||
+                      !nfsMountApiKey
+                    }
+                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                      nfsMountTestStatus === "ok"
+                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                        : nfsMountTestStatus === "fail"
+                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                          : ""
+                    }`}
+                  >
+                    {nfsMountTestStatus === "loading" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Testing...
+                      </span>
+                    ) : nfsMountTestStatus === "ok" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        Connected
+                      </span>
+                    ) : (
+                      "Test Connection"
+                    )}
+                  </button>
+                </div>
+
+                {nfsMountTestStatus === "fail" && (
+                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p>
+                      Cannot connect to NFS Mount Manager. Check the URL and API
+                      Key are correct and the service is running.
                     </p>
                   </div>
                 )}

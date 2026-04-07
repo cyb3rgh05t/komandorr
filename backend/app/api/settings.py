@@ -52,6 +52,11 @@ class PosterizarrSettings(BaseModel):
     api_key: str
 
 
+class NfsMountSettings(BaseModel):
+    url: str
+    api_key: str
+
+
 class ArrInstance(BaseModel):
     id: str
     name: str
@@ -86,6 +91,7 @@ class SettingsResponse(BaseModel):
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
+    nfs_mount: Optional[NfsMountSettings] = None
     arr: Optional[ArrSettings] = None
     external_apps: Optional[ExternalAppsSettings] = None
 
@@ -99,6 +105,7 @@ class SettingsUpdate(BaseModel):
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
+    nfs_mount: Optional[NfsMountSettings] = None
     arr: Optional[ArrSettings] = None
     external_apps: Optional[ExternalAppsSettings] = None
 
@@ -205,6 +212,15 @@ async def get_settings(username: str = Depends(require_auth)):
         ),
     )
 
+    # Get NFS Mount Manager settings from config or defaults
+    nfs_mount_config = config_data.get("nfs_mount", {})
+    nfs_mount_settings = NfsMountSettings(
+        url=nfs_mount_config.get("url", getattr(settings, "NFS_MOUNT_URL", "")),
+        api_key=nfs_mount_config.get(
+            "api_key", getattr(settings, "NFS_MOUNT_API_KEY", "")
+        ),
+    )
+
     # Get *arr settings from config - support both old and legacy formats
     arr_config = config_data.get("arr", {})
     arr_settings = None
@@ -273,6 +289,7 @@ async def get_settings(username: str = Depends(require_auth)):
         uploader=uploader_settings,
         vpn_proxy=vpn_proxy_settings,
         posterizarr=posterizarr_settings,
+        nfs_mount=nfs_mount_settings,
         arr=arr_settings,
         external_apps=external_apps_settings,
     )
@@ -367,6 +384,17 @@ async def update_settings(
         settings.POSTERIZARR_URL = updates.posterizarr.url
         settings.POSTERIZARR_API_KEY = updates.posterizarr.api_key
         logger.info(f"Updated Posterizarr URL to: {updates.posterizarr.url}")
+
+    # Update NFS Mount Manager settings
+    if updates.nfs_mount is not None:
+        config_data["nfs_mount"] = {
+            "url": updates.nfs_mount.url,
+            "api_key": updates.nfs_mount.api_key,
+        }
+        # Update runtime settings
+        settings.NFS_MOUNT_URL = updates.nfs_mount.url
+        settings.NFS_MOUNT_API_KEY = updates.nfs_mount.api_key
+        logger.info(f"Updated NFS Mount URL to: {updates.nfs_mount.url}")
 
     # Update *arr settings
     if updates.arr is not None:

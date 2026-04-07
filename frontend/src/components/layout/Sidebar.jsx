@@ -347,6 +347,11 @@ export default function Sidebar() {
       ],
     },
     {
+      label: "NFS Manager",
+      icon: HardDrive,
+      path: "/nfs-mount",
+    },
+    {
       label: t("nav.plex"),
       icon: Tv2Icon,
       isTab: true,
