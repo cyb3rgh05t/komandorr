@@ -15,16 +15,6 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 
-function StatusDot({ active, pulse = true }) {
-  return (
-    <div
-      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-        active ? `bg-emerald-400 ${pulse ? "animate-pulse" : ""}` : "bg-red-400"
-      }`}
-    />
-  );
-}
-
 function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
   return (
     <div className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/50 transition-all">
@@ -107,44 +97,56 @@ export default function NfsMount() {
             </div>
             <div>
               <p className="font-medium text-yellow-400">
-                {connStatus?.error || "NFS Mount Manager is not configured"}
-              </p>
-              <p className="text-sm text-yellow-500/70">
-                Click here to configure in Settings
+                {"NFS Mount Manager is " +
+                  (connStatus?.error || "not configured")}
               </p>
             </div>
           </div>
         </Link>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header & Refresh */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-theme-primary/10">
             <HardDrive className="w-6 h-6 text-theme-primary" />
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-theme-text">
-              NFS Mount Manager
-            </h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <StatusDot active={isConnected} pulse={false} />
-              <span className="text-xs text-theme-muted">
-                {isConnected ? "Connected" : "Disconnected"}
+          <h1 className="text-xl sm:text-2xl font-bold text-theme-text">
+            NFS Mount Manager
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          {isConnected ? (
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg flex-1 sm:flex-initial justify-center">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-theme-text">
+                Live
               </span>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg flex-1 sm:flex-initial justify-center">
+              <span className="relative flex h-3 w-3">
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-theme-text">
+                Offline
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => refetchDash()}
+            disabled={dashFetching}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
+          >
+            <RefreshCw
+              className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
+            />
+            <span className="text-xs sm:text-sm">Refresh</span>
+          </button>
         </div>
-        <button
-          onClick={() => refetchDash()}
-          disabled={dashFetching}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all"
-        >
-          <RefreshCw
-            className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
-          />
-          <span className="hidden sm:inline">Refresh</span>
-        </button>
       </div>
 
       {isConnected && dashboard && !dashboard.not_configured && (
@@ -179,24 +181,28 @@ export default function NfsMount() {
 
           {/* NFS Client Mounts */}
           {mounts.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Download className="w-4 h-4 text-theme-primary" />
-                <h2 className="text-lg font-semibold text-theme-text">
-                  NFS Client Mounts
-                </h2>
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Download className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    NFS Client Mounts
+                  </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {mountedCount}/{mounts.length} mounted
+                  </span>
+                </div>
               </div>
-              <div className="space-y-2">
+              <div className="p-4 space-y-2">
                 {mounts.map((m) => {
                   const st = mountStatuses[m.id];
                   const mounted = st?.mounted || false;
                   return (
                     <div
                       key={m.id}
-                      className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <StatusDot active={mounted} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold text-theme-text">
@@ -226,21 +232,9 @@ export default function NfsMount() {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-theme-muted">
-                          <div
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              st?.server_reachable
-                                ? "bg-emerald-400"
-                                : "bg-red-400"
-                            }`}
-                          />
-                          Server{" "}
-                          {st?.server_reachable ? "Reachable" : "Unreachable"}
-                        </div>
                       </div>
-                      {/* Mini info cards */}
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Server
                           </p>
@@ -248,7 +242,7 @@ export default function NfsMount() {
                             {m.server_ip}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Remote Path
                           </p>
@@ -256,7 +250,7 @@ export default function NfsMount() {
                             {m.remote_path}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Local Path
                           </p>
@@ -264,26 +258,19 @@ export default function NfsMount() {
                             {m.local_path}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Server Status
                           </p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                st?.server_reachable
-                                  ? "bg-emerald-400"
-                                  : "bg-red-400"
-                              }`}
-                            />
-                            <p
-                              className={`text-xs ${st?.server_reachable ? "text-emerald-400" : "text-red-400"}`}
-                            >
-                              {st?.server_reachable
-                                ? "Reachable"
-                                : "Unreachable"}
-                            </p>
-                          </div>
+                          <span
+                            className={`inline-flex items-center mt-1 px-2 py-0.5 text-xs font-medium rounded-full border ${
+                              st?.server_reachable
+                                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                : "bg-red-500/15 text-red-400 border-red-500/30"
+                            }`}
+                          >
+                            {st?.server_reachable ? "Reachable" : "Unreachable"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -295,24 +282,28 @@ export default function NfsMount() {
 
           {/* NFS Server Exports */}
           {exports.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Upload className="w-4 h-4 text-theme-primary" />
-                <h2 className="text-lg font-semibold text-theme-text">
-                  NFS Server Exports
-                </h2>
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    NFS Server Exports
+                  </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {activeExports}/{exports.length} active
+                  </span>
+                </div>
               </div>
-              <div className="space-y-2">
+              <div className="p-4 space-y-2">
                 {exports.map((exp) => {
                   const st = exportStatuses[exp.id];
                   const active = st?.is_active || exp.is_active || false;
                   return (
                     <div
                       key={exp.id}
-                      className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <StatusDot active={active} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold text-theme-text">
@@ -338,9 +329,8 @@ export default function NfsMount() {
                           </div>
                         </div>
                       </div>
-                      {/* Mini info cards */}
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Export Path
                           </p>
@@ -348,7 +338,7 @@ export default function NfsMount() {
                             {exp.export_path}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Allowed Hosts
                           </p>
@@ -356,7 +346,7 @@ export default function NfsMount() {
                             {exp.allowed_hosts}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2 sm:col-span-1 col-span-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2 sm:col-span-1 col-span-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Options
                           </p>
@@ -374,14 +364,19 @@ export default function NfsMount() {
 
           {/* MergerFS */}
           {mergerfsConfigs.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <GitMerge className="w-4 h-4 text-theme-primary" />
-                <h2 className="text-lg font-semibold text-theme-text">
-                  MergerFS
-                </h2>
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <GitMerge className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    MergerFS
+                  </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {mergerMounted}/{mergerfsConfigs.length} mounted
+                  </span>
+                </div>
               </div>
-              <div className="space-y-2">
+              <div className="p-4 space-y-2">
                 {mergerfsConfigs.map((c) => {
                   const st = mergerfsStatuses[c.id];
                   const mounted = st?.mounted || false;
@@ -389,10 +384,9 @@ export default function NfsMount() {
                   return (
                     <div
                       key={c.id}
-                      className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <StatusDot active={mounted} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold text-theme-text">
@@ -415,9 +409,8 @@ export default function NfsMount() {
                           </div>
                         </div>
                       </div>
-                      {/* Mini info cards */}
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Mount Point
                           </p>
@@ -425,7 +418,7 @@ export default function NfsMount() {
                             {c.mount_point}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Sources
                           </p>
@@ -440,7 +433,7 @@ export default function NfsMount() {
                             ))}
                           </div>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Used Space
                           </p>
@@ -481,7 +474,7 @@ export default function NfsMount() {
                             <p className="text-xs text-theme-muted mt-0.5">—</p>
                           )}
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Free Space
                           </p>
@@ -503,24 +496,28 @@ export default function NfsMount() {
 
           {/* VPN Tunnels */}
           {vpnConfigs.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-4 h-4 text-theme-primary" />
-                <h2 className="text-lg font-semibold text-theme-text">
-                  VPN Tunnels
-                </h2>
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    VPN Tunnels
+                  </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {vpnConnected}/{vpnConfigs.length} connected
+                  </span>
+                </div>
               </div>
-              <div className="space-y-2">
+              <div className="p-4 space-y-2">
                 {vpnConfigs.map((v) => {
                   const st = vpnStatuses[v.id];
                   const connected = st?.connected || false;
                   return (
                     <div
                       key={v.id}
-                      className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <StatusDot active={connected} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-semibold text-theme-text">
@@ -546,9 +543,8 @@ export default function NfsMount() {
                           </div>
                         </div>
                       </div>
-                      {/* Mini info cards */}
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Interface
                           </p>
@@ -556,7 +552,7 @@ export default function NfsMount() {
                             {st?.interface_name || v.interface_name || "—"}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Endpoint
                           </p>
@@ -564,7 +560,7 @@ export default function NfsMount() {
                             {st?.endpoint || "—"}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Transfer
                           </p>
@@ -574,7 +570,7 @@ export default function NfsMount() {
                               : "—"}
                           </p>
                         </div>
-                        <div className="bg-theme-hover/80 border border-theme/50 rounded-lg px-3 py-2">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                           <p className="text-[10px] text-theme-muted uppercase tracking-wider">
                             Type
                           </p>
@@ -610,6 +606,20 @@ export default function NfsMount() {
       {isConnected && dashLoading && !dashboard && (
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-theme-primary"></div>
+        </div>
+      )}
+
+      {/* Not Configured State */}
+      {notConfigured && (
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+          <WifiOff className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+          <h3 className="text-lg font-semibold text-theme-text mb-2">
+            NFS Mount Manager Not Configured
+          </h3>
+          <p className="text-theme-text-muted max-w-md mx-auto">
+            Configure the NFS Mount Manager URL and API Key in the settings to
+            monitor NFS mounts, exports, MergerFS and VPN tunnels.
+          </p>
         </div>
       )}
     </div>
