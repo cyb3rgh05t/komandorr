@@ -53,7 +53,7 @@ services:
         "--no-access-log",
       ]
     ports:
-      - "8010"
+      - "8010:8010"
     networks:
       - "proxy"
     volumes:
