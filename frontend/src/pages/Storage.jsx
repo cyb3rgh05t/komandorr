@@ -985,7 +985,7 @@ const Storage = () => {
                 </div>
               </div>
               <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-4">
                   {unionfsServices.map((service) => (
                     <StorageServiceCard
                       key={service.id}
@@ -1013,7 +1013,7 @@ const Storage = () => {
                 </div>
               </div>
               <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-4">
                   {raidZfsServices.map((service) => (
                     <StorageServiceCard
                       key={service.id}

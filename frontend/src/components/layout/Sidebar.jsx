@@ -351,6 +351,7 @@ export default function Sidebar() {
       icon: HardDrive,
       path: "/nfs-mount",
     },
+    { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
     {
       label: t("nav.plex"),
       icon: Tv2Icon,
@@ -376,7 +377,7 @@ export default function Sidebar() {
         { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
       ],
     },
-    { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
+
     {
       label: t("nav.uploader"),
       icon: Upload,
