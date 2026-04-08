@@ -185,7 +185,7 @@ export default function NfsMount() {
               <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Download className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
+                  <h3 className="text-lg text-base font-semibold text-theme-text">
                     NFS Client Mounts
                   </h3>
                   <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -200,16 +200,16 @@ export default function NfsMount() {
                   return (
                     <div
                       key={m.id}
-                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-theme-text">
+                            <span className="text-base font-semibold text-theme-text">
                               {m.name}
                             </span>
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                              className={`inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border ${
                                 mounted
                                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                                   : "bg-red-500/15 text-red-400 border-red-500/30"
@@ -217,16 +217,16 @@ export default function NfsMount() {
                             >
                               {mounted ? "Mounted" : "Unmounted"}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                            <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
                               NFSv{m.nfs_version}
                             </span>
                             {m.auto_mount && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
+                              <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
                                 Auto
                               </span>
                             )}
                             {!m.enabled && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-gray-500/15 text-gray-400 border-gray-500/30">
+                              <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-gray-500/15 text-gray-400 border-gray-500/30">
                                 Disabled
                               </span>
                             )}
@@ -234,32 +234,32 @@ export default function NfsMount() {
                         </div>
                       </div>
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Server
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {m.server_ip}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Remote Path
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {m.remote_path}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Local Path
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {m.local_path}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Server Status
                           </p>
                           <span
@@ -286,7 +286,7 @@ export default function NfsMount() {
               <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Upload className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
+                  <h3 className="text-lg text-base font-semibold text-theme-text">
                     NFS Server Exports
                   </h3>
                   <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -301,16 +301,16 @@ export default function NfsMount() {
                   return (
                     <div
                       key={exp.id}
-                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-theme-text">
+                            <span className="text-base font-semibold text-theme-text">
                               {exp.name}
                             </span>
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                              className={`inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border ${
                                 active
                                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                                   : "bg-red-500/15 text-red-400 border-red-500/30"
@@ -318,11 +318,11 @@ export default function NfsMount() {
                             >
                               {active ? "Active" : "Inactive"}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                            <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
                               NFSv{exp.nfs_version}
                             </span>
                             {!exp.enabled && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-gray-500/15 text-gray-400 border-gray-500/30">
+                              <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-gray-500/15 text-gray-400 border-gray-500/30">
                                 Disabled
                               </span>
                             )}
@@ -330,27 +330,27 @@ export default function NfsMount() {
                         </div>
                       </div>
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Export Path
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {exp.export_path}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Allowed Hosts
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {exp.allowed_hosts}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2 sm:col-span-1 col-span-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3 sm:col-span-1 col-span-2">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Options
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {exp.options}
                           </p>
                         </div>
@@ -368,7 +368,7 @@ export default function NfsMount() {
               <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
                 <div className="flex items-center gap-2">
                   <GitMerge className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
+                  <h3 className="text-lg text-base font-semibold text-theme-text">
                     MergerFS
                   </h3>
                   <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -384,16 +384,16 @@ export default function NfsMount() {
                   return (
                     <div
                       key={c.id}
-                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-theme-text">
+                            <span className="text-base font-semibold text-theme-text">
                               {c.name}
                             </span>
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                              className={`inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border ${
                                 mounted
                                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                                   : "bg-red-500/15 text-red-400 border-red-500/30"
@@ -402,7 +402,7 @@ export default function NfsMount() {
                               {mounted ? "Mounted" : "Unmounted"}
                             </span>
                             {c.auto_mount && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
+                              <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
                                 Auto
                               </span>
                             )}
@@ -410,41 +410,40 @@ export default function NfsMount() {
                         </div>
                       </div>
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Mount Point
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {c.mount_point}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Sources
                           </p>
                           <div className="flex flex-wrap gap-1.5 mt-1">
                             {sources.map((src, i) => (
                               <span
                                 key={i}
-                                className="inline-flex items-center text-[10px] bg-blue-500/10 border border-blue-500/25 rounded-full px-2 py-0.5 font-mono text-blue-300 truncate max-w-[140px]"
+                                className="inline-flex items-center text-xs bg-blue-500/10 border border-blue-500/25 rounded-full px-2 py-0.5 font-mono text-blue-300 truncate max-w-[140px]"
                               >
                                 {src}
                               </span>
                             ))}
                           </div>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Used Space
                           </p>
                           {mounted && st?.used_space ? (
                             <div className="mt-0.5">
                               <div className="flex items-baseline justify-between">
-                                <p className="text-xs text-theme-text font-mono">
-                                  {st.used_space}
+                                <p className="text-sm text-theme-text font-mono">{st.used_space}
                                 </p>
                                 <p
-                                  className={`text-[10px] font-medium ${
+                                  className={`text-xs font-medium ${
                                     (st.used_percent || 0) > 90
                                       ? "text-red-400"
                                       : (st.used_percent || 0) > 70
@@ -471,19 +470,19 @@ export default function NfsMount() {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-theme-muted mt-0.5">—</p>
+                            <p className="text-sm text-theme-muted mt-0.5">—</p>
                           )}
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Free Space
                           </p>
                           {mounted && st?.free_space ? (
-                            <p className="text-xs text-emerald-400 font-mono mt-0.5">
+                            <p className="text-sm text-emerald-400 font-mono mt-0.5">
                               {st.free_space}
                             </p>
                           ) : (
-                            <p className="text-xs text-theme-muted mt-0.5">—</p>
+                            <p className="text-sm text-theme-muted mt-0.5">—</p>
                           )}
                         </div>
                       </div>
@@ -500,7 +499,7 @@ export default function NfsMount() {
               <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
+                  <h3 className="text-lg text-base font-semibold text-theme-text">
                     VPN Tunnels
                   </h3>
                   <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -515,16 +514,16 @@ export default function NfsMount() {
                   return (
                     <div
                       key={v.id}
-                      className="bg-theme-hover border border-theme rounded-lg p-4 hover:border-theme-primary/30 transition-all"
+                      className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-theme-text">
+                            <span className="text-base font-semibold text-theme-text">
                               {v.name}
                             </span>
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                              className={`inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border ${
                                 connected
                                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                                   : "bg-red-500/15 text-red-400 border-red-500/30"
@@ -532,11 +531,11 @@ export default function NfsMount() {
                             >
                               {connected ? "Connected" : "Disconnected"}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                            <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
                               {v.vpn_type?.toUpperCase()}
                             </span>
                             {v.auto_connect && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
+                              <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
                                 Auto
                               </span>
                             )}
@@ -544,37 +543,37 @@ export default function NfsMount() {
                         </div>
                       </div>
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Interface
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {st?.interface_name || v.interface_name || "—"}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Endpoint
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {st?.endpoint || "—"}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Transfer
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {st?.transfer
                               ? `↑ ${st.transfer.sent || "0 B"} / ↓ ${st.transfer.received || "0 B"}`
                               : "—"}
                           </p>
                         </div>
-                        <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
-                          <p className="text-[10px] text-theme-muted uppercase tracking-wider">
+                        <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">
+                          <p className="text-xs text-theme-muted uppercase tracking-wider">
                             Type
                           </p>
-                          <p className="text-xs text-theme-text font-mono truncate mt-0.5">
+                          <p className="text-sm text-theme-text font-mono truncate mt-0.5">
                             {v.vpn_type || "—"}
                           </p>
                         </div>
@@ -613,7 +612,7 @@ export default function NfsMount() {
       {notConfigured && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
           <WifiOff className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-theme-text mb-2">
+          <h3 className="text-lg text-base font-semibold text-theme-text mb-2">
             NFS Mount Manager Not Configured
           </h3>
           <p className="text-theme-text-muted max-w-md mx-auto">

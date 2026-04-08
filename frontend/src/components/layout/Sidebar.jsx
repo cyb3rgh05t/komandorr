@@ -293,6 +293,50 @@ export default function Sidebar() {
     );
   }).length;
 
+  // Fetch NFS Mount dashboard for error badge
+  const { data: nfsMountDashboard } = useQuery({
+    queryKey: ["nfs-mount-dashboard-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/nfs-mount/dashboard");
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10000,
+    refetchInterval: 30000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const nfsMountIssueCount = useMemo(() => {
+    if (!nfsMountDashboard || nfsMountDashboard.not_configured) return 0;
+    let count = 0;
+    const mounts = nfsMountDashboard.nfs_mounts || [];
+    const mountStatuses = nfsMountDashboard.nfs_mount_statuses || {};
+    const exports = nfsMountDashboard.nfs_exports || [];
+    const exportStatuses = nfsMountDashboard.nfs_export_statuses || {};
+    const mergerfs = nfsMountDashboard.mergerfs_configs || [];
+    const mergerfsStatuses = nfsMountDashboard.mergerfs_statuses || {};
+    const vpns = nfsMountDashboard.vpn_configs || [];
+    const vpnStatuses = nfsMountDashboard.vpn_statuses || {};
+    mounts.forEach((m) => {
+      if (m.enabled && !mountStatuses[m.id]?.mounted) count++;
+      if (m.enabled && !mountStatuses[m.id]?.server_reachable) count++;
+    });
+    exports.forEach((e) => {
+      if (e.enabled && !(exportStatuses[e.id]?.is_active || e.is_active))
+        count++;
+    });
+    mergerfs.forEach((c) => {
+      if (!mergerfsStatuses[c.id]?.mounted) count++;
+    });
+    vpns.forEach((v) => {
+      if (v.enabled && !vpnStatuses[v.id]?.connected) count++;
+    });
+    return count;
+  }, [nfsMountDashboard]);
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
@@ -916,6 +960,11 @@ export default function Sidebar() {
                   const isStorage = item.path === "/storage";
                   const showStorageBadge = isStorage && storageIssuesCount > 0;
 
+                  // Check for NFS Mount issues badge
+                  const isNfsMount = item.path === "/nfs-mount";
+                  const showNfsMountBadge =
+                    isNfsMount && nfsMountIssueCount > 0;
+
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -961,6 +1010,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {storageIssuesCount}
+                          </span>
+                        )}
+                        {showNfsMountBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {nfsMountIssueCount}
                           </span>
                         )}
                       </Link>
