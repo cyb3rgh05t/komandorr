@@ -392,66 +392,74 @@ export default function VpnProxy() {
                   : null;
 
                 return (
-                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-3 py-2 col-span-2 space-y-1">
-                    <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
+                    <p className="text-[10px] text-theme-text-muted uppercase tracking-wider font-semibold">
                       HTTP Proxy
                     </p>
-                    <div
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/hint"
-                      onClick={() => copyToClipboard(internalUrl)}
-                      title="Click to copy internal proxy URL"
-                    >
-                      <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                        Internal
-                      </span>
-                      <p className="text-[9px] text-emerald-400/70 font-mono truncate flex-1">
-                        http://{authDisplay}
-                        {ip}:{internalPort}
-                      </p>
-                      {copiedUrl === internalUrl ? (
-                        <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/hint:opacity-100 transition-opacity shrink-0" />
-                      )}
-                    </div>
-                    <div
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/hhost"
-                      onClick={() => copyToClipboard(hostnameUrl)}
-                      title="Click to copy hostname proxy URL"
-                    >
-                      <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                        Host
-                      </span>
-                      <p className="text-[9px] text-amber-400/70 font-mono truncate flex-1">
-                        http://{authDisplay}
-                        {dockerName}:{internalPort}
-                      </p>
-                      {copiedUrl === hostnameUrl ? (
-                        <Check className="w-3 h-3 text-amber-400 shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/hhost:opacity-100 transition-opacity shrink-0" />
-                      )}
-                    </div>
-                    {externalUrl && (
-                      <div
-                        className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/hext"
-                        onClick={() => copyToClipboard(externalUrl)}
-                        title="Click to copy external proxy URL"
-                      >
-                        <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                          External
-                        </span>
-                        <p className="text-[9px] text-blue-400/70 font-mono truncate flex-1">
-                          http://{authDisplay}
-                          {serverIp}:{externalPort}
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-[9px] font-semibold uppercase text-emerald-400/70 mb-1">
+                          Internal
                         </p>
-                        {copiedUrl === externalUrl ? (
-                          <Check className="w-3 h-3 text-blue-400 shrink-0" />
-                        ) : (
-                          <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/hext:opacity-100 transition-opacity shrink-0" />
-                        )}
+                        <button
+                          onClick={() => copyToClipboard(internalUrl)}
+                          title="Click to copy"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer w-full"
+                        >
+                          <span className="truncate flex-1 text-left">
+                            http://{authDisplay}
+                            {ip}:{internalPort}
+                          </span>
+                          {copiedUrl === internalUrl ? (
+                            <Check className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                          )}
+                        </button>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-[9px] font-semibold uppercase text-amber-400/70 mb-1">
+                          Hostname
+                        </p>
+                        <button
+                          onClick={() => copyToClipboard(hostnameUrl)}
+                          title="Click to copy"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer w-full"
+                        >
+                          <span className="truncate flex-1 text-left">
+                            http://{authDisplay}
+                            {dockerName}:{internalPort}
+                          </span>
+                          {copiedUrl === hostnameUrl ? (
+                            <Check className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                          )}
+                        </button>
+                      </div>
+                      {externalUrl && (
+                        <div>
+                          <p className="text-[9px] font-semibold uppercase text-blue-400/70 mb-1">
+                            External
+                          </p>
+                          <button
+                            onClick={() => copyToClipboard(externalUrl)}
+                            title="Click to copy"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all cursor-pointer w-full"
+                          >
+                            <span className="truncate flex-1 text-left">
+                              http://{authDisplay}
+                              {serverIp}:{externalPort}
+                            </span>
+                            {copiedUrl === externalUrl ? (
+                              <Check className="w-3 h-3 shrink-0" />
+                            ) : (
+                              <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
@@ -475,63 +483,71 @@ export default function VpnProxy() {
                   : null;
 
                 return (
-                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-3 py-2 col-span-2 space-y-1">
-                    <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
+                    <p className="text-[10px] text-theme-text-muted uppercase tracking-wider font-semibold">
                       Shadowsocks
                     </p>
-                    <div
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/ssint"
-                      onClick={() => copyToClipboard(ssInternal)}
-                      title="Click to copy internal Shadowsocks URL"
-                    >
-                      <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                        Internal
-                      </span>
-                      <p className="text-[9px] text-emerald-400/70 font-mono truncate flex-1">
-                        {ssInternal}
-                      </p>
-                      {copiedUrl === ssInternal ? (
-                        <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/ssint:opacity-100 transition-opacity shrink-0" />
-                      )}
-                    </div>
-                    <div
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/sshost"
-                      onClick={() => copyToClipboard(ssHostname)}
-                      title="Click to copy hostname Shadowsocks URL"
-                    >
-                      <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                        Host
-                      </span>
-                      <p className="text-[9px] text-amber-400/70 font-mono truncate flex-1">
-                        {ssHostname}
-                      </p>
-                      {copiedUrl === ssHostname ? (
-                        <Check className="w-3 h-3 text-amber-400 shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/sshost:opacity-100 transition-opacity shrink-0" />
-                      )}
-                    </div>
-                    {ssExternal && (
-                      <div
-                        className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/ssext"
-                        onClick={() => copyToClipboard(ssExternal)}
-                        title="Click to copy external Shadowsocks URL"
-                      >
-                        <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                          External
-                        </span>
-                        <p className="text-[9px] text-blue-400/70 font-mono truncate flex-1">
-                          {ssExternal}
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-[9px] font-semibold uppercase text-emerald-400/70 mb-1">
+                          Internal
                         </p>
-                        {copiedUrl === ssExternal ? (
-                          <Check className="w-3 h-3 text-blue-400 shrink-0" />
-                        ) : (
-                          <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/ssext:opacity-100 transition-opacity shrink-0" />
-                        )}
+                        <button
+                          onClick={() => copyToClipboard(ssInternal)}
+                          title="Click to copy"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer w-full"
+                        >
+                          <span className="truncate flex-1 text-left">
+                            {ssInternal}
+                          </span>
+                          {copiedUrl === ssInternal ? (
+                            <Check className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                          )}
+                        </button>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-[9px] font-semibold uppercase text-amber-400/70 mb-1">
+                          Hostname
+                        </p>
+                        <button
+                          onClick={() => copyToClipboard(ssHostname)}
+                          title="Click to copy"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer w-full"
+                        >
+                          <span className="truncate flex-1 text-left">
+                            {ssHostname}
+                          </span>
+                          {copiedUrl === ssHostname ? (
+                            <Check className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                          )}
+                        </button>
+                      </div>
+                      {ssExternal && (
+                        <div>
+                          <p className="text-[9px] font-semibold uppercase text-blue-400/70 mb-1">
+                            External
+                          </p>
+                          <button
+                            onClick={() => copyToClipboard(ssExternal)}
+                            title="Click to copy"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all cursor-pointer w-full"
+                          >
+                            <span className="truncate flex-1 text-left">
+                              {ssExternal}
+                            </span>
+                            {copiedUrl === ssExternal ? (
+                              <Check className="w-3 h-3 shrink-0" />
+                            ) : (
+                              <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
@@ -557,63 +573,71 @@ export default function VpnProxy() {
                   : null;
 
                 return (
-                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-3 py-2 col-span-2 space-y-1">
-                    <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
+                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
+                    <p className="text-[10px] text-theme-text-muted uppercase tracking-wider font-semibold">
                       SOCKS5 Proxy
                     </p>
-                    <div
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/s5int"
-                      onClick={() => copyToClipboard(socks5Internal)}
-                      title="Click to copy internal SOCKS5 URL"
-                    >
-                      <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                        Internal
-                      </span>
-                      <p className="text-[9px] text-emerald-400/70 font-mono truncate flex-1">
-                        {socks5Internal}
-                      </p>
-                      {copiedUrl === socks5Internal ? (
-                        <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/s5int:opacity-100 transition-opacity shrink-0" />
-                      )}
-                    </div>
-                    <div
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/s5host"
-                      onClick={() => copyToClipboard(socks5Hostname)}
-                      title="Click to copy hostname SOCKS5 URL"
-                    >
-                      <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                        Host
-                      </span>
-                      <p className="text-[9px] text-amber-400/70 font-mono truncate flex-1">
-                        {socks5Hostname}
-                      </p>
-                      {copiedUrl === socks5Hostname ? (
-                        <Check className="w-3 h-3 text-amber-400 shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/s5host:opacity-100 transition-opacity shrink-0" />
-                      )}
-                    </div>
-                    {socks5External && (
-                      <div
-                        className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity group/s5ext"
-                        onClick={() => copyToClipboard(socks5External)}
-                        title="Click to copy external SOCKS5 URL"
-                      >
-                        <span className="text-[9px] text-theme-text-muted font-medium uppercase w-14 shrink-0">
-                          External
-                        </span>
-                        <p className="text-[9px] text-blue-400/70 font-mono truncate flex-1">
-                          {socks5External}
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-[9px] font-semibold uppercase text-emerald-400/70 mb-1">
+                          Internal
                         </p>
-                        {copiedUrl === socks5External ? (
-                          <Check className="w-3 h-3 text-blue-400 shrink-0" />
-                        ) : (
-                          <Copy className="w-3 h-3 text-theme-text-muted opacity-0 group-hover/s5ext:opacity-100 transition-opacity shrink-0" />
-                        )}
+                        <button
+                          onClick={() => copyToClipboard(socks5Internal)}
+                          title="Click to copy"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer w-full"
+                        >
+                          <span className="truncate flex-1 text-left">
+                            {socks5Internal}
+                          </span>
+                          {copiedUrl === socks5Internal ? (
+                            <Check className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                          )}
+                        </button>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-[9px] font-semibold uppercase text-amber-400/70 mb-1">
+                          Hostname
+                        </p>
+                        <button
+                          onClick={() => copyToClipboard(socks5Hostname)}
+                          title="Click to copy"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer w-full"
+                        >
+                          <span className="truncate flex-1 text-left">
+                            {socks5Hostname}
+                          </span>
+                          {copiedUrl === socks5Hostname ? (
+                            <Check className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                          )}
+                        </button>
+                      </div>
+                      {socks5External && (
+                        <div>
+                          <p className="text-[9px] font-semibold uppercase text-blue-400/70 mb-1">
+                            External
+                          </p>
+                          <button
+                            onClick={() => copyToClipboard(socks5External)}
+                            title="Click to copy"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all cursor-pointer w-full"
+                          >
+                            <span className="truncate flex-1 text-left">
+                              {socks5External}
+                            </span>
+                            {copiedUrl === socks5External ? (
+                              <Check className="w-3 h-3 shrink-0" />
+                            ) : (
+                              <Copy className="w-3 h-3 shrink-0 opacity-50" />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
