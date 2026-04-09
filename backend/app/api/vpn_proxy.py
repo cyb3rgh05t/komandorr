@@ -48,6 +48,28 @@ async def proxy_get(path: str):
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
 
 
+async def proxy_post(path: str):
+    """Forward a POST request to the VPN Proxy Manager API."""
+    base_url, api_key = get_vpn_proxy_config()
+    if not base_url or not api_key:
+        raise HTTPException(status_code=400, detail="VPN Proxy Manager not configured")
+
+    url = f"{base_url.rstrip('/')}/api{path}"
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(url, headers={"X-API-Key": api_key})
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.RequestError as e:
+        logger.error(f"VPN Proxy Manager unreachable: {e}")
+        raise HTTPException(
+            status_code=502, detail=f"VPN Proxy Manager unreachable: {e}"
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"VPN Proxy Manager error: {e.response.status_code}")
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+
+
 @router.get("/status")
 async def vpn_proxy_status(username: str = Depends(require_auth)):
     """Check if VPN Proxy Manager is reachable."""
@@ -88,6 +110,26 @@ async def get_dependents(username: str = Depends(require_auth)):
     if not _is_configured():
         return []
     return await proxy_get("/containers/dependents") or []
+
+
+@router.get("/containers/dependents-batch")
+async def get_dependents_batch(username: str = Depends(require_auth)):
+    """Get dependents for every VPN container, keyed by container DB id."""
+    if not _is_configured():
+        return {}
+    containers = await proxy_get("/containers") or []
+    import asyncio
+
+    async def _fetch(cid: int):
+        try:
+            deps = await proxy_get(f"/containers/{cid}/dependents")
+            return cid, deps or []
+        except Exception:
+            return cid, []
+
+    tasks = [_fetch(c["id"]) for c in containers if c.get("id")]
+    pairs = await asyncio.gather(*tasks)
+    return {str(cid): deps for cid, deps in pairs if deps}
 
 
 @router.get("/containers/{container_id}")
@@ -146,3 +188,20 @@ async def get_network_usage(
     if not _is_configured():
         return {}
     return await proxy_get(f"/monitoring/network-usage?provider={provider}") or {}
+
+
+@router.post("/containers/{container_id}/dependents/{docker_name}/{action}")
+async def control_dependent(
+    container_id: int,
+    docker_name: str,
+    action: str,
+    username: str = Depends(require_auth),
+):
+    """Control a dependent container (start/stop/restart)."""
+    if action not in ("start", "stop", "restart"):
+        raise HTTPException(status_code=400, detail="Invalid action")
+    if not _is_configured():
+        raise HTTPException(status_code=400, detail="VPN Proxy Manager not configured")
+    return await proxy_post(
+        f"/containers/{container_id}/dependents/{docker_name}/{action}"
+    )
