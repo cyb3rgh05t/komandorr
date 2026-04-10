@@ -52,9 +52,15 @@ class PosterizarrSettings(BaseModel):
     api_key: str
 
 
-class NfsMountSettings(BaseModel):
+class NfsMountInstance(BaseModel):
+    id: str
+    name: str
     url: str
     api_key: str
+
+
+class NfsMountSettings(BaseModel):
+    instances: list[NfsMountInstance] = []
 
 
 class ArrInstance(BaseModel):
@@ -214,12 +220,22 @@ async def get_settings(username: str = Depends(require_auth)):
 
     # Get NFS Mount Manager settings from config or defaults
     nfs_mount_config = config_data.get("nfs_mount", {})
-    nfs_mount_settings = NfsMountSettings(
-        url=nfs_mount_config.get("url", getattr(settings, "NFS_MOUNT_URL", "")),
-        api_key=nfs_mount_config.get(
-            "api_key", getattr(settings, "NFS_MOUNT_API_KEY", "")
-        ),
-    )
+    nfs_mount_instances = []
+    if "instances" in nfs_mount_config:
+        nfs_mount_instances = [
+            NfsMountInstance(**inst) for inst in nfs_mount_config["instances"]
+        ]
+    elif nfs_mount_config.get("url") or nfs_mount_config.get("api_key"):
+        # Backward compat: old single-manager format
+        nfs_mount_instances = [
+            NfsMountInstance(
+                id="nfs-default",
+                name="NFS Mount Manager",
+                url=nfs_mount_config.get("url", ""),
+                api_key=nfs_mount_config.get("api_key", ""),
+            )
+        ]
+    nfs_mount_settings = NfsMountSettings(instances=nfs_mount_instances)
 
     # Get *arr settings from config - support both old and legacy formats
     arr_config = config_data.get("arr", {})
@@ -388,13 +404,29 @@ async def update_settings(
     # Update NFS Mount Manager settings
     if updates.nfs_mount is not None:
         config_data["nfs_mount"] = {
-            "url": updates.nfs_mount.url,
-            "api_key": updates.nfs_mount.api_key,
+            "instances": [
+                {
+                    "id": inst.id,
+                    "name": inst.name,
+                    "url": inst.url,
+                    "api_key": inst.api_key,
+                }
+                for inst in updates.nfs_mount.instances
+            ]
         }
         # Update runtime settings
-        settings.NFS_MOUNT_URL = updates.nfs_mount.url
-        settings.NFS_MOUNT_API_KEY = updates.nfs_mount.api_key
-        logger.info(f"Updated NFS Mount URL to: {updates.nfs_mount.url}")
+        settings.NFS_MOUNT_INSTANCES = [
+            {
+                "id": inst.id,
+                "name": inst.name,
+                "url": inst.url,
+                "api_key": inst.api_key,
+            }
+            for inst in updates.nfs_mount.instances
+        ]
+        logger.info(
+            f"Updated NFS Mount instances: {len(updates.nfs_mount.instances)} instances"
+        )
 
     # Update *arr settings
     if updates.arr is not None:

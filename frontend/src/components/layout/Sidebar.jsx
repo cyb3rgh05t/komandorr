@@ -312,27 +312,31 @@ export default function Sidebar() {
   const nfsMountIssueCount = useMemo(() => {
     if (!nfsMountDashboard || nfsMountDashboard.not_configured) return 0;
     let count = 0;
-    const mounts = nfsMountDashboard.nfs_mounts || [];
-    const mountStatuses = nfsMountDashboard.nfs_mount_statuses || {};
-    const exports = nfsMountDashboard.nfs_exports || [];
-    const exportStatuses = nfsMountDashboard.nfs_export_statuses || {};
-    const mergerfs = nfsMountDashboard.mergerfs_configs || [];
-    const mergerfsStatuses = nfsMountDashboard.mergerfs_statuses || {};
-    const vpns = nfsMountDashboard.vpn_configs || [];
-    const vpnStatuses = nfsMountDashboard.vpn_statuses || {};
-    mounts.forEach((m) => {
-      if (m.enabled && !mountStatuses[m.id]?.mounted) count++;
-      if (m.enabled && !mountStatuses[m.id]?.server_reachable) count++;
-    });
-    exports.forEach((e) => {
-      if (e.enabled && !(exportStatuses[e.id]?.is_active || e.is_active))
-        count++;
-    });
-    mergerfs.forEach((c) => {
-      if (!mergerfsStatuses[c.id]?.mounted) count++;
-    });
-    vpns.forEach((v) => {
-      if (v.enabled && !vpnStatuses[v.id]?.connected) count++;
+    const managers = nfsMountDashboard.managers || [];
+    managers.forEach((mgr) => {
+      if (!mgr.connected) return;
+      const mounts = mgr.nfs_mounts || [];
+      const mountStatuses = mgr.nfs_mount_statuses || {};
+      const exports = mgr.nfs_exports || [];
+      const exportStatuses = mgr.nfs_export_statuses || {};
+      const mergerfs = mgr.mergerfs_configs || [];
+      const mergerfsStatuses = mgr.mergerfs_statuses || {};
+      const vpns = mgr.vpn_configs || [];
+      const vpnStatuses = mgr.vpn_statuses || {};
+      mounts.forEach((m) => {
+        if (m.enabled && !mountStatuses[m.id]?.mounted) count++;
+        if (m.enabled && !mountStatuses[m.id]?.server_reachable) count++;
+      });
+      exports.forEach((e) => {
+        if (e.enabled && !(exportStatuses[e.id]?.is_active || e.is_active))
+          count++;
+      });
+      mergerfs.forEach((c) => {
+        if (!mergerfsStatuses[c.id]?.mounted) count++;
+      });
+      vpns.forEach((v) => {
+        if (v.enabled && !vpnStatuses[v.id]?.connected) count++;
+      });
     });
     return count;
   }, [nfsMountDashboard]);

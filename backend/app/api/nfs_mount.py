@@ -10,28 +10,21 @@ router = APIRouter(prefix="/api/nfs-mount", tags=["nfs-mount"])
 _logged_not_configured = False
 
 
-def get_nfs_mount_config() -> tuple[str, str]:
-    """Return (base_url, api_key) from runtime settings."""
-    url = getattr(settings, "NFS_MOUNT_URL", "")
-    api_key = getattr(settings, "NFS_MOUNT_API_KEY", "")
-    return url, api_key
+def get_nfs_mount_instances() -> list[dict]:
+    """Return list of NFS Mount Manager instances from runtime settings."""
+    return getattr(settings, "NFS_MOUNT_INSTANCES", []) or []
 
 
-def _is_configured() -> bool:
-    url, api_key = get_nfs_mount_config()
-    return bool(url and api_key)
+def _find_instance(instance_id: str) -> dict | None:
+    """Find a specific instance by ID."""
+    for inst in get_nfs_mount_instances():
+        if inst.get("id") == instance_id:
+            return inst
+    return None
 
 
-async def proxy_get(path: str):
-    """Forward a GET request to the NFS Mount Manager API."""
-    base_url, api_key = get_nfs_mount_config()
-    if not base_url or not api_key:
-        global _logged_not_configured
-        if not _logged_not_configured:
-            logger.info("NFS Mount Manager not configured — skipping request")
-            _logged_not_configured = True
-        return None
-
+async def _proxy_get(base_url: str, api_key: str, path: str):
+    """Forward a GET request to a specific NFS Mount Manager API."""
     url = f"{base_url.rstrip('/')}/api{path}"
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -39,60 +32,160 @@ async def proxy_get(path: str):
             resp.raise_for_status()
             return resp.json()
     except httpx.RequestError as e:
-        logger.error(f"NFS Mount Manager unreachable: {e}")
-        raise HTTPException(
-            status_code=502, detail=f"NFS Mount Manager unreachable: {e}"
-        )
+        logger.error(f"NFS Mount Manager unreachable ({base_url}): {e}")
+        return None
     except httpx.HTTPStatusError as e:
-        logger.error(f"NFS Mount Manager error: {e.response.status_code}")
-        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+        logger.error(f"NFS Mount Manager error ({base_url}): {e.response.status_code}")
+        return None
 
 
 @router.get("/status")
 async def nfs_mount_status(username: str = Depends(require_auth)):
-    """Check if NFS Mount Manager is reachable."""
-    base_url, api_key = get_nfs_mount_config()
-    if not base_url or not api_key:
-        return {"connected": False, "error": "Not configured"}
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(
-                f"{base_url.rstrip('/')}/api/system/health",
+    """Check status of all NFS Mount Manager instances."""
+    instances = get_nfs_mount_instances()
+    if not instances:
+        return {"instances": [], "any_connected": False}
+
+    results = []
+    for inst in instances:
+        base_url = inst.get("url", "")
+        api_key = inst.get("api_key", "")
+        inst_id = inst.get("id", "")
+        inst_name = inst.get("name", inst_id)
+        if not base_url or not api_key:
+            results.append(
+                {
+                    "id": inst_id,
+                    "name": inst_name,
+                    "connected": False,
+                    "error": "Not configured",
+                }
             )
-            resp.raise_for_status()
-            return {"connected": True, "url": base_url}
-    except Exception as e:
-        return {"connected": False, "error": str(e)}
+            continue
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    f"{base_url.rstrip('/')}/api/system/health",
+                )
+                resp.raise_for_status()
+                results.append(
+                    {
+                        "id": inst_id,
+                        "name": inst_name,
+                        "connected": True,
+                        "url": base_url,
+                    }
+                )
+        except Exception as e:
+            results.append(
+                {
+                    "id": inst_id,
+                    "name": inst_name,
+                    "connected": False,
+                    "error": str(e),
+                }
+            )
+
+    any_connected = any(r["connected"] for r in results)
+    return {"instances": results, "any_connected": any_connected}
 
 
 @router.get("/dashboard")
 async def get_dashboard(username: str = Depends(require_auth)):
-    """Get combined dashboard data: NFS mounts, MergerFS, VPN status."""
-    if not _is_configured():
-        return {"not_configured": True}
+    """Get combined dashboard data from all NFS Mount Manager instances."""
+    instances = get_nfs_mount_instances()
+    if not instances:
+        return {"not_configured": True, "managers": []}
 
-    mounts = await proxy_get("/nfs/mounts") or []
-    mount_statuses = await proxy_get("/nfs/status") or []
-    mergerfs_configs = await proxy_get("/mergerfs/configs") or []
-    mergerfs_statuses = await proxy_get("/mergerfs/status") or []
-    vpn_configs = await proxy_get("/vpn/configs") or []
-    vpn_statuses = await proxy_get("/vpn/status") or []
-    exports = await proxy_get("/nfs/exports") or []
-    export_statuses = await proxy_get("/nfs/exports-status") or []
+    global _logged_not_configured
 
-    # Build status maps
-    mount_status_map = {s["id"]: s for s in mount_statuses}
-    mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses}
-    vpn_status_map = {s["id"]: s for s in vpn_statuses}
-    export_status_map = {s["id"]: s for s in export_statuses}
+    managers = []
+    for inst in instances:
+        base_url = inst.get("url", "")
+        api_key = inst.get("api_key", "")
+        inst_id = inst.get("id", "")
+        inst_name = inst.get("name", inst_id)
 
-    return {
-        "nfs_mounts": mounts,
-        "nfs_mount_statuses": mount_status_map,
-        "nfs_exports": exports,
-        "nfs_export_statuses": export_status_map,
-        "mergerfs_configs": mergerfs_configs,
-        "mergerfs_statuses": mergerfs_status_map,
-        "vpn_configs": vpn_configs,
-        "vpn_statuses": vpn_status_map,
-    }
+        if not base_url or not api_key:
+            if not _logged_not_configured:
+                logger.info(
+                    f"NFS Mount Manager '{inst_name}' not configured — skipping"
+                )
+                _logged_not_configured = True
+            managers.append(
+                {
+                    "id": inst_id,
+                    "name": inst_name,
+                    "connected": False,
+                    "error": "Not configured",
+                    "nfs_mounts": [],
+                    "nfs_mount_statuses": {},
+                    "nfs_exports": [],
+                    "nfs_export_statuses": {},
+                    "mergerfs_configs": [],
+                    "mergerfs_statuses": {},
+                    "vpn_configs": [],
+                    "vpn_statuses": {},
+                }
+            )
+            continue
+
+        try:
+            mounts = await _proxy_get(base_url, api_key, "/nfs/mounts") or []
+            mount_statuses = await _proxy_get(base_url, api_key, "/nfs/status") or []
+            mergerfs_configs = (
+                await _proxy_get(base_url, api_key, "/mergerfs/configs") or []
+            )
+            mergerfs_statuses = (
+                await _proxy_get(base_url, api_key, "/mergerfs/status") or []
+            )
+            vpn_configs = await _proxy_get(base_url, api_key, "/vpn/configs") or []
+            vpn_statuses = await _proxy_get(base_url, api_key, "/vpn/status") or []
+            exports = await _proxy_get(base_url, api_key, "/nfs/exports") or []
+            export_statuses = (
+                await _proxy_get(base_url, api_key, "/nfs/exports-status") or []
+            )
+
+            # Build status maps
+            mount_status_map = {s["id"]: s for s in mount_statuses}
+            mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses}
+            vpn_status_map = {s["id"]: s for s in vpn_statuses}
+            export_status_map = {s["id"]: s for s in export_statuses}
+
+            managers.append(
+                {
+                    "id": inst_id,
+                    "name": inst_name,
+                    "connected": True,
+                    "nfs_mounts": mounts,
+                    "nfs_mount_statuses": mount_status_map,
+                    "nfs_exports": exports,
+                    "nfs_export_statuses": export_status_map,
+                    "mergerfs_configs": mergerfs_configs,
+                    "mergerfs_statuses": mergerfs_status_map,
+                    "vpn_configs": vpn_configs,
+                    "vpn_statuses": vpn_status_map,
+                }
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch dashboard for NFS Manager '{inst_name}': {e}"
+            )
+            managers.append(
+                {
+                    "id": inst_id,
+                    "name": inst_name,
+                    "connected": False,
+                    "error": str(e),
+                    "nfs_mounts": [],
+                    "nfs_mount_statuses": {},
+                    "nfs_exports": [],
+                    "nfs_export_statuses": {},
+                    "mergerfs_configs": [],
+                    "mergerfs_statuses": {},
+                    "vpn_configs": [],
+                    "vpn_statuses": {},
+                }
+            )
+
+    return {"not_configured": False, "managers": managers}

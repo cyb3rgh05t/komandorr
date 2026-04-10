@@ -61,9 +61,8 @@ class Settings(BaseSettings):
     POSTERIZARR_URL: str = ""
     POSTERIZARR_API_KEY: str = ""
 
-    # NFS Mount Manager Configuration
-    NFS_MOUNT_URL: str = ""
-    NFS_MOUNT_API_KEY: str = ""
+    # NFS Mount Manager Configuration (multi-instance)
+    NFS_MOUNT_INSTANCES: list = []
 
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
@@ -132,10 +131,19 @@ class Settings(BaseSettings):
             )
         if "nfs_mount" in config_data:
             nfs_mount_config = config_data["nfs_mount"]
-            self.NFS_MOUNT_URL = nfs_mount_config.get("url", self.NFS_MOUNT_URL)
-            self.NFS_MOUNT_API_KEY = nfs_mount_config.get(
-                "api_key", self.NFS_MOUNT_API_KEY
-            )
+            # New multi-instance format
+            if "instances" in nfs_mount_config:
+                self.NFS_MOUNT_INSTANCES = nfs_mount_config["instances"]
+            # Backward compat: old single-manager format
+            elif nfs_mount_config.get("url") or nfs_mount_config.get("api_key"):
+                self.NFS_MOUNT_INSTANCES = [
+                    {
+                        "id": "nfs-default",
+                        "name": "NFS Mount Manager",
+                        "url": nfs_mount_config.get("url", ""),
+                        "api_key": nfs_mount_config.get("api_key", ""),
+                    }
+                ]
 
     @property
     def cors_origins_list(self) -> List[str]:
