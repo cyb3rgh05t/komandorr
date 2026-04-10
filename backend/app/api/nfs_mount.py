@@ -66,6 +66,7 @@ async def nfs_mount_status(username: str = Depends(require_auth)):
             async with httpx.AsyncClient(timeout=10) as client:
                 resp = await client.get(
                     f"{base_url.rstrip('/')}/api/system/health",
+                    headers={"X-API-Key": api_key},
                 )
                 resp.raise_for_status()
                 results.append(
