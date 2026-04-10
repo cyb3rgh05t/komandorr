@@ -146,7 +146,7 @@ function ManagerSection({ manager }) {
                         </span>
                         {m.auto_mount && (
                           <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
-                            Auto
+                            AUTO-Mount
                           </span>
                         )}
                         {!m.enabled && (
@@ -245,6 +245,11 @@ function ManagerSection({ manager }) {
                         <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
                           NFSv{exp.nfs_version}
                         </span>
+                        {exp.auto_enable && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
+                            AUTO-Enable
+                          </span>
+                        )}
                         {!exp.enabled && (
                           <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-gray-500/15 text-gray-400 border-gray-500/30">
                             Disabled
@@ -327,7 +332,7 @@ function ManagerSection({ manager }) {
                         </span>
                         {c.auto_mount && (
                           <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
-                            Auto
+                            AUTO-Mount
                           </span>
                         )}
                       </div>
@@ -461,7 +466,7 @@ function ManagerSection({ manager }) {
                         </span>
                         {v.auto_connect && (
                           <span className="inline-flex items-center px-2.5 py-0.5 text-sm font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
-                            Auto
+                            AUTO-Connect
                           </span>
                         )}
                       </div>

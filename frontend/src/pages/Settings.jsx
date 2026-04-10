@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
+  ChevronUp,
   Save,
   Upload,
   Film,
@@ -121,6 +122,9 @@ export default function Settings() {
   const [newAppIcon, setNewAppIcon] = useState("");
   const [newAppGroup, setNewAppGroup] = useState("");
   const appIconInputRef = useRef(null);
+  const addNfsMountRef = useRef(null);
+  const addAppRef = useRef(null);
+  const addArrRef = useRef(null);
 
   const handleAppIconUpload = async (
     file,
@@ -2081,7 +2085,17 @@ export default function Settings() {
               {!showAddNfsMount && (
                 <button
                   type="button"
-                  onClick={() => setShowAddNfsMount(true)}
+                  onClick={() => {
+                    setShowAddNfsMount(true);
+                    setTimeout(
+                      () =>
+                        addNfsMountRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      100,
+                    );
+                  }}
                   className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
                 >
                   <Plus size={16} className="text-theme-primary" />
@@ -2325,7 +2339,10 @@ export default function Settings() {
 
             {/* Add new NFS Mount instance */}
             {showAddNfsMount ? (
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4">
+              <div
+                ref={addNfsMountRef}
+                className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                 <div className="relative space-y-3">
                   <h4 className="text-sm font-semibold text-theme-text">
@@ -2455,7 +2472,17 @@ export default function Settings() {
               {!showAddApp && (
                 <button
                   type="button"
-                  onClick={() => setShowAddApp(true)}
+                  onClick={() => {
+                    setShowAddApp(true);
+                    setTimeout(
+                      () =>
+                        addAppRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      100,
+                    );
+                  }}
                   className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
                 >
                   <Plus size={16} className="text-theme-primary" />
@@ -2508,6 +2535,50 @@ export default function Settings() {
                           </span>
                         )}
                         <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex flex-col gap-0.5 mr-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const updated = [...externalApps];
+                                [updated[idx - 1], updated[idx]] = [
+                                  updated[idx],
+                                  updated[idx - 1],
+                                ];
+                                setExternalApps(updated);
+                                if (editingAppIdx === idx)
+                                  setEditingAppIdx(idx - 1);
+                                else if (editingAppIdx === idx - 1)
+                                  setEditingAppIdx(idx);
+                                setPendingChanges(true);
+                              }}
+                              className="p-1 bg-theme-hover border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
+                              title="Move up"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === externalApps.length - 1}
+                              onClick={() => {
+                                const updated = [...externalApps];
+                                [updated[idx], updated[idx + 1]] = [
+                                  updated[idx + 1],
+                                  updated[idx],
+                                ];
+                                setExternalApps(updated);
+                                if (editingAppIdx === idx)
+                                  setEditingAppIdx(idx + 1);
+                                else if (editingAppIdx === idx + 1)
+                                  setEditingAppIdx(idx);
+                                setPendingChanges(true);
+                              }}
+                              className="p-1 bg-theme-hover border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
+                              title="Move down"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                           <button
                             type="button"
                             onClick={() =>
@@ -2669,7 +2740,10 @@ export default function Settings() {
 
             {/* Add new app */}
             {showAddApp ? (
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div
+                ref={addAppRef}
+                className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+              >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                 <div className="relative space-y-4">
                   <h4 className="text-sm font-semibold text-theme-text">
@@ -3102,7 +3176,17 @@ export default function Settings() {
               {!showAddArr && (
                 <button
                   type="button"
-                  onClick={() => setShowAddArr(true)}
+                  onClick={() => {
+                    setShowAddArr(true);
+                    setTimeout(
+                      () =>
+                        addArrRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      100,
+                    );
+                  }}
                   className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
                 >
                   <Plus size={16} className="text-theme-primary" />
@@ -3341,7 +3425,10 @@ export default function Settings() {
                 {/* Add new instance */}
                 <div className="pt-2">
                   {showAddArr ? (
-                    <div className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3">
+                    <div
+                      ref={addArrRef}
+                      className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3"
+                    >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-sm font-medium text-theme-text mb-2">

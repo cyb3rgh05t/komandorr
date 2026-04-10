@@ -1,8 +1,24 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   ExternalLink,
   RefreshCw,
@@ -36,6 +52,7 @@ import {
   Search,
   Plus,
   FolderOpen,
+  GripVertical,
 } from "lucide-react";
 
 // Map icon names to lucide components
@@ -70,8 +87,123 @@ const iconMap = {
   external: ExternalLink,
 };
 
+function SortableAppCard({ app, getIcon, t }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: app.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : "auto",
+  };
+
+  const IconComponent = getIcon(app.icon);
+  const isImageUrl =
+    app.icon &&
+    (app.icon.startsWith("http://") ||
+      app.icon.startsWith("https://") ||
+      app.icon.startsWith("/"));
+
+  let displayUrl = "";
+  try {
+    const url = new URL(app.url);
+    displayUrl = url.hostname + (url.port ? `:${url.port}` : "");
+  } catch {
+    displayUrl = app.url;
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 transition-all duration-300 relative overflow-hidden ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""}`}
+    >
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-1.5 right-1.5 p-1 rounded cursor-grab active:cursor-grabbing text-theme-text-muted/40 hover:text-theme-primary/70 transition-colors"
+        title="Drag to reorder"
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </div>
+
+      {/* Background glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 via-transparent to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-theme-primary/3 transition-all duration-500" />
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-theme-primary/0 group-hover:bg-theme-primary/5 rounded-full blur-2xl transition-all duration-500" />
+
+      {/* Icon */}
+      <a
+        href={app.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="contents"
+      >
+        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-theme-hover to-theme-card border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
+          {isImageUrl ? (
+            <img
+              src={app.icon}
+              alt={app.name}
+              className="w-8 h-8 object-contain rounded-lg"
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextSibling.style.display = "flex";
+              }}
+            />
+          ) : (
+            <IconComponent
+              size={26}
+              className="text-theme-primary transition-colors"
+            />
+          )}
+          {isImageUrl && (
+            <div
+              className="hidden items-center justify-center w-full h-full"
+              style={{ display: "none" }}
+            >
+              <AppWindow
+                size={26}
+                className="text-theme-primary transition-colors"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Name & URL */}
+        <div className="relative text-center space-y-0.5 w-full">
+          <h3 className="text-xs font-bold text-theme-text group-hover:text-theme-primary transition-colors line-clamp-1">
+            {app.name}
+          </h3>
+          <p className="text-[10px] text-theme-text-muted truncate px-1">
+            {displayUrl}
+          </p>
+        </div>
+
+        {/* Open link badge */}
+        <div className="relative flex items-center gap-1 px-2.5 py-1 rounded-lg bg-theme-hover/50 border border-theme group-hover:border-theme-primary/30 group-hover:bg-theme-primary/10 transition-all duration-300">
+          <ExternalLink
+            size={10}
+            className="text-theme-text-muted group-hover:text-theme-primary transition-colors"
+          />
+          <span className="text-[9px] font-medium text-theme-text-muted group-hover:text-theme-primary transition-colors uppercase tracking-wider">
+            {t("externalApps.open", "Open")}
+          </span>
+        </div>
+      </a>
+    </div>
+  );
+}
+
 export default function ExternalApps() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   const {
     data: settingsData,
@@ -83,9 +215,51 @@ export default function ExternalApps() {
     staleTime: 60000,
   });
 
-  const apps = settingsData?.external_apps?.apps || [];
+  const [localApps, setLocalApps] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState("all");
+
+  // Sync localApps from server data
+  useEffect(() => {
+    const serverApps = settingsData?.external_apps?.apps || [];
+    setLocalApps(serverApps);
+  }, [settingsData]);
+
+  const apps = localApps;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = useCallback(
+    async (event) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = localApps.findIndex((a) => a.id === active.id);
+      const newIndex = localApps.findIndex((a) => a.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = arrayMove(localApps, oldIndex, newIndex);
+      setLocalApps(reordered);
+
+      // Persist to backend
+      try {
+        await api.post("/settings", {
+          external_apps: { apps: reordered },
+        });
+        queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
+      } catch (e) {
+        console.error("Failed to save reorder:", e);
+        // Revert on error
+        setLocalApps(localApps);
+      }
+    },
+    [localApps, queryClient],
+  );
 
   const filteredApps = apps.filter(
     (app) =>
@@ -310,125 +484,60 @@ export default function ExternalApps() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {groupedApps.map((group) => (
-            <div key={group.name || "__ungrouped"}>
-              {/* Group Header */}
-              {group.name && (
-                <div className="flex items-center gap-2 mb-3">
-                  <FolderOpen size={16} className="text-theme-primary" />
-                  <h3 className="text-sm font-semibold text-theme-text uppercase tracking-wider">
-                    {group.name}
-                  </h3>
-                  <span className="text-xs text-theme-text-muted">
-                    ({group.apps.length})
-                  </span>
-                  <div className="flex-1 border-t border-theme ml-2" />
-                </div>
-              )}
-              {!group.name && groups.length > 0 && (
-                <div className="flex items-center gap-2 mb-3">
-                  <AppWindow size={16} className="text-theme-text-muted" />
-                  <h3 className="text-sm font-semibold text-theme-text-muted uppercase tracking-wider">
-                    Ungrouped
-                  </h3>
-                  <span className="text-xs text-theme-text-muted">
-                    ({group.apps.length})
-                  </span>
-                  <div className="flex-1 border-t border-theme ml-2" />
-                </div>
-              )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="space-y-6">
+            {groupedApps.map((group) => (
+              <div key={group.name || "__ungrouped"}>
+                {/* Group Header */}
+                {group.name && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <FolderOpen size={16} className="text-theme-primary" />
+                    <h3 className="text-sm font-semibold text-theme-text uppercase tracking-wider">
+                      {group.name}
+                    </h3>
+                    <span className="text-xs text-theme-text-muted">
+                      ({group.apps.length})
+                    </span>
+                    <div className="flex-1 border-t border-theme ml-2" />
+                  </div>
+                )}
+                {!group.name && groups.length > 0 && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <AppWindow size={16} className="text-theme-text-muted" />
+                    <h3 className="text-sm font-semibold text-theme-text-muted uppercase tracking-wider">
+                      Ungrouped
+                    </h3>
+                    <span className="text-xs text-theme-text-muted">
+                      ({group.apps.length})
+                    </span>
+                    <div className="flex-1 border-t border-theme ml-2" />
+                  </div>
+                )}
 
-              {/* Apps Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
-                {group.apps.map((app) => {
-                  const IconComponent = getIcon(app.icon);
-                  const isImageUrl =
-                    app.icon &&
-                    (app.icon.startsWith("http://") ||
-                      app.icon.startsWith("https://") ||
-                      app.icon.startsWith("/"));
-
-                  // Extract hostname from URL for display
-                  let displayUrl = "";
-                  try {
-                    const url = new URL(app.url);
-                    displayUrl =
-                      url.hostname + (url.port ? `:${url.port}` : "");
-                  } catch {
-                    displayUrl = app.url;
-                  }
-
-                  return (
-                    <a
-                      key={app.id}
-                      href={app.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 transition-all duration-300 relative overflow-hidden"
-                    >
-                      {/* Background glow */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 via-transparent to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-theme-primary/3 transition-all duration-500" />
-                      <div className="absolute -top-12 -right-12 w-32 h-32 bg-theme-primary/0 group-hover:bg-theme-primary/5 rounded-full blur-2xl transition-all duration-500" />
-
-                      {/* Icon */}
-                      <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-theme-hover to-theme-card border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
-                        {isImageUrl ? (
-                          <img
-                            src={app.icon}
-                            alt={app.name}
-                            className="w-8 h-8 object-contain rounded-lg"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                              e.target.nextSibling.style.display = "flex";
-                            }}
-                          />
-                        ) : (
-                          <IconComponent
-                            size={26}
-                            className="text-theme-primary transition-colors"
-                          />
-                        )}
-                        {isImageUrl && (
-                          <div
-                            className="hidden items-center justify-center w-full h-full"
-                            style={{ display: "none" }}
-                          >
-                            <AppWindow
-                              size={26}
-                              className="text-theme-primary transition-colors"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Name & URL */}
-                      <div className="relative text-center space-y-0.5 w-full">
-                        <h3 className="text-xs font-bold text-theme-text group-hover:text-theme-primary transition-colors line-clamp-1">
-                          {app.name}
-                        </h3>
-                        <p className="text-[10px] text-theme-text-muted truncate px-1">
-                          {displayUrl}
-                        </p>
-                      </div>
-
-                      {/* Open link badge */}
-                      <div className="relative flex items-center gap-1 px-2.5 py-1 rounded-lg bg-theme-hover/50 border border-theme group-hover:border-theme-primary/30 group-hover:bg-theme-primary/10 transition-all duration-300">
-                        <ExternalLink
-                          size={10}
-                          className="text-theme-text-muted group-hover:text-theme-primary transition-colors"
-                        />
-                        <span className="text-[9px] font-medium text-theme-text-muted group-hover:text-theme-primary transition-colors uppercase tracking-wider">
-                          {t("externalApps.open", "Open")}
-                        </span>
-                      </div>
-                    </a>
-                  );
-                })}
+                {/* Apps Grid */}
+                <SortableContext
+                  items={group.apps.map((a) => a.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
+                    {group.apps.map((app) => (
+                      <SortableAppCard
+                        key={app.id}
+                        app={app}
+                        getIcon={getIcon}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </DndContext>
       )}
     </div>
   );
