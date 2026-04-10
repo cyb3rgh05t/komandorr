@@ -109,7 +109,7 @@ function ManagerSection({ manager }) {
           <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
             <div className="flex items-center gap-2">
               <Download className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-lg text-base font-semibold text-theme-text">
+              <h3 className="text-base font-semibold text-theme-text">
                 NFS Client Mounts
               </h3>
               <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -210,7 +210,7 @@ function ManagerSection({ manager }) {
           <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
             <div className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-lg text-base font-semibold text-theme-text">
+              <h3 className="text-base font-semibold text-theme-text">
                 NFS Server Exports
               </h3>
               <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -292,7 +292,7 @@ function ManagerSection({ manager }) {
           <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
             <div className="flex items-center gap-2">
               <GitMerge className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-lg text-base font-semibold text-theme-text">
+              <h3 className="text-base font-semibold text-theme-text">
                 MergerFS
               </h3>
               <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -424,7 +424,7 @@ function ManagerSection({ manager }) {
           <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-lg text-base font-semibold text-theme-text">
+              <h3 className="text-base font-semibold text-theme-text">
                 VPN Tunnels
               </h3>
               <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
@@ -703,7 +703,7 @@ export default function NfsMount() {
       {notConfigured && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
           <WifiOff className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
-          <h3 className="text-lg text-base font-semibold text-theme-text mb-2">
+          <h3 className="text-base font-semibold text-theme-text mb-2">
             NFS Mount Manager Not Configured
           </h3>
           <p className="text-theme-text-muted max-w-md mx-auto">
