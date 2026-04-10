@@ -24,7 +24,11 @@ def _find_instance(instance_id: str) -> dict | None:
 
 
 async def _proxy_get(base_url: str, api_key: str, path: str):
-    """Forward a GET request to a specific NFS Mount Manager API."""
+    """Forward a GET request to a specific NFS Mount Manager API.
+
+    Raises httpx.HTTPStatusError on 401/403 so callers can fail fast.
+    Returns None on network errors or other HTTP errors.
+    """
     url = f"{base_url.rstrip('/')}/api{path}"
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -35,8 +39,44 @@ async def _proxy_get(base_url: str, api_key: str, path: str):
         logger.error(f"NFS Mount Manager unreachable ({base_url}): {e}")
         return None
     except httpx.HTTPStatusError as e:
+        if e.response.status_code in (401, 403):
+            raise  # Let caller handle auth failures
         logger.error(f"NFS Mount Manager error ({base_url}): {e.response.status_code}")
         return None
+
+
+from pydantic import BaseModel
+
+
+class NfsMountTestRequest(BaseModel):
+    url: str
+    api_key: str
+
+
+@router.post("/test-connection")
+async def test_nfs_connection(
+    body: NfsMountTestRequest, username: str = Depends(require_auth)
+):
+    """Test connection to an NFS Mount Manager with the provided URL and API key."""
+    base_url = body.url.rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"{base_url}/api/system/health",
+                headers={"X-API-Key": body.api_key},
+            )
+            resp.raise_for_status()
+            return {"connected": True}
+    except httpx.HTTPStatusError as e:
+        code = e.response.status_code
+        if code in (401, 403):
+            return {
+                "connected": False,
+                "error": f"Authentication failed ({code}) — check API key",
+            }
+        return {"connected": False, "error": f"HTTP error: {code}"}
+    except httpx.RequestError as e:
+        return {"connected": False, "error": f"Cannot reach server: {e}"}
 
 
 @router.get("/status")
@@ -146,6 +186,29 @@ async def get_dashboard(username: str = Depends(require_auth)):
             export_statuses = (
                 await _proxy_get(base_url, api_key, "/nfs/exports-status") or []
             )
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"NFS Mount Manager '{inst_name}' authentication failed ({base_url}): {e.response.status_code} — check API key"
+            )
+            managers.append(
+                {
+                    "id": inst_id,
+                    "name": inst_name,
+                    "connected": False,
+                    "error": f"Authentication failed ({e.response.status_code})",
+                    "nfs_mounts": [],
+                    "nfs_mount_statuses": {},
+                    "nfs_exports": [],
+                    "nfs_export_statuses": {},
+                    "mergerfs_configs": [],
+                    "mergerfs_statuses": {},
+                    "vpn_configs": [],
+                    "vpn_statuses": {},
+                }
+            )
+            continue
+
+        try:
 
             # Build status maps
             mount_status_map = {s["id"]: s for s in mount_statuses}

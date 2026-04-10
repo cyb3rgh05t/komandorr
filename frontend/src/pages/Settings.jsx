@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/context/ToastContext";
 import { clearTimezoneCache } from "@/utils/dateUtils";
 import CustomDropdown from "@/components/CustomDropdown";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   Shield,
   AlertCircle,
@@ -25,7 +26,7 @@ import {
   Palette,
   HardDrive,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   testPlexConnection,
@@ -206,6 +207,33 @@ export default function Settings() {
     ];
     return validTabs.includes(tabParam) ? tabParam : "general";
   });
+
+  // Unsaved changes dialog for tab switching
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingTab, setPendingTab] = useState(null);
+
+  const handleTabSwitch = useCallback(
+    (tabId) => {
+      if (pendingChanges) {
+        setPendingTab(tabId);
+        setShowUnsavedDialog(true);
+      } else {
+        setActiveTab(tabId);
+      }
+    },
+    [pendingChanges],
+  );
+
+  // Browser tab/window close warning
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (pendingChanges) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [pendingChanges]);
 
   useEffect(() => {
     // Check auth status
@@ -860,26 +888,33 @@ export default function Settings() {
   ];
 
   return (
-    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Save Settings Button - Top */}
-      <div className="flex flex-col items-start">
-        <button
-          onClick={() => {
-            handleSaveSettings();
-            setPendingChanges(false);
-          }}
-          disabled={settingsLoading || !pendingChanges}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
-        >
-          <Save className="text-theme-primary w-4 h-4" />
-          {settingsLoading ? t("settings.saving") : t("settings.saveNow")}
-        </button>
-        {pendingChanges && (
-          <p className="text-sm text-orange-500 mt-2 font-medium">
-            ⚠️ {t("settings.unsavedChanges", "You have unsaved changes")}
-          </p>
-        )}
-      </div>
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24">
+      {/* Sticky Save Bar */}
+      {pendingChanges && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg">
+          <div className="bg-theme-card border border-orange-500/30 rounded-xl px-5 py-3 flex items-center justify-between gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 rounded-lg bg-orange-500/10">
+                <AlertCircle className="w-4 h-4 text-orange-400" />
+              </div>
+              <span className="text-sm font-medium text-theme-text">
+                {t("settings.unsavedChanges", "Unsaved changes")}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                handleSaveSettings();
+                setPendingChanges(false);
+              }}
+              disabled={settingsLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-black rounded-lg text-sm font-semibold transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <Save className="w-4 h-4" />
+              {settingsLoading ? t("settings.saving") : t("settings.saveNow")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="bg-theme-card border border-theme rounded-xl p-2 overflow-x-auto">
@@ -889,7 +924,7 @@ export default function Settings() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabSwitch(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? "bg-theme-primary text-black shadow-lg"
@@ -2028,19 +2063,31 @@ export default function Settings() {
         {/* NFS Mount Manager Settings (Multi-Instance) */}
         {activeTab === "nfs_mount" && (
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                <HardDrive className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <HardDrive className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    NFS Mount Manager Instances
+                  </h3>
+                  <p className="text-sm text-theme-muted">
+                    Connect to one or more NFS Mount Manager instances for NFS,
+                    MergerFS and VPN monitoring
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text">
-                  NFS Mount Manager Instances
-                </h3>
-                <p className="text-sm text-theme-muted">
-                  Connect to one or more NFS Mount Manager instances for NFS,
-                  MergerFS and VPN monitoring
-                </p>
-              </div>
+              {!showAddNfsMount && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddNfsMount(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                >
+                  <Plus size={16} className="text-theme-primary" />
+                  Add Instance
+                </button>
+              )}
             </div>
 
             {/* Existing NFS Mount instances */}
@@ -2059,114 +2106,23 @@ export default function Settings() {
                           <span className="font-semibold text-theme-text">
                             {inst.name || inst.id}
                           </span>
-                          {nfsMountTestStatus[inst.id] === "ok" && (
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                              Connected
-                            </span>
-                          )}
-                          {nfsMountTestStatus[inst.id] === "fail" && (
-                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
-                              Offline
-                            </span>
-                          )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              if (!inst.url || !inst.api_key) {
-                                toast.error("Please enter URL and API Key");
-                                return;
-                              }
-                              setNfsMountTestStatus((prev) => ({
-                                ...prev,
-                                [inst.id]: "loading",
-                              }));
-                              try {
-                                const result =
-                                  await api.get("/nfs-mount/status");
-                                const instStatus = result.instances?.find(
-                                  (i) => i.id === inst.id,
-                                );
-                                if (instStatus?.connected) {
-                                  setNfsMountTestStatus((prev) => ({
-                                    ...prev,
-                                    [inst.id]: "ok",
-                                  }));
-                                  toast.success(`${inst.name} connected`);
-                                } else {
-                                  setNfsMountTestStatus((prev) => ({
-                                    ...prev,
-                                    [inst.id]: "fail",
-                                  }));
-                                  toast.error(
-                                    instStatus?.error || "Connection failed",
-                                  );
-                                }
-                              } catch (e) {
-                                setNfsMountTestStatus((prev) => ({
-                                  ...prev,
-                                  [inst.id]: "fail",
-                                }));
-                                toast.error(
-                                  e.message ||
-                                    "Cannot connect to NFS Mount Manager",
-                                );
-                              }
-                            }}
-                            disabled={nfsMountTestStatus[inst.id] === "loading"}
-                            className={`flex items-center justify-center gap-1 px-3 py-1.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-xs font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-                              nfsMountTestStatus[inst.id] === "ok"
-                                ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
-                                : nfsMountTestStatus[inst.id] === "fail"
-                                  ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
-                                  : ""
-                            }`}
-                          >
-                            {nfsMountTestStatus[inst.id] === "loading" ? (
-                              <svg
-                                className="animate-spin h-3 w-3"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                              </svg>
-                            ) : nfsMountTestStatus[inst.id] === "ok" ? (
-                              <CheckCircle size={12} />
-                            ) : (
-                              "Test"
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNfsMountInstances((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              );
-                              setPendingChanges(true);
-                            }}
-                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNfsMountInstances((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            );
+                            setPendingChanges(true);
+                          }}
+                          className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-theme-muted mb-1">
+                          <label className="block text-sm font-medium text-theme-text mb-2">
                             Name
                           </label>
                           <input
@@ -2183,12 +2139,12 @@ export default function Settings() {
                               });
                               setPendingChanges(true);
                             }}
-                            className="w-full px-3 py-1.5 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             placeholder="My NFS Manager"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-theme-muted mb-1">
+                          <label className="block text-sm font-medium text-theme-text mb-2">
                             URL
                           </label>
                           <input
@@ -2209,13 +2165,13 @@ export default function Settings() {
                               }));
                               setPendingChanges(true);
                             }}
-                            className="w-full px-3 py-1.5 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             placeholder="http://nfs-mount:8550"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-theme-muted mb-1">
+                        <label className="block text-sm font-medium text-theme-text mb-2">
                           API Key
                         </label>
                         <div className="relative">
@@ -2239,7 +2195,7 @@ export default function Settings() {
                               }));
                               setPendingChanges(true);
                             }}
-                            className="w-full px-3 py-1.5 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                             placeholder="Paste your NFS Mount Manager API key"
                           />
                           <button
@@ -2260,6 +2216,107 @@ export default function Settings() {
                           </button>
                         </div>
                       </div>
+
+                      {/* Test Connection Button */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!inst.url || !inst.api_key) {
+                            toast.error("Please enter URL and API Key");
+                            return;
+                          }
+                          setNfsMountTestStatus((prev) => ({
+                            ...prev,
+                            [inst.id]: "loading",
+                          }));
+                          try {
+                            const result = await api.post(
+                              "/nfs-mount/test-connection",
+                              {
+                                url: inst.url,
+                                api_key: inst.api_key,
+                              },
+                            );
+                            if (result?.connected) {
+                              setNfsMountTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "ok",
+                              }));
+                              toast.success(`${inst.name} connected`);
+                            } else {
+                              setNfsMountTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "fail",
+                              }));
+                              toast.error(result?.error || "Connection failed");
+                            }
+                          } catch (e) {
+                            setNfsMountTestStatus((prev) => ({
+                              ...prev,
+                              [inst.id]: "fail",
+                            }));
+                            toast.error(
+                              e.message ||
+                                "Cannot connect to NFS Mount Manager",
+                            );
+                          }
+                        }}
+                        disabled={
+                          nfsMountTestStatus[inst.id] === "loading" ||
+                          !inst.url ||
+                          !inst.api_key
+                        }
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                          nfsMountTestStatus[inst.id] === "ok"
+                            ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                            : nfsMountTestStatus[inst.id] === "fail"
+                              ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                              : ""
+                        }`}
+                      >
+                        {nfsMountTestStatus[inst.id] === "loading" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Testing...
+                          </span>
+                        ) : nfsMountTestStatus[inst.id] === "ok" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} />
+                            Connected
+                          </span>
+                        ) : (
+                          "Test Connection"
+                        )}
+                      </button>
+
+                      {nfsMountTestStatus[inst.id] === "fail" && (
+                        <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <p>
+                            Cannot connect to {inst.name}. Check the URL and API
+                            key are correct.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -2276,39 +2333,39 @@ export default function Settings() {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-theme-muted mb-1">
+                      <label className="block text-sm font-medium text-theme-text mb-2">
                         Name
                       </label>
                       <input
                         type="text"
                         value={newNfsMountName}
                         onChange={(e) => setNewNfsMountName(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                         placeholder="My NFS Manager"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-theme-muted mb-1">
+                      <label className="block text-sm font-medium text-theme-text mb-2">
                         URL
                       </label>
                       <input
                         type="url"
                         value={newNfsMountUrl}
                         onChange={(e) => setNewNfsMountUrl(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                         placeholder="http://nfs-mount:8550"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-theme-muted mb-1">
+                    <label className="block text-sm font-medium text-theme-text mb-2">
                       API Key
                     </label>
                     <input
                       type="password"
                       value={newNfsMountApiKey}
                       onChange={(e) => setNewNfsMountApiKey(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm font-mono focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="Paste your NFS Mount Manager API key"
                     />
                   </div>
@@ -2345,9 +2402,9 @@ export default function Settings() {
                         !newNfsMountUrl ||
                         !newNfsMountApiKey
                       }
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-theme-primary hover:bg-theme-primary/80 text-black rounded-lg text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Plus size={14} />
+                      <Plus className="w-4 h-4 text-theme-primary" />
                       Add Instance
                     </button>
                     <button
@@ -2358,23 +2415,14 @@ export default function Settings() {
                         setNewNfsMountUrl("");
                         setNewNfsMountApiKey("");
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-theme-hover hover:bg-theme-card border border-theme rounded-lg text-xs font-medium text-theme-muted transition-all"
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
                     >
                       Cancel
                     </button>
                   </div>
                 </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowAddNfsMount(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-dashed border-theme hover:border-theme-primary rounded-xl text-sm font-medium text-theme-muted hover:text-theme-primary transition-all w-full justify-center"
-              >
-                <Plus size={16} />
-                Add NFS Mount Manager Instance
-              </button>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -2389,19 +2437,31 @@ export default function Settings() {
                 <option key={g} value={g} />
               ))}
             </datalist>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                <Globe className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    External Apps
+                  </h3>
+                  <p className="text-sm text-theme-muted">
+                    Add links to external panels and apps that will appear on
+                    the External Apps page
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text">
-                  External Apps
-                </h3>
-                <p className="text-sm text-theme-muted">
-                  Add links to external panels and apps that will appear on the
-                  External Apps page
-                </p>
-              </div>
+              {!showAddApp && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddApp(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                >
+                  <Plus size={16} className="text-theme-primary" />
+                  Add App
+                </button>
+              )}
             </div>
 
             {/* Existing apps list */}
@@ -2753,16 +2813,7 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowAddApp(true)}
-                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
-              >
-                <Plus size={16} className="text-theme-primary" />
-                Add External App
-              </button>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -3029,23 +3080,35 @@ export default function Settings() {
         {/* Sonarr/Radarr Instances */}
         {activeTab === "arr" && (
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                <Film className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Film className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("arr.instancesTitle", {
+                      defaultValue: "Sonarr/Radarr Instances",
+                    })}
+                  </h3>
+                  <p className="text-sm text-theme-muted">
+                    {t("arr.instancesSubtitle", {
+                      defaultValue:
+                        "Configure multiple Sonarr and Radarr instances (e.g., 1080p and 4K).",
+                    })}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text">
-                  {t("arr.instancesTitle", {
-                    defaultValue: "Sonarr/Radarr Instances",
-                  })}
-                </h3>
-                <p className="text-sm text-theme-muted">
-                  {t("arr.instancesSubtitle", {
-                    defaultValue:
-                      "Configure multiple Sonarr and Radarr instances (e.g., 1080p and 4K).",
-                  })}
-                </p>
-              </div>
+              {!showAddArr && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddArr(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                >
+                  <Plus size={16} className="text-theme-primary" />
+                  {t("arr.addInstance", { defaultValue: "Add Instance" })}
+                </button>
+              )}
             </div>
             <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
@@ -3277,16 +3340,7 @@ export default function Settings() {
 
                 {/* Add new instance */}
                 <div className="pt-2">
-                  {!showAddArr ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowAddArr(true)}
-                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial"
-                    >
-                      <Plus className="w-4 h-4 text-theme-primary" />
-                      {t("arr.addInstance", { defaultValue: "Add Instance" })}
-                    </button>
-                  ) : (
+                  {showAddArr ? (
                     <div className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -3376,13 +3430,32 @@ export default function Settings() {
                         </button>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Unsaved changes dialog — tab switch */}
+      <ConfirmDialog
+        isOpen={showUnsavedDialog}
+        onClose={() => {
+          setShowUnsavedDialog(false);
+          setPendingTab(null);
+        }}
+        onConfirm={() => {
+          setPendingChanges(false);
+          setActiveTab(pendingTab);
+          setPendingTab(null);
+        }}
+        title="Unsaved Changes"
+        message="You have unsaved changes. If you switch tabs now, your changes will be lost. Do you want to continue?"
+        confirmText="Discard Changes"
+        cancelText="Stay"
+        variant="warning"
+      />
     </div>
   );
 }
