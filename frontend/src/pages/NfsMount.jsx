@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -541,6 +542,18 @@ export default function NfsMount() {
   const managers = dashboard?.managers || [];
   const notConfigured = instances.length === 0 && !dashLoading;
 
+  const [activeTab, setActiveTab] = useState(null);
+
+  // Auto-select first manager tab if none selected yet
+  const effectiveTab =
+    activeTab && managers.find((m) => m.id === activeTab)
+      ? activeTab
+      : managers.length > 0
+        ? managers[0].id
+        : null;
+
+  const activeManager = managers.find((m) => m.id === effectiveTab);
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Not Configured Banner */}
@@ -606,49 +619,78 @@ export default function NfsMount() {
         </div>
       </div>
 
-      {/* Manager Sections */}
-      {managers.length > 0 &&
-        managers.map((mgr) => (
-          <div key={mgr.id} className="space-y-4">
-            {/* Manager Header */}
-            {managers.length > 1 && (
-              <div className="flex items-center gap-3 pt-2">
-                <div className="flex items-center gap-2">
-                  <Server className="w-5 h-5 text-theme-primary" />
-                  <h2 className="text-lg font-bold text-theme-text">
-                    {mgr.name}
-                  </h2>
-                  {mgr.connected ? (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      Connected
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
-                      {mgr.error || "Offline"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {mgr.connected ? (
-              <ManagerSection manager={mgr} />
-            ) : (
-              <div className="bg-theme-card border border-theme rounded-xl p-6 text-center">
-                <WifiOff className="w-10 h-10 text-theme-muted mx-auto mb-3 opacity-30" />
-                <p className="text-theme-muted text-sm">
-                  {mgr.error || "Cannot connect to this NFS Mount Manager"}
-                </p>
-              </div>
-            )}
-
-            {/* Separator between managers */}
-            {managers.length > 1 &&
-              mgr.id !== managers[managers.length - 1].id && (
-                <div className="border-b border-theme" />
-              )}
+      {/* Manager Tabs */}
+      {managers.length > 1 && (
+        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            {managers.map((mgr) => {
+              const isActive = effectiveTab === mgr.id;
+              return (
+                <button
+                  key={mgr.id}
+                  onClick={() => setActiveTab(mgr.id)}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-theme-primary text-black shadow-md"
+                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                  }`}
+                >
+                  {mgr.name}
+                  <span
+                    className={`ml-2 text-xs ${
+                      isActive ? "text-black/70" : "text-theme-text-muted"
+                    }`}
+                  >
+                    {mgr.connected ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
+                        Offline
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        ))}
+        </div>
+      )}
+
+      {/* Active Manager Content */}
+      {activeManager && (
+        <div className="space-y-4">
+          {activeManager.connected ? (
+            <ManagerSection manager={activeManager} />
+          ) : (
+            <div className="bg-theme-card border border-theme rounded-xl p-6 text-center">
+              <WifiOff className="w-10 h-10 text-theme-muted mx-auto mb-3 opacity-30" />
+              <p className="text-theme-muted text-sm">
+                {activeManager.error ||
+                  "Cannot connect to this NFS Mount Manager"}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Single manager (no tabs needed) */}
+      {managers.length === 1 && !activeManager && managers[0] && (
+        <div className="space-y-4">
+          {managers[0].connected ? (
+            <ManagerSection manager={managers[0]} />
+          ) : (
+            <div className="bg-theme-card border border-theme rounded-xl p-6 text-center">
+              <WifiOff className="w-10 h-10 text-theme-muted mx-auto mb-3 opacity-30" />
+              <p className="text-theme-muted text-sm">
+                {managers[0].error ||
+                  "Cannot connect to this NFS Mount Manager"}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Loading state */}
       {anyConnected && dashLoading && !dashboard && (
