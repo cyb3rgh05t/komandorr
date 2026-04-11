@@ -212,9 +212,11 @@ export default function Settings() {
     return validTabs.includes(tabParam) ? tabParam : "general";
   });
 
-  // Unsaved changes dialog for tab switching
+  // Unsaved changes dialog for tab switching and navigation
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingTab, setPendingTab] = useState(null);
+  const [pendingNavUrl, setPendingNavUrl] = useState(null);
+  const originalPushStateRef = useRef(null);
 
   const handleTabSwitch = useCallback(
     (tabId) => {
@@ -241,37 +243,29 @@ export default function Settings() {
 
     // Intercept SPA navigation (sidebar links use history.pushState)
     const originalPushState = window.history.pushState;
+    originalPushStateRef.current = originalPushState;
     window.history.pushState = function (...args) {
-      // args[2] is the new URL
       const targetUrl = args[2];
-      const currentUrl = window.location.pathname + window.location.search;
-      // Only block if navigating to a different page (not same settings page)
       if (targetUrl && !String(targetUrl).startsWith("/settings")) {
-        if (
-          !window.confirm(
-            "You have unsaved changes. Are you sure you want to leave?",
-          )
-        ) {
-          return;
-        }
+        setPendingNavUrl(String(targetUrl));
+        setShowUnsavedDialog(true);
+        return; // Block navigation, dialog will handle it
       }
       return originalPushState.apply(window.history, args);
     };
 
     const handlePopState = () => {
-      if (
-        !window.confirm(
-          "You have unsaved changes. Are you sure you want to leave?",
-        )
-      ) {
-        window.history.pushState(null, "", "/settings");
-      }
+      // Push back to settings and show dialog
+      originalPushState.call(window.history, null, "", "/settings");
+      setPendingNavUrl("__back__");
+      setShowUnsavedDialog(true);
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
     return () => {
       window.history.pushState = originalPushState;
+      originalPushStateRef.current = null;
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
     };
@@ -3546,20 +3540,34 @@ export default function Settings() {
         )}
       </div>
 
-      {/* Unsaved changes dialog — tab switch */}
+      {/* Unsaved changes dialog — tab switch & navigation */}
       <ConfirmDialog
         isOpen={showUnsavedDialog}
         onClose={() => {
           setShowUnsavedDialog(false);
           setPendingTab(null);
+          setPendingNavUrl(null);
         }}
         onConfirm={() => {
           setPendingChanges(false);
-          setActiveTab(pendingTab);
-          setPendingTab(null);
+          if (pendingNavUrl) {
+            const url = pendingNavUrl;
+            setPendingNavUrl(null);
+            setShowUnsavedDialog(false);
+            // Use the original pushState to navigate
+            if (url === "__back__") {
+              window.history.back();
+            } else if (originalPushStateRef.current) {
+              originalPushStateRef.current.call(window.history, null, "", url);
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }
+          } else if (pendingTab) {
+            setActiveTab(pendingTab);
+            setPendingTab(null);
+          }
         }}
         title="Unsaved Changes"
-        message="You have unsaved changes. If you switch tabs now, your changes will be lost. Do you want to continue?"
+        message="You have unsaved changes. If you leave now, your changes will be lost. Do you want to continue?"
         confirmText="Discard Changes"
         cancelText="Stay"
         variant="warning"
