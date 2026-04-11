@@ -102,6 +102,7 @@ function SortableAppCard({ app, getIcon, t }) {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : "auto",
+    position: "relative",
   };
 
   const IconComponent = getIcon(app.icon);
@@ -123,13 +124,14 @@ function SortableAppCard({ app, getIcon, t }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 transition-all duration-300 relative overflow-hidden ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""}`}
+      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 relative overflow-hidden ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""}`}
     >
       {/* Drag handle */}
       <div
         {...attributes}
         {...listeners}
         className="absolute top-1.5 right-1.5 p-1 rounded cursor-grab active:cursor-grabbing text-theme-text-muted/40 hover:text-theme-primary/70 transition-colors"
+        style={{ touchAction: "none" }}
         title="Drag to reorder"
       >
         <GripVertical className="w-3.5 h-3.5" />
@@ -144,6 +146,7 @@ function SortableAppCard({ app, getIcon, t }) {
         href={app.url}
         target="_blank"
         rel="noopener noreferrer"
+        draggable={false}
         className="contents"
       >
         <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-theme-hover to-theme-card border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
