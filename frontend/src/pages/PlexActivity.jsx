@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
+import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
 import {
   Video,
   Play,
@@ -324,16 +325,30 @@ const PlexActivity = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch Plex instances
+  const { data: instancesData } = useQuery({
+    queryKey: ["plex-instances"],
+    queryFn: () => api.get("/plex/instances"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+  const { effectiveTab, setActiveTab, instances } =
+    useInstanceTabs(instancesData);
+
   // Fetch sessions with auto-refresh using React Query
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ["plex-sessions"],
+    queryKey: ["plex-sessions", effectiveTab],
     queryFn: async () => {
-      const response = await api.get("/plex/sessions");
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
+      const response = await api.get(`/plex/sessions${params}`);
       return response;
     },
     refetchInterval: 5000, // Auto-refresh every 5 seconds
     staleTime: 3000,
     placeholderData: (previousData) => previousData,
+    enabled: instances.length > 0 || !instancesData,
   });
 
   const sessions = data?.sessions || [];
@@ -342,7 +357,9 @@ const PlexActivity = () => {
 
   const handleRefresh = async () => {
     try {
-      await queryClient.invalidateQueries({ queryKey: ["plex-sessions"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["plex-sessions", effectiveTab],
+      });
       toast.success(t("vodActivity.refreshSuccess", "Sessions refreshed"));
     } catch (err) {
       toast.error(t("vodActivity.refreshError", "Failed to refresh sessions"));
@@ -387,6 +404,13 @@ const PlexActivity = () => {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Not Configured Banner */}
       {plexNotConfigured && (
         <Link

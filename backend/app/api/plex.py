@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, HttpUrl
 import httpx
 import json
 import shutil
 from pathlib import Path
-from typing import Optional, cast, Dict, Any
+from typing import Optional, cast, Dict, Any, List
 from datetime import datetime, timezone, timedelta
 
 from app.utils.logger import logger
@@ -67,11 +67,43 @@ class UpdatePeakRequest(BaseModel):
     peak_concurrent: int
 
 
-def load_plex_config() -> Optional[dict]:
-    """Load Plex configuration from config.json (via settings)"""
+def get_plex_instances() -> List[dict]:
+    """Return all configured Plex instances."""
+    from app.config import settings
+
+    return list(settings.PLEX_INSTANCES) if settings.PLEX_INSTANCES else []
+
+
+def load_plex_config(instance_id: Optional[str] = None) -> Optional[dict]:
+    """Load Plex configuration for a specific instance, or first instance if none specified."""
     try:
         from app.config import settings
 
+        instances = settings.PLEX_INSTANCES
+        if instances:
+            if instance_id:
+                for inst in instances:
+                    if inst.get("id") == instance_id:
+                        return {
+                            "url": inst.get("url", ""),
+                            "token": inst.get("token", ""),
+                            "server_name": inst.get(
+                                "server_name", inst.get("name", "Plex Server")
+                            ),
+                        }
+                logger.warning(f"Plex instance '{instance_id}' not found")
+                return None
+            # Return first instance
+            first = instances[0]
+            return {
+                "url": first.get("url", ""),
+                "token": first.get("token", ""),
+                "server_name": first.get(
+                    "server_name", first.get("name", "Plex Server")
+                ),
+            }
+
+        # Legacy fallback
         if settings.PLEX_SERVER_URL and settings.PLEX_SERVER_TOKEN:
             logger.debug(
                 f"Loaded Plex config from config.json: {settings.PLEX_SERVER_URL}"
@@ -369,11 +401,61 @@ async def validate_plex_connection(
         return False, str(e), None, 0, 0, 0
 
 
+@router.get("/instances")
+async def get_plex_instances_endpoint():
+    """Return list of configured Plex instances with connectivity status."""
+    instances = get_plex_instances()
+    if not instances:
+        # Legacy fallback — build single instance from flat config
+        config = load_plex_config()
+        if config and config.get("url"):
+            instances = [
+                {
+                    "id": "plex-default",
+                    "name": config.get("server_name", "Plex Server"),
+                    "url": config["url"],
+                }
+            ]
+        else:
+            return {"instances": []}
+
+    results = []
+    async with httpx.AsyncClient(timeout=5.0, verify=False) as client:
+        for inst in instances:
+            url = (inst.get("url") or "").rstrip("/")
+            token = inst.get("token", "")
+            connected = False
+            server_name = inst.get("server_name", inst.get("name", "Plex Server"))
+            if url and token:
+                try:
+                    resp = await client.get(
+                        f"{url}/",
+                        headers={"X-Plex-Token": token, "Accept": "application/json"},
+                    )
+                    if resp.status_code == 200:
+                        connected = True
+                        data = resp.json()
+                        server_name = data.get("MediaContainer", {}).get(
+                            "friendlyName", server_name
+                        )
+                except Exception:
+                    pass
+            results.append(
+                {
+                    "id": inst.get("id", "plex-default"),
+                    "name": inst.get("name", server_name),
+                    "server_name": server_name,
+                    "connected": connected,
+                }
+            )
+    return {"instances": results}
+
+
 @router.get("/users/count")
-async def get_plex_users_count():
+async def get_plex_users_count(instance_id: Optional[str] = Query(None)):
     """Get count of Plex server shared users via plex.tv API"""
     try:
-        config = load_plex_config()
+        config = load_plex_config(instance_id)
         if not config or not config.get("url") or not config.get("token"):
             return {"count": 0}
 
@@ -591,9 +673,9 @@ async def debug_raw_activities():
 
 
 @router.get("/activities")
-async def get_plex_activities():
+async def get_plex_activities(instance_id: Optional[str] = Query(None)):
     """Get current Plex download/sync activities with caching"""
-    config = load_plex_config()
+    config = load_plex_config(instance_id)
 
     if not config:
         global _logged_not_configured
@@ -602,9 +684,10 @@ async def get_plex_activities():
             _logged_not_configured = True
         return {"error": True, "message": "Plex not configured", "activities": []}
 
-    # Check Redis cache first
+    # Check Redis cache first (instance-specific key)
+    cache_suffix = f":{instance_id}" if instance_id else ""
     now = datetime.now()
-    redis_cached = cache_get("plex:activities")
+    redis_cached = cache_get(f"plex:activities{cache_suffix}")
     if redis_cached:
         logger.debug("Returning cached activities from Redis")
         _activity_cache["hits"] += 1
@@ -747,7 +830,9 @@ async def get_plex_activities():
             _activity_cache["data"] = response
             _activity_cache["last_fetched"] = now
             cache_set(
-                "plex:activities", response, ttl_seconds=_activity_cache["ttl_seconds"]
+                f"plex:activities{cache_suffix}",
+                response,
+                ttl_seconds=_activity_cache["ttl_seconds"],
             )
 
             return response
@@ -835,10 +920,10 @@ async def get_plex_stats():
 
 
 @router.get("/stats/live")
-async def get_live_plex_stats():
+async def get_live_plex_stats(instance_id: Optional[str] = Query(None)):
     """Get live Plex statistics by fetching directly from Plex server"""
     try:
-        config = load_plex_config()
+        config = load_plex_config(instance_id)
         if not config:
             return {
                 "total_users": 0,
@@ -849,7 +934,8 @@ async def get_live_plex_stats():
                 "error": "Plex not configured",
             }
 
-        cached = cache_get("plex:stats_live")
+        cache_suffix = f":{instance_id}" if instance_id else ""
+        cached = cache_get(f"plex:stats_live{cache_suffix}")
         if cached:
             cached_copy = cached.copy()
             cached_copy["cached"] = True
@@ -873,7 +959,7 @@ async def get_live_plex_stats():
             "server_name": server_name,
         }
 
-        cache_set("plex:stats_live", response, ttl_seconds=30)
+        cache_set(f"plex:stats_live{cache_suffix}", response, ttl_seconds=30)
 
         return response
     except Exception as e:
@@ -957,10 +1043,10 @@ async def reset_peak_concurrent():
 
 
 @router.get("/media/recent")
-async def get_recent_media():
+async def get_recent_media(instance_id: Optional[str] = Query(None)):
     """Get recent media items with posters from Plex server"""
     try:
-        config = load_plex_config()
+        config = load_plex_config(instance_id)
         if not config:
             return {"items": [], "not_configured": True}
 
@@ -968,7 +1054,8 @@ async def get_recent_media():
         token = config["token"]
 
         # Cache recent media for a few minutes to avoid repeated heavy calls
-        cached = cache_get("plex:recent_media")
+        cache_suffix = f":{instance_id}" if instance_id else ""
+        cached = cache_get(f"plex:recent_media{cache_suffix}")
         if cached:
             cached_copy = cached.copy()
             cached_copy["cached"] = True
@@ -1037,7 +1124,7 @@ async def get_recent_media():
             response = {"media": media_items[:30]}  # Return max 30 items
 
             # Cache the payload (5 minutes)
-            cache_set("plex:recent_media", response, ttl_seconds=300)
+            cache_set(f"plex:recent_media{cache_suffix}", response, ttl_seconds=300)
 
             return response
 
@@ -1103,13 +1190,13 @@ async def proxy_plex_image(url: str):
 
 
 @router.get("/sessions")
-async def get_plex_sessions():
+async def get_plex_sessions(instance_id: Optional[str] = Query(None)):
     """
     Get live Plex sessions (currently streaming users)
     Similar to Wizarr's activity monitoring
     """
     try:
-        plex_config = load_plex_config()
+        plex_config = load_plex_config(instance_id)
 
         if (
             not plex_config
@@ -1126,7 +1213,8 @@ async def get_plex_sessions():
         token = plex_config["token"]
 
         # Short TTL cache to reduce repeated hits while keeping it fresh
-        redis_cached = cache_get("plex:sessions")
+        cache_suffix = f":{instance_id}" if instance_id else ""
+        redis_cached = cache_get(f"plex:sessions{cache_suffix}")
         if redis_cached:
             redis_copy = redis_cached.copy()
             redis_copy["cached"] = True
@@ -1355,7 +1443,7 @@ async def get_plex_sessions():
             }
 
             # Cache the result with a short TTL (10s)
-            cache_set("plex:sessions", response, ttl_seconds=10)
+            cache_set(f"plex:sessions{cache_suffix}", response, ttl_seconds=10)
 
             return response
 

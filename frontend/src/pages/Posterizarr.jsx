@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
 import {
   RefreshCw,
   Clock,
@@ -72,12 +74,26 @@ function formatTime(ts) {
   }
 }
 export default function Posterizarr() {
-  // Connection check
-  const { data: connStatus } = useQuery({
-    queryKey: ["posterizarr-status"],
-    queryFn: () => api.get("/posterizarr/status"),
+  // Fetch Posterizarr instances
+  const { data: instancesData } = useQuery({
+    queryKey: ["posterizarr-instances"],
+    queryFn: () => api.get("/posterizarr/instances"),
     staleTime: 30000,
     refetchInterval: 30000,
+  });
+  const { effectiveTab, setActiveTab, instances } =
+    useInstanceTabs(instancesData);
+  const instParam = effectiveTab
+    ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+    : "";
+
+  // Connection check
+  const { data: connStatus } = useQuery({
+    queryKey: ["posterizarr-status", effectiveTab],
+    queryFn: () => api.get(`/posterizarr/status${instParam}`),
+    staleTime: 30000,
+    refetchInterval: 30000,
+    enabled: instances.length > 0 || !instancesData,
   });
 
   // Dashboard: combined status + version + system info
@@ -87,8 +103,8 @@ export default function Posterizarr() {
     isFetching: dashFetching,
     refetch: refetchDash,
   } = useQuery({
-    queryKey: ["posterizarr-dashboard"],
-    queryFn: () => api.get("/posterizarr/dashboard"),
+    queryKey: ["posterizarr-dashboard", effectiveTab],
+    queryFn: () => api.get(`/posterizarr/dashboard${instParam}`),
     staleTime: 10000,
     refetchInterval: 15000,
     placeholderData: (prev) => prev,
@@ -97,8 +113,8 @@ export default function Posterizarr() {
 
   // Scheduler
   const { data: scheduler, refetch: refetchScheduler } = useQuery({
-    queryKey: ["posterizarr-scheduler"],
-    queryFn: () => api.get("/posterizarr/scheduler"),
+    queryKey: ["posterizarr-scheduler", effectiveTab],
+    queryFn: () => api.get(`/posterizarr/scheduler${instParam}`),
     staleTime: 10000,
     refetchInterval: 15000,
     placeholderData: (prev) => prev,
@@ -107,8 +123,11 @@ export default function Posterizarr() {
 
   // Runtime history
   const { data: history, refetch: refetchHistory } = useQuery({
-    queryKey: ["posterizarr-history"],
-    queryFn: () => api.get("/posterizarr/runtime-history?limit=15"),
+    queryKey: ["posterizarr-history", effectiveTab],
+    queryFn: () =>
+      api.get(
+        `/posterizarr/runtime-history${instParam ? instParam + "&" : "?"}limit=15`,
+      ),
     staleTime: 15000,
     refetchInterval: 30000,
     placeholderData: (prev) => prev,
@@ -117,8 +136,8 @@ export default function Posterizarr() {
 
   // Assets stats
   const { data: assetsStats, refetch: refetchAssets } = useQuery({
-    queryKey: ["posterizarr-assets-stats"],
-    queryFn: () => api.get("/posterizarr/assets/stats"),
+    queryKey: ["posterizarr-assets-stats", effectiveTab],
+    queryFn: () => api.get(`/posterizarr/assets/stats${instParam}`),
     staleTime: 30000,
     refetchInterval: 60000,
     placeholderData: (prev) => prev,
@@ -127,8 +146,8 @@ export default function Posterizarr() {
 
   // Plex export
   const { data: plexExport } = useQuery({
-    queryKey: ["posterizarr-plex-stats"],
-    queryFn: () => api.get("/posterizarr/plex-export/statistics"),
+    queryKey: ["posterizarr-plex-stats", effectiveTab],
+    queryFn: () => api.get(`/posterizarr/plex-export/statistics${instParam}`),
     staleTime: 30000,
     refetchInterval: 60000,
     placeholderData: (prev) => prev,
@@ -177,6 +196,13 @@ export default function Posterizarr() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Not Configured Banner */}
       {posterizarrNotConfigured && (
         <Link

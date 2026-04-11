@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import { useItemsPerPage } from "../utils/usePersistedState";
+import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
 import {
   Video,
   Download,
@@ -263,6 +264,16 @@ export default function VODStreams() {
   const toast = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch Plex instances
+  const { data: instancesData } = useQuery({
+    queryKey: ["plex-instances"],
+    queryFn: () => api.get("/plex/instances"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+  const { effectiveTab, setActiveTab, instances } =
+    useInstanceTabs(instancesData);
+
   // Use React Query for Plex activities
   const {
     data: activities = [],
@@ -270,19 +281,23 @@ export default function VODStreams() {
     isFetching,
     error,
   } = useQuery({
-    queryKey: ["plexActivities"],
-    queryFn: fetchPlexActivities,
+    queryKey: ["plexActivities", effectiveTab],
+    queryFn: () => fetchPlexActivities(effectiveTab),
     staleTime: 5000,
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
+    enabled: instances.length > 0 || !instancesData,
   });
 
   // Check if Plex is configured via sessions endpoint (shared with Sidebar)
   const { data: sessionsData } = useQuery({
-    queryKey: ["plex-sessions"],
+    queryKey: ["plex-sessions", effectiveTab],
     queryFn: async () => {
       try {
-        const response = await api.get("/plex/sessions");
+        const params = effectiveTab
+          ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+          : "";
+        const response = await api.get(`/plex/sessions${params}`);
         return response;
       } catch {
         return { sessions: [] };
@@ -623,6 +638,13 @@ export default function VODStreams() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Search Bar, Live Indicator & Refresh Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">

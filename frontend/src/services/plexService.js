@@ -52,13 +52,13 @@ export const testPlexConnection = async (plexUrl, plexToken) => {
 
     if (error.code === "ECONNREFUSED") {
       throw new Error(
-        "Unable to connect to Plex server. Please check if the server is running."
+        "Unable to connect to Plex server. Please check if the server is running.",
       );
     }
 
     throw new Error(
       error.message ||
-        "Failed to connect to Plex server. Please check your server URL and token."
+        "Failed to connect to Plex server. Please check your server URL and token.",
     );
   }
 };
@@ -124,12 +124,16 @@ export const savePlexConfig = async (plexUrl, plexToken) => {
 
 /**
  * Fetch Plex activities (downloads, streams, transcodes)
+ * @param {string} [instanceId] - Optional instance ID
  * @returns {Promise<Array>} Array of activities
  */
-export const fetchPlexActivities = async () => {
+export const fetchPlexActivities = async (instanceId) => {
   try {
     const credentials = sessionStorage.getItem("auth_credentials");
-    const response = await fetch("/api/downloads", {
+    const params = instanceId
+      ? `?instance_id=${encodeURIComponent(instanceId)}`
+      : "";
+    const response = await fetch(`/api/downloads${params}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

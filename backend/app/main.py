@@ -258,14 +258,14 @@ async def health_check():
 
 
 @app.get("/api/downloads")
-async def get_downloads():
+async def get_downloads(instance_id: str = None):
     """
     Get Plex download/sync activities
     This is an alias for /api/plex/activities for compatibility
     """
     from app.api.plex import get_plex_activities
 
-    return await get_plex_activities()
+    return await get_plex_activities(instance_id=instance_id)
 
 
 @app.get("/api/version")
