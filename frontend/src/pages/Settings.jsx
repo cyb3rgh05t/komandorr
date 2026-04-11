@@ -29,11 +29,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  testPlexConnection,
-  getPlexConfig,
-  savePlexConfig,
-} from "@/services/plexService";
+import { testPlexConnection } from "@/services/plexService";
 import { api } from "@/services/api";
 
 export default function Settings() {
@@ -49,12 +45,14 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Plex state
-  const [plexUrl, setPlexUrl] = useState("");
-  const [plexToken, setPlexToken] = useState("");
-  const [plexServerName, setPlexServerName] = useState("Plex Server");
-  const [validating, setValidating] = useState(false);
-  const [plexValid, setPlexValid] = useState(null);
+  // Plex state (multi-instance)
+  const [plexInstances, setPlexInstances] = useState([]);
+  const [showAddPlex, setShowAddPlex] = useState(false);
+  const [newPlexName, setNewPlexName] = useState("");
+  const [newPlexUrl, setNewPlexUrl] = useState("");
+  const [newPlexToken, setNewPlexToken] = useState("");
+  const [showPlexKeys, setShowPlexKeys] = useState({});
+  const [plexTestStatus, setPlexTestStatus] = useState({});
 
   // General settings state
   const [logLevel, setLogLevel] = useState("INFO");
@@ -65,7 +63,6 @@ export default function Settings() {
   const [settingsLoading, setSettingsLoading] = useState(false);
 
   // Visibility state for sensitive fields
-  const [showPlexToken, setShowPlexToken] = useState(false);
   const [showGithubToken, setShowGithubToken] = useState(false);
   const [showTmdbKey, setShowTmdbKey] = useState(false);
   const [showOverseerrKey, setShowOverseerrKey] = useState(false);
@@ -87,11 +84,14 @@ export default function Settings() {
   const [vpnProxyTestStatus, setVpnProxyTestStatus] = useState(null);
   const [showVpnProxyKey, setShowVpnProxyKey] = useState(false);
 
-  // Posterizarr settings state
-  const [posterizarrUrl, setPosterizarrUrl] = useState("");
-  const [posterizarrApiKey, setPosterizarrApiKey] = useState("");
-  const [posterizarrTestStatus, setPosterizarrTestStatus] = useState(null);
-  const [showPosterizarrKey, setShowPosterizarrKey] = useState(false);
+  // Posterizarr settings state (multi-instance)
+  const [posterizarrInstances, setPosterizarrInstances] = useState([]);
+  const [showAddPosterizarr, setShowAddPosterizarr] = useState(false);
+  const [newPosterizarrName, setNewPosterizarrName] = useState("");
+  const [newPosterizarrUrl, setNewPosterizarrUrl] = useState("");
+  const [newPosterizarrApiKey, setNewPosterizarrApiKey] = useState("");
+  const [showPosterizarrKeys, setShowPosterizarrKeys] = useState({});
+  const [posterizarrTestStatus, setPosterizarrTestStatus] = useState({});
 
   // NFS Mount Manager settings state (multi-instance)
   const [nfsMountInstances, setNfsMountInstances] = useState([]);
@@ -125,6 +125,8 @@ export default function Settings() {
   const addNfsMountRef = useRef(null);
   const addAppRef = useRef(null);
   const addArrRef = useRef(null);
+  const addPlexRef = useRef(null);
+  const addPosterizarrRef = useRef(null);
 
   const handleAppIconUpload = async (
     file,
@@ -287,9 +289,9 @@ export default function Settings() {
       setTimezone(data.general.timezone);
       setGithubToken(data.api.github_token);
       setTmdbApiKey(data.api.tmdb_api_key);
-      setPlexUrl(data.plex.server_url);
-      setPlexToken(data.plex.server_token);
-      setPlexServerName(data.plex.server_name);
+      if (data.plex) {
+        setPlexInstances(data.plex.instances || []);
+      }
       if (data.overseerr) {
         setOverseerrUrl(data.overseerr.url || "");
         setOverseerrApiKey(data.overseerr.api_key || "");
@@ -303,8 +305,7 @@ export default function Settings() {
         setVpnProxyApiKey(data.vpn_proxy.api_key || "");
       }
       if (data.posterizarr) {
-        setPosterizarrUrl(data.posterizarr.url || "");
-        setPosterizarrApiKey(data.posterizarr.api_key || "");
+        setPosterizarrInstances(data.posterizarr.instances || []);
       }
       if (data.nfs_mount) {
         setNfsMountInstances(data.nfs_mount.instances || []);
@@ -319,8 +320,9 @@ export default function Settings() {
       }
 
       // Auto-validate connections if configured
-      if (data.plex.server_url && data.plex.server_token) {
-        validatePlexOnLoad(data.plex.server_url, data.plex.server_token);
+      const plexInsts = data.plex?.instances || [];
+      if (plexInsts.length > 0) {
+        validatePlexOnLoad(plexInsts);
       }
       if (data.overseerr?.url && data.overseerr?.api_key) {
         validateOverseerrOnLoad();
@@ -331,8 +333,8 @@ export default function Settings() {
       if (data.vpn_proxy?.url && data.vpn_proxy?.api_key) {
         validateVpnProxyOnLoad();
       }
-      if (data.posterizarr?.url && data.posterizarr?.api_key) {
-        validatePosterizarrOnLoad();
+      if (data.posterizarr?.instances?.length > 0) {
+        validatePosterizarrOnLoad(data.posterizarr.instances);
       }
       if (data.nfs_mount?.instances?.length > 0) {
         validateNfsMountOnLoad(data.nfs_mount.instances);
@@ -353,19 +355,28 @@ export default function Settings() {
     }
   };
 
-  const validatePlexOnLoad = async (url, token) => {
-    try {
-      const result = await testPlexConnection(url, token);
-      if (result.valid) {
-        setPlexValid(true);
-        if (result.server_name) {
-          setPlexServerName(result.server_name);
+  const validatePlexOnLoad = async (instances) => {
+    for (const inst of instances) {
+      if (inst.url && inst.token) {
+        try {
+          const result = await testPlexConnection(inst.url, inst.token);
+          setPlexTestStatus((prev) => ({
+            ...prev,
+            [inst.id]: result.valid ? "ok" : "fail",
+          }));
+          if (result.valid && result.server_name) {
+            setPlexInstances((prev) =>
+              prev.map((p) =>
+                p.id === inst.id
+                  ? { ...p, server_name: result.server_name }
+                  : p,
+              ),
+            );
+          }
+        } catch {
+          setPlexTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
         }
-      } else {
-        setPlexValid(false);
       }
-    } catch (error) {
-      setPlexValid(false);
     }
   };
 
@@ -400,12 +411,22 @@ export default function Settings() {
     }
   };
 
-  const validatePosterizarrOnLoad = async () => {
-    try {
-      const result = await api.get("/posterizarr/status");
-      setPosterizarrTestStatus(result.connected ? "ok" : "fail");
-    } catch (error) {
-      setPosterizarrTestStatus("fail");
+  const validatePosterizarrOnLoad = async (instances) => {
+    for (const inst of instances) {
+      if (inst.url && inst.api_key) {
+        try {
+          const result = await api.post("/posterizarr/test-connection", {
+            url: inst.url,
+            api_key: inst.api_key,
+          });
+          setPosterizarrTestStatus((prev) => ({
+            ...prev,
+            [inst.id]: result.connected ? "ok" : "fail",
+          }));
+        } catch {
+          setPosterizarrTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
+        }
+      }
     }
   };
 
@@ -593,37 +614,7 @@ export default function Settings() {
     }
   };
 
-  const handleValidatePlex = async () => {
-    if (!plexUrl || !plexToken) {
-      toast.error(t("plex.fillAllFields"));
-      return;
-    }
-
-    setValidating(true);
-    setPlexValid(null);
-
-    try {
-      const result = await testPlexConnection(plexUrl, plexToken);
-
-      if (result.valid) {
-        setPlexValid(true);
-        // Update server name from validation result
-        if (result.server_name) {
-          setPlexServerName(result.server_name);
-        }
-        toast.success(t("plex.validationSuccess"));
-      } else {
-        setPlexValid(false);
-        toast.error(result.message || t("plex.validationFailed"));
-      }
-    } catch (error) {
-      console.error("Failed to validate Plex:", error);
-      setPlexValid(false);
-      toast.error(error.message || t("plex.validationError"));
-    } finally {
-      setValidating(false);
-    }
-  };
+  // Plex validation is now per-instance, handled inline in JSX
 
   const handleValidateOverseerr = async () => {
     if (!overseerrUrl || !overseerrApiKey) {
@@ -670,6 +661,44 @@ export default function Settings() {
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
+      // Prepare Plex instances payload, including pending new instance (if filled)
+      let plexPayload = plexInstances;
+      const hasPendingPlex = newPlexName && newPlexUrl && newPlexToken;
+      if (hasPendingPlex) {
+        const pendingId = `plex-${newPlexName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        plexPayload = [
+          ...plexInstances,
+          {
+            id: pendingId,
+            name: newPlexName,
+            url: newPlexUrl,
+            token: newPlexToken,
+            server_name: newPlexName,
+          },
+        ];
+      }
+
+      // Prepare Posterizarr instances payload, including pending new instance (if filled)
+      let posterizarrPayload = posterizarrInstances;
+      const hasPendingPosterizarr =
+        newPosterizarrName && newPosterizarrUrl && newPosterizarrApiKey;
+      if (hasPendingPosterizarr) {
+        const pendingId = `posterizarr-${newPosterizarrName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        posterizarrPayload = [
+          ...posterizarrInstances,
+          {
+            id: pendingId,
+            name: newPosterizarrName,
+            url: newPosterizarrUrl,
+            api_key: newPosterizarrApiKey,
+          },
+        ];
+      }
+
       // Prepare NFS Mount instances payload, including pending new instance (if filled)
       let nfsMountPayload = nfsMountInstances;
       const hasPendingNfsMount =
@@ -722,9 +751,7 @@ export default function Settings() {
           tmdb_api_key: tmdbApiKey,
         },
         plex: {
-          server_url: plexUrl,
-          server_token: plexToken,
-          server_name: plexServerName,
+          instances: plexPayload || [],
         },
         overseerr: {
           url: overseerrUrl,
@@ -739,8 +766,7 @@ export default function Settings() {
           api_key: vpnProxyApiKey || "",
         },
         posterizarr: {
-          url: posterizarrUrl || "",
-          api_key: posterizarrApiKey || "",
+          instances: posterizarrPayload || [],
         },
         nfs_mount: {
           instances: nfsMountPayload || [],
@@ -778,6 +804,20 @@ export default function Settings() {
 
       toast.success(t("settings.settingsSaved"));
 
+      // If we auto-included a pending new Plex instance, clear the add form
+      if (hasPendingPlex) {
+        setNewPlexName("");
+        setNewPlexUrl("");
+        setNewPlexToken("");
+        setShowAddPlex(false);
+      }
+      // If we auto-included a pending new Posterizarr instance, clear the add form
+      if (hasPendingPosterizarr) {
+        setNewPosterizarrName("");
+        setNewPosterizarrUrl("");
+        setNewPosterizarrApiKey("");
+        setShowAddPosterizarr(false);
+      }
       // If we auto-included a pending new instance, clear the add form
       if (hasPendingNew) {
         setNewArrName("");
@@ -1342,128 +1382,377 @@ export default function Settings() {
 
         {activeTab === "plex" && (
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                <Server className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text">
-                  {t("plex.serverSettings")}
-                </h3>
-              </div>
-            </div>
-            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-              {/* Decorative gradient overlay */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-              <div className="relative">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("plex.serverUrl")}
-                    </label>
-                    <input
-                      type="url"
-                      value={plexUrl}
-                      onChange={(e) => {
-                        setPlexUrl(e.target.value);
-                        setPlexValid(null);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="http://192.168.1.100:32400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      {t("plex.token")}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPlexToken ? "text" : "password"}
-                        value={plexToken}
-                        onChange={(e) => {
-                          setPlexToken(e.target.value);
-                          setPlexValid(null);
-                          setPendingChanges(true);
-                        }}
-                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                        placeholder="XXXXXXXXXXXXXXXXXXXX"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPlexToken(!showPlexToken)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
-                      >
-                        {showPlexToken ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                    <p className="mt-2 text-xs text-theme-muted">
-                      {t("plex.tokenHelp")}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleValidatePlex}
-                      disabled={validating || !plexUrl || !plexToken}
-                      className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-                        plexValid === true
-                          ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
-                          : plexValid === false
-                            ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
-                            : ""
-                      }`}
-                    >
-                      {validating ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg
-                            className="animate-spin h-4 w-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          {t("plex.validating")}
-                        </span>
-                      ) : plexValid === true ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <CheckCircle size={16} />
-                          {t("plex.validated")}
-                        </span>
-                      ) : (
-                        t("plex.validate")
-                      )}
-                    </button>
-                  </div>
-
-                  {plexValid === false && (
-                    <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <p>{t("plex.validationFailedMessage")}</p>
-                    </div>
-                  )}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Server className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    Plex Server Instances
+                  </h3>
+                  <p className="text-sm text-theme-muted">
+                    Connect to one or more Plex Media Server instances
+                  </p>
                 </div>
               </div>
+              {!showAddPlex && plexInstances.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddPlex(true);
+                    setTimeout(
+                      () =>
+                        addPlexRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      100,
+                    );
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                >
+                  <Plus size={16} className="text-theme-primary" />
+                  Add Instance
+                </button>
+              )}
             </div>
+
+            {/* Existing Plex instances */}
+            {plexInstances.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {plexInstances.map((inst, idx) => (
+                  <div
+                    key={inst.id}
+                    className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                    <div className="relative space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Server className="w-4 h-4 text-theme-primary" />
+                          <span className="font-semibold text-theme-text">
+                            {inst.name || inst.server_name || inst.id}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPlexInstances((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            );
+                            setPendingChanges(true);
+                          }}
+                          className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            value={inst.name}
+                            onChange={(e) => {
+                              setPlexInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  name: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="My Plex Server"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            URL
+                          </label>
+                          <input
+                            type="url"
+                            value={inst.url}
+                            onChange={(e) => {
+                              setPlexInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  url: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPlexTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: null,
+                              }));
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="http://192.168.1.100:32400"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          Token
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPlexKeys[inst.id] ? "text" : "password"}
+                            value={inst.token}
+                            onChange={(e) => {
+                              setPlexInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  token: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPlexTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: null,
+                              }));
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="XXXXXXXXXXXXXXXXXXXX"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowPlexKeys((prev) => ({
+                                ...prev,
+                                [inst.id]: !prev[inst.id],
+                              }))
+                            }
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                          >
+                            {showPlexKeys[inst.id] ? (
+                              <EyeOff size={14} />
+                            ) : (
+                              <Eye size={14} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Test Connection Button */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!inst.url || !inst.token) {
+                            toast.error("Please enter URL and Token");
+                            return;
+                          }
+                          setPlexTestStatus((prev) => ({
+                            ...prev,
+                            [inst.id]: "loading",
+                          }));
+                          try {
+                            const result = await testPlexConnection(
+                              inst.url,
+                              inst.token,
+                            );
+                            if (result.valid) {
+                              setPlexTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "ok",
+                              }));
+                              toast.success(`${inst.name} connected`);
+                              if (result.server_name) {
+                                setPlexInstances((prev) =>
+                                  prev.map((p) =>
+                                    p.id === inst.id
+                                      ? {
+                                          ...p,
+                                          server_name: result.server_name,
+                                        }
+                                      : p,
+                                  ),
+                                );
+                              }
+                            } else {
+                              setPlexTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "fail",
+                              }));
+                              toast.error(
+                                result.message || "Connection failed",
+                              );
+                            }
+                          } catch (e) {
+                            setPlexTestStatus((prev) => ({
+                              ...prev,
+                              [inst.id]: "fail",
+                            }));
+                            toast.error(e.message || "Cannot connect to Plex");
+                          }
+                        }}
+                        disabled={
+                          plexTestStatus[inst.id] === "loading" ||
+                          !inst.url ||
+                          !inst.token
+                        }
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                          plexTestStatus[inst.id] === "ok"
+                            ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                            : plexTestStatus[inst.id] === "fail"
+                              ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                              : ""
+                        }`}
+                      >
+                        {plexTestStatus[inst.id] === "loading" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Testing...
+                          </span>
+                        ) : plexTestStatus[inst.id] === "ok" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} />
+                            Connected
+                          </span>
+                        ) : (
+                          "Test Connection"
+                        )}
+                      </button>
+
+                      {plexTestStatus[inst.id] === "fail" && (
+                        <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <p>
+                            Cannot connect to {inst.name}. Check the URL and
+                            Token are correct.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new Plex instance */}
+            {showAddPlex || plexInstances.length === 0 ? (
+              <div
+                ref={addPlexRef}
+                className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                <div className="relative space-y-3">
+                  <h4 className="text-sm font-semibold text-theme-text">
+                    Add Plex Server Instance
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newPlexName}
+                        onChange={(e) => setNewPlexName(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="My Plex Server"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        URL
+                      </label>
+                      <input
+                        type="url"
+                        value={newPlexUrl}
+                        onChange={(e) => setNewPlexUrl(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="http://192.168.1.100:32400"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      Token
+                    </label>
+                    <input
+                      type="password"
+                      value={newPlexToken}
+                      onChange={(e) => setNewPlexToken(e.target.value)}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                      placeholder="XXXXXXXXXXXXXXXXXXXX"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newPlexName || !newPlexUrl || !newPlexToken)
+                          return;
+                        const id = `plex-${newPlexName
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+                        setPlexInstances((prev) => [
+                          ...prev,
+                          {
+                            id,
+                            name: newPlexName,
+                            url: newPlexUrl,
+                            token: newPlexToken,
+                            server_name: newPlexName,
+                          },
+                        ]);
+                        setNewPlexName("");
+                        setNewPlexUrl("");
+                        setNewPlexToken("");
+                        setShowAddPlex(false);
+                        setPendingChanges(true);
+                      }}
+                      disabled={!newPlexName || !newPlexUrl || !newPlexToken}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-4 h-4 text-theme-primary" />
+                      Add Instance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddPlex(false);
+                        setNewPlexName("");
+                        setNewPlexUrl("");
+                        setNewPlexToken("");
+                      }}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -1922,162 +2211,378 @@ export default function Settings() {
         {/* Posterizarr Settings */}
         {activeTab === "posterizarr" && (
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                <Palette className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text">
-                  Posterizarr
-                </h3>
-                <p className="text-sm text-theme-muted">
-                  Connect to your Posterizarr instance for poster management and
-                  status monitoring
-                </p>
-              </div>
-            </div>
-            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-              <div className="relative space-y-4">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Palette className="w-5 h-5" />
+                </div>
                 <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    Posterizarr URL
-                  </label>
-                  <input
-                    type="url"
-                    value={posterizarrUrl}
-                    onChange={(e) => {
-                      setPosterizarrUrl(e.target.value);
-                      setPosterizarrTestStatus(null);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="http://posterizarr:8000"
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    The URL of your Posterizarr instance (e.g.
-                    http://posterizarr:8000 or http://192.168.1.100:8000)
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    Posterizarr Instances
+                  </h3>
+                  <p className="text-sm text-theme-muted">
+                    Connect to one or more Posterizarr instances for poster
+                    management and status monitoring
                   </p>
                 </div>
+              </div>
+              {!showAddPosterizarr && posterizarrInstances.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddPosterizarr(true);
+                    setTimeout(
+                      () =>
+                        addPosterizarrRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      100,
+                    );
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                >
+                  <Plus size={16} className="text-theme-primary" />
+                  Add Instance
+                </button>
+              )}
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    API Key
-                  </label>
-                  <div className="relative">
+            {/* Existing Posterizarr instances */}
+            {posterizarrInstances.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {posterizarrInstances.map((inst, idx) => (
+                  <div
+                    key={inst.id}
+                    className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                    <div className="relative space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Palette className="w-4 h-4 text-theme-primary" />
+                          <span className="font-semibold text-theme-text">
+                            {inst.name || inst.id}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPosterizarrInstances((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            );
+                            setPendingChanges(true);
+                          }}
+                          className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            value={inst.name}
+                            onChange={(e) => {
+                              setPosterizarrInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  name: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="My Posterizarr"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            URL
+                          </label>
+                          <input
+                            type="url"
+                            value={inst.url}
+                            onChange={(e) => {
+                              setPosterizarrInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  url: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPosterizarrTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: null,
+                              }));
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="http://posterizarr:8000"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          API Key
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={
+                              showPosterizarrKeys[inst.id] ? "text" : "password"
+                            }
+                            value={inst.api_key}
+                            onChange={(e) => {
+                              setPosterizarrInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  api_key: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPosterizarrTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: null,
+                              }));
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="Paste your Posterizarr API key"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowPosterizarrKeys((prev) => ({
+                                ...prev,
+                                [inst.id]: !prev[inst.id],
+                              }))
+                            }
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                          >
+                            {showPosterizarrKeys[inst.id] ? (
+                              <EyeOff size={14} />
+                            ) : (
+                              <Eye size={14} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Test Connection Button */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!inst.url || !inst.api_key) {
+                            toast.error("Please enter URL and API Key");
+                            return;
+                          }
+                          setPosterizarrTestStatus((prev) => ({
+                            ...prev,
+                            [inst.id]: "loading",
+                          }));
+                          try {
+                            const result = await api.post(
+                              "/posterizarr/test-connection",
+                              {
+                                url: inst.url,
+                                api_key: inst.api_key,
+                              },
+                            );
+                            if (result?.connected) {
+                              setPosterizarrTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "ok",
+                              }));
+                              toast.success(`${inst.name} connected`);
+                            } else {
+                              setPosterizarrTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "fail",
+                              }));
+                              toast.error(result?.error || "Connection failed");
+                            }
+                          } catch (e) {
+                            setPosterizarrTestStatus((prev) => ({
+                              ...prev,
+                              [inst.id]: "fail",
+                            }));
+                            toast.error(
+                              e.message || "Cannot connect to Posterizarr",
+                            );
+                          }
+                        }}
+                        disabled={
+                          posterizarrTestStatus[inst.id] === "loading" ||
+                          !inst.url ||
+                          !inst.api_key
+                        }
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                          posterizarrTestStatus[inst.id] === "ok"
+                            ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                            : posterizarrTestStatus[inst.id] === "fail"
+                              ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                              : ""
+                        }`}
+                      >
+                        {posterizarrTestStatus[inst.id] === "loading" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Testing...
+                          </span>
+                        ) : posterizarrTestStatus[inst.id] === "ok" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} />
+                            Connected
+                          </span>
+                        ) : (
+                          "Test Connection"
+                        )}
+                      </button>
+
+                      {posterizarrTestStatus[inst.id] === "fail" && (
+                        <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <p>
+                            Cannot connect to {inst.name}. Check the URL and API
+                            Key are correct.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new Posterizarr instance */}
+            {showAddPosterizarr || posterizarrInstances.length === 0 ? (
+              <div
+                ref={addPosterizarrRef}
+                className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                <div className="relative space-y-3">
+                  <h4 className="text-sm font-semibold text-theme-text">
+                    Add Posterizarr Instance
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newPosterizarrName}
+                        onChange={(e) => setNewPosterizarrName(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="My Posterizarr"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        URL
+                      </label>
+                      <input
+                        type="url"
+                        value={newPosterizarrUrl}
+                        onChange={(e) => setNewPosterizarrUrl(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="http://posterizarr:8000"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text mb-2">
+                      API Key
+                    </label>
                     <input
-                      type={showPosterizarrKey ? "text" : "password"}
-                      value={posterizarrApiKey}
-                      onChange={(e) => {
-                        setPosterizarrApiKey(e.target.value);
-                        setPosterizarrTestStatus(null);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm"
+                      type="password"
+                      value={newPosterizarrApiKey}
+                      onChange={(e) => setNewPosterizarrApiKey(e.target.value)}
+                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                       placeholder="Paste your Posterizarr API key"
                     />
+                  </div>
+                  <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setShowPosterizarrKey(!showPosterizarrKey)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                      onClick={() => {
+                        if (
+                          !newPosterizarrName ||
+                          !newPosterizarrUrl ||
+                          !newPosterizarrApiKey
+                        )
+                          return;
+                        const id = `posterizarr-${newPosterizarrName
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+                        setPosterizarrInstances((prev) => [
+                          ...prev,
+                          {
+                            id,
+                            name: newPosterizarrName,
+                            url: newPosterizarrUrl,
+                            api_key: newPosterizarrApiKey,
+                          },
+                        ]);
+                        setNewPosterizarrName("");
+                        setNewPosterizarrUrl("");
+                        setNewPosterizarrApiKey("");
+                        setShowAddPosterizarr(false);
+                        setPendingChanges(true);
+                      }}
+                      disabled={
+                        !newPosterizarrName ||
+                        !newPosterizarrUrl ||
+                        !newPosterizarrApiKey
+                      }
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {showPosterizarrKey ? (
-                        <EyeOff size={16} />
-                      ) : (
-                        <Eye size={16} />
-                      )}
+                      <Plus className="w-4 h-4 text-theme-primary" />
+                      Add Instance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddPosterizarr(false);
+                        setNewPosterizarrName("");
+                        setNewPosterizarrUrl("");
+                        setNewPosterizarrApiKey("");
+                      }}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+                    >
+                      Cancel
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-theme-muted">
-                    Your Posterizarr API key for authentication
-                  </p>
                 </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!posterizarrUrl || !posterizarrApiKey) {
-                        toast.error("Please enter URL and API Key");
-                        return;
-                      }
-                      setPosterizarrTestStatus("loading");
-                      try {
-                        const result = await api.get("/posterizarr/status");
-                        if (result.connected) {
-                          setPosterizarrTestStatus("ok");
-                          toast.success("Posterizarr connected");
-                        } else {
-                          setPosterizarrTestStatus("fail");
-                          toast.error(result.error || "Connection failed");
-                        }
-                      } catch (e) {
-                        setPosterizarrTestStatus("fail");
-                        toast.error(
-                          e.message || "Cannot connect to Posterizarr",
-                        );
-                      }
-                    }}
-                    disabled={
-                      posterizarrTestStatus === "loading" ||
-                      !posterizarrUrl ||
-                      !posterizarrApiKey
-                    }
-                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-                      posterizarrTestStatus === "ok"
-                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
-                        : posterizarrTestStatus === "fail"
-                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
-                          : ""
-                    }`}
-                  >
-                    {posterizarrTestStatus === "loading" ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg
-                          className="animate-spin h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Testing...
-                      </span>
-                    ) : posterizarrTestStatus === "ok" ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <CheckCircle size={16} />
-                        Connected
-                      </span>
-                    ) : (
-                      "Test Connection"
-                    )}
-                  </button>
-                </div>
-
-                {posterizarrTestStatus === "fail" && (
-                  <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <p>
-                      Cannot connect to Posterizarr. Check the URL and API Key
-                      are correct and the service is running.
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
+            ) : null}
           </div>
         )}
 
@@ -2099,7 +2604,7 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-              {!showAddNfsMount && (
+              {!showAddNfsMount && nfsMountInstances.length > 0 && (
                 <button
                   type="button"
                   onClick={() => {
@@ -2355,7 +2860,7 @@ export default function Settings() {
             )}
 
             {/* Add new NFS Mount instance */}
-            {showAddNfsMount ? (
+            {showAddNfsMount || nfsMountInstances.length === 0 ? (
               <div
                 ref={addNfsMountRef}
                 className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
@@ -3190,7 +3695,7 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-              {!showAddArr && (
+              {!showAddArr && arrInstances.length > 0 && (
                 <button
                   type="button"
                   onClick={() => {
@@ -3441,7 +3946,7 @@ export default function Settings() {
 
                 {/* Add new instance */}
                 <div className="pt-2">
-                  {showAddArr ? (
+                  {showAddArr || arrInstances.length === 0 ? (
                     <div
                       ref={addArrRef}
                       className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3"

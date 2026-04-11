@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     PLEX_SERVER_URL: str = ""
     PLEX_SERVER_TOKEN: str = ""
     PLEX_SERVER_NAME: str = "Plex Server"
+    PLEX_INSTANCES: list = []
 
     # Uploader Configuration
     UPLOADER_BASE_URL: str = ""
@@ -60,6 +61,7 @@ class Settings(BaseSettings):
     # Posterizarr Configuration
     POSTERIZARR_URL: str = ""
     POSTERIZARR_API_KEY: str = ""
+    POSTERIZARR_INSTANCES: list = []
 
     # NFS Mount Manager Configuration (multi-instance)
     NFS_MOUNT_INSTANCES: list = []
@@ -105,13 +107,36 @@ class Settings(BaseSettings):
             )
         if "plex" in config_data:
             plex_config = config_data["plex"]
-            self.PLEX_SERVER_URL = plex_config.get("server_url", self.PLEX_SERVER_URL)
-            self.PLEX_SERVER_TOKEN = plex_config.get(
-                "server_token", self.PLEX_SERVER_TOKEN
-            )
-            self.PLEX_SERVER_NAME = plex_config.get(
-                "server_name", self.PLEX_SERVER_NAME
-            )
+            # New multi-instance format
+            if "instances" in plex_config:
+                self.PLEX_INSTANCES = plex_config["instances"]
+                # Set first instance as default for backward compat
+                if self.PLEX_INSTANCES:
+                    first = self.PLEX_INSTANCES[0]
+                    self.PLEX_SERVER_URL = first.get("url", "")
+                    self.PLEX_SERVER_TOKEN = first.get("token", "")
+                    self.PLEX_SERVER_NAME = first.get("server_name", "Plex Server")
+            else:
+                # Backward compat: old single-server format
+                self.PLEX_SERVER_URL = plex_config.get(
+                    "server_url", self.PLEX_SERVER_URL
+                )
+                self.PLEX_SERVER_TOKEN = plex_config.get(
+                    "server_token", self.PLEX_SERVER_TOKEN
+                )
+                self.PLEX_SERVER_NAME = plex_config.get(
+                    "server_name", self.PLEX_SERVER_NAME
+                )
+                if self.PLEX_SERVER_URL or self.PLEX_SERVER_TOKEN:
+                    self.PLEX_INSTANCES = [
+                        {
+                            "id": "plex-default",
+                            "name": self.PLEX_SERVER_NAME,
+                            "url": self.PLEX_SERVER_URL,
+                            "token": self.PLEX_SERVER_TOKEN,
+                            "server_name": self.PLEX_SERVER_NAME,
+                        }
+                    ]
         if "uploader" in config_data:
             uploader_config = config_data["uploader"]
             self.UPLOADER_BASE_URL = uploader_config.get(
@@ -125,10 +150,31 @@ class Settings(BaseSettings):
             )
         if "posterizarr" in config_data:
             posterizarr_config = config_data["posterizarr"]
-            self.POSTERIZARR_URL = posterizarr_config.get("url", self.POSTERIZARR_URL)
-            self.POSTERIZARR_API_KEY = posterizarr_config.get(
-                "api_key", self.POSTERIZARR_API_KEY
-            )
+            # New multi-instance format
+            if "instances" in posterizarr_config:
+                self.POSTERIZARR_INSTANCES = posterizarr_config["instances"]
+                # Set first instance as default for backward compat
+                if self.POSTERIZARR_INSTANCES:
+                    first = self.POSTERIZARR_INSTANCES[0]
+                    self.POSTERIZARR_URL = first.get("url", "")
+                    self.POSTERIZARR_API_KEY = first.get("api_key", "")
+            else:
+                # Backward compat: old single-instance format
+                self.POSTERIZARR_URL = posterizarr_config.get(
+                    "url", self.POSTERIZARR_URL
+                )
+                self.POSTERIZARR_API_KEY = posterizarr_config.get(
+                    "api_key", self.POSTERIZARR_API_KEY
+                )
+                if self.POSTERIZARR_URL or self.POSTERIZARR_API_KEY:
+                    self.POSTERIZARR_INSTANCES = [
+                        {
+                            "id": "posterizarr-default",
+                            "name": "Posterizarr",
+                            "url": self.POSTERIZARR_URL,
+                            "api_key": self.POSTERIZARR_API_KEY,
+                        }
+                    ]
         if "nfs_mount" in config_data:
             nfs_mount_config = config_data["nfs_mount"]
             # New multi-instance format

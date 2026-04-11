@@ -26,10 +26,16 @@ class APISettings(BaseModel):
     tmdb_api_key: str
 
 
+class PlexInstance(BaseModel):
+    id: str
+    name: str
+    url: str
+    token: str
+    server_name: str = "Plex Server"
+
+
 class PlexSettings(BaseModel):
-    server_url: str
-    server_token: str
-    server_name: str
+    instances: list[PlexInstance] = []
 
 
 class OverseerrSettings(BaseModel):
@@ -47,9 +53,15 @@ class VpnProxySettings(BaseModel):
     api_key: str
 
 
-class PosterizarrSettings(BaseModel):
+class PosterizarrInstance(BaseModel):
+    id: str
+    name: str
     url: str
     api_key: str
+
+
+class PosterizarrSettings(BaseModel):
+    instances: list[PosterizarrInstance] = []
 
 
 class NfsMountInstance(BaseModel):
@@ -93,7 +105,7 @@ class SettingsResponse(BaseModel):
     logging: LoggingSettings
     general: GeneralSettings
     api: APISettings
-    plex: PlexSettings
+    plex: Optional[PlexSettings] = None
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
@@ -173,13 +185,23 @@ async def get_settings(username: str = Depends(require_auth)):
         tmdb_api_key=api_config.get("tmdb_api_key", settings.TMDB_API_KEY),
     )
 
-    # Get Plex settings from config or defaults
+    # Get Plex settings from config or defaults (multi-instance with backward compat)
     plex_config = config_data.get("plex", {})
-    plex_settings = PlexSettings(
-        server_url=plex_config.get("server_url", settings.PLEX_SERVER_URL),
-        server_token=plex_config.get("server_token", settings.PLEX_SERVER_TOKEN),
-        server_name=plex_config.get("server_name", settings.PLEX_SERVER_NAME),
-    )
+    plex_instances = []
+    if "instances" in plex_config:
+        plex_instances = [PlexInstance(**inst) for inst in plex_config["instances"]]
+    elif plex_config.get("server_url") or plex_config.get("server_token"):
+        # Backward compat: old single-server format
+        plex_instances = [
+            PlexInstance(
+                id="plex-default",
+                name=plex_config.get("server_name", settings.PLEX_SERVER_NAME),
+                url=plex_config.get("server_url", settings.PLEX_SERVER_URL),
+                token=plex_config.get("server_token", settings.PLEX_SERVER_TOKEN),
+                server_name=plex_config.get("server_name", settings.PLEX_SERVER_NAME),
+            )
+        ]
+    plex_settings = PlexSettings(instances=plex_instances)
 
     # Get VoDWisharr settings from config or defaults
     overseerr_config = config_data.get("overseerr", {})
@@ -210,14 +232,28 @@ async def get_settings(username: str = Depends(require_auth)):
         ),
     )
 
-    # Get Posterizarr settings from config or defaults
+    # Get Posterizarr settings from config or defaults (multi-instance with backward compat)
     posterizarr_config = config_data.get("posterizarr", {})
-    posterizarr_settings = PosterizarrSettings(
-        url=posterizarr_config.get("url", getattr(settings, "POSTERIZARR_URL", "")),
-        api_key=posterizarr_config.get(
-            "api_key", getattr(settings, "POSTERIZARR_API_KEY", "")
-        ),
-    )
+    posterizarr_instances = []
+    if "instances" in posterizarr_config:
+        posterizarr_instances = [
+            PosterizarrInstance(**inst) for inst in posterizarr_config["instances"]
+        ]
+    elif posterizarr_config.get("url") or posterizarr_config.get("api_key"):
+        # Backward compat: old single-instance format
+        posterizarr_instances = [
+            PosterizarrInstance(
+                id="posterizarr-default",
+                name="Posterizarr",
+                url=posterizarr_config.get(
+                    "url", getattr(settings, "POSTERIZARR_URL", "")
+                ),
+                api_key=posterizarr_config.get(
+                    "api_key", getattr(settings, "POSTERIZARR_API_KEY", "")
+                ),
+            )
+        ]
+    posterizarr_settings = PosterizarrSettings(instances=posterizarr_instances)
 
     # Get NFS Mount Manager settings from config or defaults
     nfs_mount_config = config_data.get("nfs_mount", {})
@@ -348,17 +384,41 @@ async def update_settings(
         settings.GITHUB_TOKEN = updates.api.github_token
         settings.TMDB_API_KEY = updates.api.tmdb_api_key
 
-    # Update Plex settings
-    if updates.plex:
+    # Update Plex settings (multi-instance)
+    if updates.plex is not None:
         config_data["plex"] = {
-            "server_url": updates.plex.server_url,
-            "server_token": updates.plex.server_token,
-            "server_name": updates.plex.server_name,
+            "instances": [
+                {
+                    "id": inst.id,
+                    "name": inst.name,
+                    "url": inst.url,
+                    "token": inst.token,
+                    "server_name": inst.server_name,
+                }
+                for inst in updates.plex.instances
+            ]
         }
-        # Update runtime settings
-        settings.PLEX_SERVER_URL = updates.plex.server_url
-        settings.PLEX_SERVER_TOKEN = updates.plex.server_token
-        settings.PLEX_SERVER_NAME = updates.plex.server_name
+        # Update runtime settings from first instance (backward compat)
+        if updates.plex.instances:
+            first = updates.plex.instances[0]
+            settings.PLEX_SERVER_URL = first.url
+            settings.PLEX_SERVER_TOKEN = first.token
+            settings.PLEX_SERVER_NAME = first.server_name
+        else:
+            settings.PLEX_SERVER_URL = ""
+            settings.PLEX_SERVER_TOKEN = ""
+            settings.PLEX_SERVER_NAME = "Plex Server"
+        settings.PLEX_INSTANCES = [
+            {
+                "id": inst.id,
+                "name": inst.name,
+                "url": inst.url,
+                "token": inst.token,
+                "server_name": inst.server_name,
+            }
+            for inst in updates.plex.instances
+        ]
+        logger.info(f"Updated Plex instances: {len(updates.plex.instances)} instances")
 
     # Update VoDWisharr settings
     if updates.overseerr:
@@ -392,16 +452,34 @@ async def update_settings(
         settings.VPN_PROXY_API_KEY = updates.vpn_proxy.api_key
         logger.info(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
 
-    # Update Posterizarr settings
+    # Update Posterizarr settings (multi-instance)
     if updates.posterizarr is not None:
         config_data["posterizarr"] = {
-            "url": updates.posterizarr.url,
-            "api_key": updates.posterizarr.api_key,
+            "instances": [
+                {
+                    "id": inst.id,
+                    "name": inst.name,
+                    "url": inst.url,
+                    "api_key": inst.api_key,
+                }
+                for inst in updates.posterizarr.instances
+            ]
         }
-        # Update runtime settings
-        settings.POSTERIZARR_URL = updates.posterizarr.url
-        settings.POSTERIZARR_API_KEY = updates.posterizarr.api_key
-        logger.info(f"Updated Posterizarr URL to: {updates.posterizarr.url}")
+        # Update runtime settings from first instance (backward compat)
+        if updates.posterizarr.instances:
+            first = updates.posterizarr.instances[0]
+            settings.POSTERIZARR_URL = first.url
+            settings.POSTERIZARR_API_KEY = first.api_key
+        else:
+            settings.POSTERIZARR_URL = ""
+            settings.POSTERIZARR_API_KEY = ""
+        settings.POSTERIZARR_INSTANCES = [
+            {"id": inst.id, "name": inst.name, "url": inst.url, "api_key": inst.api_key}
+            for inst in updates.posterizarr.instances
+        ]
+        logger.info(
+            f"Updated Posterizarr instances: {len(updates.posterizarr.instances)} instances"
+        )
 
     # Update NFS Mount Manager settings
     if updates.nfs_mount is not None:

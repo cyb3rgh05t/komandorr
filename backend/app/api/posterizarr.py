@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
+from pydantic import BaseModel
 import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
@@ -63,6 +64,28 @@ async def posterizarr_status(username: str = Depends(require_auth)):
             resp = await client.get(url, params={"api_key": api_key})
             resp.raise_for_status()
             return {"connected": True, "url": base_url}
+    except Exception as e:
+        return {"connected": False, "error": str(e)}
+
+
+class PosterizarrTestRequest(BaseModel):
+    url: str
+    api_key: str
+
+
+@router.post("/test-connection")
+async def test_posterizarr_connection(
+    req: PosterizarrTestRequest, username: str = Depends(require_auth)
+):
+    """Test connection to a specific Posterizarr instance."""
+    if not req.url or not req.api_key:
+        return {"connected": False, "error": "URL and API key are required"}
+    try:
+        url = f"{req.url.rstrip('/')}/api"
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params={"api_key": req.api_key})
+            resp.raise_for_status()
+            return {"connected": True, "url": req.url}
     except Exception as e:
         return {"connected": False, "error": str(e)}
 
