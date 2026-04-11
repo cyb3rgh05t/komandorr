@@ -264,7 +264,14 @@ export default function ExternalApps() {
         await api.post("/settings", {
           external_apps: { apps: reordered, group_order: groupOrder },
         });
-        queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
+        queryClient.setQueryData(["settings-external-apps"], (old) => ({
+          ...old,
+          external_apps: {
+            ...old?.external_apps,
+            apps: reordered,
+            group_order: groupOrder,
+          },
+        }));
       } catch (e) {
         console.error("Failed to save reorder:", e);
         setLocalApps(localApps);
@@ -296,7 +303,14 @@ export default function ExternalApps() {
         await api.post("/settings", {
           external_apps: { apps: localApps, group_order: reordered },
         });
-        queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
+        queryClient.setQueryData(["settings-external-apps"], (old) => ({
+          ...old,
+          external_apps: {
+            ...old?.external_apps,
+            apps: localApps,
+            group_order: reordered,
+          },
+        }));
       } catch (e) {
         console.error("Failed to save group order:", e);
         setGroupOrder(currentGroups);

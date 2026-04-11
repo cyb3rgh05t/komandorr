@@ -168,8 +168,9 @@ export default function Settings() {
             // Ignore auto-save errors - user can save manually
           }
         }
-        // Invalidate external apps query so the page updates instantly
-        queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
+        // Update React Query cache so ExternalApps page gets fresh data
+        const freshSettings = await api.get("/settings");
+        queryClient.setQueryData(["settings-external-apps"], freshSettings);
       } else {
         toast.error("Failed to upload icon");
       }
@@ -344,6 +345,9 @@ export default function Settings() {
 
       // Load Telegram notification settings
       loadTelegramSettings();
+
+      // Update React Query cache so ExternalApps page gets fresh data without refetch
+      queryClient.setQueryData(["settings-external-apps"], data);
     } catch (error) {
       console.error("Failed to load settings:", error);
     }
@@ -794,8 +798,6 @@ export default function Settings() {
       console.log("Reloading settings from backend...");
       await loadSettings();
       console.log("Settings reloaded successfully");
-      // Invalidate external apps query so the page updates instantly
-      queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
     } catch (error) {
       console.error("Failed to save settings:", error);
       toast.error(t("settings.saveError"));
