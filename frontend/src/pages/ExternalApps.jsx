@@ -102,7 +102,7 @@ function SortableAppCard({ app, getIcon, t }) {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : "auto",
-    position: "relative",
+    touchAction: "none",
   };
 
   const IconComponent = getIcon(app.icon);
@@ -120,26 +120,29 @@ function SortableAppCard({ app, getIcon, t }) {
     displayUrl = app.url;
   }
 
+  const handleClick = (e) => {
+    // Don't navigate if we just finished dragging
+    if (isDragging) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 relative overflow-hidden ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""}`}
+      {...attributes}
+      {...listeners}
+      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 relative overflow-hidden cursor-grab active:cursor-grabbing ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""}`}
     >
-      {/* Drag handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-1.5 right-1.5 p-1 rounded cursor-grab active:cursor-grabbing text-theme-text-muted/40 hover:text-theme-primary/70 transition-colors"
-        style={{ touchAction: "none" }}
-        title="Drag to reorder"
-      >
+      {/* Drag indicator */}
+      <div className="absolute top-1.5 right-1.5 p-1 rounded text-theme-text-muted/40 group-hover:text-theme-primary/70 transition-colors pointer-events-none">
         <GripVertical className="w-3.5 h-3.5" />
       </div>
 
       {/* Background glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 via-transparent to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-theme-primary/3 transition-all duration-500" />
-      <div className="absolute -top-12 -right-12 w-32 h-32 bg-theme-primary/0 group-hover:bg-theme-primary/5 rounded-full blur-2xl transition-all duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 via-transparent to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-theme-primary/3 transition-all duration-500 pointer-events-none" />
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-theme-primary/0 group-hover:bg-theme-primary/5 rounded-full blur-2xl transition-all duration-500 pointer-events-none" />
 
       {/* Icon */}
       <a
@@ -147,6 +150,7 @@ function SortableAppCard({ app, getIcon, t }) {
         target="_blank"
         rel="noopener noreferrer"
         draggable={false}
+        onClick={handleClick}
         className="contents"
       >
         <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-theme-hover to-theme-card border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
@@ -155,6 +159,7 @@ function SortableAppCard({ app, getIcon, t }) {
               src={app.icon}
               alt={app.name}
               className="w-8 h-8 object-contain rounded-lg"
+              draggable={false}
               onError={(e) => {
                 e.target.style.display = "none";
                 e.target.nextSibling.style.display = "flex";
