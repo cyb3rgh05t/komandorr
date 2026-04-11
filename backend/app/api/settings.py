@@ -86,6 +86,7 @@ class ExternalApp(BaseModel):
 
 class ExternalAppsSettings(BaseModel):
     apps: list[ExternalApp] = []
+    group_order: list[str] = []
 
 
 class SettingsResponse(BaseModel):
@@ -293,7 +294,8 @@ async def get_settings(username: str = Depends(require_auth)):
     # Get external apps settings from config
     external_apps_config = config_data.get("external_apps", {})
     external_apps_settings = ExternalAppsSettings(
-        apps=[ExternalApp(**app) for app in external_apps_config.get("apps", [])]
+        apps=[ExternalApp(**app) for app in external_apps_config.get("apps", [])],
+        group_order=external_apps_config.get("group_order", []),
     )
 
     return SettingsResponse(
@@ -464,7 +466,8 @@ async def update_settings(
                     "group": app.group,
                 }
                 for app in updates.external_apps.apps
-            ]
+            ],
+            "group_order": updates.external_apps.group_order or [],
         }
         logger.info(f"Updated external apps: {len(updates.external_apps.apps)} apps")
 

@@ -53,6 +53,8 @@ import {
   Plus,
   FolderOpen,
   GripVertical,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 
 // Map icon names to lucide components
@@ -224,13 +226,16 @@ export default function ExternalApps() {
   });
 
   const [localApps, setLocalApps] = useState([]);
+  const [groupOrder, setGroupOrder] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState("all");
 
-  // Sync localApps from server data
+  // Sync localApps and groupOrder from server data
   useEffect(() => {
     const serverApps = settingsData?.external_apps?.apps || [];
+    const serverGroupOrder = settingsData?.external_apps?.group_order || [];
     setLocalApps(serverApps);
+    setGroupOrder(serverGroupOrder);
   }, [settingsData]);
 
   const apps = localApps;
@@ -257,16 +262,47 @@ export default function ExternalApps() {
       // Persist to backend
       try {
         await api.post("/settings", {
-          external_apps: { apps: reordered },
+          external_apps: { apps: reordered, group_order: groupOrder },
         });
         queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
       } catch (e) {
         console.error("Failed to save reorder:", e);
-        // Revert on error
         setLocalApps(localApps);
       }
     },
-    [localApps, queryClient],
+    [localApps, groupOrder, queryClient],
+  );
+
+  const handleGroupMove = useCallback(
+    async (groupName, direction) => {
+      const currentGroups = [...groupOrder];
+      // Ensure all existing groups are in the order array
+      const allGroups = [
+        ...new Set(localApps.map((a) => a.group).filter(Boolean)),
+      ];
+      allGroups.forEach((g) => {
+        if (!currentGroups.includes(g)) currentGroups.push(g);
+      });
+
+      const idx = currentGroups.indexOf(groupName);
+      if (idx === -1) return;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= currentGroups.length) return;
+
+      const reordered = arrayMove(currentGroups, idx, newIdx);
+      setGroupOrder(reordered);
+
+      try {
+        await api.post("/settings", {
+          external_apps: { apps: localApps, group_order: reordered },
+        });
+        queryClient.invalidateQueries({ queryKey: ["settings-external-apps"] });
+      } catch (e) {
+        console.error("Failed to save group order:", e);
+        setGroupOrder(currentGroups);
+      }
+    },
+    [localApps, groupOrder, queryClient],
   );
 
   const filteredApps = apps.filter(
@@ -276,16 +312,23 @@ export default function ExternalApps() {
       app.url?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // Get unique groups
+  // Get unique groups (ordered by groupOrder, then alphabetical for new ones)
   const groups = useMemo(() => {
     const set = new Set();
     apps.forEach((app) => {
       if (app.group) set.add(app.group);
     });
-    return Array.from(set).sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: "base" }),
-    );
-  }, [apps]);
+    const allGroups = Array.from(set);
+    // Sort: groups in groupOrder first (by their order), then remaining alphabetically
+    return allGroups.sort((a, b) => {
+      const idxA = groupOrder.indexOf(a);
+      const idxB = groupOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+  }, [apps, groupOrder]);
 
   // Group filtered apps
   const groupedApps = useMemo(() => {
@@ -315,11 +358,11 @@ export default function ExternalApps() {
     });
 
     const result = [];
-    Object.keys(grouped)
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
-      .forEach((group) => {
+    groups.forEach((group) => {
+      if (grouped[group]) {
         result.push({ name: group, apps: grouped[group] });
-      });
+      }
+    });
 
     if (ungrouped.length > 0) {
       result.push({ name: null, apps: ungrouped });
@@ -498,52 +541,78 @@ export default function ExternalApps() {
           onDragEnd={handleDragEnd}
         >
           <div className="space-y-6">
-            {groupedApps.map((group) => (
-              <div key={group.name || "__ungrouped"}>
-                {/* Group Header */}
-                {group.name && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <FolderOpen size={16} className="text-theme-primary" />
-                    <h3 className="text-sm font-semibold text-theme-text uppercase tracking-wider">
-                      {group.name}
-                    </h3>
-                    <span className="text-xs text-theme-text-muted">
-                      ({group.apps.length})
-                    </span>
-                    <div className="flex-1 border-t border-theme ml-2" />
-                  </div>
-                )}
-                {!group.name && groups.length > 0 && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <AppWindow size={16} className="text-theme-text-muted" />
-                    <h3 className="text-sm font-semibold text-theme-text-muted uppercase tracking-wider">
-                      Ungrouped
-                    </h3>
-                    <span className="text-xs text-theme-text-muted">
-                      ({group.apps.length})
-                    </span>
-                    <div className="flex-1 border-t border-theme ml-2" />
-                  </div>
-                )}
+            {groupedApps.map((group, groupIdx) => {
+              const namedGroups = groupedApps.filter((g) => g.name);
+              const namedIdx = group.name
+                ? namedGroups.findIndex((g) => g.name === group.name)
+                : -1;
+              return (
+                <div key={group.name || "__ungrouped"}>
+                  {/* Group Header */}
+                  {group.name && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <FolderOpen size={16} className="text-theme-primary" />
+                      <h3 className="text-sm font-semibold text-theme-text uppercase tracking-wider">
+                        {group.name}
+                      </h3>
+                      <span className="text-xs text-theme-text-muted">
+                        ({group.apps.length})
+                      </span>
+                      {namedGroups.length > 1 && (
+                        <div className="flex items-center gap-0.5 ml-1">
+                          <button
+                            onClick={() => handleGroupMove(group.name, -1)}
+                            disabled={namedIdx === 0}
+                            className="p-0.5 rounded hover:bg-theme-hover text-theme-text-muted hover:text-theme-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                            title="Move group up"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleGroupMove(group.name, 1)}
+                            disabled={namedIdx === namedGroups.length - 1}
+                            className="p-0.5 rounded hover:bg-theme-hover text-theme-text-muted hover:text-theme-primary transition-all disabled:opacity-30 disabled:pointer-events-none"
+                            title="Move group down"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex-1 border-t border-theme ml-2" />
+                    </div>
+                  )}
+                  {!group.name && groups.length > 0 && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <AppWindow size={16} className="text-theme-text-muted" />
+                      <h3 className="text-sm font-semibold text-theme-text-muted uppercase tracking-wider">
+                        Ungrouped
+                      </h3>
+                      <span className="text-xs text-theme-text-muted">
+                        ({group.apps.length})
+                      </span>
+                      <div className="flex-1 border-t border-theme ml-2" />
+                    </div>
+                  )}
 
-                {/* Apps Grid */}
-                <SortableContext
-                  items={group.apps.map((a) => a.id)}
-                  strategy={rectSortingStrategy}
-                >
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
-                    {group.apps.map((app) => (
-                      <SortableAppCard
-                        key={app.id}
-                        app={app}
-                        getIcon={getIcon}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </div>
-            ))}
+                  {/* Apps Grid */}
+                  <SortableContext
+                    items={group.apps.map((a) => a.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
+                      {group.apps.map((app) => (
+                        <SortableAppCard
+                          key={app.id}
+                          app={app}
+                          getIcon={getIcon}
+                          t={t}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </div>
+              );
+            })}
           </div>
         </DndContext>
       )}

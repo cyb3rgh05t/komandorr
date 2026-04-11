@@ -228,15 +228,53 @@ export default function Settings() {
     [pendingChanges],
   );
 
-  // Browser tab/window close warning
+  // Browser tab/window close warning + SPA navigation guard
   useEffect(() => {
+    if (!pendingChanges) return;
+
     const handleBeforeUnload = (e) => {
-      if (pendingChanges) {
-        e.preventDefault();
+      e.preventDefault();
+      e.returnValue =
+        "You have unsaved changes. Are you sure you want to leave?";
+      return e.returnValue;
+    };
+
+    // Intercept SPA navigation (sidebar links use history.pushState)
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function (...args) {
+      // args[2] is the new URL
+      const targetUrl = args[2];
+      const currentUrl = window.location.pathname + window.location.search;
+      // Only block if navigating to a different page (not same settings page)
+      if (targetUrl && !String(targetUrl).startsWith("/settings")) {
+        if (
+          !window.confirm(
+            "You have unsaved changes. Are you sure you want to leave?",
+          )
+        ) {
+          return;
+        }
+      }
+      return originalPushState.apply(window.history, args);
+    };
+
+    const handlePopState = () => {
+      if (
+        !window.confirm(
+          "You have unsaved changes. Are you sure you want to leave?",
+        )
+      ) {
+        window.history.pushState(null, "", "/settings");
       }
     };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.history.pushState = originalPushState;
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, [pendingChanges]);
 
   useEffect(() => {
@@ -245,23 +283,6 @@ export default function Settings() {
     // Load general settings (includes Plex)
     loadSettings();
   }, []);
-
-  // Warn before leaving with unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (pendingChanges) {
-        e.preventDefault();
-        e.returnValue =
-          "You have unsaved changes. Are you sure you want to leave?";
-        return e.returnValue;
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [pendingChanges]);
 
   const loadSettings = async () => {
     try {
