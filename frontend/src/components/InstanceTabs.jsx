@@ -33,29 +33,11 @@ export default function InstanceTabs({
             >
               {inst.name}
               {typeof inst.connected === "boolean" && (
-                <span className="ml-2 text-xs">
-                  {inst.connected ? (
-                    <span
-                      className={`inline-flex items-center px-1.5 py-0.5 rounded-full ${
-                        isActive
-                          ? "bg-black/20 text-black border border-black/30"
-                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                      }`}
-                    >
-                      Connected
-                    </span>
-                  ) : (
-                    <span
-                      className={`inline-flex items-center px-1.5 py-0.5 rounded-full ${
-                        isActive
-                          ? "bg-black/20 text-black border border-black/30"
-                          : "bg-red-500/15 text-red-400 border border-red-500/30"
-                      }`}
-                    >
-                      Offline
-                    </span>
-                  )}
-                </span>
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ml-2 ${
+                    inst.connected ? "bg-emerald-400" : "bg-red-400"
+                  }`}
+                />
               )}
             </button>
           );

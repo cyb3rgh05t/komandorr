@@ -580,50 +580,6 @@ export default function NfsMount() {
         </Link>
       )}
 
-      {/* Header & Refresh */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-theme-primary/10">
-            <HardDrive className="w-6 h-6 text-theme-primary" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-theme-text">
-            NFS Mount Manager
-          </h1>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          {anyConnected ? (
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg flex-1 sm:flex-initial justify-center">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-              </span>
-              <span className="text-xs sm:text-sm font-medium text-theme-text">
-                Live
-              </span>
-            </div>
-          ) : instances.length > 0 ? (
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg flex-1 sm:flex-initial justify-center">
-              <span className="relative flex h-3 w-3">
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-              </span>
-              <span className="text-xs sm:text-sm font-medium text-theme-text">
-                Offline
-              </span>
-            </div>
-          ) : null}
-          <button
-            onClick={() => refetchDash()}
-            disabled={dashFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
-          >
-            <RefreshCw
-              className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
-            />
-            <span className="text-xs sm:text-sm">Refresh</span>
-          </button>
-        </div>
-      </div>
-
       {/* Manager Tabs */}
       {managers.length > 1 && (
         <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
@@ -641,35 +597,51 @@ export default function NfsMount() {
                   }`}
                 >
                   {mgr.name}
-                  <span className="ml-2 text-xs">
-                    {mgr.connected ? (
-                      <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full ${
-                          isActive
-                            ? "bg-black/20 text-black border border-black/30"
-                            : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                        }`}
-                      >
-                        Connected
-                      </span>
-                    ) : (
-                      <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full ${
-                          isActive
-                            ? "bg-black/20 text-black border border-black/30"
-                            : "bg-red-500/15 text-red-400 border border-red-500/30"
-                        }`}
-                      >
-                        Offline
-                      </span>
-                    )}
-                  </span>
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full ml-2 ${
+                      mgr.connected ? "bg-emerald-400" : "bg-red-400"
+                    }`}
+                  />
                 </button>
               );
             })}
           </div>
         </div>
       )}
+
+      {/* Live/Offline Indicator & Refresh */}
+      <div className="flex justify-end items-center gap-2 sm:gap-3">
+        {anyConnected ? (
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg justify-center">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-xs sm:text-sm font-medium text-theme-text">
+              Live
+            </span>
+          </div>
+        ) : instances.length > 0 ? (
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg justify-center">
+            <span className="relative flex h-3 w-3">
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+            <span className="text-xs sm:text-sm font-medium text-theme-text">
+              Offline
+            </span>
+          </div>
+        ) : null}
+        <button
+          onClick={() => refetchDash()}
+          disabled={dashFetching}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw
+            className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
+          />
+          <span className="text-xs sm:text-sm">Refresh</span>
+        </button>
+      </div>
 
       {/* Active Manager Content */}
       {activeManager && (
