@@ -438,7 +438,9 @@ async def update_settings(
         config_data["plex_sync"] = {
             "instance_id": updates.plex_sync.instance_id,
         }
-        logger.info(f"Updated Plex VOD Sync instance_id: {updates.plex_sync.instance_id}")
+        logger.info(
+            f"Updated Plex VOD Sync instance_id: {updates.plex_sync.instance_id}"
+        )
 
     # Update VoDWisharr settings
     if updates.overseerr:

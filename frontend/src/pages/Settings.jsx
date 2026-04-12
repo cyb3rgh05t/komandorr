@@ -1827,10 +1827,7 @@ export default function Settings() {
                           }`}
                         >
                           {isSelected && (
-                            <CheckCircle
-                              size={14}
-                              className="text-black"
-                            />
+                            <CheckCircle size={14} className="text-black" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
