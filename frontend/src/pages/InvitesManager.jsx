@@ -6,6 +6,7 @@ import { useToast } from "../context/ToastContext";
 import { formatDateTime } from "../utils/dateUtils";
 import { useItemsPerPage } from "../utils/usePersistedState";
 import ConfirmDialog from "../components/ConfirmDialog";
+import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
 import {
   Plus,
   Trash2,
@@ -82,11 +83,24 @@ const InvitesManager = () => {
     placeholderData: (previousData) => previousData,
   });
 
+  // Fetch Plex instances for tab selector
+  const { data: instancesData } = useQuery({
+    queryKey: ["plex-instances"],
+    queryFn: () => api.get("/plex/instances"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+  const { effectiveTab, setActiveTab, instances } = useInstanceTabs(instancesData);
+
   // Use React Query for Plex config
   const { data: plexConfig } = useQuery({
-    queryKey: ["plexConfig"],
-    queryFn: () => api.get("/invites/plex/config"),
+    queryKey: ["plexConfig", effectiveTab],
+    queryFn: () => {
+      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      return api.get(`/invites/plex/config${params}`);
+    },
     staleTime: 60000,
+    enabled: instances.length > 0 || !instancesData,
     placeholderData: (previousData) => previousData,
   });
 
@@ -95,14 +109,16 @@ const InvitesManager = () => {
 
   // Use React Query for Plex users count
   const { data: plexUsersData } = useQuery({
-    queryKey: ["plexUsersCount"],
+    queryKey: ["plexUsersCount", effectiveTab],
     queryFn: async () => {
-      const data = await api.get("/plex/users/count");
+      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const data = await api.get(`/plex/users/count${params}`);
       console.log("Plex users count response:", data);
       return data;
     },
     staleTime: 3600000, // 1 hour
     refetchInterval: 3600000, // 1 hour
+    enabled: instances.length > 0 || !instancesData,
     placeholderData: (previousData) => previousData,
   });
 
@@ -110,10 +126,14 @@ const InvitesManager = () => {
 
   // Use React Query for Plex live stats
   const { data: plexLiveStatsData } = useQuery({
-    queryKey: ["plexLiveStats"],
-    queryFn: () => api.get("/plex/stats/live"),
+    queryKey: ["plexLiveStats", effectiveTab],
+    queryFn: () => {
+      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      return api.get(`/plex/stats/live${params}`);
+    },
     staleTime: 3600000, // 1 hour
     refetchInterval: 3600000, // 1 hour
+    enabled: instances.length > 0 || !instancesData,
     placeholderData: (previousData) => previousData,
   });
 
@@ -422,6 +442,12 @@ const InvitesManager = () => {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
       {/* Header with Search & Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">

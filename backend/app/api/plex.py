@@ -124,7 +124,7 @@ def save_plex_config(
     config: dict,
     server_name: Optional[str] = None,
 ) -> bool:
-    """Save Plex configuration to config.json"""
+    """Save Plex configuration to config.json (multi-instance format)"""
     try:
         from pathlib import Path
         import json
@@ -137,12 +137,50 @@ def save_plex_config(
             with open(config_path, "r") as f:
                 config_data = json.load(f)
 
-        # Update plex section
-        config_data["plex"] = {
-            "server_url": config["url"],
-            "server_token": config["token"],
-            "server_name": server_name or "Plex Server",
-        }
+        url = config["url"]
+        token = config["token"]
+        name = server_name or "Plex Server"
+
+        # Get existing plex config
+        plex_config = config_data.get("plex", {})
+        existing_instances = plex_config.get("instances", [])
+
+        # If old format, migrate the existing entry first
+        if not existing_instances and (plex_config.get("server_url") or plex_config.get("server_token")):
+            old_url = plex_config.get("server_url", "")
+            old_token = plex_config.get("server_token", "")
+            old_name = plex_config.get("server_name", "Plex Server")
+            if old_url or old_token:
+                existing_instances = [{
+                    "id": "plex-default",
+                    "name": old_name,
+                    "url": old_url,
+                    "token": old_token,
+                    "server_name": old_name,
+                }]
+
+        # Check if this server already exists (match by url)
+        found = False
+        for inst in existing_instances:
+            if inst.get("url") == url:
+                inst["token"] = token
+                inst["server_name"] = name
+                inst["name"] = inst.get("name") or name
+                found = True
+                break
+
+        if not found:
+            new_id = f"plex-{name.lower().replace(' ', '-')}-migrated"
+            existing_instances.append({
+                "id": new_id,
+                "name": name,
+                "url": url,
+                "token": token,
+                "server_name": name,
+            })
+
+        # Save in new multi-instance format
+        config_data["plex"] = {"instances": existing_instances}
 
         # Save back to file
         with open(config_path, "w") as f:
@@ -151,11 +189,12 @@ def save_plex_config(
         # Update runtime settings
         from app.config import settings
 
-        settings.PLEX_SERVER_URL = config["url"]
-        settings.PLEX_SERVER_TOKEN = config["token"]
-        settings.PLEX_SERVER_NAME = server_name or "Plex Server"
+        settings.PLEX_SERVER_URL = url
+        settings.PLEX_SERVER_TOKEN = token
+        settings.PLEX_SERVER_NAME = name
+        settings.PLEX_INSTANCES = existing_instances
 
-        logger.info(f"Plex configuration saved to config.json")
+        logger.info(f"Plex configuration saved to config.json ({len(existing_instances)} instances)")
         return True
     except Exception as e:
         logger.error(f"Error saving Plex config: {e}")
@@ -603,13 +642,6 @@ async def validate_plex(request: PlexValidateRequest):
     )
 
     if is_valid:
-        # Save the server name to config.json when validation succeeds
-        config_data = {
-            "url": request.url.rstrip("/"),
-            "token": request.token,
-        }
-        save_plex_config(config_data, server_name)
-
         return PlexValidateResponse(
             valid=True,
             message=f"Successfully connected to {server_name} ({total_users} users, {total_movies} movies, {total_tv_shows} TV shows)",

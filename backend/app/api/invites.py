@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Query
 from typing import List, Optional, overload, Literal
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import func
@@ -383,10 +383,15 @@ async def list_invites(
 
 
 @router.get("/plex/config")
-async def get_plex_config(username: str = Depends(require_auth)):
+async def get_plex_config(
+    username: str = Depends(require_auth),
+    instance_id: Optional[str] = Query(None),
+):
     """Get Plex server configuration and available libraries"""
     try:
-        plex_config = get_plex_config_from_settings()
+        from app.api.plex import load_plex_config
+
+        plex_config = load_plex_config(instance_id) if instance_id else get_plex_config_from_settings()
 
         if not plex_config:
             return {

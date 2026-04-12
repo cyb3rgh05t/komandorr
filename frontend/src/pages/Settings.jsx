@@ -849,6 +849,7 @@ export default function Settings() {
       console.log("Reloading settings from backend...");
       await loadSettings();
       console.log("Settings reloaded successfully");
+      setPendingChanges(false);
     } catch (error) {
       console.error("Failed to save settings:", error);
       toast.error(t("settings.saveError"));
@@ -975,9 +976,8 @@ export default function Settings() {
               </span>
             </div>
             <button
-              onClick={() => {
-                handleSaveSettings();
-                setPendingChanges(false);
+              onClick={async () => {
+                await handleSaveSettings();
               }}
               disabled={settingsLoading}
               className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-black rounded-lg text-sm font-semibold transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
