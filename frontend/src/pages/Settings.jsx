@@ -850,6 +850,14 @@ export default function Settings() {
       await loadSettings();
       console.log("Settings reloaded successfully");
       setPendingChanges(false);
+
+      // Invalidate related query caches so other pages pick up changes immediately
+      queryClient.invalidateQueries({ queryKey: ["plex-instances"] });
+      queryClient.invalidateQueries({ queryKey: ["plex-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["plex-config"] });
+      queryClient.invalidateQueries({ queryKey: ["posterizarr-instances"] });
+      queryClient.invalidateQueries({ queryKey: ["nfs-instances"] });
+      queryClient.invalidateQueries({ queryKey: ["arr-instances"] });
     } catch (error) {
       console.error("Failed to save settings:", error);
       toast.error(t("settings.saveError"));
