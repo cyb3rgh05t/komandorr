@@ -14,6 +14,7 @@ class InviteCreate(BaseModel):
     allow_channels: bool = False
     plex_home: bool = False
     libraries: str = "all"  # "all" or "1,2,3" (comma-separated library IDs)
+    plex_instance_id: Optional[str] = None  # Which Plex instance this invite is for
 
 
 class InviteUpdate(BaseModel):
@@ -46,6 +47,7 @@ class Invite(BaseModel):
     libraries: str = "all"
     is_active: bool = True
     plex_server: str = "Plex Server"
+    plex_instance_id: Optional[str] = None
 
     # Computed fields
     is_expired: bool = False
@@ -69,6 +71,7 @@ class PlexUser(BaseModel):
     last_seen: Optional[datetime] = None
     expires_at: Optional[datetime] = None
     is_active: bool = True
+    plex_instance_id: Optional[str] = None
 
     class Config:
         from_attributes = True

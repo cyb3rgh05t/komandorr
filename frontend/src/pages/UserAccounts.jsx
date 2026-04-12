@@ -97,19 +97,7 @@ const UserAccounts = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  // Use React Query for invites to get users
-  const { data: invites = [], isLoading: loading } = useQuery({
-    queryKey: ["invites"],
-    queryFn: async () => {
-      const data = await api.get("/invites/");
-      return data || [];
-    },
-    staleTime: 600000, // 10 minutes
-    refetchInterval: 600000, // 10 minutes
-    placeholderData: (previousData) => previousData,
-  });
-
-  // Fetch Plex instances for tab selector
+  // Fetch Plex instances for tab selector (must be before queries that use effectiveTab)
   const { data: instancesData } = useQuery({
     queryKey: ["plex-instances"],
     queryFn: () => api.get("/plex/instances"),
@@ -117,6 +105,19 @@ const UserAccounts = () => {
     refetchInterval: 30000,
   });
   const { effectiveTab, setActiveTab, instances } = useInstanceTabs(instancesData);
+
+  // Use React Query for invites to get users
+  const { data: invites = [], isLoading: loading } = useQuery({
+    queryKey: ["invites", effectiveTab],
+    queryFn: async () => {
+      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const data = await api.get(`/invites/${params}`);
+      return data || [];
+    },
+    staleTime: 600000, // 10 minutes
+    refetchInterval: 600000, // 10 minutes
+    placeholderData: (previousData) => previousData,
+  });
 
   // Use React Query for Plex config (contains libraries)
   const { data: plexConfig } = useQuery({
@@ -453,8 +454,8 @@ const UserAccounts = () => {
         `/invites/users/${editModal.user.id}/expiration`,
         updateData,
       );
-      queryClient.invalidateQueries(["invites"]);
-      queryClient.invalidateQueries(["inviteStats"]);
+      queryClient.invalidateQueries(["invites", effectiveTab]);
+      queryClient.invalidateQueries(["inviteStats", effectiveTab]);
       toast.success(t("userAccounts.userUpdated"));
       setEditModal({
         isOpen: false,
@@ -472,9 +473,9 @@ const UserAccounts = () => {
   const confirmDeleteUser = async () => {
     try {
       await api.delete(`/invites/users/${confirmDialog.userId}`);
-      queryClient.invalidateQueries(["invites"]);
-      queryClient.invalidateQueries(["inviteStats"]);
-      queryClient.invalidateQueries(["plexLiveStats"]);
+      queryClient.invalidateQueries(["invites", effectiveTab]);
+      queryClient.invalidateQueries(["inviteStats", effectiveTab]);
+      queryClient.invalidateQueries(["plexLiveStats", effectiveTab]);
       toast.success(t("userAccounts.userDeleted"));
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -484,9 +485,9 @@ const UserAccounts = () => {
 
   const handleRefresh = async () => {
     await Promise.all([
-      queryClient.refetchQueries(["invites"]),
-      queryClient.refetchQueries(["plexConfig"]),
-      queryClient.refetchQueries(["plexLiveStats"]),
+      queryClient.refetchQueries(["invites", effectiveTab]),
+      queryClient.refetchQueries(["plexConfig", effectiveTab]),
+      queryClient.refetchQueries(["plexLiveStats", effectiveTab]),
     ]);
     toast.success(t("userAccounts.refreshed") || "Refreshed");
   };
@@ -497,8 +498,8 @@ const UserAccounts = () => {
 
     try {
       await api.post(`/invites/users/${user.id}/refresh`);
-      queryClient.invalidateQueries(["invites"]);
-      queryClient.invalidateQueries(["inviteStats"]);
+      queryClient.invalidateQueries(["invites", effectiveTab]);
+      queryClient.invalidateQueries(["inviteStats", effectiveTab]);
       toast.success(
         t("userAccounts.userRefreshed") ||
           `Updated info for ${user.username || user.email}`,

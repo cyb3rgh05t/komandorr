@@ -158,6 +158,9 @@ class InviteDB(Base):
     # Library access (comma-separated library IDs or "all")
     libraries = Column(String, default="all")  # "all" or "1,2,3"
 
+    # Plex instance this invite belongs to
+    plex_instance_id = Column(String, nullable=True)  # e.g. "plex-default"
+
     # Status
     is_active = Column(Boolean, default=True)
 
@@ -179,6 +182,9 @@ class PlexUserDB(Base):
     # Invite relationship
     invite_id = Column(Integer, ForeignKey("invites.id"), nullable=False)
     invite = relationship("InviteDB", back_populates="users")
+
+    # Plex instance this user was invited to
+    plex_instance_id = Column(String, nullable=True)  # e.g. "plex-default"
 
     # Timestamps
     created_at = Column(
@@ -348,6 +354,20 @@ class Database:
             if "thumb" not in plex_users_columns:
                 logger.info("Adding thumb column to plex_users table")
                 cursor.execute("ALTER TABLE plex_users ADD COLUMN thumb TEXT")
+
+            # Add plex_instance_id column to plex_users if it doesn't exist
+            if "plex_instance_id" not in plex_users_columns:
+                logger.info("Adding plex_instance_id column to plex_users table")
+                cursor.execute("ALTER TABLE plex_users ADD COLUMN plex_instance_id TEXT")
+
+            # Check if new columns exist in invites table
+            cursor.execute("PRAGMA table_info(invites)")
+            invite_columns = [row[1] for row in cursor.fetchall()]
+
+            # Add plex_instance_id column to invites if it doesn't exist
+            if "plex_instance_id" not in invite_columns:
+                logger.info("Adding plex_instance_id column to invites table")
+                cursor.execute("ALTER TABLE invites ADD COLUMN plex_instance_id TEXT")
 
             # Check if watch_history table exists
             cursor.execute(

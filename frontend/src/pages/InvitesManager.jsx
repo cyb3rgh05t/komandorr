@@ -53,20 +53,21 @@ const InvitesManager = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch Plex instances for tab selector (must be before queries that use effectiveTab)
+  const { data: instancesData } = useQuery({
+    queryKey: ["plex-instances"],
+    queryFn: () => api.get("/plex/instances"),
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+  const { effectiveTab, setActiveTab, instances } = useInstanceTabs(instancesData);
+
   // Use React Query for invites
   const { data: invites = [], isLoading: loading } = useQuery({
-    queryKey: ["invites"],
+    queryKey: ["invites", effectiveTab],
     queryFn: async () => {
-      const data = await api.get("/invites/");
-      console.log("Invites data:", data);
-      if (data && data.length > 0) {
-        console.log(
-          "First invite full object:",
-          JSON.stringify(data[0], null, 2),
-        );
-        console.log("First invite plex_server:", data[0].plex_server);
-        console.log("First invite keys:", Object.keys(data[0]));
-      }
+      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const data = await api.get(`/invites/${params}`);
       return data;
     },
     staleTime: 10000,
@@ -76,21 +77,15 @@ const InvitesManager = () => {
 
   // Use React Query for stats
   const { data: stats = null } = useQuery({
-    queryKey: ["inviteStats"],
-    queryFn: () => api.get("/invites/stats"),
+    queryKey: ["inviteStats", effectiveTab],
+    queryFn: () => {
+      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      return api.get(`/invites/stats${params}`);
+    },
     staleTime: 3600000, // 1 hour
     refetchInterval: 3600000, // 1 hour
     placeholderData: (previousData) => previousData,
   });
-
-  // Fetch Plex instances for tab selector
-  const { data: instancesData } = useQuery({
-    queryKey: ["plex-instances"],
-    queryFn: () => api.get("/plex/instances"),
-    staleTime: 30000,
-    refetchInterval: 30000,
-  });
-  const { effectiveTab, setActiveTab, instances } = useInstanceTabs(instancesData);
 
   // Use React Query for Plex config
   const { data: plexConfig } = useQuery({
@@ -224,6 +219,7 @@ const InvitesManager = () => {
           createForm.libraries.length > 0
             ? createForm.libraries.join(",")
             : "all",
+        plex_instance_id: effectiveTab || null,
       };
 
       await api.post("/invites/", payload);
@@ -241,8 +237,8 @@ const InvitesManager = () => {
         libraries: [],
       });
 
-      queryClient.invalidateQueries(["invites"]);
-      queryClient.invalidateQueries(["inviteStats"]);
+      queryClient.invalidateQueries(["invites", effectiveTab]);
+      queryClient.invalidateQueries(["inviteStats", effectiveTab]);
       toast.success(t("invites.inviteCreated"));
     } catch (error) {
       console.error("Error creating invite:", error);
@@ -305,8 +301,8 @@ const InvitesManager = () => {
         expires_in_days: "",
       });
 
-      queryClient.invalidateQueries(["invites"]);
-      queryClient.invalidateQueries(["inviteStats"]);
+      queryClient.invalidateQueries(["invites", effectiveTab]);
+      queryClient.invalidateQueries(["inviteStats", effectiveTab]);
       toast.success(
         t("invites.inviteUpdated") || "Invite updated successfully",
       );
@@ -329,9 +325,9 @@ const InvitesManager = () => {
   const confirmDeleteInvite = async () => {
     try {
       await api.delete(`/invites/${confirmDialog.inviteId}`);
-      queryClient.invalidateQueries(["invites"]);
-      queryClient.invalidateQueries(["inviteStats"]);
-      queryClient.invalidateQueries(["plexLiveStats"]);
+      queryClient.invalidateQueries(["invites", effectiveTab]);
+      queryClient.invalidateQueries(["inviteStats", effectiveTab]);
+      queryClient.invalidateQueries(["plexLiveStats", effectiveTab]);
       toast.success(t("invites.inviteDeleted"));
     } catch (error) {
       console.error("Error deleting invite:", error);
@@ -468,9 +464,9 @@ const InvitesManager = () => {
           <button
             onClick={async () => {
               await Promise.all([
-                queryClient.refetchQueries(["invites"]),
-                queryClient.refetchQueries(["inviteStats"]),
-                queryClient.refetchQueries(["plexUsersCount"]),
+                queryClient.refetchQueries(["invites", effectiveTab]),
+                queryClient.refetchQueries(["inviteStats", effectiveTab]),
+                queryClient.refetchQueries(["plexUsersCount", effectiveTab]),
               ]);
               toast.success(t("invites.refreshed"));
             }}

@@ -31,18 +31,15 @@ from app.utils.plex_invite import (
 router = APIRouter(prefix="/api/invites", tags=["invites"])
 
 
-def get_plex_config_from_settings():
-    """Get Plex configuration from settings (config.json)"""
-    from app.config import settings
+def get_plex_config_from_settings(instance_id: Optional[str] = None):
+    """Get Plex configuration from settings, optionally for a specific instance"""
+    from app.api.plex import load_plex_config
 
-    if not settings.PLEX_SERVER_URL or not settings.PLEX_SERVER_TOKEN:
-        return None
+    if instance_id:
+        return load_plex_config(instance_id)
 
-    return {
-        "url": settings.PLEX_SERVER_URL,
-        "token": settings.PLEX_SERVER_TOKEN,
-        "server_name": settings.PLEX_SERVER_NAME or "Plex Server",
-    }
+    # Fallback: load first instance
+    return load_plex_config()
 
 
 def generate_invite_code(length: int = 8) -> str:
@@ -100,6 +97,7 @@ def db_invite_to_pydantic(
         "is_expired": is_expired,
         "is_exhausted": is_exhausted,
         "plex_server": plex_server,
+        "plex_instance_id": db_invite.plex_instance_id,
     }
 
     if include_users:
@@ -115,6 +113,7 @@ def db_invite_to_pydantic(
                 last_seen=u.last_seen,
                 expires_at=u.expires_at,
                 is_active=u.is_active,
+                plex_instance_id=u.plex_instance_id,
             )
             for u in db_invite.users
         ]
@@ -275,18 +274,18 @@ async def create_invite(
                 allow_channels=invite_data.allow_channels,
                 plex_home=invite_data.plex_home,
                 libraries=invite_data.libraries,
+                plex_instance_id=invite_data.plex_instance_id,
             )
 
             session.add(db_invite)
             session.commit()
             session.refresh(db_invite)
 
-            logger.info(f"Created invite {code} by {username}")
+            logger.info(f"Created invite {code} by {username} for instance {invite_data.plex_instance_id}")
 
-            # Get Plex server name from config
-            from app.config import settings
-
-            plex_server = settings.PLEX_SERVER_NAME or "Plex Server"
+            # Get Plex server name from the target instance
+            plex_config = get_plex_config_from_settings(invite_data.plex_instance_id)
+            plex_server = plex_config["server_name"] if plex_config else "Plex Server"
 
             return db_invite_to_pydantic(db_invite, plex_server=plex_server)
 
@@ -303,14 +302,16 @@ async def create_invite(
 
 @router.get("/")
 async def list_invites(
-    include_inactive: bool = False, username: str = Depends(require_auth)
+    include_inactive: bool = False,
+    instance_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
 ) -> List[InviteWithUsers]:
-    """List all invites"""
+    """List all invites, optionally filtered by Plex instance"""
     try:
         session = db.get_session()
         try:
-            # Get Plex server name from settings
-            plex_config = get_plex_config_from_settings()
+            # Get Plex server name for the requested instance
+            plex_config = get_plex_config_from_settings(instance_id)
             plex_server = plex_config["server_name"] if plex_config else "Plex Server"
             logger.info(f"Using Plex server name: {plex_server}")
 
@@ -318,6 +319,13 @@ async def list_invites(
 
             if not include_inactive:
                 query = query.filter_by(is_active=True)
+
+            # Filter by instance if specified
+            if instance_id:
+                query = query.filter(
+                    (InviteDB.plex_instance_id == instance_id)
+                    | (InviteDB.plex_instance_id.is_(None))
+                )
 
             invites = query.order_by(InviteDB.created_at.desc()).all()
 
@@ -431,43 +439,58 @@ async def get_plex_config(
 
 
 @router.get("/stats", response_model=InviteStatsResponse)
-async def get_invite_stats(username: str = Depends(require_auth)):
-    """Get invite statistics"""
+async def get_invite_stats(
+    instance_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get invite statistics, optionally filtered by Plex instance"""
     try:
         session = db.get_session()
         try:
             now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-            total_invites = session.query(InviteDB).count()
+            def _instance_filter(query, model):
+                if instance_id:
+                    return query.filter(
+                        (model.plex_instance_id == instance_id)
+                        | (model.plex_instance_id.is_(None))
+                    )
+                return query
+
+            total_invites = _instance_filter(
+                session.query(InviteDB), InviteDB
+            ).count()
 
             # Active invites: is_active=True AND not expired AND not exhausted
-            active_invites = (
-                session.query(InviteDB)
-                .filter(
+            active_invites = _instance_filter(
+                session.query(InviteDB).filter(
                     InviteDB.is_active == True,
                     (InviteDB.expires_at.is_(None)) | (InviteDB.expires_at > now),
                     (InviteDB.usage_limit.is_(None))
                     | (InviteDB.used_count < InviteDB.usage_limit),
-                )
-                .count()
-            )
+                ),
+                InviteDB,
+            ).count()
 
-            total_users = session.query(PlexUserDB).count()
-            active_users = session.query(PlexUserDB).filter_by(is_active=True).count()
+            total_users = _instance_filter(
+                session.query(PlexUserDB), PlexUserDB
+            ).count()
+            active_users = _instance_filter(
+                session.query(PlexUserDB).filter_by(is_active=True), PlexUserDB
+            ).count()
 
-            # Calculate used up invites (where used_count >= usage_limit and usage_limit is not null)
-            used_up_invites = (
-                session.query(InviteDB)
-                .filter(
+            # Calculate used up invites
+            used_up_invites = _instance_filter(
+                session.query(InviteDB).filter(
                     InviteDB.usage_limit.isnot(None),
                     InviteDB.used_count >= InviteDB.usage_limit,
-                )
-                .count()
-            )
+                ),
+                InviteDB,
+            ).count()
 
-            # Calculate total redemptions (sum of all used_count)
+            # Calculate total redemptions
             total_redemptions = (
-                session.query(InviteDB)
+                _instance_filter(session.query(InviteDB), InviteDB)
                 .with_entities(func.sum(InviteDB.used_count))
                 .scalar()
                 or 0
@@ -506,8 +529,8 @@ async def get_invite(invite_id: int, username: str = Depends(require_auth)):
                     status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found"
                 )
 
-            # Get Plex server name from settings
-            plex_config = get_plex_config_from_settings()
+            # Get Plex server name from the invite's instance
+            plex_config = get_plex_config_from_settings(db_invite.plex_instance_id)
             plex_server = plex_config["server_name"] if plex_config else "Plex Server"
 
             return db_invite_to_pydantic(
@@ -554,8 +577,8 @@ async def update_invite(
 
             logger.info(f"Updated invite {db_invite.code} by {username}")
 
-            # Get Plex server name from settings
-            plex_config = get_plex_config_from_settings()
+            # Get Plex server name from the invite's instance
+            plex_config = get_plex_config_from_settings(db_invite.plex_instance_id)
             plex_server = plex_config["server_name"] if plex_config else "Plex Server"
 
             return db_invite_to_pydantic(db_invite, plex_server=plex_server)
@@ -671,8 +694,8 @@ async def validate_invite(code: str):
                 )
 
             # Get Plex server name from config
-            # Get Plex server name from settings
-            plex_config = get_plex_config_from_settings()
+            # Get Plex server name from the invite's instance
+            plex_config = get_plex_config_from_settings(db_invite.plex_instance_id)
             server_name = plex_config["server_name"] if plex_config else "Plex Server"
 
             return ValidateInviteResponse(
@@ -740,8 +763,8 @@ async def redeem_invite(request: RedeemInviteRequest):
                     detail="This email has already been invited and is currently active",
                 )
 
-            # Get Plex config from settings
-            plex_config = get_plex_config_from_settings()
+            # Get Plex config from the invite's instance
+            plex_config = get_plex_config_from_settings(db_invite.plex_instance_id)
             if not plex_config:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -770,6 +793,7 @@ async def redeem_invite(request: RedeemInviteRequest):
                 logger.info(f"Reactivating previously removed user: {request.email}")
                 existing_user.is_active = True  # type: ignore
                 existing_user.invite_id = db_invite.id  # type: ignore
+                existing_user.plex_instance_id = db_invite.plex_instance_id  # type: ignore
                 existing_user.created_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
                 plex_user = existing_user
             else:
@@ -777,6 +801,7 @@ async def redeem_invite(request: RedeemInviteRequest):
                 plex_user = PlexUserDB(
                     email=request.email.lower(),
                     invite_id=db_invite.id,
+                    plex_instance_id=db_invite.plex_instance_id,
                     username=None,  # Will be populated when user accepts invite
                     plex_id=None,  # Will be populated when user accepts invite
                     thumb=None,  # Will be populated when user accepts invite
@@ -849,6 +874,7 @@ async def redeem_invite(request: RedeemInviteRequest):
                     last_seen=plex_user.last_seen,  # type: ignore
                     expires_at=plex_user.expires_at,  # type: ignore
                     is_active=plex_user.is_active,  # type: ignore
+                    plex_instance_id=plex_user.plex_instance_id,  # type: ignore
                 ),
             }
 
@@ -866,14 +892,23 @@ async def redeem_invite(request: RedeemInviteRequest):
 
 
 @router.get("/users", response_model=List[PlexUser])
-async def list_plex_users(username: str = Depends(require_auth)):
-    """List all Plex users created via invites"""
+async def list_plex_users(
+    instance_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """List all Plex users created via invites, optionally filtered by instance"""
     try:
         session = db.get_session()
         try:
-            users = (
-                session.query(PlexUserDB).order_by(PlexUserDB.created_at.desc()).all()
-            )
+            query = session.query(PlexUserDB)
+
+            if instance_id:
+                query = query.filter(
+                    (PlexUserDB.plex_instance_id == instance_id)
+                    | (PlexUserDB.plex_instance_id.is_(None))
+                )
+
+            db_users = query.order_by(PlexUserDB.created_at.desc()).all()
 
             users = [
                 PlexUser(
@@ -887,9 +922,12 @@ async def list_plex_users(username: str = Depends(require_auth)):
                     last_seen=u.last_seen,  # type: ignore
                     expires_at=u.expires_at,  # type: ignore
                     is_active=u.is_active,  # type: ignore
+                    plex_instance_id=u.plex_instance_id,  # type: ignore
                 )
-                for u in users
+                for u in db_users
             ]
+
+            return users
 
         finally:
             session.close()
@@ -921,8 +959,8 @@ async def refresh_user_info(user_id: int, username: str = Depends(require_auth))
                     status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
                 )
 
-            # Get Plex config
-            plex_config = get_plex_config_from_settings()
+            # Get Plex config from the user's instance
+            plex_config = get_plex_config_from_settings(db_user.plex_instance_id)
             if not plex_config:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -965,6 +1003,7 @@ async def refresh_user_info(user_id: int, username: str = Depends(require_auth))
                 last_seen=db_user.last_seen,  # type: ignore
                 expires_at=db_user.expires_at,  # type: ignore
                 is_active=db_user.is_active,  # type: ignore
+                plex_instance_id=db_user.plex_instance_id,  # type: ignore
             )
 
         finally:
@@ -995,8 +1034,8 @@ async def delete_user(user_id: int, username: str = Depends(require_auth)):
 
             user_email = db_user.email
 
-            # Get Plex config
-            plex_config = get_plex_config_from_settings()
+            # Get Plex config from the user's instance
+            plex_config = get_plex_config_from_settings(db_user.plex_instance_id)
 
             # Remove user from Plex server
             if plex_config and user_email:
