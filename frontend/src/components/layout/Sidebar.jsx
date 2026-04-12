@@ -14,7 +14,6 @@ import {
   Activity,
   TrendingUp,
   HardDrive,
-  Video,
   Mail,
   Users,
   BarChart3,
@@ -43,7 +42,6 @@ export default function Sidebar() {
   const [expandedTabs, setExpandedTabs] = useState({
     plex: false,
     services: false,
-    vod: false,
     downloads: false,
     uploader: false,
   });
@@ -412,18 +410,14 @@ export default function Sidebar() {
       ],
     },
     {
-      label: t("nav.vodMedia", "VoD Media"),
-      icon: Video,
-      isTab: true,
-      tabName: "vod",
-      items: [
-        {
-          path: "/vod-streams",
-          label: t("nav.vodPlexSync", "VoD Plex-Sync"),
-          icon: FilmIcon,
-        },
-        { path: "/vod-portal", label: t("nav.vodPortal"), icon: TvIcon },
-      ],
+      label: t("nav.vodPlexSync", "VoD Plex-Sync"),
+      icon: FilmIcon,
+      path: "/vod-streams",
+    },
+    {
+      label: t("nav.vodPortal"),
+      icon: TvIcon,
+      path: "/vod-portal",
     },
 
     {
@@ -592,12 +586,6 @@ export default function Sidebar() {
                   const hasFailedUploadsBadge =
                     item.tabName === "uploader" && failedUploadsCount > 0;
 
-                  // Check if VoD Media tab has active streams badge
-                  const hasVodStreamsBadge =
-                    item.tabName === "vod" &&
-                    plexConfigured &&
-                    vodStreamsCount > 0;
-
                   // Check if Downloads tab has active or stuck downloads (show separate badges)
                   const totalActiveDownloads =
                     downloadCounts.sonarrActive + downloadCounts.radarrActive;
@@ -696,15 +684,6 @@ export default function Sidebar() {
                         )}
                         {hasStuckDownloadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-yellow-500 text-white ${
-                              isOpen ? "" : "md:hidden 2xl:inline-flex"
-                            }`}
-                          >
-                            {totalStuckDownloads}
-                          </span>
-                        )}
-                        {hasVodStreamsBadge && (
-                          <span
                             className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
@@ -758,12 +737,6 @@ export default function Sidebar() {
                               isMovies && downloadCounts.radarrActive > 0;
                             const moviesStuckBadge =
                               isMovies && downloadCounts.radarrStuck > 0;
-
-                            // VoD Plex-Sync badge
-                            const isVodPlexSync =
-                              subItem.path === "/vod-streams";
-                            const vodPlexSyncBadge =
-                              isVodPlexSync && vodStreamsCount > 0;
 
                             // Uploader Active Uploads badge
                             const isActiveUploads =
@@ -838,12 +811,6 @@ export default function Sidebar() {
                               badges.push({
                                 count: downloadCounts.radarrStuck,
                                 color: "bg-yellow-500",
-                              });
-                            }
-                            if (vodPlexSyncBadge) {
-                              badges.push({
-                                count: vodStreamsCount,
-                                color: "bg-green-500",
                               });
                             }
                             // Uploader: separate badges for active, queue, and failed

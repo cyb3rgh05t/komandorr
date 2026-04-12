@@ -38,6 +38,10 @@ class PlexSettings(BaseModel):
     instances: list[PlexInstance] = []
 
 
+class PlexSyncSettings(BaseModel):
+    instance_id: str = ""
+
+
 class OverseerrSettings(BaseModel):
     url: str
     api_key: str
@@ -106,6 +110,7 @@ class SettingsResponse(BaseModel):
     general: GeneralSettings
     api: APISettings
     plex: Optional[PlexSettings] = None
+    plex_sync: Optional[PlexSyncSettings] = None
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
@@ -120,6 +125,7 @@ class SettingsUpdate(BaseModel):
     general: Optional[GeneralSettings] = None
     api: Optional[APISettings] = None
     plex: Optional[PlexSettings] = None
+    plex_sync: Optional[PlexSyncSettings] = None
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
@@ -202,6 +208,12 @@ async def get_settings(username: str = Depends(require_auth)):
             )
         ]
     plex_settings = PlexSettings(instances=plex_instances)
+
+    # Get Plex VOD Sync settings
+    plex_sync_config = config_data.get("plex_sync", {})
+    plex_sync_settings = PlexSyncSettings(
+        instance_id=plex_sync_config.get("instance_id", "")
+    )
 
     # Get VoDWisharr settings from config or defaults
     overseerr_config = config_data.get("overseerr", {})
@@ -339,6 +351,7 @@ async def get_settings(username: str = Depends(require_auth)):
         general=general_settings,
         api=api_settings,
         plex=plex_settings,
+        plex_sync=plex_sync_settings,
         overseerr=overseerr_settings,
         uploader=uploader_settings,
         vpn_proxy=vpn_proxy_settings,
@@ -419,6 +432,13 @@ async def update_settings(
             for inst in updates.plex.instances
         ]
         logger.info(f"Updated Plex instances: {len(updates.plex.instances)} instances")
+
+    # Update Plex VOD Sync settings
+    if updates.plex_sync is not None:
+        config_data["plex_sync"] = {
+            "instance_id": updates.plex_sync.instance_id,
+        }
+        logger.info(f"Updated Plex VOD Sync instance_id: {updates.plex_sync.instance_id}")
 
     # Update VoDWisharr settings
     if updates.overseerr:

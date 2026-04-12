@@ -19,6 +19,7 @@ import {
   Save,
   Upload,
   Film,
+  FilmIcon,
   Plus,
   Trash2,
   Pencil,
@@ -53,6 +54,9 @@ export default function Settings() {
   const [newPlexToken, setNewPlexToken] = useState("");
   const [showPlexKeys, setShowPlexKeys] = useState({});
   const [plexTestStatus, setPlexTestStatus] = useState({});
+
+  // Plex VOD Sync state
+  const [plexSyncInstanceId, setPlexSyncInstanceId] = useState("");
 
   // General settings state
   const [logLevel, setLogLevel] = useState("INFO");
@@ -127,6 +131,20 @@ export default function Settings() {
   const addArrRef = useRef(null);
   const addPlexRef = useRef(null);
   const addPosterizarrRef = useRef(null);
+
+  // Refs to always access the latest multi-instance state in async save handler
+  const plexInstancesRef = useRef(plexInstances);
+  plexInstancesRef.current = plexInstances;
+  const plexSyncInstanceIdRef = useRef(plexSyncInstanceId);
+  plexSyncInstanceIdRef.current = plexSyncInstanceId;
+  const posterizarrInstancesRef = useRef(posterizarrInstances);
+  posterizarrInstancesRef.current = posterizarrInstances;
+  const nfsMountInstancesRef = useRef(nfsMountInstances);
+  nfsMountInstancesRef.current = nfsMountInstances;
+  const arrInstancesRef = useRef(arrInstances);
+  arrInstancesRef.current = arrInstances;
+  const externalAppsRef = useRef(externalApps);
+  externalAppsRef.current = externalApps;
 
   const handleAppIconUpload = async (
     file,
@@ -203,6 +221,7 @@ export default function Settings() {
       "general",
       "auth",
       "plex",
+      "plex_sync",
       "overseerr",
       "uploader",
       "vpn_proxy",
@@ -289,9 +308,8 @@ export default function Settings() {
       setTimezone(data.general.timezone);
       setGithubToken(data.api.github_token);
       setTmdbApiKey(data.api.tmdb_api_key);
-      if (data.plex) {
-        setPlexInstances(data.plex.instances || []);
-      }
+      setPlexInstances(data.plex?.instances || []);
+      setPlexSyncInstanceId(data.plex_sync?.instance_id || "");
       if (data.overseerr) {
         setOverseerrUrl(data.overseerr.url || "");
         setOverseerrApiKey(data.overseerr.api_key || "");
@@ -304,20 +322,10 @@ export default function Settings() {
         setVpnProxyUrl(data.vpn_proxy.url || "");
         setVpnProxyApiKey(data.vpn_proxy.api_key || "");
       }
-      if (data.posterizarr) {
-        setPosterizarrInstances(data.posterizarr.instances || []);
-      }
-      if (data.nfs_mount) {
-        setNfsMountInstances(data.nfs_mount.instances || []);
-      }
-      if (data.arr || data.instances) {
-        setArrInstances(
-          (data.arr && data.arr.instances) || data.instances || [],
-        );
-      }
-      if (data.external_apps) {
-        setExternalApps(data.external_apps.apps || []);
-      }
+      setPosterizarrInstances(data.posterizarr?.instances || []);
+      setNfsMountInstances(data.nfs_mount?.instances || []);
+      setArrInstances(data.arr?.instances || data.instances || []);
+      setExternalApps(data.external_apps?.apps || []);
 
       // Auto-validate connections if configured
       const plexInsts = data.plex?.instances || [];
@@ -662,14 +670,14 @@ export default function Settings() {
     setSettingsLoading(true);
     try {
       // Prepare Plex instances payload, including pending new instance (if filled)
-      let plexPayload = plexInstances;
+      let plexPayload = plexInstancesRef.current;
       const hasPendingPlex = newPlexName && newPlexUrl && newPlexToken;
       if (hasPendingPlex) {
         const pendingId = `plex-${newPlexName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
         plexPayload = [
-          ...plexInstances,
+          ...plexInstancesRef.current,
           {
             id: pendingId,
             name: newPlexName,
@@ -681,7 +689,7 @@ export default function Settings() {
       }
 
       // Prepare Posterizarr instances payload, including pending new instance (if filled)
-      let posterizarrPayload = posterizarrInstances;
+      let posterizarrPayload = posterizarrInstancesRef.current;
       const hasPendingPosterizarr =
         newPosterizarrName && newPosterizarrUrl && newPosterizarrApiKey;
       if (hasPendingPosterizarr) {
@@ -689,7 +697,7 @@ export default function Settings() {
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
         posterizarrPayload = [
-          ...posterizarrInstances,
+          ...posterizarrInstancesRef.current,
           {
             id: pendingId,
             name: newPosterizarrName,
@@ -700,7 +708,7 @@ export default function Settings() {
       }
 
       // Prepare NFS Mount instances payload, including pending new instance (if filled)
-      let nfsMountPayload = nfsMountInstances;
+      let nfsMountPayload = nfsMountInstancesRef.current;
       const hasPendingNfsMount =
         newNfsMountName && newNfsMountUrl && newNfsMountApiKey;
       if (hasPendingNfsMount) {
@@ -708,7 +716,7 @@ export default function Settings() {
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
         nfsMountPayload = [
-          ...nfsMountInstances,
+          ...nfsMountInstancesRef.current,
           {
             id: pendingId,
             name: newNfsMountName,
@@ -719,14 +727,14 @@ export default function Settings() {
       }
 
       // Prepare *arr instances payload, including pending new instance (if filled)
-      let instancesPayload = arrInstances;
+      let instancesPayload = arrInstancesRef.current;
       const hasPendingNew = newArrName && newArrUrl && newArrApiKey;
       if (hasPendingNew) {
         const pendingId = `${newArrType}-${newArrName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
         instancesPayload = [
-          ...arrInstances,
+          ...arrInstancesRef.current,
           {
             id: pendingId,
             name: newArrName,
@@ -753,6 +761,9 @@ export default function Settings() {
         plex: {
           instances: plexPayload || [],
         },
+        plex_sync: {
+          instance_id: plexSyncInstanceIdRef.current || "",
+        },
         overseerr: {
           url: overseerrUrl,
           api_key: overseerrApiKey,
@@ -775,7 +786,7 @@ export default function Settings() {
           instances: instancesPayload || [],
         },
         external_apps: {
-          apps: externalApps || [],
+          apps: externalAppsRef.current || [],
         },
       };
 
@@ -930,6 +941,7 @@ export default function Settings() {
       icon: Shield,
     },
     { id: "plex", label: t("plex.serverSettings", "Plex"), icon: Server },
+    { id: "plex_sync", label: "Plex VOD Sync", icon: FilmIcon },
     { id: "overseerr", label: "VoD Portal", icon: Server },
     {
       id: "uploader",
@@ -1753,6 +1765,96 @@ export default function Settings() {
                 </div>
               </div>
             ) : null}
+          </div>
+        )}
+
+        {/* Plex VOD Sync Configuration */}
+        {activeTab === "plex_sync" && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                <FilmIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Plex VOD Sync
+                </h3>
+                <p className="text-sm text-theme-muted">
+                  Select which Plex instance to use for VoD Plex-Sync monitoring
+                </p>
+              </div>
+            </div>
+
+            {plexInstances.length === 0 ? (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
+                <Server className="w-10 h-10 text-theme-muted mx-auto mb-3 opacity-30" />
+                <p className="text-theme-muted text-sm mb-3">
+                  No Plex instances configured yet
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleTabSwitch("plex")}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-black rounded-lg text-sm font-semibold transition-all"
+                >
+                  Configure Plex Instances
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {plexInstances.map((inst) => {
+                  const isSelected = plexSyncInstanceId === inst.id;
+                  return (
+                    <button
+                      key={inst.id}
+                      type="button"
+                      onClick={() => {
+                        setPlexSyncInstanceId(inst.id);
+                        setPendingChanges(true);
+                      }}
+                      className={`w-full group bg-theme-card border rounded-xl p-4 sm:p-5 shadow-lg transition-all duration-300 relative overflow-hidden text-left ${
+                        isSelected
+                          ? "border-theme-primary ring-2 ring-theme-primary/30"
+                          : "border-theme hover:border-theme-primary/50"
+                      }`}
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                      <div className="relative flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            isSelected
+                              ? "border-theme-primary bg-theme-primary"
+                              : "border-theme-border"
+                          }`}
+                        >
+                          {isSelected && (
+                            <CheckCircle
+                              size={14}
+                              className="text-black"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Server className="w-4 h-4 text-theme-primary" />
+                            <span className="font-semibold text-theme-text">
+                              {inst.name || inst.server_name || inst.id}
+                            </span>
+                            {plexTestStatus[inst.id] === "ok" && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                Connected
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-theme-muted mt-1 truncate">
+                            {inst.url}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

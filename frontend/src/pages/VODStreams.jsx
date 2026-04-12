@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import { useItemsPerPage } from "../utils/usePersistedState";
-import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
 import {
   Video,
   Download,
@@ -264,15 +263,13 @@ export default function VODStreams() {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch Plex instances
-  const { data: instancesData } = useQuery({
-    queryKey: ["plex-instances"],
-    queryFn: () => api.get("/plex/instances"),
-    staleTime: 30000,
-    refetchInterval: 30000,
+  // Fetch selected Plex VOD Sync instance from settings
+  const { data: settingsData } = useQuery({
+    queryKey: ["settings-plex-sync"],
+    queryFn: () => api.get("/settings"),
+    staleTime: 60000,
   });
-  const { effectiveTab, setActiveTab, instances } =
-    useInstanceTabs(instancesData);
+  const syncInstanceId = settingsData?.plex_sync?.instance_id || "";
 
   // Use React Query for Plex activities
   const {
@@ -281,21 +278,20 @@ export default function VODStreams() {
     isFetching,
     error,
   } = useQuery({
-    queryKey: ["plexActivities", effectiveTab],
-    queryFn: () => fetchPlexActivities(effectiveTab),
+    queryKey: ["plexActivities", syncInstanceId],
+    queryFn: () => fetchPlexActivities(syncInstanceId || undefined),
     staleTime: 5000,
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
-    enabled: instances.length > 0 || !instancesData,
   });
 
   // Check if Plex is configured via sessions endpoint (shared with Sidebar)
   const { data: sessionsData } = useQuery({
-    queryKey: ["plex-sessions", effectiveTab],
+    queryKey: ["plex-sessions", syncInstanceId],
     queryFn: async () => {
       try {
-        const params = effectiveTab
-          ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        const params = syncInstanceId
+          ? `?instance_id=${encodeURIComponent(syncInstanceId)}`
           : "";
         const response = await api.get(`/plex/sessions${params}`);
         return response;
@@ -599,6 +595,46 @@ export default function VODStreams() {
     ?.toLowerCase()
     .includes("not configured");
 
+  if (!syncInstanceId) {
+    return (
+      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-6">
+        <Link
+          to="/settings?tab=plex_sync"
+          className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-sm bg-yellow-500/10">
+              <Server className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="font-medium text-yellow-400">
+                {t(
+                  "vodStreams.noSyncInstance.title",
+                  "No Plex VOD Sync instance selected",
+                )}
+              </p>
+            </div>
+          </div>
+        </Link>
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
+          <Server className="w-16 h-16 mx-auto text-theme-text-muted mb-4" />
+          <h3 className="text-lg font-semibold text-theme-text mb-2">
+            {t(
+              "vodStreams.noSyncInstance.title",
+              "No Plex VOD Sync instance selected",
+            )}
+          </h3>
+          <p className="text-theme-text-muted max-w-md mx-auto">
+            {t(
+              "vodStreams.noSyncInstance.description",
+              "Select a Plex instance for VOD Sync in the settings to monitor streams and downloads.",
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (plexNotConfigured) {
     return (
       <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-6">
@@ -638,13 +674,6 @@ export default function VODStreams() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
-
       {/* Search Bar, Live Indicator & Refresh Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
