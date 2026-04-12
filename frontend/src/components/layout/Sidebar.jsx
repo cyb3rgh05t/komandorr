@@ -684,11 +684,11 @@ export default function Sidebar() {
                         )}
                         {hasStuckDownloadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-yellow-500 text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
-                            {vodStreamsCount}
+                            {totalStuckDownloads}
                           </span>
                         )}
                         <ChevronDown
