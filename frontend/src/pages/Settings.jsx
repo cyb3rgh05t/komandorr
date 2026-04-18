@@ -3617,7 +3617,7 @@ export default function Settings() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-theme-text">
-                      Chat Targets
+                      {t("settings.chatTargets") || "Chat Targets"}
                     </span>
                     <button
                       type="button"
@@ -3632,18 +3632,18 @@ export default function Settings() {
                       className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-theme-primary/10 text-theme-primary border border-theme-primary/30 rounded-lg hover:bg-theme-primary/20 transition-all"
                     >
                       <Plus size={14} />
-                      Add Target
+                      {t("settings.addTarget") || "Add Target"}
                     </button>
                   </div>
                   <p className="text-xs text-theme-muted">
-                    Add multiple chat IDs with optional topic IDs for forum
-                    groups
+                    {t("settings.chatTargetsHelp") ||
+                      "Add multiple chat IDs with optional topic IDs for forum groups"}
                   </p>
 
                   {telegramTargets.length === 0 && (
                     <div className="text-xs text-theme-muted text-center py-4 bg-theme-hover/30 border border-dashed border-theme rounded-lg">
-                      No targets configured. Add one to start receiving
-                      notifications.
+                      {t("settings.noTargets") ||
+                        "No targets configured. Add one to start receiving notifications."}
                     </div>
                   )}
 
@@ -3778,109 +3778,148 @@ export default function Settings() {
                 {/* ── Event Routing ── */}
                 <div className="space-y-3 pt-2">
                   <span className="text-sm font-medium text-theme-text">
-                    Event Routing
+                    {t("settings.eventRouting") || "Event Routing"}
                   </span>
                   <p className="text-xs text-theme-muted">
-                    Enable events and choose which targets receive them
+                    {t("settings.eventRoutingHelp") ||
+                      "Enable events and choose which targets receive them"}
                   </p>
 
-                  {telegramEventTypes.map((evt) => {
-                    const evtCfg = telegramEvents[evt.id] || {
-                      enabled: false,
-                      targets: [],
-                    };
-                    const eventColors = {
-                      service_offline: "bg-red-500",
-                      service_problem: "bg-yellow-500",
-                      service_recovery: "bg-green-500",
-                      invite_created: "bg-blue-500",
-                      invite_redeemed: "bg-purple-500",
-                      user_added: "bg-emerald-500",
-                      user_removed: "bg-orange-500",
-                      storage_warning: "bg-amber-500",
-                      vpn_error: "bg-red-400",
-                      nfs_error: "bg-rose-500",
-                      uploader_failed: "bg-pink-500",
-                      posterizarr_error: "bg-violet-500",
-                    };
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {telegramEventTypes.map((evt) => {
+                      const evtCfg = telegramEvents[evt.id] || {
+                        enabled: false,
+                        targets: [],
+                      };
+                      const eventColors = {
+                        service_offline:
+                          "from-red-500/20 to-red-500/5 border-red-500/30",
+                        service_problem:
+                          "from-yellow-500/20 to-yellow-500/5 border-yellow-500/30",
+                        service_recovery:
+                          "from-green-500/20 to-green-500/5 border-green-500/30",
+                        invite_created:
+                          "from-blue-500/20 to-blue-500/5 border-blue-500/30",
+                        invite_redeemed:
+                          "from-purple-500/20 to-purple-500/5 border-purple-500/30",
+                        user_added:
+                          "from-emerald-500/20 to-emerald-500/5 border-emerald-500/30",
+                        user_removed:
+                          "from-orange-500/20 to-orange-500/5 border-orange-500/30",
+                        storage_warning:
+                          "from-amber-500/20 to-amber-500/5 border-amber-500/30",
+                        vpn_error:
+                          "from-red-400/20 to-red-400/5 border-red-400/30",
+                        nfs_error:
+                          "from-rose-500/20 to-rose-500/5 border-rose-500/30",
+                        uploader_failed:
+                          "from-pink-500/20 to-pink-500/5 border-pink-500/30",
+                        posterizarr_error:
+                          "from-violet-500/20 to-violet-500/5 border-violet-500/30",
+                      };
+                      const dotColors = {
+                        service_offline: "bg-red-500",
+                        service_problem: "bg-yellow-500",
+                        service_recovery: "bg-green-500",
+                        invite_created: "bg-blue-500",
+                        invite_redeemed: "bg-purple-500",
+                        user_added: "bg-emerald-500",
+                        user_removed: "bg-orange-500",
+                        storage_warning: "bg-amber-500",
+                        vpn_error: "bg-red-400",
+                        nfs_error: "bg-rose-500",
+                        uploader_failed: "bg-pink-500",
+                        posterizarr_error: "bg-violet-500",
+                      };
 
-                    return (
-                      <div
-                        key={evt.id}
-                        className="p-3 bg-theme-hover/30 border border-theme rounded-lg"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-2 h-2 rounded-full ${
-                                eventColors[evt.id] || "bg-gray-400"
+                      return (
+                        <div
+                          key={evt.id}
+                          className={`relative p-3 rounded-xl border bg-gradient-to-br transition-all duration-200 ${
+                            evtCfg.enabled
+                              ? eventColors[evt.id] ||
+                                "from-gray-500/20 to-gray-500/5 border-gray-500/30"
+                              : "from-theme-hover/30 to-theme-hover/10 border-theme opacity-60"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                                  evtCfg.enabled
+                                    ? dotColors[evt.id] || "bg-gray-400"
+                                    : "bg-gray-600"
+                                }`}
+                              />
+                              <span className="text-sm font-medium text-theme-text truncate">
+                                {evt.label}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = { ...telegramEvents };
+                                updated[evt.id] = {
+                                  ...evtCfg,
+                                  enabled: !evtCfg.enabled,
+                                };
+                                setTelegramEvents(updated);
+                                setPendingChanges(true);
+                              }}
+                              className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+                                evtCfg.enabled ? "bg-green-500" : "bg-gray-600"
                               }`}
-                            />
-                            <span className="text-sm text-theme-text">
-                              {evt.label}
-                            </span>
+                            >
+                              <span
+                                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                                  evtCfg.enabled ? "translate-x-4" : ""
+                                }`}
+                              />
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = { ...telegramEvents };
-                              updated[evt.id] = {
-                                ...evtCfg,
-                                enabled: !evtCfg.enabled,
-                              };
-                              setTelegramEvents(updated);
-                              setPendingChanges(true);
-                            }}
-                            className={`relative w-10 h-5 rounded-full transition-colors ${
-                              evtCfg.enabled ? "bg-green-500" : "bg-gray-600"
-                            }`}
-                          >
-                            <span
-                              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                                evtCfg.enabled ? "translate-x-5" : ""
-                              }`}
-                            />
-                          </button>
+                          {evtCfg.enabled && telegramTargets.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
+                              {telegramTargets.map((tgt) => {
+                                const selected = (
+                                  evtCfg.targets || []
+                                ).includes(tgt.id);
+                                return (
+                                  <button
+                                    key={tgt.id}
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = {
+                                        ...telegramEvents,
+                                      };
+                                      const currentTargets =
+                                        evtCfg.targets || [];
+                                      updated[evt.id] = {
+                                        ...evtCfg,
+                                        targets: selected
+                                          ? currentTargets.filter(
+                                              (tid) => tid !== tgt.id,
+                                            )
+                                          : [...currentTargets, tgt.id],
+                                      };
+                                      setTelegramEvents(updated);
+                                      setPendingChanges(true);
+                                    }}
+                                    className={`px-2 py-0.5 text-[11px] rounded-md border transition-all ${
+                                      selected
+                                        ? "bg-theme-primary/20 border-theme-primary text-theme-primary font-medium"
+                                        : "bg-theme-card/50 border-theme/50 text-theme-muted hover:border-theme-primary/50"
+                                    }`}
+                                  >
+                                    {tgt.label || tgt.chat_id}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                        {evtCfg.enabled && telegramTargets.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {telegramTargets.map((tgt) => {
-                              const selected = (evtCfg.targets || []).includes(
-                                tgt.id,
-                              );
-                              return (
-                                <button
-                                  key={tgt.id}
-                                  type="button"
-                                  onClick={() => {
-                                    const updated = { ...telegramEvents };
-                                    const currentTargets = evtCfg.targets || [];
-                                    updated[evt.id] = {
-                                      ...evtCfg,
-                                      targets: selected
-                                        ? currentTargets.filter(
-                                            (tid) => tid !== tgt.id,
-                                          )
-                                        : [...currentTargets, tgt.id],
-                                    };
-                                    setTelegramEvents(updated);
-                                    setPendingChanges(true);
-                                  }}
-                                  className={`px-2 py-1 text-xs rounded-md border transition-all ${
-                                    selected
-                                      ? "bg-theme-primary/20 border-theme-primary text-theme-primary"
-                                      : "bg-theme-hover/50 border-theme text-theme-muted hover:border-theme-primary/50"
-                                  }`}
-                                >
-                                  {tgt.label || tgt.chat_id}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Global Test */}
@@ -3893,16 +3932,16 @@ export default function Settings() {
                       !telegramBotToken ||
                       telegramTargets.length === 0
                     }
-                    className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       telegramTestStatus === "ok"
-                        ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                        ? "bg-green-600 hover:bg-green-700 text-white border border-green-600"
                         : telegramTestStatus === "fail"
-                          ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
-                          : ""
+                          ? "bg-red-600 hover:bg-red-700 text-white border border-red-600"
+                          : "bg-theme-primary/10 text-theme-primary border border-theme-primary/30 hover:bg-theme-primary/20"
                     }`}
                   >
                     {telegramTesting && !telegramTestingTarget ? (
-                      <span className="flex items-center justify-center gap-2">
+                      <>
                         <svg
                           className="animate-spin h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -3916,25 +3955,25 @@ export default function Settings() {
                             r="10"
                             stroke="currentColor"
                             strokeWidth="4"
-                          ></circle>
+                          />
                           <path
                             className="opacity-75"
                             fill="currentColor"
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
+                          />
                         </svg>
                         {t("settings.testing") || "Testing..."}
-                      </span>
+                      </>
                     ) : telegramTestStatus === "ok" ? (
-                      <span className="flex items-center justify-center gap-2">
+                      <>
                         <CheckCircle size={16} />
                         {t("settings.testSuccess") || "Test Sent!"}
-                      </span>
+                      </>
                     ) : (
-                      <span className="flex items-center justify-center gap-2">
+                      <>
                         <Send className="w-4 h-4" />
                         {t("settings.testAllTargets") || "Test All Targets"}
-                      </span>
+                      </>
                     )}
                   </button>
                 </div>
