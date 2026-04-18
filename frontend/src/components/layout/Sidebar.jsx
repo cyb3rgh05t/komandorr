@@ -44,6 +44,7 @@ export default function Sidebar() {
     services: false,
     downloads: false,
     uploader: false,
+    vodplexsync: false,
   });
 
   // Toggle tab expansion
@@ -412,7 +413,20 @@ export default function Sidebar() {
     {
       label: t("nav.vodPlexSync", "VoD Plex-Sync"),
       icon: FilmIcon,
-      path: "/vod-streams",
+      isTab: true,
+      tabName: "vodplexsync",
+      items: [
+        {
+          path: "/vod-streams",
+          label: t("vodStreams.tabs.live", "Live"),
+          icon: Activity,
+        },
+        {
+          path: "/vod-streams-history",
+          label: t("vodStreams.tabs.history", "History"),
+          icon: History,
+        },
+      ],
     },
     {
       label: t("nav.vodPortal"),

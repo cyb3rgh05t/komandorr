@@ -443,7 +443,7 @@
       "paused": "Paused",
       "transcoding": "Transcoding",
       "streaming": "Streaming",
-      "peakConcurrent": "Peak Concurrent",
+      "peakConcurrent": "Highest Peak",
       "resetPeak": "Reset Peak",
       "scanning": "Library Scans"
     },
@@ -486,6 +486,21 @@
       "activities": "activities",
       "previous": "Previous page",
       "next": "Next page"
+    },
+    "tabs": {
+      "live": "Live",
+      "history": "History"
+    },
+    "history": {
+      "noData": "No History Data",
+      "noDataDesc": "Peak data will appear once streams are detected.",
+      "highestPeak": "Highest Peak",
+      "avgPeak": "Avg Peak",
+      "daysTracked": "Days Tracked",
+      "chartTitle": "Daily Peak Concurrent Streams",
+      "chartSubtitle": "Last 30 days",
+      "legendDaily": "Daily Peak",
+      "legendHighest": "Highest Peak"
     }
   },
   "plex": {

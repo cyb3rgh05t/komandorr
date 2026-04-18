@@ -9,7 +9,7 @@ from typing import Optional, cast, Dict, Any, List
 from datetime import datetime, timezone, timedelta
 
 from app.utils.logger import logger
-from app.database import db, PlexStatsDB
+from app.database import db, PlexStatsDB, DailyPeakDB
 from app.services.redis_cache import cache_get, cache_set, cache_delete
 
 router = APIRouter(prefix="/api/plex", tags=["plex"])
@@ -146,18 +146,22 @@ def save_plex_config(
         existing_instances = plex_config.get("instances", [])
 
         # If old format, migrate the existing entry first
-        if not existing_instances and (plex_config.get("server_url") or plex_config.get("server_token")):
+        if not existing_instances and (
+            plex_config.get("server_url") or plex_config.get("server_token")
+        ):
             old_url = plex_config.get("server_url", "")
             old_token = plex_config.get("server_token", "")
             old_name = plex_config.get("server_name", "Plex Server")
             if old_url or old_token:
-                existing_instances = [{
-                    "id": "plex-default",
-                    "name": old_name,
-                    "url": old_url,
-                    "token": old_token,
-                    "server_name": old_name,
-                }]
+                existing_instances = [
+                    {
+                        "id": "plex-default",
+                        "name": old_name,
+                        "url": old_url,
+                        "token": old_token,
+                        "server_name": old_name,
+                    }
+                ]
 
         # Check if this server already exists (match by url)
         found = False
@@ -171,13 +175,15 @@ def save_plex_config(
 
         if not found:
             new_id = f"plex-{name.lower().replace(' ', '-')}-migrated"
-            existing_instances.append({
-                "id": new_id,
-                "name": name,
-                "url": url,
-                "token": token,
-                "server_name": name,
-            })
+            existing_instances.append(
+                {
+                    "id": new_id,
+                    "name": name,
+                    "url": url,
+                    "token": token,
+                    "server_name": name,
+                }
+            )
 
         # Save in new multi-instance format
         config_data["plex"] = {"instances": existing_instances}
@@ -194,7 +200,9 @@ def save_plex_config(
         settings.PLEX_SERVER_NAME = name
         settings.PLEX_INSTANCES = existing_instances
 
-        logger.info(f"Plex configuration saved to config.json ({len(existing_instances)} instances)")
+        logger.info(
+            f"Plex configuration saved to config.json ({len(existing_instances)} instances)"
+        )
         return True
     except Exception as e:
         logger.error(f"Error saving Plex config: {e}")
@@ -1027,6 +1035,21 @@ async def update_peak_concurrent(request: UpdatePeakRequest):
                     stats.peak_concurrent = request.peak_concurrent  # type: ignore
                     stats.last_updated = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
 
+            # Also track daily peak
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            daily = session.query(DailyPeakDB).filter(DailyPeakDB.date == today).first()
+            if not daily:
+                daily = DailyPeakDB(
+                    date=today,
+                    peak_concurrent=request.peak_concurrent,
+                    updated_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                )
+                session.add(daily)
+            else:
+                if request.peak_concurrent > daily.peak_concurrent:  # type: ignore
+                    daily.peak_concurrent = request.peak_concurrent  # type: ignore
+                    daily.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
+
             session.commit()
             session.refresh(stats)
 
@@ -1042,6 +1065,32 @@ async def update_peak_concurrent(request: UpdatePeakRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating peak concurrent: {str(e)}",
+        )
+
+
+@router.get("/stats/daily-peaks")
+async def get_daily_peaks(days: int = 30):
+    """Get daily peak concurrent streams for the last N days"""
+    try:
+        session = db.get_session()
+        try:
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime(
+                "%Y-%m-%d"
+            )
+            peaks = (
+                session.query(DailyPeakDB)
+                .filter(DailyPeakDB.date >= cutoff)
+                .order_by(DailyPeakDB.date.asc())
+                .all()
+            )
+            return [{"date": p.date, "peak": p.peak_concurrent} for p in peaks]
+        finally:
+            session.close()
+    except Exception as e:
+        logger.error(f"Error getting daily peaks: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
         )
 
 

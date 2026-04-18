@@ -126,6 +126,17 @@ class PlexStatsDB(Base):
     last_updated = Column(DateTime, nullable=True)  # Store as naive UTC
 
 
+class DailyPeakDB(Base):
+    """SQLAlchemy model for daily peak concurrent streams"""
+
+    __tablename__ = "daily_peaks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String, unique=True, nullable=False, index=True)  # YYYY-MM-DD
+    peak_concurrent = Column(Integer, default=0)
+    updated_at = Column(DateTime, nullable=True)
+
+
 class InviteDB(Base):
     """SQLAlchemy model for Plex Invitations"""
 
@@ -358,7 +369,9 @@ class Database:
             # Add plex_instance_id column to plex_users if it doesn't exist
             if "plex_instance_id" not in plex_users_columns:
                 logger.info("Adding plex_instance_id column to plex_users table")
-                cursor.execute("ALTER TABLE plex_users ADD COLUMN plex_instance_id TEXT")
+                cursor.execute(
+                    "ALTER TABLE plex_users ADD COLUMN plex_instance_id TEXT"
+                )
 
             # Check if new columns exist in invites table
             cursor.execute("PRAGMA table_info(invites)")
