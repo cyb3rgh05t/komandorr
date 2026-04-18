@@ -3,6 +3,7 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
+from app.services.notifications import notification_service
 
 router = APIRouter(prefix="/api/nfs-mount", tags=["nfs-mount"])
 
@@ -190,6 +191,12 @@ async def get_dashboard(username: str = Depends(require_auth)):
             logger.error(
                 f"NFS Mount Manager '{inst_name}' authentication failed ({base_url}): {e.response.status_code} — check API key"
             )
+            try:
+                await notification_service.notify_nfs_error(
+                    inst_name, f"Authentication failed ({e.response.status_code})"
+                )
+            except Exception:
+                pass
             managers.append(
                 {
                     "id": inst_id,
@@ -235,6 +242,10 @@ async def get_dashboard(username: str = Depends(require_auth)):
             logger.error(
                 f"Failed to fetch dashboard for NFS Manager '{inst_name}': {e}"
             )
+            try:
+                await notification_service.notify_nfs_error(inst_name, str(e))
+            except Exception:
+                pass
             managers.append(
                 {
                     "id": inst_id,

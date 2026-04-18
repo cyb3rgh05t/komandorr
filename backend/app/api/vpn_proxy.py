@@ -3,6 +3,7 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
+from app.services.notifications import notification_service
 
 router = APIRouter(prefix="/api/vpn-proxy", tags=["vpn-proxy"])
 
@@ -40,6 +41,10 @@ async def proxy_get(path: str):
             return resp.json()
     except httpx.RequestError as e:
         logger.error(f"VPN Proxy Manager unreachable: {e}")
+        try:
+            await notification_service.notify_vpn_error(str(e), url=base_url)
+        except Exception:
+            pass
         raise HTTPException(
             status_code=502, detail=f"VPN Proxy Manager unreachable: {e}"
         )

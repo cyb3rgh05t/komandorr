@@ -202,13 +202,13 @@ export default function Settings() {
   // Telegram notification settings state
   const [telegramEnabled, setTelegramEnabled] = useState(false);
   const [telegramBotToken, setTelegramBotToken] = useState("");
-  const [telegramChatId, setTelegramChatId] = useState("");
-  const [telegramNotifyOffline, setTelegramNotifyOffline] = useState(true);
-  const [telegramNotifyProblem, setTelegramNotifyProblem] = useState(true);
-  const [telegramNotifyRecovery, setTelegramNotifyRecovery] = useState(true);
+  const [telegramTargets, setTelegramTargets] = useState([]);
+  const [telegramEvents, setTelegramEvents] = useState({});
+  const [telegramEventTypes, setTelegramEventTypes] = useState([]);
   const [showTelegramToken, setShowTelegramToken] = useState(false);
   const [telegramTestStatus, setTelegramTestStatus] = useState(null);
   const [telegramTesting, setTelegramTesting] = useState(false);
+  const [telegramTestingTarget, setTelegramTestingTarget] = useState(null);
 
   // Unsaved changes state
   const [pendingChanges, setPendingChanges] = useState(false);
@@ -485,25 +485,33 @@ export default function Settings() {
   // Telegram notification functions
   const loadTelegramSettings = async () => {
     try {
-      const data = await api.get("/notifications/telegram");
+      const [data, evtData] = await Promise.all([
+        api.get("/notifications/telegram"),
+        api.get("/notifications/telegram/events"),
+      ]);
       if (data.telegram) {
         setTelegramEnabled(data.telegram.enabled || false);
         setTelegramBotToken(data.telegram.bot_token || "");
-        setTelegramChatId(data.telegram.chat_id || "");
-        setTelegramNotifyOffline(data.telegram.notify_offline ?? true);
-        setTelegramNotifyProblem(data.telegram.notify_problem ?? true);
-        setTelegramNotifyRecovery(data.telegram.notify_recovery ?? true);
+        setTelegramTargets(data.telegram.targets || []);
+        setTelegramEvents(data.telegram.events || {});
+      }
+      if (evtData.event_types) {
+        setTelegramEventTypes(evtData.event_types);
       }
     } catch (error) {
       console.error("Failed to load Telegram settings:", error);
     }
   };
 
-  const handleTestTelegram = async () => {
+  const handleTestTelegram = async (targetId = null) => {
     setTelegramTesting(true);
+    setTelegramTestingTarget(targetId);
     setTelegramTestStatus(null);
     try {
-      const result = await api.post("/notifications/telegram/test");
+      const url = targetId
+        ? `/notifications/telegram/test?target_id=${encodeURIComponent(targetId)}`
+        : "/notifications/telegram/test";
+      const result = await api.post(url);
       if (result.success) {
         setTelegramTestStatus("ok");
         toast.success(result.message || "Test notification sent!");
@@ -519,6 +527,7 @@ export default function Settings() {
       );
     } finally {
       setTelegramTesting(false);
+      setTelegramTestingTarget(null);
     }
   };
 
@@ -799,10 +808,8 @@ export default function Settings() {
         await api.put("/notifications/telegram", {
           enabled: telegramEnabled,
           bot_token: telegramBotToken,
-          chat_id: telegramChatId,
-          notify_offline: telegramNotifyOffline,
-          notify_problem: telegramNotifyProblem,
-          notify_recovery: telegramNotifyRecovery,
+          targets: telegramTargets,
+          events: telegramEvents,
         });
         console.log("Telegram settings saved successfully");
       } catch (telegramError) {
@@ -3534,14 +3541,14 @@ export default function Settings() {
                 </h3>
                 <p className="text-sm text-theme-muted">
                   {t("settings.telegramDescription") ||
-                    "Get notified when services go offline or have problems"}
+                    "Get notified about services, invites, users, storage and more"}
                 </p>
               </div>
             </div>
-            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+            <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
-              <div className="relative space-y-4">
+              <div className="relative space-y-5">
                 {/* Enable Toggle */}
                 <div className="flex items-center justify-between p-3 bg-theme-hover/50 border border-theme rounded-lg">
                   <div>
@@ -3551,7 +3558,7 @@ export default function Settings() {
                     </span>
                     <p className="text-xs text-theme-muted mt-1">
                       {t("settings.enableTelegramHelp") ||
-                        "Send alerts when service status changes"}
+                        "Send alerts to Telegram for various events"}
                     </p>
                   </div>
                   <button
@@ -3606,119 +3613,285 @@ export default function Settings() {
                   </p>
                 </div>
 
-                {/* Chat ID */}
-                <div>
-                  <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.telegramChatId") || "Chat ID"}
-                  </label>
-                  <input
-                    type="text"
-                    value={telegramChatId}
-                    onChange={(e) => {
-                      setTelegramChatId(e.target.value);
-                      setPendingChanges(true);
-                    }}
-                    className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                    placeholder="-1001234567890"
-                  />
-                  <p className="mt-2 text-xs text-theme-muted">
-                    {t("settings.telegramChatIdHelp") ||
-                      "Your personal chat ID or group/channel ID (use @userinfobot to find it)"}
+                {/* ── Chat Targets ── */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-theme-text">
+                      Chat Targets
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const id = `t-${Date.now()}`;
+                        setTelegramTargets([
+                          ...telegramTargets,
+                          { id, label: "", chat_id: "", topic_id: null },
+                        ]);
+                        setPendingChanges(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-theme-primary/10 text-theme-primary border border-theme-primary/30 rounded-lg hover:bg-theme-primary/20 transition-all"
+                    >
+                      <Plus size={14} />
+                      Add Target
+                    </button>
+                  </div>
+                  <p className="text-xs text-theme-muted">
+                    Add multiple chat IDs with optional topic IDs for forum
+                    groups
                   </p>
+
+                  {telegramTargets.length === 0 && (
+                    <div className="text-xs text-theme-muted text-center py-4 bg-theme-hover/30 border border-dashed border-theme rounded-lg">
+                      No targets configured. Add one to start receiving
+                      notifications.
+                    </div>
+                  )}
+
+                  {telegramTargets.map((target, idx) => (
+                    <div
+                      key={target.id}
+                      className="p-3 bg-theme-hover/30 border border-theme rounded-lg space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-theme-muted uppercase tracking-wide">
+                          Target {idx + 1}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleTestTelegram(target.id)}
+                            disabled={
+                              telegramTesting ||
+                              !telegramEnabled ||
+                              !telegramBotToken ||
+                              !target.chat_id
+                            }
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-theme-card hover:bg-theme-hover border border-theme rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {telegramTesting &&
+                            telegramTestingTarget === target.id ? (
+                              <svg
+                                className="animate-spin h-3 w-3"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                            ) : (
+                              <Send size={12} />
+                            )}
+                            Test
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = telegramTargets.filter(
+                                (_, i) => i !== idx,
+                              );
+                              setTelegramTargets(updated);
+                              // Also remove this target from any events
+                              const updatedEvents = { ...telegramEvents };
+                              for (const key of Object.keys(updatedEvents)) {
+                                if (updatedEvents[key]?.targets) {
+                                  updatedEvents[key] = {
+                                    ...updatedEvents[key],
+                                    targets: updatedEvents[key].targets.filter(
+                                      (tid) => tid !== target.id,
+                                    ),
+                                  };
+                                }
+                              }
+                              setTelegramEvents(updatedEvents);
+                              setPendingChanges(true);
+                            }}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={target.label}
+                          onChange={(e) => {
+                            const updated = [...telegramTargets];
+                            updated[idx] = {
+                              ...updated[idx],
+                              label: e.target.value,
+                            };
+                            setTelegramTargets(updated);
+                            setPendingChanges(true);
+                          }}
+                          className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="Label (e.g. Alerts)"
+                        />
+                        <input
+                          type="text"
+                          value={target.chat_id}
+                          onChange={(e) => {
+                            const updated = [...telegramTargets];
+                            updated[idx] = {
+                              ...updated[idx],
+                              chat_id: e.target.value,
+                            };
+                            setTelegramTargets(updated);
+                            setPendingChanges(true);
+                          }}
+                          className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="Chat ID"
+                        />
+                        <input
+                          type="number"
+                          value={target.topic_id || ""}
+                          onChange={(e) => {
+                            const updated = [...telegramTargets];
+                            updated[idx] = {
+                              ...updated[idx],
+                              topic_id: e.target.value
+                                ? parseInt(e.target.value)
+                                : null,
+                            };
+                            setTelegramTargets(updated);
+                            setPendingChanges(true);
+                          }}
+                          className="px-3 py-1.5 bg-theme-hover border border-theme rounded-lg text-sm text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="Topic ID (optional)"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Notification Preferences */}
+                {/* ── Event Routing ── */}
                 <div className="space-y-3 pt-2">
                   <span className="text-sm font-medium text-theme-text">
-                    {t("settings.notificationTypes") || "Notification Types"}
+                    Event Routing
                   </span>
+                  <p className="text-xs text-theme-muted">
+                    Enable events and choose which targets receive them
+                  </p>
 
-                  <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                      <span className="text-sm text-theme-text">
-                        {t("settings.notifyOffline") || "Service Offline"}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTelegramNotifyOffline(!telegramNotifyOffline);
-                        setPendingChanges(true);
-                      }}
-                      className={`relative w-10 h-5 rounded-full transition-colors ${
-                        telegramNotifyOffline ? "bg-green-500" : "bg-gray-600"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                          telegramNotifyOffline ? "translate-x-5" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
+                  {telegramEventTypes.map((evt) => {
+                    const evtCfg = telegramEvents[evt.id] || {
+                      enabled: false,
+                      targets: [],
+                    };
+                    const eventColors = {
+                      service_offline: "bg-red-500",
+                      service_problem: "bg-yellow-500",
+                      service_recovery: "bg-green-500",
+                      invite_created: "bg-blue-500",
+                      invite_redeemed: "bg-purple-500",
+                      user_added: "bg-emerald-500",
+                      user_removed: "bg-orange-500",
+                      storage_warning: "bg-amber-500",
+                      vpn_error: "bg-red-400",
+                      nfs_error: "bg-rose-500",
+                      uploader_failed: "bg-pink-500",
+                      posterizarr_error: "bg-violet-500",
+                    };
 
-                  <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                      <span className="text-sm text-theme-text">
-                        {t("settings.notifyProblem") ||
-                          "Service Problems (Slow Response)"}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTelegramNotifyProblem(!telegramNotifyProblem);
-                        setPendingChanges(true);
-                      }}
-                      className={`relative w-10 h-5 rounded-full transition-colors ${
-                        telegramNotifyProblem ? "bg-green-500" : "bg-gray-600"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                          telegramNotifyProblem ? "translate-x-5" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-theme-hover/30 border border-theme rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm text-theme-text">
-                        {t("settings.notifyRecovery") || "Service Recovery"}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTelegramNotifyRecovery(!telegramNotifyRecovery);
-                        setPendingChanges(true);
-                      }}
-                      className={`relative w-10 h-5 rounded-full transition-colors ${
-                        telegramNotifyRecovery ? "bg-green-500" : "bg-gray-600"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                          telegramNotifyRecovery ? "translate-x-5" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
+                    return (
+                      <div
+                        key={evt.id}
+                        className="p-3 bg-theme-hover/30 border border-theme rounded-lg"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                eventColors[evt.id] || "bg-gray-400"
+                              }`}
+                            />
+                            <span className="text-sm text-theme-text">
+                              {evt.label}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = { ...telegramEvents };
+                              updated[evt.id] = {
+                                ...evtCfg,
+                                enabled: !evtCfg.enabled,
+                              };
+                              setTelegramEvents(updated);
+                              setPendingChanges(true);
+                            }}
+                            className={`relative w-10 h-5 rounded-full transition-colors ${
+                              evtCfg.enabled ? "bg-green-500" : "bg-gray-600"
+                            }`}
+                          >
+                            <span
+                              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                                evtCfg.enabled ? "translate-x-5" : ""
+                              }`}
+                            />
+                          </button>
+                        </div>
+                        {evtCfg.enabled && telegramTargets.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {telegramTargets.map((tgt) => {
+                              const selected = (evtCfg.targets || []).includes(
+                                tgt.id,
+                              );
+                              return (
+                                <button
+                                  key={tgt.id}
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = { ...telegramEvents };
+                                    const currentTargets = evtCfg.targets || [];
+                                    updated[evt.id] = {
+                                      ...evtCfg,
+                                      targets: selected
+                                        ? currentTargets.filter(
+                                            (tid) => tid !== tgt.id,
+                                          )
+                                        : [...currentTargets, tgt.id],
+                                    };
+                                    setTelegramEvents(updated);
+                                    setPendingChanges(true);
+                                  }}
+                                  className={`px-2 py-1 text-xs rounded-md border transition-all ${
+                                    selected
+                                      ? "bg-theme-primary/20 border-theme-primary text-theme-primary"
+                                      : "bg-theme-hover/50 border-theme text-theme-muted hover:border-theme-primary/50"
+                                  }`}
+                                >
+                                  {tgt.label || tgt.chat_id}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Test Button */}
+                {/* Global Test */}
                 <div className="flex gap-3 pt-2">
                   <button
-                    onClick={handleTestTelegram}
+                    onClick={() => handleTestTelegram()}
                     disabled={
                       telegramTesting ||
                       !telegramEnabled ||
                       !telegramBotToken ||
-                      !telegramChatId
+                      telegramTargets.length === 0
                     }
                     className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm flex-1 sm:flex-initial disabled:opacity-50 disabled:cursor-not-allowed ${
                       telegramTestStatus === "ok"
@@ -3728,7 +3901,7 @@ export default function Settings() {
                           : ""
                     }`}
                   >
-                    {telegramTesting ? (
+                    {telegramTesting && !telegramTestingTarget ? (
                       <span className="flex items-center justify-center gap-2">
                         <svg
                           className="animate-spin h-4 w-4"
@@ -3760,7 +3933,7 @@ export default function Settings() {
                     ) : (
                       <span className="flex items-center justify-center gap-2">
                         <Send className="w-4 h-4" />
-                        {t("settings.testTelegram") || "Send Test"}
+                        {t("settings.testAllTargets") || "Test All Targets"}
                       </span>
                     )}
                   </button>

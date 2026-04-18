@@ -5,6 +5,7 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
+from app.services.notifications import notification_service
 
 router = APIRouter(prefix="/api/posterizarr", tags=["posterizarr"])
 
@@ -130,6 +131,15 @@ async def posterizarr_status(
             resp.raise_for_status()
             return {"connected": True, "url": base_url}
     except Exception as e:
+        inst_name = instance_id or "default"
+        for inst in settings.POSTERIZARR_INSTANCES:
+            if inst.get("id") == instance_id:
+                inst_name = inst.get("name", inst_name)
+                break
+        try:
+            await notification_service.notify_posterizarr_error(inst_name, str(e))
+        except Exception:
+            pass
         return {"connected": False, "error": str(e)}
 
 

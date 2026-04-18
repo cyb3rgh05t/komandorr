@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
+from typing import Optional
 import asyncio
 import os
 import httpx
@@ -258,7 +259,7 @@ async def health_check():
 
 
 @app.get("/api/downloads")
-async def get_downloads(instance_id: str = None):
+async def get_downloads(instance_id: Optional[str] = None):
     """
     Get Plex download/sync activities
     This is an alias for /api/plex/activities for compatibility
