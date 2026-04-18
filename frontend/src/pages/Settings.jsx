@@ -3629,9 +3629,9 @@ export default function Settings() {
                         ]);
                         setPendingChanges(true);
                       }}
-                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-theme-primary/10 text-theme-primary border border-theme-primary/30 rounded-lg hover:bg-theme-primary/20 transition-all"
+                      className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
                     >
-                      <Plus size={14} />
+                      <Plus size={16} className="text-theme-primary" />
                       {t("settings.addTarget") || "Add Target"}
                     </button>
                   </div>
@@ -3709,7 +3709,10 @@ export default function Settings() {
                               </span>
                             ) : (
                               <span className="flex items-center justify-center gap-2">
-                                <Send className="w-4 h-4" />
+                                <Send
+                                  size={16}
+                                  className="text-theme-primary"
+                                />
                                 {t("settings.testTelegram") || "Send Test"}
                               </span>
                             )}
@@ -3993,7 +3996,7 @@ export default function Settings() {
                       </span>
                     ) : (
                       <span className="flex items-center justify-center gap-2">
-                        <Send className="w-4 h-4" />
+                        <Send size={16} className="text-theme-primary" />
                         {t("settings.testAllTargets") || "Test All Targets"}
                       </span>
                     )}
