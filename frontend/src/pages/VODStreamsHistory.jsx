@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "../context/ToastContext";
 import {
   BarChart3,
   Calendar,
@@ -389,12 +390,12 @@ const DailyPeakChart = ({
 };
 
 export default function VODStreamsHistory() {
-  const {
-    data: dailyPeaks,
-    isLoading: peaksLoading,
-    refetch,
-    isFetching,
-  } = useQuery({
+  const { t } = useTranslation();
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { data: dailyPeaks, isLoading: peaksLoading } = useQuery({
     queryKey: ["plex-daily-peaks"],
     queryFn: () => api.get("/plex/stats/daily-peaks?days=30"),
     staleTime: 60000,
@@ -408,13 +409,29 @@ export default function VODStreamsHistory() {
     refetchInterval: 60000,
   });
 
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["plex-daily-peaks"] }),
+        queryClient.refetchQueries({ queryKey: ["plex-stats"] }),
+      ]);
+      toast.success(t("common.refreshed", "Refreshed successfully"));
+    } catch (error) {
+      toast.error(t("common.refreshError", "Failed to refresh data"));
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing, queryClient, t]);
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <DailyPeakChart
         data={dailyPeaks}
         isLoading={peaksLoading}
-        onRefresh={refetch}
-        isRefreshing={isFetching && !peaksLoading}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
         allTimePeak={plexStats?.peak_concurrent}
       />
     </div>
