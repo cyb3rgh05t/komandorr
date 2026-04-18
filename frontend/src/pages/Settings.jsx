@@ -3667,9 +3667,11 @@ export default function Settings() {
                               !target.chat_id
                             }
                             className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-                              telegramTestingTarget === target.id && telegramTestStatus === "ok"
+                              telegramTestingTarget === target.id &&
+                              telegramTestStatus === "ok"
                                 ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
-                                : telegramTestingTarget === target.id && telegramTestStatus === "fail"
+                                : telegramTestingTarget === target.id &&
+                                    telegramTestStatus === "fail"
                                   ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
                                   : ""
                             }`}
@@ -3699,7 +3701,8 @@ export default function Settings() {
                                 </svg>
                                 {t("settings.testing") || "Testing..."}
                               </span>
-                            ) : telegramTestingTarget === target.id && telegramTestStatus === "ok" ? (
+                            ) : telegramTestingTarget === target.id &&
+                              telegramTestStatus === "ok" ? (
                               <span className="flex items-center justify-center gap-2">
                                 <CheckCircle size={16} />
                                 {t("settings.testSuccess") || "Test Sent!"}
@@ -3952,7 +3955,8 @@ export default function Settings() {
                     className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                       !telegramTestingTarget && telegramTestStatus === "ok"
                         ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
-                        : !telegramTestingTarget && telegramTestStatus === "fail"
+                        : !telegramTestingTarget &&
+                            telegramTestStatus === "fail"
                           ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
                           : ""
                     }`}
@@ -3981,7 +3985,8 @@ export default function Settings() {
                         </svg>
                         {t("settings.testing") || "Testing..."}
                       </span>
-                    ) : !telegramTestingTarget && telegramTestStatus === "ok" ? (
+                    ) : !telegramTestingTarget &&
+                      telegramTestStatus === "ok" ? (
                       <span className="flex items-center justify-center gap-2">
                         <CheckCircle size={16} />
                         {t("settings.testSuccess") || "Test Sent!"}
