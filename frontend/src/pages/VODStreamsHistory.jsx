@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
@@ -12,13 +12,7 @@ import {
 import { api } from "@/services/api";
 import { getPlexStats } from "@/services/plexService";
 
-const DailyPeakChart = ({
-  data,
-  isLoading,
-  onRefresh,
-  isRefreshing,
-  allTimePeak,
-}) => {
+const DailyPeakChart = ({ data, isLoading, allTimePeak }) => {
   const { t } = useTranslation();
   const [hoveredBar, setHoveredBar] = useState(null);
 
@@ -176,17 +170,7 @@ const DailyPeakChart = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-theme-hover/50 hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-xs font-medium text-theme-text-muted hover:text-theme-text transition-all disabled:opacity-50"
-          >
-            <RefreshCw
-              size={13}
-              className={`text-theme-primary ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            {t("common.refresh", "Refresh")}
-          </button>
+          <div />
         </div>
 
         {/* Chart Body */}
@@ -395,19 +379,31 @@ export default function VODStreamsHistory() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: dailyPeaks, isLoading: peaksLoading } = useQuery({
+  const {
+    data: dailyPeaks,
+    isLoading: peaksLoading,
+    isFetching: peaksFetching,
+    dataUpdatedAt: peaksUpdatedAt,
+  } = useQuery({
     queryKey: ["plex-daily-peaks"],
     queryFn: () => api.get("/plex/stats/daily-peaks?days=30"),
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 10000,
+    refetchInterval: 15000,
   });
 
-  const { data: plexStats } = useQuery({
+  const { data: plexStats, isFetching: statsFetching } = useQuery({
     queryKey: ["plex-stats"],
     queryFn: () => getPlexStats(),
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 10000,
+    refetchInterval: 15000,
   });
+
+  const isFetching = peaksFetching || statsFetching;
+
+  const lastUpdated = useMemo(() => {
+    if (!peaksUpdatedAt) return null;
+    return new Date(peaksUpdatedAt).toLocaleTimeString();
+  }, [peaksUpdatedAt]);
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -427,11 +423,39 @@ export default function VODStreamsHistory() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      {/* Refresh Row */}
+      <div className="flex items-center justify-end gap-3">
+        {lastUpdated && (
+          <span className="text-xs text-theme-text-muted/60 tabular-nums">
+            {lastUpdated}
+          </span>
+        )}
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw
+            size={16}
+            className={`text-theme-primary transition-transform duration-500 ${
+              isRefreshing
+                ? "animate-spin"
+                : isFetching
+                  ? "animate-spin opacity-40"
+                  : ""
+            }`}
+          />
+          <span className="text-xs sm:text-sm">
+            {isRefreshing
+              ? t("common.refreshing", "Refreshing")
+              : t("common.refresh", "Refresh")}
+          </span>
+        </button>
+      </div>
+
       <DailyPeakChart
         data={dailyPeaks}
         isLoading={peaksLoading}
-        onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
         allTimePeak={plexStats?.peak_concurrent}
       />
     </div>

@@ -858,6 +858,52 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
 
             logger.info(f"Total activities retrieved: {len(activities)}")
 
+            # Auto-track daily peak from activity count
+            activity_count = len(activities)
+            if activity_count > 0:
+                try:
+                    peak_session = db.get_session()
+                    try:
+                        # Update all-time peak
+                        stats = peak_session.query(PlexStatsDB).first()
+                        if not stats:
+                            stats = PlexStatsDB(
+                                peak_concurrent=activity_count,
+                                last_updated=datetime.now(timezone.utc).replace(
+                                    tzinfo=None
+                                ),
+                            )
+                            peak_session.add(stats)
+                        elif activity_count > stats.peak_concurrent:
+                            stats.peak_concurrent = activity_count  # type: ignore
+                            stats.last_updated = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
+
+                        # Update daily peak
+                        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                        daily = (
+                            peak_session.query(DailyPeakDB)
+                            .filter(DailyPeakDB.date == today)
+                            .first()
+                        )
+                        if not daily:
+                            daily = DailyPeakDB(
+                                date=today,
+                                peak_concurrent=activity_count,
+                                updated_at=datetime.now(timezone.utc).replace(
+                                    tzinfo=None
+                                ),
+                            )
+                            peak_session.add(daily)
+                        elif activity_count > daily.peak_concurrent:
+                            daily.peak_concurrent = activity_count  # type: ignore
+                            daily.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
+
+                        peak_session.commit()
+                    finally:
+                        peak_session.close()
+                except Exception as peak_err:
+                    logger.warning(f"Failed to update daily peak: {peak_err}")
+
             # Build response
             response = {
                 "error": False,
@@ -1016,7 +1062,7 @@ async def get_live_plex_stats(instance_id: Optional[str] = Query(None)):
 
 @router.post("/stats/peak")
 async def update_peak_concurrent(request: UpdatePeakRequest):
-    """Update peak concurrent activities count"""
+    """Update peak concurrent activities count and daily peak"""
     try:
         session = db.get_session()
         try:
@@ -1030,7 +1076,7 @@ async def update_peak_concurrent(request: UpdatePeakRequest):
                 )
                 session.add(stats)
             else:
-                # Only update if new value is higher
+                # Only update all-time if new value is higher
                 if request.peak_concurrent > stats.peak_concurrent:  # type: ignore
                     stats.peak_concurrent = request.peak_concurrent  # type: ignore
                     stats.last_updated = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
@@ -1052,10 +1098,15 @@ async def update_peak_concurrent(request: UpdatePeakRequest):
 
             session.commit()
             session.refresh(stats)
+            session.refresh(daily)
+
+            # Invalidate plex:stats cache so GET /stats returns fresh data
+            cache_delete("plex:stats")
 
             return {
                 "success": True,
                 "peak_concurrent": stats.peak_concurrent,  # type: ignore
+                "daily_peak": daily.peak_concurrent,  # type: ignore
                 "last_updated": stats.last_updated.isoformat() if stats.last_updated else None,  # type: ignore
             }
         finally:

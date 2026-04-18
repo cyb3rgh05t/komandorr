@@ -471,25 +471,30 @@ export default function VODStreams() {
     setActivityProgress(newProgress);
     setCompletedActivities(newCompleted);
 
-    // Update peak concurrent activities - save to database
-    // Post every 60 seconds so daily peaks are tracked even when below all-time peak
+    // Track peak concurrent activities and daily peaks
+    // Always post every 60 seconds so daily peaks are tracked correctly
+    // Also post immediately when a new all-time peak is detected
     const currentCount = activities.length;
     const currentPeak = peakConcurrentRef.current;
     const postNow = Date.now();
     const timeSinceLastPost = postNow - lastPeakPostTimeRef.current;
-    const shouldPost =
-      currentCount > 0 &&
-      (currentCount > currentPeak || timeSinceLastPost >= 60000);
+    const isNewAllTimePeak = currentCount > currentPeak;
+    const intervalElapsed = timeSinceLastPost >= 60000;
 
-    if (shouldPost) {
+    if (currentCount > 0 && (isNewAllTimePeak || intervalElapsed)) {
       lastPeakPostTimeRef.current = postNow;
       updatePeakConcurrent(currentCount)
         .then((result) => {
-          setPeakConcurrent(result.peak_concurrent);
-          peakConcurrentRef.current = result.peak_concurrent;
+          // Only update all-time peak ref if it actually increased
+          if (result.peak_concurrent > peakConcurrentRef.current) {
+            setPeakConcurrent(result.peak_concurrent);
+            peakConcurrentRef.current = result.peak_concurrent;
+          }
         })
         .catch((error) => {
           console.error("Error updating peak concurrent:", error);
+          // Reset timer so it retries sooner
+          lastPeakPostTimeRef.current = postNow - 50000;
         });
     }
   }, [activities]);
