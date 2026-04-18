@@ -398,12 +398,14 @@ export default function VODStreamsHistory() {
     queryKey: ["plex-daily-peaks"],
     queryFn: () => api.get("/plex/stats/daily-peaks?days=30"),
     staleTime: 60000,
+    refetchInterval: 60000,
   });
 
   const { data: plexStats } = useQuery({
     queryKey: ["plex-stats"],
     queryFn: () => getPlexStats(),
     staleTime: 60000,
+    refetchInterval: 60000,
   });
 
   return (
