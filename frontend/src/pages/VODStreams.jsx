@@ -331,6 +331,8 @@ export default function VODStreams() {
 
   // Use a ref to track the latest peak value to avoid stale closures
   const peakConcurrentRef = useRef(peakConcurrent);
+  // Track last time we posted to the daily peak endpoint
+  const lastPeakPostTimeRef = useRef(0);
 
   // Update ref whenever state changes
   useEffect(() => {
@@ -470,11 +472,17 @@ export default function VODStreams() {
     setCompletedActivities(newCompleted);
 
     // Update peak concurrent activities - save to database
+    // Post every 60 seconds so daily peaks are tracked even when below all-time peak
     const currentCount = activities.length;
     const currentPeak = peakConcurrentRef.current;
+    const postNow = Date.now();
+    const timeSinceLastPost = postNow - lastPeakPostTimeRef.current;
+    const shouldPost =
+      currentCount > 0 &&
+      (currentCount > currentPeak || timeSinceLastPost >= 60000);
 
-    if (currentCount > currentPeak) {
-      console.log(`Updating peak: ${currentPeak} -> ${currentCount}`);
+    if (shouldPost) {
+      lastPeakPostTimeRef.current = postNow;
       updatePeakConcurrent(currentCount)
         .then((result) => {
           setPeakConcurrent(result.peak_concurrent);
