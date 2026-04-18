@@ -86,27 +86,81 @@ const CircularProgress = ({
 const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   const { t } = useTranslation();
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const [cardsPerPage, setCardsPerPage] = useState(6);
+  const [cardsPerPage, setCardsPerPage] = useState(4);
+  const [circleSize, setCircleSize] = useState({ main: 140, side: 60 });
 
-  // Calculate how many cards can fit based on screen width
+  // Calculate how many cards can fit and circle sizes based on screen width
   useEffect(() => {
-    const calculateCardsPerPage = () => {
+    const calculateLayout = () => {
       const width = window.innerWidth;
-      if (width < 640) return 1;
-      if (width < 768) return 2;
-      if (width < 1024) return 3;
-      if (width < 1280) return 4;
-      if (width < 1536) return 5;
-      if (width < 1920) return 6;
-      if (width < 2560) return 7;
-      if (width < 3440) return 9;
-      return 11;
+      let cards, main, side;
+
+      if (width < 640) {
+        cards = 1;
+        main = 130;
+        side = 55;
+      } else if (width < 768) {
+        cards = 2;
+        main = 110;
+        side = 48;
+      } else if (width < 1024) {
+        cards = 2;
+        main = 120;
+        side = 52;
+      } else if (width < 1280) {
+        cards = 3;
+        main = 110;
+        side = 48;
+      } else if (width < 1536) {
+        cards = 4;
+        main = 110;
+        side = 48;
+      } else if (width < 1920) {
+        cards = 5;
+        main = 120;
+        side = 52;
+      } else if (width < 2560) {
+        cards = 6;
+        main = 130;
+        side = 55;
+      } else if (width < 3440) {
+        // Ultrawide 1440p (3440x1440)
+        cards = 8;
+        main = 140;
+        side = 60;
+      } else if (width < 3840) {
+        // Between ultrawide and 4K
+        cards = 9;
+        main = 145;
+        side = 62;
+      } else if (width < 5120) {
+        // 4K (3840x2160)
+        cards = 10;
+        main = 150;
+        side = 65;
+      } else if (width < 6016) {
+        // Super ultrawide (5120x1440)
+        cards = 12;
+        main = 155;
+        side = 68;
+      } else {
+        // 6K+ displays
+        cards = 14;
+        main = 160;
+        side = 70;
+      }
+
+      return { cards, main, side };
     };
 
-    setCardsPerPage(calculateCardsPerPage());
+    const layout = calculateLayout();
+    setCardsPerPage(layout.cards);
+    setCircleSize({ main: layout.main, side: layout.side });
 
     const handleResize = () => {
-      setCardsPerPage(calculateCardsPerPage());
+      const layout = calculateLayout();
+      setCardsPerPage(layout.cards);
+      setCircleSize({ main: layout.main, side: layout.side });
       // Reset carousel index if it's out of bounds
       setCarouselIndex(0);
     };
@@ -316,7 +370,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
         )}
 
         {/* Cards Container */}
-        <div className="flex justify-center gap-4 sm:gap-8 lg:gap-14 flex-1 overflow-hidden">
+        <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 xl:gap-10 flex-1 overflow-hidden">
           {topServices.map((service, index) => {
             const serviceBandwidth =
               (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
@@ -360,13 +414,13 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                 className="relative group transition-all duration-300"
               >
                 {/* Circles row: CPU - Traffic - RAM */}
-                <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                   {/* CPU Circle (left) */}
                   <div className="flex-shrink-0 self-end mb-2">
                     <CircularProgress
                       percentage={cpuPercent}
                       color="#f59e0b"
-                      size={60}
+                      size={circleSize.side}
                       label="CPU"
                     />
                   </div>
@@ -375,23 +429,23 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                   <CircularProgress
                     percentage={percentage}
                     color={colorScheme.primary}
-                    size={140}
+                    size={circleSize.main}
                   >
                     <span className="text-[9px] sm:text-[10px] font-medium text-theme-text-muted uppercase tracking-wider">
                       Traffic
                     </span>
-                    <div className="text-2xl sm:text-3xl font-bold text-theme-text">
+                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-text">
                       {percentage}%
                     </div>
-                    <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
-                      <ArrowUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
-                      <span className="font-mono font-semibold text-[10px] sm:text-[11px] text-blue-400">
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <ArrowUp className="w-2.5 h-2.5 text-blue-400" />
+                      <span className="font-mono font-semibold text-[9px] sm:text-[10px] text-blue-400">
                         {formatBandwidth(service.bandwidth_up || 0)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <ArrowDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-400" />
-                      <span className="font-mono font-semibold text-[10px] sm:text-[11px] text-green-400">
+                      <ArrowDown className="w-2.5 h-2.5 text-green-400" />
+                      <span className="font-mono font-semibold text-[9px] sm:text-[10px] text-green-400">
                         {formatBandwidth(service.bandwidth_down || 0)}
                       </span>
                     </div>
@@ -402,7 +456,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                     <CircularProgress
                       percentage={memPercent}
                       color="#06b6d4"
-                      size={60}
+                      size={circleSize.side}
                       label="RAM"
                     />
                   </div>
