@@ -87,6 +87,11 @@ async def lifespan(app: FastAPI):
 
     cache_warmer_task = asyncio.create_task(cache_warmer.start_warming())
 
+    # Start background peak tracker (polls Plex activities independently)
+    from app.services.peak_tracker import peak_tracker
+
+    peak_tracker_task = asyncio.create_task(peak_tracker.start_tracking())
+
     yield
 
     # Shutdown
@@ -95,11 +100,13 @@ async def lifespan(app: FastAPI):
     watch_history_sync.stop()
     stats_cache.stop()
     cache_warmer.stop()
+    peak_tracker.stop()
     monitoring_task.cancel()
     expiration_task.cancel()
     watch_history_task.cancel()
     stats_cache_task.cancel()
     cache_warmer_task.cancel()
+    peak_tracker_task.cancel()
     try:
         await monitoring_task
     except asyncio.CancelledError:
@@ -118,6 +125,10 @@ async def lifespan(app: FastAPI):
         pass
     try:
         await cache_warmer_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await peak_tracker_task
     except asyncio.CancelledError:
         pass
 
