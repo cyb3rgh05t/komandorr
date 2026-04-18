@@ -340,6 +340,27 @@ export default function Sidebar() {
     return count;
   }, [nfsMountDashboard]);
 
+  // Fetch Posterizarr runtime history for error badge
+  const { data: posterizarrHistory } = useQuery({
+    queryKey: ["posterizarr-history-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/posterizarr/runtime-history?limit=1");
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 30000,
+    refetchInterval: 60000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const posterizarrErrorCount = useMemo(() => {
+    if (!posterizarrHistory?.history?.length) return 0;
+    return posterizarrHistory.history[0].errors || 0;
+  }, [posterizarrHistory]);
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
@@ -614,6 +635,10 @@ export default function Sidebar() {
                   const hasVpnProxyBadge =
                     item.tabName === "vpnproxy" && vpnErrorCount > 0;
 
+                  // Check if VoD Plex-Sync tab has active streams
+                  const hasVodPlexSyncBadge =
+                    item.tabName === "vodplexsync" && vodStreamsCount > 0;
+
                   return (
                     <div key={item.label}>
                       <button
@@ -658,6 +683,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {vpnErrorCount}
+                          </span>
+                        )}{" "}
+                        {hasVodPlexSyncBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {vodStreamsCount}
                           </span>
                         )}{" "}
                         {hasPlexActivityBadge && (
@@ -774,6 +808,11 @@ export default function Sidebar() {
                               subItem.path === "/vpn-proxy" &&
                               vpnErrorCount > 0;
 
+                            // VoD Streams Live badge
+                            const vodStreamsLiveBadge =
+                              subItem.path === "/vod-streams" &&
+                              vodStreamsCount > 0;
+
                             // Build array of badges to show
                             const badges = [];
 
@@ -850,6 +889,12 @@ export default function Sidebar() {
                               badges.push({
                                 count: vpnErrorCount,
                                 color: "bg-red-500",
+                              });
+                            }
+                            if (vodStreamsLiveBadge) {
+                              badges.push({
+                                count: vodStreamsCount,
+                                color: "bg-green-500",
                               });
                             }
 
@@ -936,11 +981,6 @@ export default function Sidebar() {
                   const Icon = item.icon;
                   const active = isActive(item.path);
 
-                  // Check for VOD Streams badge
-                  const isVodStreams = item.path === "/vod-streams";
-                  const showVodStreamsBadge =
-                    isVodStreams && vodStreamsCount > 0;
-
                   // Check for Storage issues badge
                   const isStorage = item.path === "/storage";
                   const showStorageBadge = isStorage && storageIssuesCount > 0;
@@ -949,6 +989,11 @@ export default function Sidebar() {
                   const isNfsMount = item.path === "/nfs-mount";
                   const showNfsMountBadge =
                     isNfsMount && nfsMountIssueCount > 0;
+
+                  // Check for Posterizarr errors badge
+                  const isPosterizarr = item.path === "/posterizarr";
+                  const showPosterizarrBadge =
+                    isPosterizarr && posterizarrErrorCount > 0;
 
                   return (
                     <li key={item.path} className="relative group">
@@ -979,15 +1024,6 @@ export default function Sidebar() {
                         >
                           {item.label}
                         </span>
-                        {showVodStreamsBadge && (
-                          <span
-                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-green-500 text-white ${
-                              isOpen ? "" : "md:hidden 2xl:inline-flex"
-                            }`}
-                          >
-                            {vodStreamsCount}
-                          </span>
-                        )}
                         {showStorageBadge && (
                           <span
                             className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
@@ -1004,6 +1040,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {nfsMountIssueCount}
+                          </span>
+                        )}
+                        {showPosterizarrBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {posterizarrErrorCount}
                           </span>
                         )}
                       </Link>
