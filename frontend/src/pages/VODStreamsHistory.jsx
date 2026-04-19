@@ -709,6 +709,9 @@ export default function VODStreamsHistory() {
     queryFn: () => api.get(`/plex/stats/daily-peaks?days=${days}`),
     staleTime: 10000,
     refetchInterval: 15000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    placeholderData: (prev) => prev,
   });
 
   const { data: plexStats, isFetching: statsFetching } = useQuery({
@@ -716,6 +719,9 @@ export default function VODStreamsHistory() {
     queryFn: () => getPlexStats(),
     staleTime: 10000,
     refetchInterval: 15000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    placeholderData: (prev) => prev,
   });
 
   const isFetching = peaksFetching || statsFetching;
