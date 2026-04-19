@@ -144,10 +144,13 @@ export default function Sidebar() {
 
       inst.records.forEach((record) => {
         const statusLower = (record.status || "").toLowerCase();
+        const trackedState = (record.trackedDownloadState || "").toLowerCase();
         const isActive =
           statusLower.includes("download") || statusLower.includes("import");
         const isCompleted =
-          statusLower.includes("complet") && record.sizeleft === 0;
+          (statusLower.includes("complet") &&
+            (record.sizeleft === 0 || record.sizeleft == null)) ||
+          trackedState === "importpending";
 
         if (isActive) {
           if (isSonarr) sonarrActive++;

@@ -750,26 +750,7 @@ export default function VODStreamsHistory() {
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Time Range Filter */}
-        <div className="flex items-center">
-          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
-            {TIME_RANGES.map((range) => (
-              <button
-                key={range.key}
-                onClick={() => setTimeRange(range.key)}
-                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
-                  timeRange === range.key
-                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                }`}
-              >
-                {range.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
+      <div className="flex flex-wrap items-center justify-end gap-3">
         {/* Right: Trend + Export + Timestamp + Refresh */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Trend Line Toggle */}
@@ -874,6 +855,24 @@ export default function VODStreamsHistory() {
             allTimePeak={plexStats?.peak_concurrent}
             t={t}
           />
+          {/* Time Range Filter */}
+          <div>
+            <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.key}
+                  onClick={() => setTimeRange(range.key)}
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                    timeRange === range.key
+                      ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <PeakChart
             data={dailyPeaks}
             allTimePeak={plexStats?.peak_concurrent}
