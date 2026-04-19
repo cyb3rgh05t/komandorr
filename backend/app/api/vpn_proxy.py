@@ -41,10 +41,6 @@ async def proxy_get(path: str):
             return resp.json()
     except httpx.RequestError as e:
         logger.error(f"VPN Proxy Manager unreachable: {e}")
-        try:
-            await notification_service.notify_vpn_error(str(e), url=base_url)
-        except Exception:
-            pass
         raise HTTPException(
             status_code=502, detail=f"VPN Proxy Manager unreachable: {e}"
         )
@@ -106,7 +102,26 @@ async def get_vpn_info_batch(username: str = Depends(require_auth)):
     """Get VPN info for all running containers."""
     if not _is_configured():
         return {}
-    return await proxy_get("/containers/vpn-info-batch") or {}
+    data = await proxy_get("/containers/vpn-info-batch") or {}
+
+    # Check each container's VPN status and notify if offline / not connected
+    base_url, _ = get_vpn_proxy_config()
+    for container_id, info in data.items():
+        vpn_status = (info.get("vpn_status") or "").lower()
+        has_ip = bool(info.get("public_ip"))
+        if vpn_status != "running" or not has_ip:
+            container_name = info.get("container_name", f"Container {container_id}")
+            reason = f"VPN status: {vpn_status or 'unknown'}"
+            if not has_ip:
+                reason += ", no public IP"
+            try:
+                await notification_service.notify_vpn_error(
+                    f"{container_name} — {reason}", url=base_url
+                )
+            except Exception:
+                pass
+
+    return data
 
 
 @router.get("/containers/dependents")

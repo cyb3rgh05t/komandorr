@@ -209,6 +209,7 @@ export default function Settings() {
   const [telegramTestStatus, setTelegramTestStatus] = useState(null);
   const [telegramTesting, setTelegramTesting] = useState(false);
   const [telegramTestingTarget, setTelegramTestingTarget] = useState(null);
+  const [telegramCooldown, setTelegramCooldown] = useState(5);
 
   // Unsaved changes state
   const [pendingChanges, setPendingChanges] = useState(false);
@@ -494,6 +495,7 @@ export default function Settings() {
         setTelegramBotToken(data.telegram.bot_token || "");
         setTelegramTargets(data.telegram.targets || []);
         setTelegramEvents(data.telegram.events || {});
+        setTelegramCooldown(data.telegram.cooldown_minutes ?? 5);
       }
       if (evtData.event_types) {
         setTelegramEventTypes(evtData.event_types);
@@ -810,6 +812,7 @@ export default function Settings() {
           bot_token: telegramBotToken,
           targets: telegramTargets,
           events: telegramEvents,
+          cooldown_minutes: telegramCooldown,
         });
         console.log("Telegram settings saved successfully");
       } catch (telegramError) {
@@ -956,7 +959,7 @@ export default function Settings() {
       label: t("auth.authSettings", "Authentication"),
       icon: Shield,
     },
-    { id: "plex", label: t("plex.serverSettings", "Plex"), icon: Server },
+    { id: "plex", label: "Plex Servers", icon: Server },
     { id: "plex_sync", label: "Plex VOD Sync", icon: FilmIcon },
     { id: "overseerr", label: "VoD Portal", icon: Server },
     {
@@ -3796,6 +3799,29 @@ export default function Settings() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* ── Cooldown ── */}
+                <div className="pt-2">
+                  <label className="block text-sm font-medium text-theme-text mb-2">
+                    {t("settings.cooldownMinutes") || "Notification Cooldown (minutes)"}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      max="1440"
+                      value={telegramCooldown}
+                      onChange={(e) => {
+                        setTelegramCooldown(Math.max(0, parseInt(e.target.value) || 0));
+                        setPendingChanges(true);
+                      }}
+                      className="w-28 px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                    />
+                    <span className="text-xs text-theme-muted">
+                      {t("settings.cooldownHelp") || "Time between duplicate error notifications (0 = no cooldown)"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* ── Event Routing ── */}

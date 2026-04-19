@@ -550,6 +550,8 @@
     "noTargets": "Keine Ziele konfiguriert. Füge eines hinzu um Benachrichtigungen zu erhalten.",
     "eventRouting": "Event-Routing",
     "eventRoutingHelp": "Aktiviere Events und wähle welche Ziele sie erhalten",
+    "cooldownMinutes": "Benachrichtigungs-Cooldown (Minuten)",
+    "cooldownHelp": "Zeit zwischen doppelten Fehler-Benachrichtigungen (0 = kein Cooldown)",
     "telegramSaved": "Telegram Einstellungen gespeichert",
     "telegramSaveError": "Fehler beim Speichern der Telegram Einstellungen",
     "telegramTestError": "Fehler beim Senden der Test-Benachrichtigung",

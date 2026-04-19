@@ -52,13 +52,18 @@ class NotificationService:
         self._error_cooldowns: Dict[str, datetime] = {}  # dedup for error notifications
         self._config_path = Path(__file__).parent.parent.parent / "data" / "config.json"
         self._error_cooldown_seconds = (
-            300  # 5 min between duplicate error notifications
+            300  # default 5 min, overridden by config cooldown_minutes
         )
 
     # ── dedup / cooldown ────────────────────────────────────────────
 
     def _check_cooldown(self, key: str) -> bool:
         """Return True if we should send (not in cooldown). Sets cooldown on call."""
+        # Re-read cooldown from config each time so changes take effect immediately
+        cfg = self._load_config()
+        cooldown_min = cfg.get("cooldown_minutes")
+        if cooldown_min is not None:
+            self._error_cooldown_seconds = max(0, int(cooldown_min)) * 60
         now = datetime.now(timezone.utc)
         last = self._error_cooldowns.get(key)
         if last and (now - last).total_seconds() < self._error_cooldown_seconds:
@@ -69,15 +74,54 @@ class NotificationService:
     # ── config helpers ────────────────────────────────────────────
 
     def _load_config(self) -> dict:
-        """Load notification config from config.json"""
+        """Load notification config from config.json, auto-migrating legacy format."""
         try:
             if self._config_path.exists():
                 with open(self._config_path, "r") as f:
                     config = json.load(f)
-                    return config.get("notifications", {}).get("telegram", {})
+                    telegram = config.get("notifications", {}).get("telegram", {})
+                    return self._migrate_legacy(telegram)
         except Exception as e:
             logger.error(f"Failed to load notification config: {e}")
         return {}
+
+    @staticmethod
+    def _migrate_legacy(config: dict) -> dict:
+        """Convert old flat config to new targets+events format (in memory only)."""
+        if "targets" not in config:
+            chat_id = config.get("chat_id", "")
+            if chat_id:
+                config["targets"] = [
+                    {
+                        "id": "default",
+                        "label": "Default",
+                        "chat_id": chat_id,
+                        "topic_id": None,
+                    }
+                ]
+            else:
+                config["targets"] = []
+
+        if "events" not in config:
+            target_ids = [t["id"] for t in config.get("targets", [])]
+            config["events"] = {}
+            for evt in EVENT_TYPES:
+                if evt == "service_offline":
+                    enabled = config.get("notify_offline", True)
+                elif evt == "service_problem":
+                    enabled = config.get("notify_problem", True)
+                elif evt == "service_recovery":
+                    enabled = config.get("notify_recovery", True)
+                else:
+                    # Legacy config had no per-event flags for non-service events;
+                    # enable all events by default so notifications actually fire.
+                    enabled = True
+                config["events"][evt] = {
+                    "enabled": enabled,
+                    "targets": target_ids if enabled else [],
+                }
+
+        return config
 
     def is_enabled(self) -> bool:
         """Check if Telegram notifications are globally enabled"""

@@ -617,6 +617,8 @@
     "noTargets": "No targets configured. Add one to start receiving notifications.",
     "eventRouting": "Event Routing",
     "eventRoutingHelp": "Enable events and choose which targets receive them",
+    "cooldownMinutes": "Notification Cooldown (minutes)",
+    "cooldownHelp": "Time between duplicate error notifications (0 = no cooldown)",
     "telegramSaved": "Telegram settings saved",
     "telegramSaveError": "Failed to save Telegram settings",
     "telegramTestError": "Failed to send test notification",

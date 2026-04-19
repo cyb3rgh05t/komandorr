@@ -39,6 +39,7 @@ class TelegramSettings(BaseModel):
     # New multi-target
     targets: List[TelegramTarget] = []
     events: Dict[str, EventConfig] = {}
+    cooldown_minutes: int = 5
 
 
 class TelegramSettingsResponse(BaseModel):
@@ -155,6 +156,7 @@ def _build_response(telegram_config: dict) -> TelegramSettingsResponse:
             bot_token=_mask_token(config.get("bot_token", "")),
             targets=targets,
             events=events,
+            cooldown_minutes=config.get("cooldown_minutes", 5),
         )
     )
 
@@ -224,6 +226,7 @@ async def update_telegram_settings(
         "bot_token": bot_token,
         "targets": targets,
         "events": events,
+        "cooldown_minutes": max(0, settings.cooldown_minutes),
     }
 
     config["notifications"]["telegram"] = new_telegram

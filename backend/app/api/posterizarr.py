@@ -131,15 +131,6 @@ async def posterizarr_status(
             resp.raise_for_status()
             return {"connected": True, "url": base_url}
     except Exception as e:
-        inst_name = instance_id or "default"
-        for inst in settings.POSTERIZARR_INSTANCES:
-            if inst.get("id") == instance_id:
-                inst_name = inst.get("name", inst_name)
-                break
-        try:
-            await notification_service.notify_posterizarr_error(inst_name, str(e))
-        except Exception:
-            pass
         return {"connected": False, "error": str(e)}
 
 
@@ -232,10 +223,31 @@ async def get_runtime_history(
     params = {}
     if limit is not None:
         params["limit"] = limit
-    return (
+    data = (
         await proxy_get("/runtime-history", params=params, instance_id=instance_id)
         or {}
     )
+
+    # Check latest run for errors and send notification if errors > 0
+    history_items = data.get("history", [])
+    if history_items:
+        latest = history_items[0]
+        error_count = latest.get("errors", 0) or 0
+        if error_count > 0:
+            inst_name = instance_id or "default"
+            for inst in getattr(settings, "POSTERIZARR_INSTANCES", []) or []:
+                if inst.get("id") == instance_id:
+                    inst_name = inst.get("name", inst_name)
+                    break
+            try:
+                await notification_service.notify_posterizarr_error(
+                    inst_name,
+                    f"Latest run had {error_count} error(s)",
+                )
+            except Exception:
+                pass
+
+    return data
 
 
 @router.get("/assets/overview")

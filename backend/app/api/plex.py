@@ -1121,19 +1121,17 @@ async def update_peak_concurrent(request: UpdatePeakRequest):
 
 @router.get("/stats/daily-peaks")
 async def get_daily_peaks(days: int = 30):
-    """Get daily peak concurrent streams for the last N days"""
+    """Get daily peak concurrent streams for the last N days (0 = all)"""
     try:
         session = db.get_session()
         try:
-            cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime(
-                "%Y-%m-%d"
-            )
-            peaks = (
-                session.query(DailyPeakDB)
-                .filter(DailyPeakDB.date >= cutoff)
-                .order_by(DailyPeakDB.date.asc())
-                .all()
-            )
+            query = session.query(DailyPeakDB)
+            if days > 0:
+                cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime(
+                    "%Y-%m-%d"
+                )
+                query = query.filter(DailyPeakDB.date >= cutoff)
+            peaks = query.order_by(DailyPeakDB.date.asc()).all()
             return [{"date": p.date, "peak": p.peak_concurrent} for p in peaks]
         finally:
             session.close()

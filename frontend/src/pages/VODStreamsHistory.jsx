@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
@@ -6,48 +6,228 @@ import {
   BarChart3,
   Calendar,
   TrendingUp,
+  TrendingDown,
   Activity,
   RefreshCw,
+  Download,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { getPlexStats } from "@/services/plexService";
 
-const DailyPeakChart = ({ data, isLoading, allTimePeak }) => {
-  const { t } = useTranslation();
-  const [hoveredBar, setHoveredBar] = useState(null);
+// --- Time Range Options ---
+const TIME_RANGES = [
+  { key: "7d", label: "7 Days", days: 7 },
+  { key: "14d", label: "14 Days", days: 14 },
+  { key: "30d", label: "30 Days", days: 30 },
+  { key: "90d", label: "90 Days", days: 90 },
+  { key: "all", label: "All Time", days: 0 },
+];
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-theme-card border border-theme rounded-lg p-4"
-            >
-              <div className="animate-pulse space-y-2">
-                <div className="h-3 bg-theme-hover rounded w-2/3" />
-                <div className="h-6 bg-theme-hover rounded w-1/3" />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="h-5 bg-theme-hover rounded w-1/4" />
-              <div className="h-4 bg-theme-hover rounded w-1/6" />
-            </div>
-            <div className="h-72 bg-theme-hover rounded-lg" />
-          </div>
-        </div>
-      </div>
-    );
+// --- Helpers ---
+function formatDate(dateStr, short = false) {
+  const d = new Date(dateStr + "T00:00:00");
+  return short
+    ? d.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : d.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+}
+
+function getDayOfWeek(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();
+  return day === 0 || day === 6 ? "weekend" : "weekday";
+}
+
+function exportData(data, format) {
+  if (!data || data.length === 0) return;
+
+  let content, type, ext;
+  if (format === "csv") {
+    const header = "Date,Peak Concurrent,Day Type\n";
+    const rows = data
+      .map((d) => `${d.date},${d.peak},${getDayOfWeek(d.date)}`)
+      .join("\n");
+    content = header + rows;
+    type = "text/csv";
+    ext = "csv";
+  } else {
+    content = JSON.stringify(data, null, 2);
+    type = "application/json";
+    ext = "json";
   }
+
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `vod-peaks-${new Date().toISOString().split("T")[0]}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- Stats Cards ---
+function StatsCards({ data, allTimePeak, t }) {
+  if (!data || data.length === 0) return null;
+
+  const peaks = data.map((d) => d.peak);
+  const maxPeak = Math.max(...peaks);
+  const minPeak = Math.min(...peaks);
+  const avgPeak = (peaks.reduce((a, b) => a + b, 0) / peaks.length).toFixed(1);
+
+  const weekdays = data.filter((d) => getDayOfWeek(d.date) === "weekday");
+  const weekends = data.filter((d) => getDayOfWeek(d.date) === "weekend");
+  const avgWeekday =
+    weekdays.length > 0
+      ? (weekdays.reduce((s, d) => s + d.peak, 0) / weekdays.length).toFixed(1)
+      : "\u2014";
+  const avgWeekend =
+    weekends.length > 0
+      ? (weekends.reduce((s, d) => s + d.peak, 0) / weekends.length).toFixed(1)
+      : "\u2014";
+
+  // Trend: compare last 7 days avg vs previous 7 days
+  let trendPercent = null;
+  let trendDir = "flat";
+  if (data.length >= 7) {
+    const recent = data.slice(-7);
+    const prev = data.slice(-14, -7);
+    if (prev.length > 0) {
+      const recentAvg = recent.reduce((s, d) => s + d.peak, 0) / recent.length;
+      const prevAvg = prev.reduce((s, d) => s + d.peak, 0) / prev.length;
+      if (prevAvg > 0) {
+        trendPercent = (((recentAvg - prevAvg) / prevAvg) * 100).toFixed(1);
+        trendDir =
+          recentAvg > prevAvg ? "up" : recentAvg < prevAvg ? "down" : "flat";
+      }
+    }
+  }
+
+  const cards = [
+    {
+      label: t("vodStreams.history.highestPeak", "All-Time Peak"),
+      value: allTimePeak ?? maxPeak,
+      icon: TrendingUp,
+      color: "text-theme-primary",
+      borderColor: "hover:border-theme-primary",
+      bgColor: "hover:bg-theme-primary/10",
+      showTrend: true,
+    },
+    {
+      label: t("vodStreams.history.avgPeak", "Avg Peak"),
+      value: avgPeak,
+      icon: BarChart3,
+      color: "text-cyan-500",
+      borderColor: "hover:border-cyan-500/50",
+      bgColor: "hover:bg-cyan-500/10",
+    },
+    {
+      label: t("vodStreams.history.minPeak", "Min Peak"),
+      value: minPeak,
+      icon: TrendingDown,
+      color: "text-orange-400",
+      borderColor: "hover:border-orange-400/50",
+      bgColor: "hover:bg-orange-400/10",
+    },
+    {
+      label: t("vodStreams.history.weekdayAvg", "Weekday Avg"),
+      value: avgWeekday,
+      icon: Clock,
+      color: "text-blue-400",
+      borderColor: "hover:border-blue-400/50",
+      bgColor: "hover:bg-blue-400/10",
+    },
+    {
+      label: t("vodStreams.history.weekendAvg", "Weekend Avg"),
+      value: avgWeekend,
+      icon: Zap,
+      color: "text-purple-400",
+      borderColor: "hover:border-purple-400/50",
+      bgColor: "hover:bg-purple-400/10",
+    },
+    {
+      label: t("vodStreams.history.daysTracked", "Days Tracked"),
+      value: data.length,
+      icon: Calendar,
+      color: "text-green-500",
+      borderColor: "hover:border-green-500/50",
+      bgColor: "hover:bg-green-500/10",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          className={`bg-theme-card border border-theme rounded-lg p-3 sm:p-4 hover:shadow-md transition-all ${card.borderColor} ${card.bgColor}`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-medium text-theme-text-muted uppercase tracking-wider truncate">
+                {card.label}
+              </p>
+              <p
+                className={`text-xl sm:text-2xl font-bold ${card.color} mt-0.5`}
+              >
+                {card.value}
+              </p>
+            </div>
+            <card.icon
+              className={`w-6 h-6 sm:w-7 sm:h-7 ${card.color} opacity-60 shrink-0`}
+            />
+          </div>
+          {card.showTrend && trendPercent !== null && (
+            <div className="mt-1.5 flex items-center gap-1">
+              {trendDir === "up" ? (
+                <ArrowUp size={12} className="text-green-400" />
+              ) : trendDir === "down" ? (
+                <ArrowDown size={12} className="text-red-400" />
+              ) : (
+                <Minus size={12} className="text-theme-text-muted" />
+              )}
+              <span
+                className={`text-[10px] font-medium ${
+                  trendDir === "up"
+                    ? "text-green-400"
+                    : trendDir === "down"
+                      ? "text-red-400"
+                      : "text-theme-text-muted"
+                }`}
+              >
+                {trendPercent > 0 ? "+" : ""}
+                {trendPercent}% vs prev 7d
+              </span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// --- Chart Component ---
+function getMonthBadge(data) {
+  if (!data || data.length === 0) return null;
+  const lastDate = new Date(data[data.length - 1].date + "T00:00:00");
+  return lastDate
+    .toLocaleDateString(undefined, { month: "long" })
+    .toUpperCase();
+}
+
+function PeakChart({ data, allTimePeak, showTrendLine, t }) {
+  const [hoveredBar, setHoveredBar] = useState(null);
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
+      <div className="bg-theme-card border border-theme rounded-xl p-16 text-center">
         <div className="max-w-sm mx-auto space-y-5">
           <div className="relative w-20 h-20 mx-auto">
             <div className="absolute inset-0 rounded-full bg-theme-primary/20 animate-pulse" />
@@ -71,313 +251,453 @@ const DailyPeakChart = ({ data, isLoading, allTimePeak }) => {
     );
   }
 
-  const maxPeak = Math.max(...data.map((d) => d.peak), 1);
-  const chartHeight = 320;
-  const chartPadding = { top: 24, right: 24, bottom: 56, left: 48 };
-  const innerWidth =
-    Math.max(data.length * 44, 600) - chartPadding.left - chartPadding.right;
-  const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
-  const barWidth = Math.min(
-    Math.max((innerWidth / data.length) * 0.65, 14),
-    38,
-  );
-  const barGap = innerWidth / data.length;
+  // Enrich data with diffs
+  const enriched = data.map((item, i) => {
+    const prev = i > 0 ? data[i - 1].peak : null;
+    const diff = prev !== null ? item.peak - prev : null;
+    const diffPercent =
+      prev !== null && prev > 0
+        ? (((item.peak - prev) / prev) * 100).toFixed(1)
+        : null;
+    return { ...item, diff, diffPercent, dayType: getDayOfWeek(item.date) };
+  });
 
+  const peaks = enriched.map((d) => d.peak);
+  const maxPeak = Math.max(...peaks, 1);
+  const minPeakVal = Math.min(...peaks);
+  const peakDayIndex = enriched.findIndex((d) => d.peak === maxPeak);
+  const minDayIndex = enriched.findIndex((d) => d.peak === minPeakVal);
+
+  // Chart dimensions - taller chart, tight bars, more top space for tooltips
+  const chartHeight = 480;
+  const chartPadding = { top: 85, right: 16, bottom: 60, left: 48 };
+  const innerWidth =
+    Math.max(enriched.length * 22, 300) -
+    chartPadding.left -
+    chartPadding.right;
+  const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+  const barGap = innerWidth / enriched.length;
+  const barWidth = Math.min(Math.max(barGap * 0.88, 8), 32);
+  const svgWidth = innerWidth + chartPadding.left + chartPadding.right;
+
+  // Y-axis ticks
   const yTicks = [];
-  const tickStep = Math.max(1, Math.ceil(maxPeak / 5));
-  for (let i = 0; i <= maxPeak + tickStep; i += tickStep) {
-    yTicks.push(i);
-  }
+  const tickStep = Math.max(1, Math.ceil(maxPeak / 6));
+  for (let i = 0; i <= maxPeak + tickStep; i += tickStep) yTicks.push(i);
   const yMax = yTicks[yTicks.length - 1];
 
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  };
-
-  const overallPeak = allTimePeak ?? Math.max(...data.map((d) => d.peak));
-  const avgPeak =
-    data.length > 0
-      ? (data.reduce((sum, d) => sum + d.peak, 0) / data.length).toFixed(1)
-      : 0;
-
-  // Find highest peak day index for accent coloring
-  const peakDayIndex = data.findIndex((d) => d.peak === overallPeak);
+  // Trend line: moving average (window 3)
+  const trendPoints = [];
+  if (showTrendLine && enriched.length >= 3) {
+    const window = Math.min(3, Math.floor(enriched.length / 2));
+    for (let i = 0; i < enriched.length; i++) {
+      const start = Math.max(0, i - Math.floor(window / 2));
+      const end = Math.min(enriched.length, start + window);
+      const slice = enriched.slice(start, end);
+      const avg = slice.reduce((s, d) => s + d.peak, 0) / slice.length;
+      const cx = chartPadding.left + i * barGap + barGap / 2;
+      const cy = chartPadding.top + innerHeight - (avg / yMax) * innerHeight;
+      trendPoints.push(`${cx},${cy}`);
+    }
+  }
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-theme-primary" />
-                {t("vodStreams.history.highestPeak", "Highest Peak")}
-              </p>
-              <p className="text-2xl font-bold text-theme-primary mt-1">
-                {overallPeak}
-              </p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-theme-primary" />
+    <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+      {/* Chart Header */}
+      <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-theme">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-theme-primary/15">
+            <Activity className="w-5 h-5 text-theme-primary" />
           </div>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-cyan-500/50 hover:bg-cyan-500/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <BarChart3 className="w-3 h-3 text-cyan-500" />
-                {t("vodStreams.history.avgPeak", "Avg Peak")}
-              </p>
-              <p className="text-2xl font-bold text-cyan-500 mt-1">{avgPeak}</p>
-            </div>
-            <BarChart3 className="w-8 h-8 text-cyan-500" />
-          </div>
-        </div>
-        <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-green-500" />
-                {t("vodStreams.history.daysTracked", "Days Tracked")}
-              </p>
-              <p className="text-2xl font-bold text-green-500 mt-1">
-                {data.length}
-              </p>
-            </div>
-            <Calendar className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Chart Card */}
-      <div className="bg-theme-card border border-theme rounded-lg shadow-sm overflow-hidden">
-        {/* Chart Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-theme">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-md bg-theme-primary/15">
-              <Activity className="w-4 h-4 text-theme-primary" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-theme-text">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-base font-semibold text-theme-text">
                 {t(
                   "vodStreams.history.chartTitle",
                   "Daily Peak Concurrent Streams",
                 )}
               </h3>
-              <p className="text-xs text-theme-text-muted mt-0.5">
-                {t("vodStreams.history.chartSubtitle", "Last 30 days")}
-              </p>
+              {getMonthBadge(data) && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md">
+                  <Calendar size={10} className="text-cyan-400" />
+                  <span className="text-[10px] font-semibold text-cyan-400 tracking-wide">
+                    {getMonthBadge(data)}
+                  </span>
+                </span>
+              )}
             </div>
+            <p className="text-xs text-theme-text-muted mt-0.5">
+              {enriched.length > 0
+                ? `${formatDate(enriched[0].date)} \u2014 ${formatDate(enriched[enriched.length - 1].date)}`
+                : t("vodStreams.history.chartSubtitle", "Last 30 days")}
+            </p>
           </div>
-          <div />
         </div>
+      </div>
 
-        {/* Chart Body */}
-        <div className="p-4 sm:p-6 overflow-x-auto">
-          <svg
-            width={innerWidth + chartPadding.left + chartPadding.right}
-            height={chartHeight}
-            className="min-w-full"
-          >
-            <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
-              </linearGradient>
-              <linearGradient id="barGradientHover" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
-                <stop offset="100%" stopColor="#d97706" stopOpacity="0.6" />
-              </linearGradient>
-            </defs>
+      {/* Chart Body */}
+      <div className="px-3 sm:px-5 py-6 sm:py-8 overflow-x-auto">
+        <svg width={svgWidth} height={chartHeight} className="min-w-full">
+          <defs>
+            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
+            </linearGradient>
+            <linearGradient id="barGradientHover" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.6" />
+            </linearGradient>
+            <linearGradient id="barGradientMin" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#ea580c" stopOpacity="0.5" />
+            </linearGradient>
+            <linearGradient id="barGradientWeekend" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.5" />
+            </linearGradient>
+          </defs>
 
-            {/* Y-axis grid lines */}
-            {yTicks.map((tick) => {
-              const y =
-                chartPadding.top + innerHeight - (tick / yMax) * innerHeight;
-              return (
-                <g key={`y-${tick}`}>
-                  <line
-                    x1={chartPadding.left}
-                    y1={y}
-                    x2={chartPadding.left + innerWidth}
-                    y2={y}
-                    stroke="currentColor"
-                    className="text-theme-text-muted"
-                    strokeOpacity={0.1}
-                    strokeDasharray="3 6"
-                  />
-                  <text
-                    x={chartPadding.left - 10}
-                    y={y + 4}
-                    textAnchor="end"
-                    className="text-theme-text-muted"
-                    fill="currentColor"
-                    fontSize={11}
-                    fontWeight="500"
-                  >
-                    {tick}
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* Bars */}
-            {data.map((item, i) => {
-              const barHeight = (item.peak / yMax) * innerHeight;
-              const x =
-                chartPadding.left + i * barGap + (barGap - barWidth) / 2;
-              const y = chartPadding.top + innerHeight - barHeight;
-              const isHovered = hoveredBar === i;
-              const isPeakDay = i === peakDayIndex;
-
-              let fill = "url(#barGradient)";
-              if (isHovered) fill = "url(#barGradientHover)";
-              if (isPeakDay) fill = "url(#barGradientPeak)";
-
-              return (
-                <g
-                  key={item.date}
-                  onMouseEnter={() => setHoveredBar(i)}
-                  onMouseLeave={() => setHoveredBar(null)}
-                  className="cursor-pointer"
+          {/* Y-axis grid lines */}
+          {yTicks.map((tick) => {
+            const y =
+              chartPadding.top + innerHeight - (tick / yMax) * innerHeight;
+            return (
+              <g key={`y-${tick}`}>
+                <line
+                  x1={chartPadding.left}
+                  y1={y}
+                  x2={chartPadding.left + innerWidth}
+                  y2={y}
+                  stroke="currentColor"
+                  className="text-theme-text-muted"
+                  strokeOpacity={0.1}
+                  strokeDasharray="3 6"
+                />
+                <text
+                  x={chartPadding.left - 10}
+                  y={y + 4}
+                  textAnchor="end"
+                  className="text-theme-text-muted"
+                  fill="currentColor"
+                  fontSize={11}
+                  fontWeight="500"
                 >
-                  {/* Hover highlight column */}
-                  {isHovered && (
-                    <rect
-                      x={chartPadding.left + i * barGap}
-                      y={chartPadding.top}
-                      width={barGap}
-                      height={innerHeight}
-                      fill="currentColor"
-                      className="text-theme-text-muted"
-                      opacity={0.04}
-                      rx={4}
-                    />
-                  )}
-                  {/* Bar */}
+                  {tick}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Bars */}
+          {enriched.map((item, i) => {
+            const barHeight = (item.peak / yMax) * innerHeight;
+            const x = chartPadding.left + i * barGap + (barGap - barWidth) / 2;
+            const y = chartPadding.top + innerHeight - barHeight;
+            const isHovered = hoveredBar === i;
+            const isPeakDay = i === peakDayIndex;
+            const isMinDay = i === minDayIndex && enriched.length > 2;
+            const isWeekend = item.dayType === "weekend";
+
+            let fill = isWeekend
+              ? "url(#barGradientWeekend)"
+              : "url(#barGradient)";
+            if (isMinDay) fill = "url(#barGradientMin)";
+            if (isPeakDay) fill = "url(#barGradientPeak)";
+            if (isHovered && !isPeakDay && !isMinDay)
+              fill = "url(#barGradientHover)";
+
+            // Tooltip positioning - smart clamp so it never gets cut off
+            const tw = 170;
+            const th = item.diff !== null ? 72 : 50;
+            const tx = Math.max(
+              4,
+              Math.min(x + barWidth / 2 - tw / 2, svgWidth - tw - 4),
+            );
+            let ty = y - th - 12;
+            if (ty < 4) ty = y + Math.max(barHeight, 2) + 10;
+
+            return (
+              <g
+                key={item.date}
+                onMouseEnter={() => setHoveredBar(i)}
+                onMouseLeave={() => setHoveredBar(null)}
+                className="cursor-pointer"
+              >
+                {/* Hover highlight column */}
+                {isHovered && (
                   <rect
-                    x={x}
-                    y={y}
-                    width={barWidth}
-                    height={Math.max(barHeight, 2)}
+                    x={chartPadding.left + i * barGap}
+                    y={chartPadding.top}
+                    width={barGap}
+                    height={innerHeight}
+                    fill="currentColor"
+                    className="text-theme-text-muted"
+                    opacity={0.04}
                     rx={4}
-                    fill={fill}
-                    style={{
-                      transition: "all 0.2s ease",
-                    }}
                   />
-                  {/* Tooltip on hover */}
-                  {isHovered && (
-                    <g>
-                      <rect
-                        x={x + barWidth / 2 - 22}
-                        y={y - 30}
-                        width={44}
-                        height={22}
-                        rx={6}
+                )}
+                {/* Bar */}
+                <rect
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={Math.max(barHeight, 2)}
+                  rx={3}
+                  fill={fill}
+                  style={{ transition: "all 0.2s ease" }}
+                />
+                {/* Tooltip on hover */}
+                {isHovered && (
+                  <g>
+                    {/* Tooltip background */}
+                    <rect
+                      x={tx}
+                      y={ty}
+                      width={tw}
+                      height={th}
+                      rx={10}
+                      className="fill-theme-card stroke-theme-text-muted/20"
+                      strokeWidth="1"
+                      style={{
+                        filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.6))",
+                      }}
+                    />
+                    {/* Arrow pointer */}
+                    {ty < y && (
+                      <polygon
+                        points={`${x + barWidth / 2 - 5},${ty + th} ${x + barWidth / 2 + 5},${ty + th} ${x + barWidth / 2},${ty + th + 6}`}
                         className="fill-theme-card"
-                        stroke="currentColor"
-                        strokeWidth="1"
-                        strokeOpacity={0.2}
-                        style={{
-                          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                        }}
                       />
-                      <text
-                        x={x + barWidth / 2}
-                        y={y - 15}
-                        textAnchor="middle"
-                        className="text-theme-text"
-                        fill="currentColor"
-                        fontSize={12}
-                        fontWeight="bold"
-                      >
-                        {item.peak}
-                      </text>
-                    </g>
-                  )}
-                  {/* Peak day crown indicator */}
-                  {isPeakDay && !isHovered && (
+                    )}
+                    {/* Date */}
                     <text
-                      x={x + barWidth / 2}
-                      y={y - 8}
+                      x={tx + tw / 2}
+                      y={ty + 18}
                       textAnchor="middle"
-                      fontSize={14}
+                      className="fill-theme-text-muted"
+                      fill="currentColor"
+                      fontSize={11}
+                      fontWeight="500"
                     >
-                      👑
+                      {formatDate(item.date)}
                     </text>
-                  )}
-                  {/* X-axis label */}
+                    {/* Peak value */}
+                    <text
+                      x={tx + tw / 2}
+                      y={ty + 38}
+                      textAnchor="middle"
+                      className="fill-theme-text"
+                      fill="currentColor"
+                      fontSize={15}
+                      fontWeight="bold"
+                    >
+                      {item.peak} streams
+                    </text>
+                    {/* Diff from previous day */}
+                    {item.diff !== null && (
+                      <text
+                        x={tx + tw / 2}
+                        y={ty + 58}
+                        textAnchor="middle"
+                        fill={
+                          item.diff > 0
+                            ? "#4ade80"
+                            : item.diff < 0
+                              ? "#f87171"
+                              : "currentColor"
+                        }
+                        className={
+                          item.diff === 0 ? "fill-theme-text-muted" : undefined
+                        }
+                        fontSize={11}
+                        fontWeight="600"
+                      >
+                        {item.diff > 0
+                          ? "\u25B2"
+                          : item.diff < 0
+                            ? "\u25BC"
+                            : "\u2014"}{" "}
+                        {item.diff > 0 ? "+" : ""}
+                        {item.diff} ({item.diffPercent > 0 ? "+" : ""}
+                        {item.diffPercent}%)
+                      </text>
+                    )}
+                  </g>
+                )}
+                {/* Peak day crown */}
+                {isPeakDay && !isHovered && (
                   <text
                     x={x + barWidth / 2}
-                    y={chartPadding.top + innerHeight + 20}
-                    textAnchor="end"
-                    className="text-theme-text-muted"
-                    fill="currentColor"
-                    fontSize={10}
-                    fontWeight={isHovered ? "600" : "400"}
-                    opacity={isHovered ? 1 : 0.7}
-                    transform={`rotate(-45, ${x + barWidth / 2}, ${chartPadding.top + innerHeight + 20})`}
+                    y={y - 8}
+                    textAnchor="middle"
+                    fontSize={14}
                   >
-                    {formatDate(item.date)}
+                    {"\uD83D\uDC51"}
                   </text>
-                </g>
-              );
-            })}
+                )}
+                {/* Min day marker */}
+                {isMinDay && !isHovered && (
+                  <text
+                    x={x + barWidth / 2}
+                    y={y - 6}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fill="#f97316"
+                  >
+                    {"\u25BD"}
+                  </text>
+                )}
+                {/* X-axis label */}
+                <text
+                  x={x + barWidth / 2}
+                  y={chartPadding.top + innerHeight + 20}
+                  textAnchor="end"
+                  className="text-theme-text-muted"
+                  fill="currentColor"
+                  fontSize={10}
+                  fontWeight={isHovered ? "600" : "400"}
+                  opacity={isHovered ? 1 : 0.7}
+                  transform={`rotate(-45, ${x + barWidth / 2}, ${chartPadding.top + innerHeight + 20})`}
+                >
+                  {formatDate(item.date, true)}
+                </text>
+              </g>
+            );
+          })}
 
-            {/* X-axis line */}
-            <line
-              x1={chartPadding.left}
-              y1={chartPadding.top + innerHeight}
-              x2={chartPadding.left + innerWidth}
-              y2={chartPadding.top + innerHeight}
-              stroke="currentColor"
-              className="text-theme-text-muted"
-              strokeOpacity={0.2}
+          {/* Trend Line */}
+          {trendPoints.length > 1 && (
+            <polyline
+              points={trendPoints.join(" ")}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="2"
+              strokeOpacity="0.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="6 3"
             />
-            {/* Y-axis line */}
-            <line
-              x1={chartPadding.left}
-              y1={chartPadding.top}
-              x2={chartPadding.left}
-              y2={chartPadding.top + innerHeight}
-              stroke="currentColor"
-              className="text-theme-text-muted"
-              strokeOpacity={0.2}
-            />
-          </svg>
+          )}
+
+          {/* X-axis line */}
+          <line
+            x1={chartPadding.left}
+            y1={chartPadding.top + innerHeight}
+            x2={chartPadding.left + innerWidth}
+            y2={chartPadding.top + innerHeight}
+            stroke="currentColor"
+            className="text-theme-text-muted"
+            strokeOpacity={0.2}
+          />
+          {/* Y-axis line */}
+          <line
+            x1={chartPadding.left}
+            y1={chartPadding.top}
+            x2={chartPadding.left}
+            y2={chartPadding.top + innerHeight}
+            stroke="currentColor"
+            className="text-theme-text-muted"
+            strokeOpacity={0.2}
+          />
+        </svg>
+      </div>
+
+      {/* Chart Footer Legend */}
+      <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-cyan-500" />
+          <span className="text-xs text-theme-text-muted">
+            {t("vodStreams.history.legendWeekday", "Weekday")}
+          </span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-purple-400" />
+          <span className="text-xs text-theme-text-muted">
+            {t("vodStreams.history.legendWeekend", "Weekend")}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-amber-500" />
+          <span className="text-xs text-theme-text-muted">
+            {t("vodStreams.history.legendHighest", "Highest Peak")}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-orange-500" />
+          <span className="text-xs text-theme-text-muted">
+            {t("vodStreams.history.legendLowest", "Lowest Peak")}
+          </span>
+        </div>
+        {showTrendLine && (
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-0 border-t-2 border-dashed border-cyan-400" />
+            <span className="text-xs text-theme-text-muted">
+              {t("vodStreams.history.legendTrend", "Trend")}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-        {/* Chart Footer Legend */}
-        <div className="flex items-center justify-center gap-6 px-4 sm:px-6 py-3 border-t border-theme bg-theme-hover/20">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-cyan-500" />
-            <span className="text-xs text-theme-text-muted">
-              {t("vodStreams.history.legendDaily", "Daily Peak")}
-            </span>
+// --- Loading Skeleton ---
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="bg-theme-card border border-theme rounded-lg p-4"
+          >
+            <div className="animate-pulse space-y-2">
+              <div className="h-3 bg-theme-hover rounded w-2/3" />
+              <div className="h-6 bg-theme-hover rounded w-1/3" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-amber-500" />
-            <span className="text-xs text-theme-text-muted">
-              {t("vodStreams.history.legendHighest", "Highest Peak")}
-            </span>
+        ))}
+      </div>
+      <div className="bg-theme-card border border-theme rounded-xl p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="h-5 bg-theme-hover rounded w-1/4" />
+            <div className="h-4 bg-theme-hover rounded w-1/6" />
           </div>
+          <div className="h-96 bg-theme-hover rounded-lg" />
         </div>
       </div>
     </div>
   );
-};
+}
 
+// --- Main Page ---
 export default function VODStreamsHistory() {
   const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [timeRange, setTimeRange] = useState("30d");
+  const [showTrendLine, setShowTrendLine] = useState(true);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportRef = useRef(null);
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const days = TIME_RANGES.find((r) => r.key === timeRange)?.days ?? 30;
 
   const {
     data: dailyPeaks,
@@ -385,8 +705,8 @@ export default function VODStreamsHistory() {
     isFetching: peaksFetching,
     dataUpdatedAt: peaksUpdatedAt,
   } = useQuery({
-    queryKey: ["plex-daily-peaks"],
-    queryFn: () => api.get("/plex/stats/daily-peaks?days=30"),
+    queryKey: ["plex-daily-peaks", days],
+    queryFn: () => api.get(`/plex/stats/daily-peaks?days=${days}`),
     staleTime: 10000,
     refetchInterval: 15000,
   });
@@ -410,7 +730,7 @@ export default function VODStreamsHistory() {
     setIsRefreshing(true);
     try {
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ["plex-daily-peaks"] }),
+        queryClient.refetchQueries({ queryKey: ["plex-daily-peaks", days] }),
         queryClient.refetchQueries({ queryKey: ["plex-stats"] }),
       ]);
       toast.success(t("common.refreshed", "Refreshed successfully"));
@@ -419,45 +739,143 @@ export default function VODStreamsHistory() {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, queryClient, t]);
+  }, [isRefreshing, queryClient, t, days]);
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Refresh Row */}
-      <div className="flex items-center justify-end gap-3">
-        {lastUpdated && (
-          <span className="text-xs text-theme-text-muted/60 tabular-nums">
-            {lastUpdated}
-          </span>
-        )}
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCw
-            size={16}
-            className={`text-theme-primary transition-transform duration-500 ${
-              isRefreshing
-                ? "animate-spin"
-                : isFetching
-                  ? "animate-spin opacity-40"
-                  : ""
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Left: Time Range Filter */}
+        <div className="flex items-center">
+          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+            {TIME_RANGES.map((range) => (
+              <button
+                key={range.key}
+                onClick={() => setTimeRange(range.key)}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  timeRange === range.key
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                }`}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Trend + Export + Timestamp + Refresh */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Trend Line Toggle */}
+          <button
+            onClick={() => setShowTrendLine(!showTrendLine)}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 border rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              showTrendLine
+                ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
+                : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:bg-theme-hover"
             }`}
-          />
-          <span className="text-xs sm:text-sm">
-            {isRefreshing
-              ? t("common.refreshing", "Refreshing")
-              : t("common.refresh", "Refresh")}
-          </span>
-        </button>
+            title={t("vodStreams.history.toggleTrend", "Toggle trend line")}
+          >
+            <TrendingUp size={14} />
+            <span className="hidden sm:inline">Trend</span>
+          </button>
+
+          {/* Export */}
+          <div className="relative" ref={exportRef}>
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                showExportMenu
+                  ? "bg-theme-primary/15 border-theme-primary/30 text-theme-primary"
+                  : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:bg-theme-hover"
+              }`}
+              title={t("vodStreams.history.export", "Export data")}
+            >
+              <Download
+                size={14}
+                className={`text-theme-primary
+              }`}
+              />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-1.5 bg-theme-card border border-theme rounded-lg shadow-xl z-50 min-w-[100px] overflow-hidden">
+                <button
+                  onClick={() => {
+                    exportData(dailyPeaks, "csv");
+                    setShowExportMenu(false);
+                  }}
+                  className="flex items-center w-full px-4 py-2.5 text-xs text-left text-theme-text-muted hover:text-theme-primary hover:bg-theme-primary/10 transition-colors"
+                >
+                  CSV
+                </button>
+                <div className="border-t border-theme" />
+                <button
+                  onClick={() => {
+                    exportData(dailyPeaks, "json");
+                    setShowExportMenu(false);
+                  }}
+                  className="flex items-center w-full px-4 py-2.5 text-xs text-left text-theme-text-muted hover:text-theme-primary hover:bg-theme-primary/10 transition-colors"
+                >
+                  JSON
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-6 bg-theme-text-muted/20 hidden sm:block" />
+
+          {/* Timestamp */}
+          {lastUpdated && (
+            <span className="text-xs text-theme-text-muted/60 tabular-nums hidden sm:inline">
+              {lastUpdated}
+            </span>
+          )}
+
+          {/* Refresh */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw
+              size={15}
+              className={`text-theme-primary transition-transform duration-500 ${
+                isRefreshing
+                  ? "animate-spin"
+                  : isFetching
+                    ? "animate-spin opacity-40"
+                    : ""
+              }`}
+            />
+            <span className="text-xs sm:text-sm">
+              {isRefreshing
+                ? t("common.refreshing", "Refreshing")
+                : t("common.refresh", "Refresh")}
+            </span>
+          </button>
+        </div>
       </div>
 
-      <DailyPeakChart
-        data={dailyPeaks}
-        isLoading={peaksLoading}
-        allTimePeak={plexStats?.peak_concurrent}
-      />
+      {/* Content */}
+      {peaksLoading ? (
+        <LoadingSkeleton />
+      ) : (
+        <>
+          <StatsCards
+            data={dailyPeaks}
+            allTimePeak={plexStats?.peak_concurrent}
+            t={t}
+          />
+          <PeakChart
+            data={dailyPeaks}
+            allTimePeak={plexStats?.peak_concurrent}
+            showTrendLine={showTrendLine}
+            t={t}
+          />
+        </>
+      )}
     </div>
   );
 }
