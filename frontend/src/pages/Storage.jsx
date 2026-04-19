@@ -559,6 +559,7 @@ const Storage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [storageTab, setStorageTab] = useState("unionfs");
 
   // Fetch services with storage data
   const {
@@ -765,7 +766,23 @@ const Storage = () => {
 
       {/* Summary Cards - Status Overview */}
       {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+          {/* Storage Items count */}
+          <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-cyan-500/50 hover:bg-cyan-500/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Server className="w-3 h-3 text-cyan-500" />
+                  {t("storage.storageItems", "Storage Items")}
+                </p>
+                <p className="text-2xl font-bold text-cyan-500 mt-1">
+                  {servicesWithStorage.length}
+                </p>
+              </div>
+              <Server className="w-8 h-8 text-cyan-500/50" />
+            </div>
+          </div>
+
           {/* UnionFS paths count */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
             <div className="flex items-center justify-between">
@@ -1001,61 +1018,97 @@ const Storage = () => {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Storage Type Tabs */}
+          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+            <button
+              onClick={() => setStorageTab("unionfs")}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                storageTab === "unionfs"
+                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+              }`}
+            >
+              <HardDrive className="w-4 h-4" />
+              {t("storage.unionfsServers", "UnionFS Storage")}
+              <span
+                className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
+                  storageTab === "unionfs"
+                    ? "text-black/70"
+                    : "text-theme-text-muted"
+                }`}
+              >
+                {unionfsServices.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setStorageTab("raidzfs")}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                storageTab === "raidzfs"
+                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+              }`}
+            >
+              <Disc3 className="w-4 h-4" />
+              {t("storage.raidZfsServers", "RAID & ZFS Arrays")}
+              <span
+                className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
+                  storageTab === "raidzfs"
+                    ? "text-black/70"
+                    : "text-theme-text-muted"
+                }`}
+              >
+                {raidZfsServices.length}
+              </span>
+            </button>
+          </div>
+
           {/* UnionFS Storage Section */}
-          {unionfsServices.length > 0 && (
-            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <HardDrive className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
-                    {t("storage.unionfsServers", "UnionFS Storage")}
-                  </h3>
-                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                    {unionfsServices.length}
-                  </span>
-                </div>
+          {storageTab === "unionfs" &&
+            (unionfsServices.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {unionfsServices.map((service) => (
+                  <StorageServiceCard
+                    key={service.id}
+                    service={service}
+                    t={t}
+                  />
+                ))}
               </div>
-              <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 gap-4">
-                  {unionfsServices.map((service) => (
-                    <StorageServiceCard
-                      key={service.id}
-                      service={service}
-                      t={t}
-                    />
-                  ))}
-                </div>
+            ) : (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
+                <HardDrive
+                  size={48}
+                  className="mx-auto mb-4 text-theme-text-muted opacity-30"
+                />
+                <p className="text-theme-text-muted">
+                  {t("storage.noUnionfs", "No UnionFS storage found")}
+                </p>
               </div>
-            </div>
-          )}
+            ))}
 
           {/* RAID/ZFS Storage Section */}
-          {raidZfsServices.length > 0 && (
-            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Disc3 className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
-                    {t("storage.raidZfsServers", "RAID & ZFS Arrays")}
-                  </h3>
-                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                    {raidZfsServices.length}
-                  </span>
-                </div>
+          {storageTab === "raidzfs" &&
+            (raidZfsServices.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {raidZfsServices.map((service) => (
+                  <StorageServiceCard
+                    key={service.id}
+                    service={service}
+                    t={t}
+                  />
+                ))}
               </div>
-              <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-1 gap-4">
-                  {raidZfsServices.map((service) => (
-                    <StorageServiceCard
-                      key={service.id}
-                      service={service}
-                      t={t}
-                    />
-                  ))}
-                </div>
+            ) : (
+              <div className="bg-theme-card border border-theme rounded-xl p-8 text-center">
+                <Disc3
+                  size={48}
+                  className="mx-auto mb-4 text-theme-text-muted opacity-30"
+                />
+                <p className="text-theme-text-muted">
+                  {t("storage.noRaidZfs", "No RAID/ZFS arrays found")}
+                </p>
               </div>
-            </div>
-          )}
+            ))}
         </div>
       )}
     </div>

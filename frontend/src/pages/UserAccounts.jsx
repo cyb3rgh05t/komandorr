@@ -104,13 +104,16 @@ const UserAccounts = () => {
     staleTime: 30000,
     refetchInterval: 30000,
   });
-  const { effectiveTab, setActiveTab, instances } = useInstanceTabs(instancesData);
+  const { effectiveTab, setActiveTab, instances } =
+    useInstanceTabs(instancesData);
 
   // Use React Query for invites to get users
   const { data: invites = [], isLoading: loading } = useQuery({
     queryKey: ["invites", effectiveTab],
     queryFn: async () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       const data = await api.get(`/invites/${params}`);
       return data || [];
     },
@@ -123,7 +126,9 @@ const UserAccounts = () => {
   const { data: plexConfig } = useQuery({
     queryKey: ["plexConfig", effectiveTab],
     queryFn: () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       return api.get(`/invites/plex/config${params}`);
     },
     staleTime: 60000,
@@ -137,7 +142,9 @@ const UserAccounts = () => {
   const { data: plexLiveStatsData } = useQuery({
     queryKey: ["plexLiveStats", effectiveTab],
     queryFn: () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       return api.get(`/plex/stats/live${params}`);
     },
     staleTime: 60000,
@@ -150,7 +157,9 @@ const UserAccounts = () => {
   const { data: plexUsersData } = useQuery({
     queryKey: ["plexUsersCount", effectiveTab],
     queryFn: async () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       const data = await api.get(`/plex/users/count${params}`);
       return data;
     },
@@ -525,12 +534,6 @@ const UserAccounts = () => {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
       {/* Not Configured Banner */}
       {plexNotConfigured && (
         <Link
@@ -834,6 +837,13 @@ const UserAccounts = () => {
           </div>
         </div>
       </div>
+
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
 
       {/* Users List */}
       <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
@@ -1593,15 +1603,15 @@ const UserAccounts = () => {
                   <label className="block text-sm font-medium text-theme-text mb-2">
                     {t("userHistory.filters.timeRange") || "Time Range"}
                   </label>
-                  <div className="flex gap-2">
+                  <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
                     {["all", "today", "week", "month"].map((filter) => (
                       <button
                         key={filter}
                         onClick={() => setTimeFilter(filter)}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                           timeFilter === filter
-                            ? "bg-theme-primary text-black shadow-md"
-                            : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                            ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                            : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
                         }`}
                       >
                         {t(`userHistory.filters.${filter}`) ||
@@ -1615,15 +1625,15 @@ const UserAccounts = () => {
                   <label className="block text-sm font-medium text-theme-text mb-2">
                     {t("userHistory.filters.mediaType") || "Media Type"}
                   </label>
-                  <div className="flex gap-2">
+                  <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
                     {["all", "movie", "episode"].map((filter) => (
                       <button
                         key={filter}
                         onClick={() => setTypeFilter(filter)}
-                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                           typeFilter === filter
-                            ? "bg-theme-primary text-black shadow-md"
-                            : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                            ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                            : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
                         }`}
                       >
                         {t(`userHistory.filters.${filter}`) ||

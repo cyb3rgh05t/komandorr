@@ -196,13 +196,6 @@ export default function Posterizarr() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
-
       {/* Not Configured Banner */}
       {posterizarrNotConfigured && (
         <Link
@@ -385,6 +378,13 @@ export default function Posterizarr() {
                 )}
             </div>
           </div>
+
+          {/* Instance Tabs */}
+          <InstanceTabs
+            instances={instances}
+            activeTab={effectiveTab}
+            setActiveTab={setActiveTab}
+          />
 
           {/* ── Scheduler ── */}
           <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">

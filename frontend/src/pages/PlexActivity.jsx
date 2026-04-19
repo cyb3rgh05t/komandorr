@@ -404,13 +404,6 @@ const PlexActivity = () => {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
-
       {/* Not Configured Banner */}
       {plexNotConfigured && (
         <Link
@@ -541,6 +534,13 @@ const PlexActivity = () => {
           </div>
         </div>
       </div>
+
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
 
       {/* Error State */}
       {hasError && (

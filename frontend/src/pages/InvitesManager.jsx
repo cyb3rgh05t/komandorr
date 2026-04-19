@@ -60,13 +60,16 @@ const InvitesManager = () => {
     staleTime: 30000,
     refetchInterval: 30000,
   });
-  const { effectiveTab, setActiveTab, instances } = useInstanceTabs(instancesData);
+  const { effectiveTab, setActiveTab, instances } =
+    useInstanceTabs(instancesData);
 
   // Use React Query for invites
   const { data: invites = [], isLoading: loading } = useQuery({
     queryKey: ["invites", effectiveTab],
     queryFn: async () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       const data = await api.get(`/invites/${params}`);
       return data;
     },
@@ -79,7 +82,9 @@ const InvitesManager = () => {
   const { data: stats = null } = useQuery({
     queryKey: ["inviteStats", effectiveTab],
     queryFn: () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       return api.get(`/invites/stats${params}`);
     },
     staleTime: 3600000, // 1 hour
@@ -91,7 +96,9 @@ const InvitesManager = () => {
   const { data: plexConfig } = useQuery({
     queryKey: ["plexConfig", effectiveTab],
     queryFn: () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       return api.get(`/invites/plex/config${params}`);
     },
     staleTime: 60000,
@@ -106,7 +113,9 @@ const InvitesManager = () => {
   const { data: plexUsersData } = useQuery({
     queryKey: ["plexUsersCount", effectiveTab],
     queryFn: async () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       const data = await api.get(`/plex/users/count${params}`);
       console.log("Plex users count response:", data);
       return data;
@@ -123,7 +132,9 @@ const InvitesManager = () => {
   const { data: plexLiveStatsData } = useQuery({
     queryKey: ["plexLiveStats", effectiveTab],
     queryFn: () => {
-      const params = effectiveTab ? `?instance_id=${encodeURIComponent(effectiveTab)}` : "";
+      const params = effectiveTab
+        ? `?instance_id=${encodeURIComponent(effectiveTab)}`
+        : "";
       return api.get(`/plex/stats/live${params}`);
     },
     staleTime: 3600000, // 1 hour
@@ -438,12 +449,6 @@ const InvitesManager = () => {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
       {/* Header with Search & Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
@@ -702,109 +707,109 @@ const InvitesManager = () => {
         </div>
       )}
 
+      {/* Instance Tabs */}
+      <div>
+        <InstanceTabs
+          instances={instances}
+          activeTab={effectiveTab}
+          setActiveTab={setActiveTab}
+        />
+      </div>
+
       {/* Filter Tabs */}
-      <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-        <div className="flex gap-2 min-w-max">
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-              filter === "all"
-                ? "bg-theme-primary text-black shadow-md"
-                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+      <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+        <button
+          onClick={() => setFilter("all")}
+          className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            filter === "all"
+              ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+          }`}
+        >
+          {t("invites.filter.all")}
+          <span
+            className={`ml-2 text-xs ${
+              filter === "all" ? "text-black/70" : "text-theme-text-muted"
             }`}
           >
-            {t("invites.filter.all")}
-            <span
-              className={`ml-2 text-xs ${
-                filter === "all" ? "text-black/70" : "text-theme-text-muted"
-              }`}
-            >
-              ({invites.length})
-            </span>
-          </button>
-          <button
-            onClick={() => setFilter("active")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-              filter === "active"
-                ? "bg-theme-primary text-black shadow-md"
-                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+            ({invites.length})
+          </span>
+        </button>
+        <button
+          onClick={() => setFilter("active")}
+          className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            filter === "active"
+              ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+          }`}
+        >
+          {t("invites.filter.active")}
+          <span
+            className={`ml-2 text-xs ${
+              filter === "active" ? "text-black/70" : "text-theme-text-muted"
             }`}
           >
-            {t("invites.filter.active")}
-            <span
-              className={`ml-2 text-xs ${
-                filter === "active" ? "text-black/70" : "text-theme-text-muted"
-              }`}
-            >
-              (
-              {
-                invites.filter(
-                  (inv) =>
-                    !inv.is_expired && !inv.is_exhausted && inv.is_active,
-                ).length
-              }
-              )
-            </span>
-          </button>
-          <button
-            onClick={() => setFilter("redeemed")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-              filter === "redeemed"
-                ? "bg-theme-primary text-black shadow-md"
-                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+            (
+            {
+              invites.filter(
+                (inv) => !inv.is_expired && !inv.is_exhausted && inv.is_active,
+              ).length
+            }
+            )
+          </span>
+        </button>
+        <button
+          onClick={() => setFilter("redeemed")}
+          className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            filter === "redeemed"
+              ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+          }`}
+        >
+          {t("invites.filter.redeemed")}
+          <span
+            className={`ml-2 text-xs ${
+              filter === "redeemed" ? "text-black/70" : "text-theme-text-muted"
             }`}
           >
-            {t("invites.filter.redeemed")}
-            <span
-              className={`ml-2 text-xs ${
-                filter === "redeemed"
-                  ? "text-black/70"
-                  : "text-theme-text-muted"
-              }`}
-            >
-              (
-              {
-                invites.filter((inv) => inv.users && inv.users.length > 0)
-                  .length
-              }
-              )
-            </span>
-          </button>
-          <button
-            onClick={() => setFilter("expired")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-              filter === "expired"
-                ? "bg-theme-primary text-black shadow-md"
-                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+            ({invites.filter((inv) => inv.users && inv.users.length > 0).length}
+            )
+          </span>
+        </button>
+        <button
+          onClick={() => setFilter("expired")}
+          className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            filter === "expired"
+              ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+          }`}
+        >
+          {t("invites.filter.expired")}
+          <span
+            className={`ml-2 text-xs ${
+              filter === "expired" ? "text-black/70" : "text-theme-text-muted"
             }`}
           >
-            {t("invites.filter.expired")}
-            <span
-              className={`ml-2 text-xs ${
-                filter === "expired" ? "text-black/70" : "text-theme-text-muted"
-              }`}
-            >
-              ({invites.filter((inv) => inv.is_expired).length})
-            </span>
-          </button>
-          <button
-            onClick={() => setFilter("used-up")}
-            className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-              filter === "used-up"
-                ? "bg-theme-primary text-black shadow-md"
-                : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+            ({invites.filter((inv) => inv.is_expired).length})
+          </span>
+        </button>
+        <button
+          onClick={() => setFilter("used-up")}
+          className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            filter === "used-up"
+              ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+              : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+          }`}
+        >
+          {t("invites.filter.usedUp")}
+          <span
+            className={`ml-2 text-xs ${
+              filter === "used-up" ? "text-black/70" : "text-theme-text-muted"
             }`}
           >
-            {t("invites.filter.usedUp")}
-            <span
-              className={`ml-2 text-xs ${
-                filter === "used-up" ? "text-black/70" : "text-theme-text-muted"
-              }`}
-            >
-              ({invites.filter((inv) => inv.is_exhausted).length})
-            </span>
-          </button>
-        </div>
+            ({invites.filter((inv) => inv.is_exhausted).length})
+          </span>
+        </button>
       </div>
 
       {/* Invites Table */}
