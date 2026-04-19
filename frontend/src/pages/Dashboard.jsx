@@ -932,54 +932,51 @@ export default function Dashboard() {
         (vpnConnectionStatus?.connected && dashboardVisibility.vpnList)) && (
         <div className="space-y-6">
           {/* Tab Header */}
-          <div className="border-b border-theme">
-            <div className="flex gap-6">
-              {dashboardVisibility.services && (
-                <button
-                  onClick={() => setDashboardMainTab("services")}
-                  className={`flex items-center gap-2 pb-3 px-1 text-sm font-semibold transition-all border-b-2 ${
+          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+            {dashboardVisibility.services && (
+              <button
+                onClick={() => setDashboardMainTab("services")}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  dashboardMainTab === "services"
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                }`}
+              >
+                <Server className="w-4 h-4" />
+                {t("dashboard.services", "Services")}
+                <span
+                  className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
                     dashboardMainTab === "services"
-                      ? "border-theme-primary text-theme-primary"
-                      : "border-transparent text-theme-text-muted hover:text-theme-text hover:border-theme-text-muted/30"
+                      ? "text-black/70"
+                      : "text-theme-text-muted"
                   }`}
                 >
-                  <Server className="w-4 h-4" />
-                  {t("dashboard.services", "Services")}
-                  <span
-                    className={`ml-1 px-2 py-0.5 rounded-md text-xs font-bold ${
-                      dashboardMainTab === "services"
-                        ? "bg-theme-primary/20 text-theme-primary"
-                        : "bg-theme-hover text-theme-text-muted"
-                    }`}
-                  >
-                    {services.length}
-                  </span>
-                </button>
-              )}
-              {vpnConnectionStatus?.connected &&
-                dashboardVisibility.vpnList && (
-                  <button
-                    onClick={() => setDashboardMainTab("vpn")}
-                    className={`flex items-center gap-2 pb-3 px-1 text-sm font-semibold transition-all border-b-2 ${
-                      dashboardMainTab === "vpn"
-                        ? "border-theme-primary text-theme-primary"
-                        : "border-transparent text-theme-text-muted hover:text-theme-text hover:border-theme-text-muted/30"
-                    }`}
-                  >
-                    <Shield className="w-4 h-4" />
-                    VPN Proxy
-                    <span
-                      className={`ml-1 px-2 py-0.5 rounded-md text-xs font-bold ${
-                        dashboardMainTab === "vpn"
-                          ? "bg-theme-primary/20 text-theme-primary"
-                          : "bg-theme-hover text-theme-text-muted"
-                      }`}
-                    >
-                      {vpnContainers.length}
-                    </span>
-                  </button>
-                )}
-            </div>
+                  {services.length}
+                </span>
+              </button>
+            )}
+            {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
+              <button
+                onClick={() => setDashboardMainTab("vpn")}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  dashboardMainTab === "vpn"
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                VPN Proxy
+                <span
+                  className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
+                    dashboardMainTab === "vpn"
+                      ? "text-black/70"
+                      : "text-theme-text-muted"
+                  }`}
+                >
+                  {vpnContainers.length}
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Tab Content */}
