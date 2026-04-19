@@ -4,7 +4,6 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
-from app.services.notifications import notification_service
 
 
 router = APIRouter(prefix="/api/uploader", tags=["uploader"])
@@ -113,10 +112,4 @@ async def get_failed(
 async def get_failed_count(username: str = Depends(require_auth)):
     if not _is_configured():
         return {"count": 0, "not_configured": True}
-    result = await proxy_get("/srv/api/jobs/failed_count.php")
-    if isinstance(result, dict) and result.get("count", 0) > 0:
-        try:
-            await notification_service.notify_uploader_failed(result["count"])
-        except Exception:
-            pass
-    return result
+    return await proxy_get("/srv/api/jobs/failed_count.php")

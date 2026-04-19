@@ -3,7 +3,6 @@ from typing import List
 from app.models.storage import StorageUpdate, StorageDataPoint
 from app.services.monitor import monitor
 from app.utils.logger import logger
-from app.services.notifications import notification_service
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/storage", tags=["storage"])
@@ -88,46 +87,6 @@ async def update_storage(storage_data: StorageUpdate):
 
     # Save to database
     monitor._save_service(service)
-
-    # Check for storage warnings (>90% usage on any path)
-    STORAGE_WARNING_THRESHOLD = 90.0
-    for path in storage_data.storage_paths:
-        if path.percent >= STORAGE_WARNING_THRESHOLD:
-            try:
-                free_gb = path.free
-                await notification_service.notify_storage_warning(
-                    hostname=storage_data.hostname,
-                    path=path.path,
-                    percent=path.percent,
-                    free_gb=free_gb,
-                )
-            except Exception:
-                pass
-
-    # Check for RAID degraded/failed
-    for raid in storage_data.raid_arrays:
-        if raid.status in ("degraded", "failed"):
-            try:
-                await notification_service.notify_storage_warning(
-                    hostname=storage_data.hostname,
-                    path=f"RAID: {raid.device}",
-                    percent=0,
-                    free_gb=0,
-                )
-            except Exception:
-                pass
-
-    for pool in storage_data.zfs_pools:
-        if pool.status in ("degraded", "failed"):
-            try:
-                await notification_service.notify_storage_warning(
-                    hostname=storage_data.hostname,
-                    path=f"ZFS: {pool.pool}",
-                    percent=0,
-                    free_gb=0,
-                )
-            except Exception:
-                pass
 
     logger.debug(
         f"Updated storage for {service.name}: "

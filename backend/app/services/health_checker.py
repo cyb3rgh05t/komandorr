@@ -1,5 +1,5 @@
 """
-Background health checker for VPN, NFS, and Posterizarr services.
+Background health checker for VPN, NFS, Posterizarr, Storage, and Uploader services.
 Runs independently of the UI — sends Telegram notifications when problems are detected.
 """
 
@@ -10,7 +10,7 @@ from app.services.notifications import notification_service
 
 
 class HealthChecker:
-    """Periodically checks VPN, NFS, and Posterizarr health and sends notifications."""
+    """Periodically checks service health and sends notifications."""
 
     def __init__(self):
         self._running = False
@@ -32,6 +32,8 @@ class HealthChecker:
                     self._check_vpn(),
                     self._check_nfs(),
                     self._check_posterizarr(),
+                    self._check_storage(),
+                    self._check_uploader(),
                     return_exceptions=True,
                 )
             except asyncio.CancelledError:
@@ -220,6 +222,87 @@ class HealthChecker:
                         )
                     except Exception:
                         pass
+
+    # ── Storage ────────────────────────────────────────────────────
+
+    async def _check_storage(self):
+        """Check storage usage across all monitored services."""
+        from app.services.monitor import monitor
+
+        STORAGE_WARNING_THRESHOLD = 90.0
+
+        for service in monitor.get_all_services():
+            storage = getattr(service, "storage", None)
+            if not storage:
+                continue
+
+            hostname = getattr(storage, "hostname", "unknown")
+
+            # Check storage paths for high usage
+            for path in getattr(storage, "storage_paths", []) or []:
+                percent = getattr(path, "percent", 0) or 0
+                if percent >= STORAGE_WARNING_THRESHOLD:
+                    try:
+                        await notification_service.notify_storage_warning(
+                            hostname=hostname,
+                            path=path.path,
+                            percent=percent,
+                            free_gb=getattr(path, "free", 0) or 0,
+                        )
+                    except Exception:
+                        pass
+
+            # Check RAID arrays
+            for raid in getattr(storage, "raid_arrays", []) or []:
+                if getattr(raid, "status", "") in ("degraded", "failed"):
+                    try:
+                        await notification_service.notify_storage_warning(
+                            hostname=hostname,
+                            path=f"RAID: {raid.device}",
+                            percent=0,
+                            free_gb=0,
+                        )
+                    except Exception:
+                        pass
+
+            # Check ZFS pools
+            for pool in getattr(storage, "zfs_pools", []) or []:
+                if getattr(pool, "status", "") in ("degraded", "failed"):
+                    try:
+                        await notification_service.notify_storage_warning(
+                            hostname=hostname,
+                            path=f"ZFS: {pool.pool}",
+                            percent=0,
+                            free_gb=0,
+                        )
+                    except Exception:
+                        pass
+
+    # ── Uploader ───────────────────────────────────────────────────
+
+    async def _check_uploader(self):
+        """Check uploader for failed jobs."""
+        from app.config import settings
+
+        base_url = getattr(settings, "UPLOADER_BASE_URL", "")
+        if not base_url:
+            return
+
+        try:
+            url = f"{base_url.rstrip('/')}/srv/api/jobs/failed_count.php"
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                data = resp.json()
+        except Exception as e:
+            logger.debug(f"Health checker: Uploader unreachable: {e}")
+            return
+
+        if isinstance(data, dict) and data.get("count", 0) > 0:
+            try:
+                await notification_service.notify_uploader_failed(data["count"])
+            except Exception:
+                pass
 
 
 health_checker = HealthChecker()
