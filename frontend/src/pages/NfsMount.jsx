@@ -582,30 +582,28 @@ export default function NfsMount() {
 
       {/* Manager Tabs */}
       {managers.length > 1 && (
-        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {managers.map((mgr) => {
-              const isActive = effectiveTab === mgr.id;
-              return (
-                <button
-                  key={mgr.id}
-                  onClick={() => setActiveTab(mgr.id)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                    isActive
-                      ? "bg-theme-primary text-black shadow-md"
-                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+        <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+          {managers.map((mgr) => {
+            const isActive = effectiveTab === mgr.id;
+            return (
+              <button
+                key={mgr.id}
+                onClick={() => setActiveTab(mgr.id)}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  isActive
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                }`}
+              >
+                {mgr.name}
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ml-2 ${
+                    mgr.connected ? "bg-emerald-400" : "bg-red-400"
                   }`}
-                >
-                  {mgr.name}
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full ml-2 ${
-                      mgr.connected ? "bg-emerald-400" : "bg-red-400"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
+                />
+              </button>
+            );
+          })}
         </div>
       )}
 

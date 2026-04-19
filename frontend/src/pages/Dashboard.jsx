@@ -1170,50 +1170,48 @@ export default function Dashboard() {
                     return (
                       <div className="space-y-6">
                         {/* Tabs */}
-                        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-                          <div className="flex gap-2 min-w-max">
-                            <button
-                              onClick={() => setActiveTab("ALL")}
-                              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                        <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+                          <button
+                            onClick={() => setActiveTab("ALL")}
+                            className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                              activeTab === "ALL"
+                                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                            }`}
+                          >
+                            {t("dashboard.all")}
+                            <span
+                              className={`ml-2 text-xs ${
                                 activeTab === "ALL"
-                                  ? "bg-theme-primary text-black shadow-md"
-                                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                                  ? "text-black/70"
+                                  : "text-theme-text-muted"
                               }`}
                             >
-                              {t("dashboard.all")}
+                              ({filteredServices.length})
+                            </span>
+                          </button>
+                          {groupNames.map((groupName) => (
+                            <button
+                              key={groupName}
+                              onClick={() => setActiveTab(groupName)}
+                              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                                activeTab === groupName
+                                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                              }`}
+                            >
+                              {groupName}
                               <span
                                 className={`ml-2 text-xs ${
-                                  activeTab === "ALL"
+                                  activeTab === groupName
                                     ? "text-black/70"
                                     : "text-theme-text-muted"
                                 }`}
                               >
-                                ({filteredServices.length})
+                                ({grouped[groupName].length})
                               </span>
                             </button>
-                            {groupNames.map((groupName) => (
-                              <button
-                                key={groupName}
-                                onClick={() => setActiveTab(groupName)}
-                                className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                                  activeTab === groupName
-                                    ? "bg-theme-primary text-black shadow-md"
-                                    : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
-                                }`}
-                              >
-                                {groupName}
-                                <span
-                                  className={`ml-2 text-xs ${
-                                    activeTab === groupName
-                                      ? "text-black/70"
-                                      : "text-theme-text-muted"
-                                  }`}
-                                >
-                                  ({grouped[groupName].length})
-                                </span>
-                              </button>
-                            ))}
-                          </div>
+                          ))}
                         </div>
 
                         {/* Active Tab Content */}
