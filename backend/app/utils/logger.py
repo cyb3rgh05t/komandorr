@@ -32,14 +32,16 @@ class ColoredConsoleFormatter(logging.Formatter):
         "CRITICAL": Fore.MAGENTA + Style.BRIGHT,
     }
 
-    def __init__(self, show_timestamp: bool = False):
+    def __init__(self, show_timestamp: bool = False, tz: ZoneInfo | None = None):
         """
         Initialize the formatter.
 
         Args:
             show_timestamp: Whether to show timestamp in console output
+            tz: Timezone for timestamps (default: UTC)
         """
         self.show_timestamp = show_timestamp
+        self._tz = tz or ZoneInfo("UTC")
 
         if show_timestamp:
             fmt = "%(asctime)s - %(levelname)s - %(message)s"
@@ -49,6 +51,13 @@ class ColoredConsoleFormatter(logging.Formatter):
             datefmt = None
 
         super().__init__(fmt=fmt, datefmt=datefmt)
+
+    def formatTime(self, record, datefmt=None):
+        """Format time using the configured timezone."""
+        dt = datetime.fromtimestamp(record.created, tz=self._tz)
+        if datefmt:
+            return dt.strftime(datefmt)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
 
     def format(self, record):
         """Format log record with colors"""
@@ -84,13 +93,15 @@ class DetailedFileFormatter(logging.Formatter):
     Includes timestamps, log levels, and optionally module/function names.
     """
 
-    def __init__(self, include_location: bool = True):
+    def __init__(self, include_location: bool = True, tz: ZoneInfo | None = None):
         """
         Initialize the formatter.
 
         Args:
             include_location: Whether to include module and function names
+            tz: Timezone for timestamps (default: UTC)
         """
+        self._tz = tz or ZoneInfo("UTC")
         if include_location:
             fmt = (
                 "%(asctime)s - %(levelname)-8s - "
@@ -101,6 +112,13 @@ class DetailedFileFormatter(logging.Formatter):
             fmt = "%(asctime)s - %(levelname)-8s - %(message)s"
 
         super().__init__(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
+
+    def formatTime(self, record, datefmt=None):
+        """Format time using the configured timezone."""
+        dt = datetime.fromtimestamp(record.created, tz=self._tz)
+        if datefmt:
+            return dt.strftime(datefmt)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class Logger:
@@ -192,7 +210,9 @@ class Logger:
         # ===========================
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)  # Console shows all levels
-        console_formatter = ColoredConsoleFormatter(show_timestamp=show_timestamp)
+        console_formatter = ColoredConsoleFormatter(
+            show_timestamp=show_timestamp, tz=self._timezone
+        )
         console_handler.setFormatter(console_formatter)
         self._logger.addHandler(console_handler)
 
@@ -214,7 +234,8 @@ class Logger:
                 file_handler = logging.FileHandler(log_file, encoding="utf-8")
                 file_handler.setLevel(logging.DEBUG)  # File logs everything
                 file_formatter = DetailedFileFormatter(
-                    include_location=include_location
+                    include_location=include_location,
+                    tz=self._timezone,
                 )
                 file_handler.setFormatter(file_formatter)
                 self._logger.addHandler(file_handler)

@@ -7,6 +7,7 @@ import httpx
 from datetime import datetime, timezone
 from typing import Optional, Dict, List
 from pathlib import Path
+from zoneinfo import ZoneInfo
 import json
 
 from app.utils.logger import logger
@@ -56,6 +57,22 @@ class NotificationService:
         )
 
     # ── dedup / cooldown ────────────────────────────────────────────
+
+    def _get_tz(self) -> ZoneInfo:
+        """Return the configured timezone from settings."""
+        try:
+            from app.config import settings
+
+            return ZoneInfo(settings.TZ)
+        except Exception:
+            return ZoneInfo("UTC")
+
+    def _get_timestamp(self) -> str:
+        """Return a formatted timestamp string using the configured timezone."""
+        tz = self._get_tz()
+        now = datetime.now(tz)
+        tz_name = now.strftime("%Z") or str(tz)
+        return now.strftime(f"%Y-%m-%d %H:%M:%S {tz_name}")
 
     def _check_cooldown(self, key: str) -> bool:
         """Return True if we should send (not in cooldown). Sets cooldown on call."""
@@ -258,7 +275,7 @@ class NotificationService:
         message = (
             "🔔 <b>Komandorr Test Notification</b>\n\n"
             "✅ Your Telegram notifications are configured correctly!\n\n"
-            f"<i>Sent at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</i>"
+            f"<i>Sent at {self._get_timestamp()}</i>"
         )
 
         if target_id:
@@ -307,7 +324,7 @@ class NotificationService:
         else:
             return False
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = (
             f"{emoji} <b>Service {status_text}</b>\n\n"
             f"📌 <b>Service:</b> {service_name}\n"
@@ -329,7 +346,7 @@ class NotificationService:
         server_name: str = "",
         usage_limit: Optional[int] = None,
     ) -> bool:
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         limit = str(usage_limit) if usage_limit else "Unlimited"
         message = (
             f"📨 <b>Invite Created</b>\n\n"
@@ -344,7 +361,7 @@ class NotificationService:
     async def notify_invite_redeemed(
         self, code: str, email: str, server_name: str = ""
     ) -> bool:
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = (
             f"🎉 <b>Invite Redeemed</b>\n\n"
             f"🔑 <b>Code:</b> <code>{code}</code>\n"
@@ -360,7 +377,7 @@ class NotificationService:
     async def notify_user_added(
         self, email: str, server_name: str = "", added_by: str = ""
     ) -> bool:
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = f"👤 <b>User Added to Plex</b>\n\n" f"📧 <b>Email:</b> {email}\n"
         if server_name:
             message += f"🖥 <b>Server:</b> {server_name}\n"
@@ -372,7 +389,7 @@ class NotificationService:
     async def notify_user_removed(
         self, email: str, server_name: str = "", removed_by: str = ""
     ) -> bool:
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = f"🚫 <b>User Removed from Plex</b>\n\n" f"📧 <b>Email:</b> {email}\n"
         if server_name:
             message += f"🖥 <b>Server:</b> {server_name}\n"
@@ -388,7 +405,7 @@ class NotificationService:
     ) -> bool:
         if not self._check_cooldown(f"storage_warning:{hostname}:{path}"):
             return False
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = (
             f"💾 <b>Storage Warning</b>\n\n"
             f"🖥 <b>Host:</b> {hostname}\n"
@@ -404,7 +421,7 @@ class NotificationService:
     async def notify_vpn_error(self, error: str, url: str = "") -> bool:
         if not self._check_cooldown(f"vpn_error:{url}"):
             return False
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = f"🔒 <b>VPN Error</b>\n\n" f"❌ <b>Error:</b> {error}\n"
         if url:
             message += f"🔗 <b>URL:</b> {url}\n"
@@ -416,7 +433,7 @@ class NotificationService:
     async def notify_nfs_error(self, instance_name: str, error: str) -> bool:
         if not self._check_cooldown(f"nfs_error:{instance_name}"):
             return False
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = (
             f"📁 <b>NFS Error</b>\n\n"
             f"🖥 <b>Instance:</b> {instance_name}\n"
@@ -432,7 +449,7 @@ class NotificationService:
     ) -> bool:
         if not self._check_cooldown("uploader_failed"):
             return False
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = (
             f"📤 <b>Uploader Failed Items</b>\n\n" f"🔢 <b>Failed:</b> {failed_count}\n"
         )
@@ -446,7 +463,7 @@ class NotificationService:
     async def notify_posterizarr_error(self, instance_name: str, error: str) -> bool:
         if not self._check_cooldown(f"posterizarr_error:{instance_name}"):
             return False
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = self._get_timestamp()
         message = (
             f"🖼 <b>Posterizarr Error</b>\n\n"
             f"🖥 <b>Instance:</b> {instance_name}\n"
