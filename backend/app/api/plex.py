@@ -1835,20 +1835,20 @@ async def warm_caches():
     """Manually trigger cache warming (admin only)"""
     try:
         # Warm activities cache
-        await get_plex_activities()
+        await get_plex_activities(instance_id=None)
 
         # Warm watch history cache
         await get_watch_history()
 
         # Warm sessions cache
-        await get_plex_sessions()
+        await get_plex_sessions(instance_id=None)
 
         # Warm stats caches
         await get_plex_stats()
-        await get_live_plex_stats()
+        await get_live_plex_stats(instance_id=None)
 
         # Warm recent media cache
-        await get_recent_media()
+        await get_recent_media(instance_id=None)
 
         # Force refresh stats cache
         from app.services.stats_cache import stats_cache

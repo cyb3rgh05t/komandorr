@@ -51,7 +51,7 @@ class CacheWarmer:
             if await self._should_warm(_activity_cache, now):
                 logger.debug("Warming Plex activities cache")
                 try:
-                    await get_plex_activities()
+                    await get_plex_activities(instance_id=None)
                 except Exception as e:
                     logger.debug(f"Failed to warm activities cache: {e}")
 

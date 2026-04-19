@@ -156,11 +156,11 @@ def save_config(config_data):
     """Save configuration to config.json"""
     config_path = get_config_path()
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Saving config to {config_path}")
+    logger.debug(f"Saving config to {config_path}")
     try:
         with open(config_path, "w") as f:
             json.dump(config_data, f, indent=2)
-        logger.info(f"Config saved successfully to {config_path}")
+        logger.debug(f"Config saved successfully to {config_path}")
     except Exception as e:
         logger.error(f"Failed to save config: {e}")
         raise
@@ -367,8 +367,8 @@ async def update_settings(
     updates: SettingsUpdate, username: str = Depends(require_auth)
 ):
     """Update application settings"""
-    logger.info(f"POST /api/settings called by user: {username}")
-    logger.info(f"Updates received: {updates.model_dump()}")
+    logger.info(f"Settings updated by user: {username}")
+    logger.debug(f"Updates received: {updates.model_dump()}")
     config_data = load_config()
 
     # Update logging settings
@@ -431,14 +431,14 @@ async def update_settings(
             }
             for inst in updates.plex.instances
         ]
-        logger.info(f"Updated Plex instances: {len(updates.plex.instances)} instances")
+        logger.debug(f"Updated Plex instances: {len(updates.plex.instances)} instances")
 
     # Update Plex VOD Sync settings
     if updates.plex_sync is not None:
         config_data["plex_sync"] = {
             "instance_id": updates.plex_sync.instance_id,
         }
-        logger.info(
+        logger.debug(
             f"Updated Plex VOD Sync instance_id: {updates.plex_sync.instance_id}"
         )
 
@@ -461,7 +461,7 @@ async def update_settings(
         }
         # Update runtime settings
         settings.UPLOADER_BASE_URL = updates.uploader.base_url
-        logger.info(f"Updated Uploader base_url to: {updates.uploader.base_url}")
+        logger.debug(f"Updated Uploader base_url to: {updates.uploader.base_url}")
 
     # Update VPN Proxy Manager settings
     if updates.vpn_proxy is not None:
@@ -472,7 +472,7 @@ async def update_settings(
         # Update runtime settings
         settings.VPN_PROXY_URL = updates.vpn_proxy.url
         settings.VPN_PROXY_API_KEY = updates.vpn_proxy.api_key
-        logger.info(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
+        logger.debug(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
 
     # Update Posterizarr settings (multi-instance)
     if updates.posterizarr is not None:
@@ -499,7 +499,7 @@ async def update_settings(
             {"id": inst.id, "name": inst.name, "url": inst.url, "api_key": inst.api_key}
             for inst in updates.posterizarr.instances
         ]
-        logger.info(
+        logger.debug(
             f"Updated Posterizarr instances: {len(updates.posterizarr.instances)} instances"
         )
 
@@ -526,7 +526,7 @@ async def update_settings(
             }
             for inst in updates.nfs_mount.instances
         ]
-        logger.info(
+        logger.debug(
             f"Updated NFS Mount instances: {len(updates.nfs_mount.instances)} instances"
         )
 
@@ -549,10 +549,10 @@ async def update_settings(
         if "instances" in config_data:
             try:
                 del config_data["instances"]
-                logger.info("Removed legacy top-level 'instances' array")
+                logger.debug("Removed legacy top-level 'instances' array")
             except Exception:
                 pass
-        logger.info(f"Updated arr instances: {len(updates.arr.instances)} instances")
+        logger.debug(f"Updated arr instances: {len(updates.arr.instances)} instances")
 
     # Update External Apps settings
     if updates.external_apps is not None:
@@ -569,12 +569,12 @@ async def update_settings(
             ],
             "group_order": updates.external_apps.group_order or [],
         }
-        logger.info(f"Updated external apps: {len(updates.external_apps.apps)} apps")
+        logger.debug(f"Updated external apps: {len(updates.external_apps.apps)} apps")
 
     # Save to config.json
-    logger.info("Calling save_config...")
+    logger.debug("Calling save_config...")
     save_config(config_data)
-    logger.info("Config saved, calling get_settings to return updated state...")
+    logger.debug("Config saved, calling get_settings to return updated state...")
 
     # Return updated settings
     return await get_settings(username)

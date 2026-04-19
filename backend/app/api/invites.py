@@ -79,7 +79,7 @@ def db_invite_to_pydantic(
     if db_invite.usage_limit and db_invite.used_count >= db_invite.usage_limit:
         is_exhausted = True
 
-    logger.info(f"Creating invite model for: {plex_server}")
+    logger.debug(f"Creating invite model for: {plex_server}")
 
     base_data = {
         "id": db_invite.id,
@@ -127,7 +127,7 @@ def db_invite_to_pydantic(
             if result.is_exhausted
             else f"{result.used_count}/{usage_limit_str} uses"
         )
-        logger.info(
+        logger.debug(
             f"Invite created successfully:\n"
             f"  Code: {result.code}\n"
             f"  Server: {result.plex_server}\n"
@@ -138,14 +138,14 @@ def db_invite_to_pydantic(
 
         # Log user details if any
         if users:
-            logger.info(f"  Registered users:")
+            logger.debug(f"  Registered users:")
             for user in users:
                 status = "Active" if user.is_active else "Inactive"
-                logger.info(f"    - {user.username} ({user.email}) | {status}")
+                logger.debug(f"    - {user.username} ({user.email}) | {status}")
 
         return result
 
-    logger.info(f"✅ Invite '{db_invite.code}' created for {plex_server}")
+    logger.debug(f"Invite '{db_invite.code}' created for {plex_server}")
     return Invite(**base_data)
 
 
