@@ -226,7 +226,9 @@ async def get_dashboard(username: str = Depends(require_auth)):
             # Check for unmounted exports, mounts, or mergerfs
             issues = []
             for m in mounts:
-                if m.get("enabled") and not mount_status_map.get(m["id"], {}).get("mounted"):
+                if m.get("enabled") and not mount_status_map.get(m["id"], {}).get(
+                    "mounted"
+                ):
                     issues.append(f"Mount '{m.get('name', m['id'])}' not mounted")
             for e in exports:
                 st = export_status_map.get(e["id"], {})

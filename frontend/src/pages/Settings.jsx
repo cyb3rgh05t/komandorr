@@ -3804,7 +3804,8 @@ export default function Settings() {
                 {/* ── Cooldown ── */}
                 <div className="pt-2">
                   <label className="block text-sm font-medium text-theme-text mb-2">
-                    {t("settings.cooldownMinutes") || "Notification Cooldown (minutes)"}
+                    {t("settings.cooldownMinutes") ||
+                      "Notification Cooldown (minutes)"}
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -3813,13 +3814,16 @@ export default function Settings() {
                       max="1440"
                       value={telegramCooldown}
                       onChange={(e) => {
-                        setTelegramCooldown(Math.max(0, parseInt(e.target.value) || 0));
+                        setTelegramCooldown(
+                          Math.max(0, parseInt(e.target.value) || 0),
+                        );
                         setPendingChanges(true);
                       }}
                       className="w-28 px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
                     />
                     <span className="text-xs text-theme-muted">
-                      {t("settings.cooldownHelp") || "Time between duplicate error notifications (0 = no cooldown)"}
+                      {t("settings.cooldownHelp") ||
+                        "Time between duplicate error notifications (0 = no cooldown)"}
                     </span>
                   </div>
                 </div>
