@@ -3,7 +3,6 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
-from app.services.notifications import notification_service
 
 router = APIRouter(prefix="/api/nfs-mount", tags=["nfs-mount"])
 
@@ -191,12 +190,6 @@ async def get_dashboard(username: str = Depends(require_auth)):
             logger.error(
                 f"NFS Mount Manager '{inst_name}' authentication failed ({base_url}): {e.response.status_code} — check API key"
             )
-            try:
-                await notification_service.notify_nfs_error(
-                    inst_name, f"Authentication failed ({e.response.status_code})"
-                )
-            except Exception:
-                pass
             managers.append(
                 {
                     "id": inst_id,
@@ -223,29 +216,6 @@ async def get_dashboard(username: str = Depends(require_auth)):
             vpn_status_map = {s["id"]: s for s in vpn_statuses}
             export_status_map = {s["id"]: s for s in export_statuses}
 
-            # Check for unmounted exports, mounts, or mergerfs
-            issues = []
-            for m in mounts:
-                if m.get("enabled") and not mount_status_map.get(m["id"], {}).get(
-                    "mounted"
-                ):
-                    issues.append(f"Mount '{m.get('name', m['id'])}' not mounted")
-            for e in exports:
-                st = export_status_map.get(e["id"], {})
-                if e.get("enabled") and not (st.get("is_active") or e.get("is_active")):
-                    issues.append(f"Export '{e.get('name', e['id'])}' not active")
-            for c in mergerfs_configs:
-                if not mergerfs_status_map.get(c["id"], {}).get("mounted"):
-                    issues.append(f"MergerFS '{c.get('name', c['id'])}' not mounted")
-
-            if issues:
-                try:
-                    await notification_service.notify_nfs_error(
-                        inst_name, "; ".join(issues[:5])
-                    )
-                except Exception:
-                    pass
-
             managers.append(
                 {
                     "id": inst_id,
@@ -265,10 +235,6 @@ async def get_dashboard(username: str = Depends(require_auth)):
             logger.error(
                 f"Failed to fetch dashboard for NFS Manager '{inst_name}': {e}"
             )
-            try:
-                await notification_service.notify_nfs_error(inst_name, str(e))
-            except Exception:
-                pass
             managers.append(
                 {
                     "id": inst_id,

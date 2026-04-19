@@ -1,0 +1,225 @@
+"""
+Background health checker for VPN, NFS, and Posterizarr services.
+Runs independently of the UI — sends Telegram notifications when problems are detected.
+"""
+
+import asyncio
+import httpx
+from app.utils.logger import logger
+from app.services.notifications import notification_service
+
+
+class HealthChecker:
+    """Periodically checks VPN, NFS, and Posterizarr health and sends notifications."""
+
+    def __init__(self):
+        self._running = False
+
+    def stop(self):
+        self._running = False
+
+    async def start(self, interval: int = 60):
+        """Start the health check loop."""
+        self._running = True
+        logger.info(f"Starting background health checker (interval: {interval}s)")
+
+        # Wait a bit before first check to let services initialize
+        await asyncio.sleep(30)
+
+        while self._running:
+            try:
+                await asyncio.gather(
+                    self._check_vpn(),
+                    self._check_nfs(),
+                    self._check_posterizarr(),
+                    return_exceptions=True,
+                )
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Health checker error: {e}")
+
+            await asyncio.sleep(interval)
+
+    # ── VPN ────────────────────────────────────────────────────────
+
+    async def _check_vpn(self):
+        """Check VPN container health via VPN Proxy Manager API."""
+        from app.config import settings
+
+        url = getattr(settings, "VPN_PROXY_URL", "")
+        api_key = getattr(settings, "VPN_PROXY_API_KEY", "")
+        if not url or not api_key:
+            return
+
+        try:
+            api_url = f"{url.rstrip('/')}/api/containers/vpn-info-batch"
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(api_url, headers={"X-API-Key": api_key})
+                resp.raise_for_status()
+                data = resp.json()
+        except Exception as e:
+            logger.debug(f"Health checker: VPN API unreachable: {e}")
+            return
+
+        for container_id, info in data.items():
+            vpn_status = (info.get("vpn_status") or "").lower()
+            has_ip = bool(info.get("public_ip"))
+            if vpn_status != "running" or not has_ip:
+                container_name = info.get("container_name", f"Container {container_id}")
+                reason = f"VPN status: {vpn_status or 'unknown'}"
+                if not has_ip:
+                    reason += ", no public IP"
+                try:
+                    await notification_service.notify_vpn_error(
+                        f"{container_name} — {reason}", url=url
+                    )
+                except Exception:
+                    pass
+
+    # ── NFS ────────────────────────────────────────────────────────
+
+    async def _check_nfs(self):
+        """Check NFS mount/export/mergerfs health for all instances."""
+        from app.config import settings
+
+        instances = getattr(settings, "NFS_MOUNT_INSTANCES", []) or []
+        if not instances:
+            return
+
+        for inst in instances:
+            base_url = inst.get("url", "")
+            api_key = inst.get("api_key", "")
+            inst_name = inst.get("name", inst.get("id", "unknown"))
+
+            if not base_url or not api_key:
+                continue
+
+            try:
+                mounts, mount_statuses, exports, export_statuses = (
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+                mergerfs_configs, mergerfs_statuses = None, None
+
+                async with httpx.AsyncClient(timeout=15) as client:
+                    headers = {"X-API-Key": api_key}
+                    base = base_url.rstrip("/")
+
+                    resps = await asyncio.gather(
+                        client.get(f"{base}/api/nfs/mounts", headers=headers),
+                        client.get(f"{base}/api/nfs/status", headers=headers),
+                        client.get(f"{base}/api/nfs/exports", headers=headers),
+                        client.get(f"{base}/api/nfs/exports-status", headers=headers),
+                        client.get(f"{base}/api/mergerfs/configs", headers=headers),
+                        client.get(f"{base}/api/mergerfs/status", headers=headers),
+                        return_exceptions=True,
+                    )
+
+                def safe_json(r):
+                    if isinstance(r, Exception):
+                        return []
+                    try:
+                        r.raise_for_status()
+                        return r.json()
+                    except Exception:
+                        return []
+
+                mounts = safe_json(resps[0])
+                mount_statuses = safe_json(resps[1])
+                exports = safe_json(resps[2])
+                export_statuses = safe_json(resps[3])
+                mergerfs_configs = safe_json(resps[4])
+                mergerfs_statuses = safe_json(resps[5])
+
+                mount_status_map = {s["id"]: s for s in mount_statuses}
+                export_status_map = {s["id"]: s for s in export_statuses}
+                mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses}
+
+                issues = []
+                for m in mounts:
+                    if m.get("enabled") and not mount_status_map.get(m["id"], {}).get(
+                        "mounted"
+                    ):
+                        issues.append(f"Mount '{m.get('name', m['id'])}' not mounted")
+                for e in exports:
+                    st = export_status_map.get(e["id"], {})
+                    if e.get("enabled") and not (
+                        st.get("is_active") or e.get("is_active")
+                    ):
+                        issues.append(f"Export '{e.get('name', e['id'])}' not active")
+                for c in mergerfs_configs:
+                    if not mergerfs_status_map.get(c["id"], {}).get("mounted"):
+                        issues.append(
+                            f"MergerFS '{c.get('name', c['id'])}' not mounted"
+                        )
+
+                if issues:
+                    try:
+                        await notification_service.notify_nfs_error(
+                            inst_name, "; ".join(issues[:5])
+                        )
+                    except Exception:
+                        pass
+
+            except Exception as e:
+                logger.debug(f"Health checker: NFS '{inst_name}' check failed: {e}")
+                try:
+                    await notification_service.notify_nfs_error(inst_name, str(e))
+                except Exception:
+                    pass
+
+    # ── Posterizarr ────────────────────────────────────────────────
+
+    async def _check_posterizarr(self):
+        """Check Posterizarr runtime history for errors."""
+        from app.config import settings
+
+        instances = (
+            list(settings.POSTERIZARR_INSTANCES)
+            if getattr(settings, "POSTERIZARR_INSTANCES", None)
+            else []
+        )
+        if not instances:
+            return
+
+        for inst in instances:
+            inst_url = inst.get("url", "")
+            inst_api_key = inst.get("api_key", "")
+            inst_name = inst.get("name", inst.get("id", "unknown"))
+            inst_id = inst.get("id", "")
+
+            if not inst_url or not inst_api_key:
+                continue
+
+            try:
+                url = f"{inst_url.rstrip('/')}/api/runtime-history"
+                async with httpx.AsyncClient(timeout=15) as client:
+                    resp = await client.get(
+                        url, params={"api_key": inst_api_key, "limit": 1}
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+            except Exception as e:
+                logger.debug(
+                    f"Health checker: Posterizarr '{inst_name}' unreachable: {e}"
+                )
+                continue
+
+            history_items = data.get("history", [])
+            if history_items:
+                latest = history_items[0]
+                error_count = latest.get("errors", 0) or 0
+                if error_count > 0:
+                    try:
+                        await notification_service.notify_posterizarr_error(
+                            inst_name,
+                            f"Latest run had {error_count} error(s)",
+                        )
+                    except Exception:
+                        pass
+
+
+health_checker = HealthChecker()

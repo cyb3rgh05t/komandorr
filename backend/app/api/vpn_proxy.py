@@ -3,7 +3,6 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
-from app.services.notifications import notification_service
 
 router = APIRouter(prefix="/api/vpn-proxy", tags=["vpn-proxy"])
 
@@ -103,23 +102,6 @@ async def get_vpn_info_batch(username: str = Depends(require_auth)):
     if not _is_configured():
         return {}
     data = await proxy_get("/containers/vpn-info-batch") or {}
-
-    # Check each container's VPN status and notify if offline / not connected
-    base_url, _ = get_vpn_proxy_config()
-    for container_id, info in data.items():
-        vpn_status = (info.get("vpn_status") or "").lower()
-        has_ip = bool(info.get("public_ip"))
-        if vpn_status != "running" or not has_ip:
-            container_name = info.get("container_name", f"Container {container_id}")
-            reason = f"VPN status: {vpn_status or 'unknown'}"
-            if not has_ip:
-                reason += ", no public IP"
-            try:
-                await notification_service.notify_vpn_error(
-                    f"{container_name} — {reason}", url=base_url
-                )
-            except Exception:
-                pass
 
     return data
 

@@ -92,6 +92,11 @@ async def lifespan(app: FastAPI):
 
     peak_tracker_task = asyncio.create_task(peak_tracker.start_tracking())
 
+    # Start background health checker for VPN/NFS/Posterizarr notifications
+    from app.services.health_checker import health_checker
+
+    health_checker_task = asyncio.create_task(health_checker.start(interval=60))
+
     yield
 
     # Shutdown
@@ -101,12 +106,14 @@ async def lifespan(app: FastAPI):
     stats_cache.stop()
     cache_warmer.stop()
     peak_tracker.stop()
+    health_checker.stop()
     monitoring_task.cancel()
     expiration_task.cancel()
     watch_history_task.cancel()
     stats_cache_task.cancel()
     cache_warmer_task.cancel()
     peak_tracker_task.cancel()
+    health_checker_task.cancel()
     try:
         await monitoring_task
     except asyncio.CancelledError:
@@ -129,6 +136,10 @@ async def lifespan(app: FastAPI):
         pass
     try:
         await peak_tracker_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await health_checker_task
     except asyncio.CancelledError:
         pass
 
