@@ -249,8 +249,44 @@ export default function VpnProxyMonitor() {
 
   if (statusLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-theme-primary" />
+      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4">
+        {/* Stat cards skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-lg p-4"
+            >
+              <div className="animate-pulse space-y-2">
+                <div className="h-3 bg-theme-hover rounded w-2/3" />
+                <div className="h-7 bg-theme-hover rounded w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Tabs skeleton */}
+        <div className="animate-pulse flex gap-2">
+          <div className="h-9 bg-theme-hover rounded-lg w-32" />
+          <div className="h-9 bg-theme-hover rounded-lg w-32" />
+        </div>
+        {/* Content cards skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-xl p-4"
+            >
+              <div className="animate-pulse space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-theme-hover rounded w-1/3" />
+                  <div className="h-4 bg-theme-hover rounded w-1/4" />
+                </div>
+                <div className="h-3 bg-theme-hover rounded w-full" />
+                <div className="h-3 bg-theme-hover rounded w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

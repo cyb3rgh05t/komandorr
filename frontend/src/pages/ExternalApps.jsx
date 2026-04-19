@@ -217,6 +217,7 @@ export default function ExternalApps() {
 
   const {
     data: settingsData,
+    isLoading: isInitialLoading,
     refetch,
     isFetching,
   } = useQuery({
@@ -528,7 +529,21 @@ export default function ExternalApps() {
       )}
 
       {/* Apps Grid */}
-      {apps.length === 0 ? (
+      {isInitialLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-xl p-4 aspect-square"
+            >
+              <div className="animate-pulse flex flex-col items-center justify-center h-full space-y-3">
+                <div className="w-12 h-12 bg-theme-hover rounded-xl" />
+                <div className="h-3 bg-theme-hover rounded w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : apps.length === 0 ? (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-12 text-center">
           <AppWindow className="w-16 h-16 mx-auto text-theme-text-muted/50 mb-4" />
           <h3 className="text-lg font-semibold text-theme-text mb-2">

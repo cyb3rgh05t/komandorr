@@ -966,8 +966,46 @@ export default function VpnProxy() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-theme-primary"></div>
+        <div className="space-y-4">
+          {/* Stat cards skeleton */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-lg p-4"
+              >
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-theme-hover rounded w-2/3" />
+                  <div className="h-7 bg-theme-hover rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Container cards skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-xl p-4"
+              >
+                <div className="animate-pulse space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-theme-hover rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-theme-hover rounded w-2/3" />
+                      <div className="h-3 bg-theme-hover rounded w-1/2" />
+                    </div>
+                    <div className="w-3 h-3 bg-theme-hover rounded-full" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="h-8 bg-theme-hover rounded" />
+                    <div className="h-8 bg-theme-hover rounded" />
+                  </div>
+                  <div className="h-3 bg-theme-hover rounded w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

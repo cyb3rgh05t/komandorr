@@ -150,6 +150,7 @@ export default function ArrActivity() {
 
   const {
     data: queueData,
+    isLoading: isInitialLoading,
     refetch: refetchQueue,
     isFetching: isFetchingQueue,
   } = useQuery({
@@ -520,8 +521,45 @@ export default function ArrActivity() {
         </button>
       </div>
 
+      {/* Loading Skeleton */}
+      {isInitialLoading && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-lg p-4"
+              >
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-theme-hover rounded w-2/3" />
+                  <div className="h-7 bg-theme-hover rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-xl p-4"
+            >
+              <div className="animate-pulse space-y-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-5 bg-theme-hover rounded w-1/4" />
+                  <div className="h-4 bg-theme-hover rounded w-16" />
+                </div>
+                <div className="space-y-2">
+                  {[...Array(4)].map((_, j) => (
+                    <div key={j} className="h-10 bg-theme-hover rounded" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Summary Cards */}
-      {activeTab !== "history" && (
+      {!isInitialLoading && activeTab !== "history" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50">
             <div className="flex items-center justify-between">
@@ -586,7 +624,8 @@ export default function ArrActivity() {
       )}
 
       {/* Instance Queues - Filtered by Tab */}
-      {activeTab !== "history" &&
+      {!isInitialLoading &&
+        activeTab !== "history" &&
         filteredInstances
           .filter((inst) => {
             if (!inst.enabled) return false;

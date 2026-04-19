@@ -239,8 +239,48 @@ export default function Posterizarr() {
 
       {/* Loading */}
       {dashLoading && !dashboard && (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-theme-primary"></div>
+        <div className="space-y-4">
+          {/* Stat cards skeleton */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-lg p-4"
+              >
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-theme-hover rounded w-2/3" />
+                  <div className="h-7 bg-theme-hover rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Scheduler skeleton */}
+          <div className="bg-theme-card border border-theme rounded-xl p-5">
+            <div className="animate-pulse space-y-4">
+              <div className="h-5 bg-theme-hover rounded w-1/4" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-16 bg-theme-hover rounded-lg" />
+                ))}
+              </div>
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-10 bg-theme-hover rounded" />
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Plex export skeleton */}
+          <div className="bg-theme-card border border-theme rounded-xl p-5">
+            <div className="animate-pulse space-y-3">
+              <div className="h-5 bg-theme-hover rounded w-1/4" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 bg-theme-hover rounded-lg" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -907,8 +907,39 @@ const Storage = () => {
 
       {/* Loading state */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-theme-primary" size={32} />
+        <div className="space-y-4">
+          {/* Stat cards skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-theme-card border border-theme rounded-lg p-4"
+              >
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-theme-hover rounded w-2/3" />
+                  <div className="h-7 bg-theme-hover rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Storage cards skeleton */}
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-theme-card border border-theme rounded-xl p-5"
+            >
+              <div className="animate-pulse space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-theme-hover rounded-lg" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-theme-hover rounded w-1/4" />
+                    <div className="h-3 bg-theme-hover rounded w-1/3" />
+                  </div>
+                </div>
+                <div className="h-48 bg-theme-hover rounded-lg" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : servicesWithStorage.length === 0 ? (
         /* Empty state when no storage agents are installed/configured */
