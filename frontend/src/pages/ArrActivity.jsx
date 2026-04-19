@@ -190,6 +190,7 @@ export default function ArrActivity() {
     "komandorr_arrHistory_pageSize",
     10,
   );
+  const [activeHistoryInstance, setActiveHistoryInstance] = useState(null);
 
   const {
     data: historyData,
@@ -868,6 +869,19 @@ export default function ArrActivity() {
             (inst) => inst.enabled,
           );
 
+          // Auto-select first instance if none selected or current is gone
+          const currentId = activeHistoryInstance;
+          const validIds = filteredHistoryInstances.map((i) => i.id);
+          const selectedId =
+            currentId && validIds.includes(currentId)
+              ? currentId
+              : validIds[0] || null;
+
+          if (selectedId && selectedId !== currentId) {
+            // defer state update
+            setTimeout(() => setActiveHistoryInstance(selectedId), 0);
+          }
+
           const getEventIcon = (eventType) => {
             const et = (eventType || "").toLowerCase();
             if (et.includes("grab"))
@@ -957,263 +971,298 @@ export default function ArrActivity() {
             );
           }
 
-          return filteredHistoryInstances.map((inst) => {
-            const records = inst.records || [];
-            const totalRecords = inst.totalRecords || records.length;
-            const isSonarr = inst.type === "sonarr";
+          const activeInst = filteredHistoryInstances.find(
+            (i) => i.id === selectedId,
+          );
 
-            // Filter by search
-            const filteredRecords = normalizedSearch
-              ? records.filter((r) => {
-                  const haystack =
-                    `${r.sourceTitle || ""} ${r.downloadClient || ""} ${r.indexer || ""} ${r.eventType || ""}`.toLowerCase();
-                  return haystack.includes(normalizedSearch);
-                })
-              : records;
+          return (
+            <div className="space-y-4">
+              {/* Instance Tabs */}
+              <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+                {filteredHistoryInstances.map((inst) => {
+                  const isSonarr = inst.type === "sonarr";
+                  const Icon = isSonarr ? Tv : Film;
+                  const isActive = inst.id === selectedId;
+                  const recordCount =
+                    inst.totalRecords || inst.records?.length || 0;
 
-            return (
-              <div key={inst.id}>
-                <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-                  {/* Header */}
-                  <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {isSonarr ? (
-                        <Tv className="w-5 h-5 text-theme-primary" />
-                      ) : (
-                        <Film className="w-5 h-5 text-theme-primary" />
-                      )}
-                      <h3 className="text-lg font-semibold text-theme-text">
-                        {inst.name}
-                      </h3>
-                      <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                        {totalRecords} records
+                  return (
+                    <button
+                      key={inst.id}
+                      onClick={() => {
+                        setActiveHistoryInstance(inst.id);
+                        setHistoryPage(1);
+                      }}
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                          : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                      }`}
+                    >
+                      <Icon size={14} />
+                      <span>{inst.name}</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                          isActive
+                            ? "bg-black/20 text-black"
+                            : "bg-theme-hover text-theme-text-muted"
+                        }`}
+                      >
+                        {recordCount}
                       </span>
-                    </div>
-                  </div>
-
-                  {inst.error ? (
-                    <div className="p-6">
-                      <div className="flex items-center gap-3 text-red-400">
-                        <AlertCircle className="w-5 h-5" />
-                        <div>
-                          <p className="font-medium">
-                            Unable to connect to {inst.name}
-                          </p>
-                          <p className="text-sm text-theme-text-muted mt-1">
-                            {inst.error}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : filteredRecords.length === 0 ? (
-                    <div className="py-12 text-center text-theme-text-muted">
-                      <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No history records</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full min-w-[900px] text-sm">
-                          <thead>
-                            <tr className="border-b border-theme-primary">
-                              <th className="text-left py-3 px-2">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                  {isSonarr ? "Series" : "Movie"}
-                                </span>
-                              </th>
-                              {isSonarr && (
-                                <th className="text-left py-3 px-2">
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                    Episode
-                                  </span>
-                                </th>
-                              )}
-                              {isSonarr && (
-                                <th className="text-left py-3 px-2">
-                                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                    Episode Title
-                                  </span>
-                                </th>
-                              )}
-                              <th className="text-left py-3 px-2">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                  Quality
-                                </span>
-                              </th>
-                              <th className="text-left py-3 px-2">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                  Formats
-                                </span>
-                              </th>
-                              <th className="text-right py-3 px-2">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                  Date
-                                </span>
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredRecords.map((record, idx) => {
-                              const evt = getEventIcon(record.eventType);
-                              const seriesTitle = isSonarr
-                                ? record.series?.title ||
-                                  record.sourceTitle ||
-                                  "Unknown"
-                                : record.movie?.title ||
-                                  record.sourceTitle ||
-                                  "Unknown";
-                              const episodeCode = record.episode
-                                ? `S${String(record.episode.seasonNumber || 0).padStart(2, "0")}E${String(record.episode.episodeNumber || 0).padStart(2, "0")}`
-                                : "—";
-                              const episodeTitle = record.episode?.title || "—";
-                              const customFormats =
-                                record.customFormats
-                                  ?.map((f) => f.name)
-                                  .join(", ") || "—";
-
-                              return (
-                                <tr
-                                  key={record.id || idx}
-                                  className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                                >
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <div
-                                        className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded ${evt.bg} ${evt.color} border ${evt.border}`}
-                                        title={evt.label}
-                                      >
-                                        {(() => {
-                                          const EvtIcon = evt.icon;
-                                          return <EvtIcon size={11} />;
-                                        })()}
-                                      </div>
-                                      <span className="font-medium text-theme-text truncate max-w-[250px] group-hover:text-theme-primary transition-colors">
-                                        {seriesTitle}
-                                      </span>
-                                    </div>
-                                  </td>
-                                  {isSonarr && (
-                                    <td className="py-3 px-4">
-                                      <span className="text-sm text-theme-text font-mono">
-                                        {episodeCode}
-                                      </span>
-                                    </td>
-                                  )}
-                                  {isSonarr && (
-                                    <td className="py-3 px-4">
-                                      <span className="text-sm text-theme-text truncate max-w-[200px] block">
-                                        {episodeTitle}
-                                      </span>
-                                    </td>
-                                  )}
-                                  <td className="py-3 px-4">
-                                    <span className="text-sm text-theme-text">
-                                      {record.quality?.quality?.name || "—"}
-                                    </span>
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    {customFormats !== "—" ? (
-                                      <div className="flex flex-wrap gap-1">
-                                        {record.customFormats.map((f, i) => (
-                                          <span
-                                            key={i}
-                                            className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                                          >
-                                            {f.name}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <span className="text-xs text-theme-text-muted">
-                                        —
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="py-3 px-4 text-right">
-                                    <div className="flex items-center gap-1 justify-end">
-                                      <Clock className="w-3 h-3 text-theme-text-muted" />
-                                      <span className="text-sm text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                                        {formatDate(record.date)}
-                                      </span>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* History Pagination */}
-                {totalRecords > historyPageSize && (
-                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm font-medium text-theme-text-muted">
-                        Page{" "}
-                        <span className="text-theme-text font-semibold">
-                          {historyPage}
-                        </span>{" "}
-                        of{" "}
-                        <span className="text-theme-text font-semibold">
-                          {Math.ceil(totalRecords / historyPageSize)}
-                        </span>{" "}
-                        ({totalRecords} total)
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-theme-text-muted">
-                          Per page:
-                        </span>
-                        <select
-                          value={historyPageSize}
-                          onChange={(e) => {
-                            setHistoryPageSize(Number(e.target.value));
-                            setHistoryPage(1);
-                          }}
-                          className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
-                        >
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                          <option value="50">50</option>
-                          <option value="100">100</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          setHistoryPage((p) => Math.max(1, p - 1))
-                        }
-                        disabled={historyPage === 1}
-                        className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow active:scale-95"
-                      >
-                        <ChevronLeft size={20} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setHistoryPage((p) =>
-                            Math.min(
-                              Math.ceil(totalRecords / historyPageSize),
-                              p + 1,
-                            ),
-                          )
-                        }
-                        disabled={
-                          historyPage >=
-                          Math.ceil(totalRecords / historyPageSize)
-                        }
-                        className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow active:scale-95"
-                      >
-                        <ChevronRight size={20} />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    </button>
+                  );
+                })}
               </div>
-            );
-          });
+
+              {/* Active Instance Content */}
+              {activeInst &&
+                (() => {
+                  const records = activeInst.records || [];
+                  const totalRecords =
+                    activeInst.totalRecords || records.length;
+                  const isSonarr = activeInst.type === "sonarr";
+
+                  const filteredRecords = normalizedSearch
+                    ? records.filter((r) => {
+                        const haystack =
+                          `${r.sourceTitle || ""} ${r.downloadClient || ""} ${r.indexer || ""} ${r.eventType || ""}`.toLowerCase();
+                        return haystack.includes(normalizedSearch);
+                      })
+                    : records;
+
+                  return (
+                    <div>
+                      <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+                        {activeInst.error ? (
+                          <div className="p-6">
+                            <div className="flex items-center gap-3 text-red-400">
+                              <AlertCircle className="w-5 h-5" />
+                              <div>
+                                <p className="font-medium">
+                                  Unable to connect to {activeInst.name}
+                                </p>
+                                <p className="text-sm text-theme-text-muted mt-1">
+                                  {activeInst.error}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : filteredRecords.length === 0 ? (
+                          <div className="py-12 text-center text-theme-text-muted">
+                            <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                            <p>No history records</p>
+                          </div>
+                        ) : (
+                          <div className="overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="w-full min-w-[900px] text-sm">
+                                <thead>
+                                  <tr className="border-b border-theme-primary">
+                                    <th className="text-left py-3 px-2">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                        {isSonarr ? "Series" : "Movie"}
+                                      </span>
+                                    </th>
+                                    {isSonarr && (
+                                      <th className="text-left py-3 px-2">
+                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                          Episode
+                                        </span>
+                                      </th>
+                                    )}
+                                    {isSonarr && (
+                                      <th className="text-left py-3 px-2">
+                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                          Episode Title
+                                        </span>
+                                      </th>
+                                    )}
+                                    <th className="text-left py-3 px-2">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                        Quality
+                                      </span>
+                                    </th>
+                                    <th className="text-left py-3 px-2">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                        Formats
+                                      </span>
+                                    </th>
+                                    <th className="text-right py-3 px-2">
+                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                                        Date
+                                      </span>
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {filteredRecords.map((record, idx) => {
+                                    const evt = getEventIcon(record.eventType);
+                                    const seriesTitle = isSonarr
+                                      ? record.series?.title ||
+                                        record.sourceTitle ||
+                                        "Unknown"
+                                      : record.movie?.title ||
+                                        record.sourceTitle ||
+                                        "Unknown";
+                                    const episodeCode = record.episode
+                                      ? `S${String(record.episode.seasonNumber || 0).padStart(2, "0")}E${String(record.episode.episodeNumber || 0).padStart(2, "0")}`
+                                      : "—";
+                                    const episodeTitle =
+                                      record.episode?.title || "—";
+                                    const customFormats =
+                                      record.customFormats
+                                        ?.map((f) => f.name)
+                                        .join(", ") || "—";
+
+                                    return (
+                                      <tr
+                                        key={record.id || idx}
+                                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                                      >
+                                        <td className="py-3 px-4">
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <div
+                                              className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded ${evt.bg} ${evt.color} border ${evt.border}`}
+                                              title={evt.label}
+                                            >
+                                              {(() => {
+                                                const EvtIcon = evt.icon;
+                                                return <EvtIcon size={11} />;
+                                              })()}
+                                            </div>
+                                            <span className="font-medium text-theme-text truncate max-w-[250px] group-hover:text-theme-primary transition-colors">
+                                              {seriesTitle}
+                                            </span>
+                                          </div>
+                                        </td>
+                                        {isSonarr && (
+                                          <td className="py-3 px-4">
+                                            <span className="text-sm text-theme-text font-mono">
+                                              {episodeCode}
+                                            </span>
+                                          </td>
+                                        )}
+                                        {isSonarr && (
+                                          <td className="py-3 px-4">
+                                            <span className="text-sm text-theme-text truncate max-w-[200px] block">
+                                              {episodeTitle}
+                                            </span>
+                                          </td>
+                                        )}
+                                        <td className="py-3 px-4">
+                                          <span className="text-sm text-theme-text">
+                                            {record.quality?.quality?.name ||
+                                              "—"}
+                                          </span>
+                                        </td>
+                                        <td className="py-3 px-4">
+                                          {customFormats !== "—" ? (
+                                            <div className="flex flex-wrap gap-1">
+                                              {record.customFormats.map(
+                                                (f, i) => (
+                                                  <span
+                                                    key={i}
+                                                    className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                                  >
+                                                    {f.name}
+                                                  </span>
+                                                ),
+                                              )}
+                                            </div>
+                                          ) : (
+                                            <span className="text-xs text-theme-text-muted">
+                                              —
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="py-3 px-4 text-right">
+                                          <div className="flex items-center gap-1 justify-end">
+                                            <Clock className="w-3 h-3 text-theme-text-muted" />
+                                            <span className="text-sm text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
+                                              {formatDate(record.date)}
+                                            </span>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* History Pagination */}
+                      {totalRecords > historyPageSize && (
+                        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="text-sm font-medium text-theme-text-muted">
+                              Page{" "}
+                              <span className="text-theme-text font-semibold">
+                                {historyPage}
+                              </span>{" "}
+                              of{" "}
+                              <span className="text-theme-text font-semibold">
+                                {Math.ceil(totalRecords / historyPageSize)}
+                              </span>{" "}
+                              ({totalRecords} total)
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-theme-text-muted">
+                                Per page:
+                              </span>
+                              <select
+                                value={historyPageSize}
+                                onChange={(e) => {
+                                  setHistoryPageSize(Number(e.target.value));
+                                  setHistoryPage(1);
+                                }}
+                                className="px-3 py-1.5 bg-theme-card border border-theme rounded-lg text-sm text-theme-text hover:border-theme-primary focus:outline-none focus:border-theme-primary transition-colors"
+                              >
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                setHistoryPage((p) => Math.max(1, p - 1))
+                              }
+                              disabled={historyPage === 1}
+                              className="p-2.5 bg-theme hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow active:scale-95"
+                            >
+                              <ChevronLeft size={20} />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setHistoryPage((p) =>
+                                  Math.min(
+                                    Math.ceil(totalRecords / historyPageSize),
+                                    p + 1,
+                                  ),
+                                )
+                              }
+                              disabled={
+                                historyPage >=
+                                Math.ceil(totalRecords / historyPageSize)
+                              }
+                              className="p-2.5 bg-theme-hover hover:bg-theme border border-theme hover:border-theme-primary rounded-lg text-theme-text hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow active:scale-95"
+                            >
+                              <ChevronRight size={20} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+            </div>
+          );
         })()}
     </div>
   );
