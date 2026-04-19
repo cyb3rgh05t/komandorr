@@ -14,6 +14,7 @@ class HealthChecker:
 
     def __init__(self):
         self._running = False
+        self._vpn_error_state: dict[str, bool] = {}  # track per-container error state
 
     def stop(self):
         self._running = False
@@ -54,12 +55,33 @@ class HealthChecker:
         if not url or not api_key:
             return
 
+        headers = {"X-API-Key": api_key}
+        base = url.rstrip("/")
+
+        # Fetch both vpn-info-batch and full container list for proper names
         try:
-            api_url = f"{url.rstrip('/')}/api/containers/vpn-info-batch"
             async with httpx.AsyncClient(timeout=15) as client:
-                resp = await client.get(api_url, headers={"X-API-Key": api_key})
+                resp = await client.get(
+                    f"{base}/api/containers/vpn-info-batch", headers=headers
+                )
                 resp.raise_for_status()
                 data = resp.json()
+
+                # Fetch full container list to get docker_name / name
+                container_names: dict[str, str] = {}
+                try:
+                    containers_resp = await client.get(
+                        f"{base}/api/containers", headers=headers
+                    )
+                    containers_resp.raise_for_status()
+                    for c in containers_resp.json():
+                        cid = str(c.get("id", ""))
+                        # Prefer docker_name, fall back to name
+                        container_names[cid] = (
+                            c.get("docker_name") or c.get("name") or f"Container {cid}"
+                        )
+                except Exception:
+                    pass
         except Exception as e:
             logger.debug(f"Health checker: VPN API unreachable: {e}")
             return
@@ -67,17 +89,40 @@ class HealthChecker:
         for container_id, info in data.items():
             vpn_status = (info.get("vpn_status") or "").lower()
             has_ip = bool(info.get("public_ip"))
-            if vpn_status != "running" or not has_ip:
-                container_name = info.get("container_name", f"Container {container_id}")
+            is_error = vpn_status != "running" or not has_ip
+
+            # Resolve container name: container list > vpn-info > fallback
+            container_name = (
+                container_names.get(str(container_id))
+                or info.get("container_name")
+                or f"Container {container_id}"
+            )
+
+            was_error = self._vpn_error_state.get(str(container_id), False)
+
+            if is_error:
+                self._vpn_error_state[str(container_id)] = True
                 reason = f"VPN status: {vpn_status or 'unknown'}"
                 if not has_ip:
                     reason += ", no public IP"
                 try:
                     await notification_service.notify_vpn_error(
-                        f"{container_name} — {reason}", url=url
+                        container_name=container_name, error=reason, url=url
                     )
                 except Exception:
                     pass
+            else:
+                # VPN is healthy now — send recovery if it was previously in error
+                self._vpn_error_state[str(container_id)] = False
+                if was_error:
+                    try:
+                        await notification_service.notify_vpn_recovery(
+                            container_name=container_name,
+                            public_ip=info.get("public_ip", ""),
+                            url=url,
+                        )
+                    except Exception:
+                        pass
 
     # ── NFS ────────────────────────────────────────────────────────
 

@@ -23,6 +23,7 @@ EVENT_TYPES = [
     "user_removed",
     "storage_warning",
     "vpn_error",
+    "vpn_recovery",
     "nfs_error",
     "uploader_failed",
     "posterizarr_error",
@@ -39,6 +40,7 @@ EVENT_LABELS = {
     "user_removed": "User Removed",
     "storage_warning": "Storage Warning",
     "vpn_error": "VPN Error",
+    "vpn_recovery": "VPN Recovery",
     "nfs_error": "NFS Error",
     "uploader_failed": "Uploader Failed",
     "posterizarr_error": "Posterizarr Error",
@@ -418,15 +420,39 @@ class NotificationService:
 
     # ── VPN events ────────────────────────────────────────────────
 
-    async def notify_vpn_error(self, error: str, url: str = "") -> bool:
-        if not self._check_cooldown(f"vpn_error:{url}"):
+    async def notify_vpn_error(
+        self, container_name: str, error: str, url: str = ""
+    ) -> bool:
+        if not self._check_cooldown(f"vpn_error:{container_name}"):
             return False
         timestamp = self._get_timestamp()
-        message = f"🔒 <b>VPN Error</b>\n\n" f"❌ <b>Error:</b> {error}\n"
+        message = (
+            f"🔒 <b>VPN Error</b>\n\n"
+            f"📦 <b>Container:</b> {container_name}\n"
+            f"❌ <b>Error:</b> {error}\n"
+        )
         if url:
             message += f"🔗 <b>URL:</b> {url}\n"
         message += f"\n<i>{timestamp}</i>"
         return await self._dispatch("vpn_error", message)
+
+    async def notify_vpn_recovery(
+        self, container_name: str, public_ip: str = "", url: str = ""
+    ) -> bool:
+        if not self._check_cooldown(f"vpn_recovery:{container_name}"):
+            return False
+        timestamp = self._get_timestamp()
+        message = (
+            f"🔒 <b>VPN Recovery</b>\n\n"
+            f"📦 <b>Container:</b> {container_name}\n"
+            f"✅ <b>Status:</b> VPN running\n"
+        )
+        if public_ip:
+            message += f"🌐 <b>Public IP:</b> {public_ip}\n"
+        if url:
+            message += f"🔗 <b>URL:</b> {url}\n"
+        message += f"\n<i>{timestamp}</i>"
+        return await self._dispatch("vpn_recovery", message)
 
     # ── NFS events ────────────────────────────────────────────────
 

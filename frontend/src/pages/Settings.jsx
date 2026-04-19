@@ -3863,6 +3863,8 @@ export default function Settings() {
                           "from-amber-500/20 to-amber-500/5 border-amber-500/30",
                         vpn_error:
                           "from-red-400/20 to-red-400/5 border-red-400/30",
+                        vpn_recovery:
+                          "from-green-400/20 to-green-400/5 border-green-400/30",
                         nfs_error:
                           "from-rose-500/20 to-rose-500/5 border-rose-500/30",
                         uploader_failed:
@@ -3880,6 +3882,7 @@ export default function Settings() {
                         user_removed: "bg-orange-500",
                         storage_warning: "bg-amber-500",
                         vpn_error: "bg-red-400",
+                        vpn_recovery: "bg-green-400",
                         nfs_error: "bg-rose-500",
                         uploader_failed: "bg-pink-500",
                         posterizarr_error: "bg-violet-500",
