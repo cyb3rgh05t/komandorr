@@ -34,7 +34,7 @@ function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
   );
 }
 
-function ManagerSection({ manager }) {
+function ManagerSection({ manager, tabsSlot }) {
   const mounts = manager.nfs_mounts || [];
   const mountStatuses = manager.nfs_mount_statuses || {};
   const exports = manager.nfs_exports || [];
@@ -102,6 +102,9 @@ function ManagerSection({ manager }) {
           color="amber-400"
         />
       </div>
+
+      {/* Manager Tabs (injected from parent) */}
+      {tabsSlot}
 
       {/* NFS Client Mounts */}
       {mounts.length > 0 && (
@@ -580,30 +583,32 @@ export default function NfsMount() {
         </Link>
       )}
 
-      {/* Manager Tabs */}
-      {managers.length > 1 && (
-        <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
-          {managers.map((mgr) => {
-            const isActive = effectiveTab === mgr.id;
-            return (
-              <button
-                key={mgr.id}
-                onClick={() => setActiveTab(mgr.id)}
-                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  isActive
-                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                }`}
-              >
-                {mgr.name}
-                <span
-                  className={`inline-block w-2 h-2 rounded-full ml-2 ${
-                    mgr.connected ? "bg-emerald-400" : "bg-red-400"
+      {/* Manager Tabs (shown here only when active manager is disconnected) */}
+      {managers.length > 1 && activeManager && !activeManager.connected && (
+        <div>
+          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+            {managers.map((mgr) => {
+              const isActive = effectiveTab === mgr.id;
+              return (
+                <button
+                  key={mgr.id}
+                  onClick={() => setActiveTab(mgr.id)}
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
                   }`}
-                />
-              </button>
-            );
-          })}
+                >
+                  {mgr.name}
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full ml-2 ${
+                      mgr.connected ? "bg-emerald-400" : "bg-red-400"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -645,7 +650,38 @@ export default function NfsMount() {
       {activeManager && (
         <div className="space-y-4">
           {activeManager.connected ? (
-            <ManagerSection manager={activeManager} />
+            <ManagerSection
+              manager={activeManager}
+              tabsSlot={
+                managers.length > 1 ? (
+                  <div>
+                    <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+                      {managers.map((mgr) => {
+                        const isActive = effectiveTab === mgr.id;
+                        return (
+                          <button
+                            key={mgr.id}
+                            onClick={() => setActiveTab(mgr.id)}
+                            className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                              isActive
+                                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                            }`}
+                          >
+                            {mgr.name}
+                            <span
+                              className={`inline-block w-2 h-2 rounded-full ml-2 ${
+                                mgr.connected ? "bg-emerald-400" : "bg-red-400"
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null
+              }
+            />
           ) : (
             <div className="bg-theme-card border border-theme rounded-xl p-6 text-center">
               <WifiOff className="w-10 h-10 text-theme-muted mx-auto mb-3 opacity-30" />
