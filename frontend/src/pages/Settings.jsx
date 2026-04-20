@@ -3867,6 +3867,12 @@ export default function Settings() {
                           "from-green-400/20 to-green-400/5 border-green-400/30",
                         nfs_error:
                           "from-rose-500/20 to-rose-500/5 border-rose-500/30",
+                        nfs_recovery:
+                          "from-teal-400/20 to-teal-400/5 border-teal-400/30",
+                        traffic_high:
+                          "from-orange-400/20 to-orange-400/5 border-orange-400/30",
+                        traffic_recovery:
+                          "from-cyan-400/20 to-cyan-400/5 border-cyan-400/30",
                         uploader_failed:
                           "from-pink-500/20 to-pink-500/5 border-pink-500/30",
                         posterizarr_error:
@@ -3884,6 +3890,9 @@ export default function Settings() {
                         vpn_error: "bg-red-400",
                         vpn_recovery: "bg-green-400",
                         nfs_error: "bg-rose-500",
+                        nfs_recovery: "bg-teal-400",
+                        traffic_high: "bg-orange-400",
+                        traffic_recovery: "bg-cyan-400",
                         uploader_failed: "bg-pink-500",
                         posterizarr_error: "bg-violet-500",
                       };

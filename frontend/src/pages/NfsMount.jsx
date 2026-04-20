@@ -542,7 +542,7 @@ export default function NfsMount() {
     staleTime: 5000,
     refetchInterval: 10000,
     placeholderData: (prev) => prev,
-    enabled: connStatus?.any_connected === true,
+    enabled: connStatus?.instances?.length > 0,
   });
 
   const anyConnected = connStatus?.any_connected;

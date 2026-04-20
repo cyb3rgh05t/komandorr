@@ -15,6 +15,11 @@ class HealthChecker:
     def __init__(self):
         self._running = False
         self._vpn_error_state: dict[str, bool] = {}  # track per-container error state
+        self._nfs_error_state: dict[str, bool] = (
+            {}
+        )  # track per-instance NFS error state
+        self._traffic_high_count: dict[str, int] = {}  # consecutive high-traffic checks
+        self._traffic_high_state: dict[str, bool] = {}  # track per-service alert state
 
     def stop(self):
         self._running = False
@@ -35,6 +40,7 @@ class HealthChecker:
                     self._check_posterizarr(),
                     self._check_storage(),
                     self._check_uploader(),
+                    self._check_traffic(),
                     return_exceptions=True,
                 )
             except asyncio.CancelledError:
@@ -181,6 +187,22 @@ class HealthChecker:
                 mergerfs_configs = safe_json(resps[4])
                 mergerfs_statuses = safe_json(resps[5])
 
+                # Check if ALL responses failed → instance completely unreachable
+                all_failed = all(isinstance(r, Exception) for r in resps)
+                if all_failed:
+                    first_err = next(
+                        (r for r in resps if isinstance(r, Exception)), None
+                    )
+                    self._nfs_error_state[inst_name] = True
+                    try:
+                        await notification_service.notify_nfs_error(
+                            inst_name,
+                            f"Instance unreachable: {first_err}",
+                        )
+                    except Exception:
+                        pass
+                    continue
+
                 mount_status_map = {s["id"]: s for s in mount_statuses}
                 export_status_map = {s["id"]: s for s in export_statuses}
                 mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses}
@@ -204,14 +226,24 @@ class HealthChecker:
                         )
 
                 if issues:
+                    self._nfs_error_state[inst_name] = True
                     try:
                         await notification_service.notify_nfs_error(
                             inst_name, "; ".join(issues[:5])
                         )
                     except Exception:
                         pass
+                else:
+                    # No issues — send recovery if previously in error
+                    if self._nfs_error_state.get(inst_name):
+                        self._nfs_error_state[inst_name] = False
+                        try:
+                            await notification_service.notify_nfs_recovery(inst_name)
+                        except Exception:
+                            pass
 
             except Exception as e:
+                self._nfs_error_state[inst_name] = True
                 logger.debug(f"Health checker: NFS '{inst_name}' check failed: {e}")
                 try:
                     await notification_service.notify_nfs_error(inst_name, str(e))
@@ -348,6 +380,61 @@ class HealthChecker:
                 await notification_service.notify_uploader_failed(data["count"])
             except Exception:
                 pass
+
+    # ── Traffic ────────────────────────────────────────────────────
+
+    async def _check_traffic(self):
+        """Check traffic bandwidth — alert when ≥95% sustained for 2+ minutes."""
+        from app.services.monitor import monitor
+
+        TRAFFIC_HIGH_THRESHOLD = 95.0
+        # With 60s health-check interval, 2 consecutive checks = ~2 minutes
+        REQUIRED_CONSECUTIVE = 2
+
+        for service in monitor.get_all_services():
+            traffic = getattr(service, "traffic", None)
+            if not traffic or not getattr(traffic, "last_updated", None):
+                continue
+
+            max_bw = getattr(traffic, "max_bandwidth", 0) or 0
+            if max_bw <= 0:
+                continue
+
+            bw_up = getattr(traffic, "bandwidth_up", 0) or 0
+            bw_down = getattr(traffic, "bandwidth_down", 0) or 0
+            current_bw = bw_up + bw_down
+            percent = min((current_bw / max_bw) * 100, 100.0)
+
+            svc_key = service.id
+
+            if percent >= TRAFFIC_HIGH_THRESHOLD:
+                self._traffic_high_count[svc_key] = (
+                    self._traffic_high_count.get(svc_key, 0) + 1
+                )
+
+                if self._traffic_high_count[
+                    svc_key
+                ] >= REQUIRED_CONSECUTIVE and not self._traffic_high_state.get(svc_key):
+                    self._traffic_high_state[svc_key] = True
+                    bw_str = f"{current_bw:.1f} / {max_bw:.1f} MB/s"
+                    try:
+                        await notification_service.notify_traffic_high(
+                            service.name, percent, bw_str
+                        )
+                    except Exception:
+                        pass
+            else:
+                # Below threshold — reset counter
+                self._traffic_high_count[svc_key] = 0
+
+                if self._traffic_high_state.get(svc_key):
+                    self._traffic_high_state[svc_key] = False
+                    try:
+                        await notification_service.notify_traffic_recovery(
+                            service.name, percent
+                        )
+                    except Exception:
+                        pass
 
 
 health_checker = HealthChecker()

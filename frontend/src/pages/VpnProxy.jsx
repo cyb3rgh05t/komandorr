@@ -904,63 +904,57 @@ export default function VpnProxy() {
 
       {/* Provider Tabs */}
       {!isLoading && containers.length > 0 && (
-        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            <button
-              onClick={() => {
-                setActiveTab("all");
-                setSearchParams({});
-              }}
-              className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === "all"
-                  ? "bg-theme-primary text-black shadow-md"
-                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+        <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+          <button
+            onClick={() => {
+              setActiveTab("all");
+              setSearchParams({});
+            }}
+            className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+              activeTab === "all"
+                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+            }`}
+          >
+            All
+            <span
+              className={`ml-2 text-xs ${
+                activeTab === "all" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
-              All
-              <span
-                className={`ml-2 text-xs ${
-                  activeTab === "all"
-                    ? "text-black/70"
-                    : "text-theme-text-muted"
+              ({containers.length})
+            </span>
+          </button>
+          {providers.map((provider) => {
+            const count = containers.filter(
+              (c) =>
+                (c.vpn_provider || "").toLowerCase() === provider.toLowerCase(),
+            ).length;
+            const isActive = activeTab.toLowerCase() === provider.toLowerCase();
+            return (
+              <button
+                key={provider}
+                onClick={() => {
+                  setActiveTab(provider);
+                  setSearchParams({ provider });
+                }}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  isActive
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
                 }`}
               >
-                ({containers.length})
-              </span>
-            </button>
-            {providers.map((provider) => {
-              const count = containers.filter(
-                (c) =>
-                  (c.vpn_provider || "").toLowerCase() ===
-                  provider.toLowerCase(),
-              ).length;
-              const isActive =
-                activeTab.toLowerCase() === provider.toLowerCase();
-              return (
-                <button
-                  key={provider}
-                  onClick={() => {
-                    setActiveTab(provider);
-                    setSearchParams({ provider });
-                  }}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                    isActive
-                      ? "bg-theme-primary text-black shadow-md"
-                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                <span className="capitalize">{provider}</span>
+                <span
+                  className={`ml-2 text-xs ${
+                    isActive ? "text-black/70" : "text-theme-text-muted"
                   }`}
                 >
-                  <span className="capitalize">{provider}</span>
-                  <span
-                    className={`ml-2 text-xs ${
-                      isActive ? "text-black/70" : "text-theme-text-muted"
-                    }`}
-                  >
-                    ({count})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  ({count})
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 

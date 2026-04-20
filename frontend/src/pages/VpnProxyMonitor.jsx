@@ -419,79 +419,75 @@ export default function VpnProxyMonitor() {
 
       {/* Tabs */}
       <div className="space-y-4">
-        <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            <button
-              onClick={() => setTab("network")}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                tab === "network"
-                  ? "bg-theme-primary text-black shadow-md"
-                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+        <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+          <button
+            onClick={() => setTab("network")}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+              tab === "network"
+                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+            }`}
+          >
+            <Wifi className="w-4 h-4" />
+            Network Usage
+          </button>
+          <button
+            onClick={() => setTab("streams")}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+              tab === "streams"
+                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+            }`}
+          >
+            <MonitorPlay className="w-4 h-4" />
+            Active Streams
+            <span
+              className={`ml-2 text-xs ${
+                tab === "streams" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
-              <Wifi className="w-4 h-4" />
-              Network Usage
-            </button>
-            <button
-              onClick={() => setTab("streams")}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                tab === "streams"
-                  ? "bg-theme-primary text-black shadow-md"
-                  : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
-              }`}
-            >
-              <MonitorPlay className="w-4 h-4" />
-              Active Streams
-              <span
-                className={`ml-2 text-xs ${
-                  tab === "streams" ? "text-black/70" : "text-theme-text-muted"
-                }`}
-              >
-                ({readers.length})
-              </span>
-            </button>
-          </div>
+              ({readers.length})
+            </span>
+          </button>
         </div>
 
         {/* Network Usage Tab */}
         {tab === "network" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-                <div className="flex gap-2 min-w-max">
-                  {["all", ...CATEGORIES].map((cat) => {
-                    const count =
-                      cat === "all"
-                        ? CATEGORIES.reduce(
-                            (sum, c) =>
-                              sum + Object.keys(usage[c]?.Proxy || {}).length,
-                            0,
-                          )
-                        : Object.keys(usage[cat]?.Proxy || {}).length;
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => setNetworkTab(cat)}
-                        className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+              <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+                {["all", ...CATEGORIES].map((cat) => {
+                  const count =
+                    cat === "all"
+                      ? CATEGORIES.reduce(
+                          (sum, c) =>
+                            sum + Object.keys(usage[c]?.Proxy || {}).length,
+                          0,
+                        )
+                      : Object.keys(usage[cat]?.Proxy || {}).length;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setNetworkTab(cat)}
+                      className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                        networkTab === cat
+                          ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                          : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                      }`}
+                    >
+                      {cat === "all" ? "All" : cat}
+                      <span
+                        className={`ml-2 text-xs ${
                           networkTab === cat
-                            ? "bg-theme-primary text-black shadow-md"
-                            : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                            ? "text-black/70"
+                            : "text-theme-text-muted"
                         }`}
                       >
-                        {cat === "all" ? "All" : cat}
-                        <span
-                          className={`ml-2 text-xs ${
-                            networkTab === cat
-                              ? "text-black/70"
-                              : "text-theme-text-muted"
-                          }`}
-                        >
-                          ({count})
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                        ({count})
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />

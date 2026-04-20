@@ -25,6 +25,9 @@ EVENT_TYPES = [
     "vpn_error",
     "vpn_recovery",
     "nfs_error",
+    "nfs_recovery",
+    "traffic_high",
+    "traffic_recovery",
     "uploader_failed",
     "posterizarr_error",
 ]
@@ -42,6 +45,9 @@ EVENT_LABELS = {
     "vpn_error": "VPN Error",
     "vpn_recovery": "VPN Recovery",
     "nfs_error": "NFS Error",
+    "nfs_recovery": "NFS Recovery",
+    "traffic_high": "Traffic High",
+    "traffic_recovery": "Traffic Recovery",
     "uploader_failed": "Uploader Failed",
     "posterizarr_error": "Posterizarr Error",
 }
@@ -467,6 +473,47 @@ class NotificationService:
             f"\n<i>{timestamp}</i>"
         )
         return await self._dispatch("nfs_error", message)
+
+    async def notify_nfs_recovery(self, instance_name: str) -> bool:
+        if not self._check_cooldown(f"nfs_recovery:{instance_name}"):
+            return False
+        timestamp = self._get_timestamp()
+        message = (
+            f"📁 <b>NFS Recovery</b>\n\n"
+            f"🖥 <b>Instance:</b> {instance_name}\n"
+            f"✅ <b>Status:</b> All mounts/exports healthy\n"
+            f"\n<i>{timestamp}</i>"
+        )
+        return await self._dispatch("nfs_recovery", message)
+
+    # ── Traffic events ────────────────────────────────────────────
+
+    async def notify_traffic_high(
+        self, service_name: str, percent: float, bandwidth: str
+    ) -> bool:
+        if not self._check_cooldown(f"traffic_high:{service_name}"):
+            return False
+        timestamp = self._get_timestamp()
+        message = (
+            f"📡 <b>Traffic High</b>\n\n"
+            f"🖥 <b>Service:</b> {service_name}\n"
+            f"⚠️ <b>Bandwidth:</b> {percent:.0f}% ({bandwidth})\n"
+            f"⏱ <b>Duration:</b> Sustained for 2+ minutes\n"
+            f"\n<i>{timestamp}</i>"
+        )
+        return await self._dispatch("traffic_high", message)
+
+    async def notify_traffic_recovery(self, service_name: str, percent: float) -> bool:
+        if not self._check_cooldown(f"traffic_recovery:{service_name}"):
+            return False
+        timestamp = self._get_timestamp()
+        message = (
+            f"📡 <b>Traffic Recovery</b>\n\n"
+            f"🖥 <b>Service:</b> {service_name}\n"
+            f"✅ <b>Status:</b> Bandwidth back to normal ({percent:.0f}%)\n"
+            f"\n<i>{timestamp}</i>"
+        )
+        return await self._dispatch("traffic_recovery", message)
 
     # ── Uploader events ──────────────────────────────────────────
 

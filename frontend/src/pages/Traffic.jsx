@@ -471,53 +471,51 @@ export default function Traffic() {
 
           {/* Group Tabs */}
           {allGroups.length > 0 && (
-            <div className="bg-theme-card border border-theme rounded-lg p-2 overflow-x-auto">
-              <div className="flex gap-2 min-w-max">
-                <button
-                  onClick={() => setActiveTab("ALL")}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+            <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab("ALL")}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  activeTab === "ALL"
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                }`}
+              >
+                {t("traffic.page.tabs.all")}
+                <span
+                  className={`ml-2 text-xs ${
                     activeTab === "ALL"
-                      ? "bg-theme-primary text-black shadow-md"
-                      : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                      ? "text-black/70"
+                      : "text-theme-text-muted"
                   }`}
                 >
-                  {t("traffic.page.tabs.all")}
-                  <span
-                    className={`ml-2 text-xs ${
-                      activeTab === "ALL"
-                        ? "text-black/70"
-                        : "text-theme-text-muted"
+                  ({filteredServices.length})
+                </span>
+              </button>
+              {allGroups.map((groupName) => {
+                const groupServices = groupedServices[groupName] || [];
+                return (
+                  <button
+                    key={groupName}
+                    onClick={() => setActiveTab(groupName)}
+                    className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      activeTab === groupName
+                        ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                        : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
                     }`}
                   >
-                    ({filteredServices.length})
-                  </span>
-                </button>
-                {allGroups.map((groupName) => {
-                  const groupServices = groupedServices[groupName] || [];
-                  return (
-                    <button
-                      key={groupName}
-                      onClick={() => setActiveTab(groupName)}
-                      className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                    {groupName}
+                    <span
+                      className={`ml-2 text-xs ${
                         activeTab === groupName
-                          ? "bg-theme-primary text-black shadow-md"
-                          : "bg-theme-hover/50 text-theme-text-muted hover:bg-theme-primary/20 hover:text-theme-primary"
+                          ? "text-black/70"
+                          : "text-theme-text-muted"
                       }`}
                     >
-                      {groupName}
-                      <span
-                        className={`ml-2 text-xs ${
-                          activeTab === groupName
-                            ? "text-black/70"
-                            : "text-theme-text-muted"
-                        }`}
-                      >
-                        ({groupServices.length})
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      ({groupServices.length})
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
