@@ -5,8 +5,12 @@ Runs independently of the UI — sends Telegram notifications when problems are 
 
 import asyncio
 import httpx
+import json
+from pathlib import Path
 from app.utils.logger import logger
 from app.services.notifications import notification_service
+
+_STATE_FILE = Path(__file__).parent.parent.parent / "data" / "health_state.json"
 
 
 class HealthChecker:
@@ -20,7 +24,27 @@ class HealthChecker:
         )  # track per-instance NFS error state
         self._traffic_high_count: dict[str, int] = {}  # consecutive high-traffic checks
         self._traffic_high_state: dict[str, bool] = {}  # track per-service alert state
-        self._storage_last_notify_day: dict[str, str] = {}
+        self._storage_last_notify_day: dict[str, str] = self._load_state()
+
+    def _load_state(self) -> dict[str, str]:
+        """Load persisted daily-gate state from disk."""
+        try:
+            if _STATE_FILE.exists():
+                data = json.loads(_STATE_FILE.read_text())
+                return data.get("storage_last_notify_day", {})
+        except Exception as e:
+            logger.warning(f"Could not load health state: {e}")
+        return {}
+
+    def _save_state(self) -> None:
+        """Persist daily-gate state to disk so it survives restarts."""
+        try:
+            _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            _STATE_FILE.write_text(
+                json.dumps({"storage_last_notify_day": self._storage_last_notify_day})
+            )
+        except Exception as e:
+            logger.warning(f"Could not save health state: {e}")
 
     def stop(self):
         self._running = False
@@ -432,6 +456,7 @@ class HealthChecker:
                             free_gb=getattr(path, "free", 0) or 0,
                         )
                         self._storage_last_notify_day[issue_key] = today
+                        self._save_state()
                     except Exception:
                         pass
 
@@ -451,6 +476,7 @@ class HealthChecker:
                             free_gb=0,
                         )
                         self._storage_last_notify_day[issue_key] = today
+                        self._save_state()
                     except Exception:
                         pass
 
@@ -474,13 +500,16 @@ class HealthChecker:
                             free_gb=0,
                         )
                         self._storage_last_notify_day[issue_key] = today
+                        self._save_state()
                     except Exception:
                         pass
 
         # Reset per-day suppression when an issue is resolved
         resolved_keys = set(self._storage_last_notify_day.keys()) - current_issue_keys
-        for key in resolved_keys:
-            self._storage_last_notify_day.pop(key, None)
+        if resolved_keys:
+            for key in resolved_keys:
+                self._storage_last_notify_day.pop(key, None)
+            self._save_state()
 
     # ── Uploader ───────────────────────────────────────────────────
 

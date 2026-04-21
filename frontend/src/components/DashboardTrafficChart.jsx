@@ -64,12 +64,9 @@ const DashboardTrafficChart = ({
     );
   }
 
-  // Filter services with active traffic
+  // Show all configured services that have a history array (even if currently idle)
   const activeServices = trafficData.services.filter(
-    (service) =>
-      service.traffic_history &&
-      service.traffic_history.length > 0 &&
-      (service.bandwidth_up > 0 || service.bandwidth_down > 0)
+    (service) => service.traffic_history && service.traffic_history.length > 0,
   );
 
   if (activeServices.length === 0) {
@@ -123,7 +120,7 @@ const DashboardTrafficChart = ({
   const servicePaths = activeServices.map((service, serviceIndex) => {
     const history = service.traffic_history.slice(-maxDataPoints);
     const values = history.map((point) =>
-      chartType === "upload" ? point.bandwidth_up : point.bandwidth_down
+      chartType === "upload" ? point.bandwidth_up : point.bandwidth_down,
     );
 
     const points = values.map((value, index) => {
@@ -157,7 +154,7 @@ const DashboardTrafficChart = ({
     (sum, s) =>
       sum +
       (chartType === "upload" ? s.bandwidth_up || 0 : s.bandwidth_down || 0),
-    0
+    0,
   );
 
   return (
@@ -179,7 +176,8 @@ const DashboardTrafficChart = ({
               {t(
                 activeServices.length === 1
                   ? "traffic.service"
-                  : "traffic.activeServices"
+                  : "traffic.services",
+                activeServices.length === 1 ? "service" : "services",
               )}
             </div>
           </div>
@@ -387,7 +385,9 @@ const DashboardTrafficChart = ({
           <span className="text-xs text-theme-text-muted font-medium">
             {servicePaths.length}{" "}
             {t(
-              servicePaths.length === 1 ? "traffic.service" : "traffic.services"
+              servicePaths.length === 1
+                ? "traffic.service"
+                : "traffic.services",
             )}
           </span>
         </div>

@@ -416,8 +416,7 @@ class NotificationService:
     async def notify_storage_warning(
         self, hostname: str, path: str, percent: float, free_gb: float
     ) -> bool:
-        if not self._check_cooldown(f"storage_warning:{hostname}:{path}"):
-            return False
+        # Daily gate is handled entirely in health_checker; no cooldown needed here
         timestamp = self._get_timestamp()
         message = (
             f"💾 <b>Storage Warning</b>\n\n"
