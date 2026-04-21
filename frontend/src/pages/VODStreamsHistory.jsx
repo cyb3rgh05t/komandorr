@@ -15,6 +15,7 @@ import {
   Minus,
   Clock,
   Zap,
+  ChevronDown,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { getPlexStats } from "@/services/plexService";
@@ -724,13 +725,18 @@ export default function VODStreamsHistory() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey);
   const [showTrendLine, setShowTrendLine] = useState(true);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showMonthMenu, setShowMonthMenu] = useState(false);
   const exportRef = useRef(null);
+  const monthRef = useRef(null);
 
-  // Close export dropdown on outside click
+  // Close menus on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (exportRef.current && !exportRef.current.contains(e.target)) {
         setShowExportMenu(false);
+      }
+      if (monthRef.current && !monthRef.current.contains(e.target)) {
+        setShowMonthMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -829,6 +835,16 @@ export default function VODStreamsHistory() {
       setTimeRange("all");
     }
   }, [selectedMonth, timeRange]);
+
+  const selectedMonthLabel = useMemo(() => {
+    if (selectedMonth === "all") {
+      return t("vodStreams.history.monthAll", "All Months");
+    }
+    return (
+      monthOptions.find((opt) => opt.value === selectedMonth)?.label ||
+      t("vodStreams.history.monthAll", "All Months")
+    );
+  }, [monthOptions, selectedMonth, t]);
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -977,26 +993,57 @@ export default function VODStreamsHistory() {
                 ))}
               </div>
 
-              <select
-                value={selectedMonth}
-                onChange={(e) => {
-                  const month = e.target.value;
-                  setSelectedMonth(month);
-                  if (month !== "all") {
-                    setTimeRange("all");
-                  }
-                }}
-                className="h-9 px-3 pr-8 rounded-lg bg-theme-card border border-theme text-xs sm:text-sm text-theme-text hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-colors appearance-none shadow-sm"
-              >
-                <option value="all">
-                  {t("vodStreams.history.monthAll", "All Months")}
-                </option>
-                {monthOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative" ref={monthRef}>
+                <button
+                  onClick={() => setShowMonthMenu((prev) => !prev)}
+                  className={`h-9 px-3 rounded-lg border text-xs sm:text-sm transition-all shadow-sm min-w-[140px] flex items-center justify-between gap-2 ${
+                    showMonthMenu
+                      ? "bg-theme-primary/15 border-theme-primary/40 text-theme-primary"
+                      : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary/50"
+                  }`}
+                >
+                  <span className="truncate">{selectedMonthLabel}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform ${showMonthMenu ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {showMonthMenu && (
+                  <div className="absolute left-0 top-full mt-1.5 min-w-full bg-theme-card border border-theme rounded-lg shadow-xl z-50 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setSelectedMonth("all");
+                        setShowMonthMenu(false);
+                      }}
+                      className={`flex items-center w-full px-3 py-2 text-xs sm:text-sm text-left transition-colors ${
+                        selectedMonth === "all"
+                          ? "bg-theme-primary/20 text-theme-primary"
+                          : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover"
+                      }`}
+                    >
+                      {t("vodStreams.history.monthAll", "All Months")}
+                    </button>
+                    <div className="border-t border-theme" />
+                    {monthOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setSelectedMonth(opt.value);
+                          setShowMonthMenu(false);
+                        }}
+                        className={`flex items-center w-full px-3 py-2 text-xs sm:text-sm text-left transition-colors ${
+                          selectedMonth === opt.value
+                            ? "bg-theme-primary/20 text-theme-primary"
+                            : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <PeakChart
