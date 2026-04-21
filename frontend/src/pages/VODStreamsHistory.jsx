@@ -115,9 +115,9 @@ function StatsCards({ data, allTimePeak, t }) {
       label: t("vodStreams.history.highestPeak", "All-Time Peak"),
       value: allTimePeak ?? maxPeak,
       icon: TrendingUp,
-      color: "text-emerald-400",
-      borderColor: "hover:border-emerald-400/50",
-      bgColor: "hover:bg-emerald-400/10",
+      color: "text-theme-primary",
+      borderColor: "hover:border-theme-primary",
+      bgColor: "hover:bg-theme-primary/10",
       showTrend: true,
     },
     {
@@ -148,9 +148,9 @@ function StatsCards({ data, allTimePeak, t }) {
       label: t("vodStreams.history.weekendAvg", "Weekend Avg"),
       value: avgWeekend,
       icon: Zap,
-      color: "text-fuchsia-400",
-      borderColor: "hover:border-fuchsia-400/50",
-      bgColor: "hover:bg-fuchsia-400/10",
+      color: "text-green-400",
+      borderColor: "hover:border-green-400/50",
+      bgColor: "hover:bg-green-400/10",
     },
     {
       label: t("vodStreams.history.daysTracked", "Days Tracked"),
@@ -356,16 +356,16 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
               <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
             </linearGradient>
             <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
-              <stop offset="100%" stopColor="#059669" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.6" />
             </linearGradient>
             <linearGradient id="barGradientMin" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fb7185" stopOpacity="0.9" />
               <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
             </linearGradient>
             <linearGradient id="barGradientWeekend" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#e879f9" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#c026d3" stopOpacity="0.5" />
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.5" />
             </linearGradient>
           </defs>
 
@@ -623,13 +623,13 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-fuchsia-400" />
+          <span className="w-3 h-3 rounded-sm bg-green-400" />
           <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.legendWeekend", "Weekend")}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-emerald-400" />
+          <span className="w-3 h-3 rounded-sm bg-theme-primary" />
           <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.legendHighest", "Highest Peak")}
           </span>

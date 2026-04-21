@@ -8,24 +8,24 @@
 
 ## Alle Notification-Events (16 Typen)
 
-| #   | Event Type          | Label             | Emoji | Trigger-Quelle  | Trigger-Bedingung                                                             | Frequenz / Intervall                            |
-| --- | ------------------- | ----------------- | ----- | --------------- | ----------------------------------------------------------------------------- | ----------------------------------------------- |
-| 1   | `service_offline`   | Service Offline   | 🔴    | Monitor Service | Service-HTTP-Status wechselt zu `offline`                                     | Alle **10 Sek.** geprüft, nur bei Statuswechsel |
-| 2   | `service_problem`   | Service Problem   | ⚠️    | Monitor Service | Service-HTTP-Status wechselt zu `problem`                                     | Alle **10 Sek.** geprüft, nur bei Statuswechsel |
-| 3   | `service_recovery`  | Service Recovery  | ✅    | Monitor Service | Service wechselt von `offline`/`problem` zurück zu `online`                   | Alle **10 Sek.** geprüft, nur bei Statuswechsel |
-| 4   | `invite_created`    | Invite Created    | 📨    | Invites API     | Neuer Invite-Code wird generiert                                              | **On-Demand** (API-Aufruf)                      |
-| 5   | `invite_redeemed`   | Invite Redeemed   | 🎉    | Invites API     | User löst einen Invite-Code ein                                               | **On-Demand** (API-Aufruf)                      |
-| 6   | `user_added`        | User Added        | 👤    | Invites API     | Plex-User wird nach Invite-Einlösung hinzugefügt                              | **On-Demand** (API-Aufruf)                      |
-| 7   | `user_removed`      | User Removed      | 🚫    | Invites API     | Plex-User wird manuell oder per Bulk-Aktion entfernt                          | **On-Demand** (API-Aufruf)                      |
-| 8   | `vpn_error`         | VPN Error         | 🔒    | Health Checker  | VPN-Container-Status ≠ `running` oder keine öffentliche IP                    | Alle **60 Sek.** geprüft, **5 Min. Cooldown**   |
-| 9   | `vpn_recovery`      | VPN Recovery      | 🔒✅  | Health Checker  | VPN-Container erholt sich nach vorherigem Fehler                              | Alle **60 Sek.** geprüft                        |
-| 10  | `nfs_error`         | NFS Error         | 📁    | Health Checker  | NFS-Mount/Export/MergerFS nicht gemountet/aktiv oder Instanz nicht erreichbar | Alle **60 Sek.** geprüft, **5 Min. Cooldown**   |
-| 11  | `nfs_recovery`      | NFS Recovery      | 📁✅  | Health Checker  | Alle NFS-Mounts/Exports wieder gesund nach vorherigem Fehler                  | Alle **60 Sek.** geprüft                        |
-| 12  | `storage_warning`   | Storage Warning   | 💾    | Health Checker  | Speicherplatz ≥ **90%** belegt, oder RAID/ZFS-Status degraded/failed          | Alle **60 Sek.** geprüft, **5 Min. Cooldown**   |
-| 13  | `traffic_high`      | Traffic High      | 📡    | Health Checker  | Bandbreite ≥ **95%** für **2+ aufeinanderfolgende Checks** (~2 Min.)          | Alle **60 Sek.** geprüft, **5 Min. Cooldown**   |
-| 14  | `traffic_recovery`  | Traffic Recovery  | 📡✅  | Health Checker  | Traffic fällt unter 95% nach vorherigem High-Alert                            | Alle **60 Sek.** geprüft                        |
-| 15  | `uploader_failed`   | Uploader Failed   | 📤    | Health Checker  | Uploader-API meldet fehlgeschlagene Jobs (count > 0)                          | Alle **60 Sek.** geprüft, **5 Min. Cooldown**   |
-| 16  | `posterizarr_error` | Posterizarr Error | 🖼    | Health Checker  | Letzte Posterizarr-Laufzeithistorie hat Error-Count > 0                       | Alle **60 Sek.** geprüft, **5 Min. Cooldown**   |
+| #   | Event Type          | Label             | Emoji | Trigger-Quelle  | Trigger-Bedingung                                                                                                           | Frequenz / Intervall                                       |
+| --- | ------------------- | ----------------- | ----- | --------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 1   | `service_offline`   | Service Offline   | 🔴    | Monitor Service | Service-HTTP-Status wechselt zu `offline`                                                                                   | Alle **10 Sek.** geprüft, nur bei Statuswechsel            |
+| 2   | `service_problem`   | Service Problem   | ⚠️    | Monitor Service | Service-HTTP-Status wechselt zu `problem`                                                                                   | Alle **10 Sek.** geprüft, nur bei Statuswechsel            |
+| 3   | `service_recovery`  | Service Recovery  | ✅    | Monitor Service | Service wechselt von `offline`/`problem` zurück zu `online`                                                                 | Alle **10 Sek.** geprüft, nur bei Statuswechsel            |
+| 4   | `invite_created`    | Invite Created    | 📨    | Invites API     | Neuer Invite-Code wird generiert                                                                                            | **On-Demand** (API-Aufruf)                                 |
+| 5   | `invite_redeemed`   | Invite Redeemed   | 🎉    | Invites API     | User löst einen Invite-Code ein                                                                                             | **On-Demand** (API-Aufruf)                                 |
+| 6   | `user_added`        | User Added        | 👤    | Invites API     | Plex-User wird nach Invite-Einlösung hinzugefügt                                                                            | **On-Demand** (API-Aufruf)                                 |
+| 7   | `user_removed`      | User Removed      | 🚫    | Invites API     | Plex-User wird manuell oder per Bulk-Aktion entfernt                                                                        | **On-Demand** (API-Aufruf)                                 |
+| 8   | `vpn_error`         | VPN Error         | 🔒    | Health Checker  | **Getrennte VPN-Issue-Logik:** stopped/exited/dead/removed/created = One-Shot; unhealthy/not_connected = Error mit Cooldown | Alle **60 Sek.** geprüft (One-Shot oder Cooldown)          |
+| 9   | `vpn_recovery`      | VPN Recovery      | 🔒✅  | Health Checker  | VPN-Container erholt sich nach vorherigem Fehler                                                                            | Alle **60 Sek.** geprüft                                   |
+| 10  | `nfs_error`         | NFS Error         | 📁    | Health Checker  | NFS-Mount/Export/MergerFS nicht aktiv, Instanz nicht erreichbar, oder einzelne NFS-API-Endpunkte fehlgeschlagen             | Alle **60 Sek.** geprüft, **5 Min. Cooldown**              |
+| 11  | `nfs_recovery`      | NFS Recovery      | 📁✅  | Health Checker  | Alle NFS-Mounts/Exports wieder gesund nach vorherigem Fehler                                                                | Alle **60 Sek.** geprüft                                   |
+| 12  | `storage_warning`   | Storage Warning   | 💾    | Health Checker  | Speicherpfad ≥ **90%** oder RAID/ZFS in risky state (`degraded`, `failed`, `faulted`, `offline`, `unavail`)                 | Alle **60 Sek.** geprüft, maximal **1x/Tag pro Issue-Key** |
+| 13  | `traffic_high`      | Traffic High      | 📡    | Health Checker  | Bandbreite ≥ **95%** für **2+ aufeinanderfolgende Checks** (~2 Min.)                                                        | Alle **60 Sek.** geprüft, **5 Min. Cooldown**              |
+| 14  | `traffic_recovery`  | Traffic Recovery  | 📡✅  | Health Checker  | Traffic fällt unter 95% nach vorherigem High-Alert                                                                          | Alle **60 Sek.** geprüft                                   |
+| 15  | `uploader_failed`   | Uploader Failed   | 📤    | Health Checker  | Uploader-API meldet fehlgeschlagene Jobs (count > 0)                                                                        | Alle **60 Sek.** geprüft, **5 Min. Cooldown**              |
+| 16  | `posterizarr_error` | Posterizarr Error | 🖼    | Health Checker  | Letzte Posterizarr-Laufzeithistorie hat Error-Count > 0                                                                     | Alle **60 Sek.** geprüft, **5 Min. Cooldown**              |
 
 ---
 
@@ -44,17 +44,17 @@
 - **Gestartet in:** `backend/app/main.py`
 - **Events & Bedingungen:**
 
-| Event               | Bedingung                                                           |
-| ------------------- | ------------------------------------------------------------------- |
-| `vpn_error`         | VPN-Container nicht running oder keine Public-IP                    |
-| `vpn_recovery`      | VPN-Container recovered nach vorherigem Error                       |
-| `nfs_error`         | NFS-Mount/Export/MergerFS nicht aktiv oder Instanz nicht erreichbar |
-| `nfs_recovery`      | Alle NFS-Mounts/Exports gesund nach vorherigem Error                |
-| `storage_warning`   | Speicherpfad ≥ 90% belegt oder RAID/ZFS degraded/failed             |
-| `traffic_high`      | Bandbreite ≥ 95% für 2+ aufeinanderfolgende Checks                  |
-| `traffic_recovery`  | Traffic unter 95% nach vorherigem High-Alert                        |
-| `uploader_failed`   | Uploader-API meldet fehlgeschlagene Jobs                            |
-| `posterizarr_error` | Posterizarr Runtime-History zeigt Errors                            |
+| Event               | Bedingung                                                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vpn_error`         | VPN-Issue-Klassen: `stopped` (one-shot), `unhealthy` (cooldown), `not_connected` (cooldown)                                                           |
+| `vpn_recovery`      | VPN-Container recovered nach vorherigem Error                                                                                                         |
+| `nfs_error`         | NFS-Mount/Export/MergerFS nicht aktiv, Instanz nicht erreichbar, oder einzelne NFS-API-Endpunkte fehlgeschlagen                                       |
+| `nfs_recovery`      | Alle NFS-Mounts/Exports gesund nach vorherigem Error                                                                                                  |
+| `storage_warning`   | Speicherpfad ≥ 90% oder RAID/ZFS in risky state (`degraded`, `failed`, `faulted`, `offline`, `unavail`); Benachrichtigung maximal 1x/Tag bis Recovery |
+| `traffic_high`      | Bandbreite ≥ 95% für 2+ aufeinanderfolgende Checks                                                                                                    |
+| `traffic_recovery`  | Traffic unter 95% nach vorherigem High-Alert                                                                                                          |
+| `uploader_failed`   | Uploader-API meldet fehlgeschlagene Jobs                                                                                                              |
+| `posterizarr_error` | Posterizarr Runtime-History zeigt Errors                                                                                                              |
 
 ### 3. Invites API (`backend/app/api/invites.py`)
 
@@ -72,17 +72,24 @@
 
 ## Cooldown / Deduplizierung
 
-| Mechanismus         | Gilt für                                                                                                                    | Default                 | Konfigurierbar                                           |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------- |
-| **Cooldown-Timer**  | Health-Checker-Events (`vpn_error`, `nfs_error`, `storage_warning`, `traffic_high`, `uploader_failed`, `posterizarr_error`) | **5 Minuten**           | Ja, via `cooldown_minutes` in den Telegram-Einstellungen |
-| **Zustandsbasiert** | Service-Events (`service_offline`, `service_problem`, `service_recovery`)                                                   | Nur bei Statuswechsel   | Nein (fest implementiert)                                |
-| **Keine**           | Invite/User-Events                                                                                                          | Sofort bei jedem Aufruf | Nein                                                     |
+| Mechanismus                     | Gilt für                                                                                                                                 | Default                                   | Konfigurierbar                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| **Cooldown-Timer**              | Health-Checker-Events (`vpn_error` für `unhealthy`/`not_connected`, `nfs_error`, `traffic_high`, `uploader_failed`, `posterizarr_error`) | **5 Minuten**                             | Ja, via `cooldown_minutes` in den Telegram-Einstellungen |
+| **One-Shot bis Recovery**       | `vpn_error` bei `stopped/exited/dead/removed/created`                                                                                    | 1 Nachricht pro Ausfallphase              | Nein (zustandsbasiert)                                   |
+| **Tages-Reminder bis Recovery** | `storage_warning` (storage path + RAID/ZFS issues)                                                                                       | Maximal 1 Nachricht pro Tag und Issue-Key | Nein (Health-Checker-intern)                             |
+| **Zustandsbasiert**             | Service-Events (`service_offline`, `service_problem`, `service_recovery`)                                                                | Nur bei Statuswechsel                     | Nein (fest implementiert)                                |
+| **Keine**                       | Invite/User-Events                                                                                                                       | Sofort bei jedem Aufruf                   | Nein                                                     |
 
 Der Cooldown wird pro Ressourcen-Key angewendet, z.B.:
 
 - `vpn_error:container_name`
-- `storage_warning:host:path`
 - `nfs_error:instance`
+
+Zusätzlich verwendet der Health Checker für Storage-Warnings einen Tages-Key pro Problem, z.B.:
+
+- `storage_path:host:/data`
+- `storage_raid:host:/dev/md0`
+- `storage_zfs:host:tank`
 
 ---
 
@@ -93,6 +100,10 @@ Trigger (Monitor/HealthChecker/API)
   │
   ▼
 notify_*() Methode aufgerufen
+  │
+  ├─ VPN stopped/exited ⇒ One-Shot bis Recovery
+  │
+  ├─ Storage Warning ⇒ Tages-Gate (1x/Tag/Issue-Key)
   │
   ▼
 Cooldown-Check → falls innerhalb Cooldown → abgebrochen
