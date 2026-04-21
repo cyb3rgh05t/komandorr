@@ -235,12 +235,9 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
     );
   }
 
-  // Filter services with active traffic
+  // Show all configured services that have a history array (even if currently idle)
   const activeServices = trafficData.services.filter(
-    (service) =>
-      service.traffic_history &&
-      service.traffic_history.length > 0 &&
-      (service.bandwidth_up > 0 || service.bandwidth_down > 0),
+    (service) => service.traffic_history && service.traffic_history.length > 0,
   );
 
   // Calculate totals
