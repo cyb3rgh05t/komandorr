@@ -286,34 +286,41 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   for (let i = 0; i <= maxPeak + tickStep; i += tickStep) yTicks.push(i);
   const yMax = yTicks[yTicks.length - 1];
 
-  // Trend line: EMA-smoothed daily peaks for a visually curved trend
+  // Trend line points from actual daily values
   const trendPoints = [];
   if (showTrendLine && enriched.length >= 2) {
-    const alpha = 0.35;
-    let ema = enriched[0].peak;
-
     for (let i = 0; i < enriched.length; i++) {
-      const value = enriched[i].peak;
-      ema = i === 0 ? value : alpha * value + (1 - alpha) * ema;
-      const smoothed = Math.max(0, Math.min(yMax, ema));
+      const value = Math.max(0, Math.min(yMax, enriched[i].peak));
       const cx = chartPadding.left + i * barGap + barGap / 2;
-      const cy =
-        chartPadding.top + innerHeight - (smoothed / yMax) * innerHeight;
+      const cy = chartPadding.top + innerHeight - (value / yMax) * innerHeight;
       trendPoints.push({ x: cx, y: cy });
     }
   }
 
-  // Build curved path from trend points using quadratic Bézier curves
+  // Build a smooth spline path (Catmull-Rom to cubic Bézier)
   const buildCurvedPath = (points) => {
     if (points.length < 2) return "";
-    let path = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      const cp = {
-        x: (points[i - 1].x + points[i].x) / 2,
-        y: (points[i - 1].y + points[i].y) / 2,
-      };
-      path += ` Q ${cp.x} ${cp.y} ${points[i].x} ${points[i].y}`;
+    if (points.length === 2) {
+      return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
     }
+
+    const tension = 1.0;
+    let path = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = i === 0 ? points[i] : points[i - 1];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = i + 2 < points.length ? points[i + 2] : p2;
+
+      const cp1x = p1.x + ((p2.x - p0.x) * tension) / 6;
+      const cp1y = p1.y + ((p2.y - p0.y) * tension) / 6;
+      const cp2x = p2.x - ((p3.x - p1.x) * tension) / 6;
+      const cp2y = p2.y - ((p3.y - p1.y) * tension) / 6;
+
+      path += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+    }
+
     return path;
   };
 
