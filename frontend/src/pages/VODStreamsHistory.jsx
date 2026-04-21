@@ -115,9 +115,9 @@ function StatsCards({ data, allTimePeak, t }) {
       label: t("vodStreams.history.highestPeak", "All-Time Peak"),
       value: allTimePeak ?? maxPeak,
       icon: TrendingUp,
-      color: "text-theme-primary",
-      borderColor: "hover:border-theme-primary",
-      bgColor: "hover:bg-theme-primary/10",
+      color: "text-emerald-400",
+      borderColor: "hover:border-emerald-400/50",
+      bgColor: "hover:bg-emerald-400/10",
       showTrend: true,
     },
     {
@@ -132,9 +132,9 @@ function StatsCards({ data, allTimePeak, t }) {
       label: t("vodStreams.history.minPeak", "Min Peak"),
       value: minPeak,
       icon: TrendingDown,
-      color: "text-orange-400",
-      borderColor: "hover:border-orange-400/50",
-      bgColor: "hover:bg-orange-400/10",
+      color: "text-rose-400",
+      borderColor: "hover:border-rose-400/50",
+      bgColor: "hover:bg-rose-400/10",
     },
     {
       label: t("vodStreams.history.weekdayAvg", "Weekday Avg"),
@@ -148,9 +148,9 @@ function StatsCards({ data, allTimePeak, t }) {
       label: t("vodStreams.history.weekendAvg", "Weekend Avg"),
       value: avgWeekend,
       icon: Zap,
-      color: "text-purple-400",
-      borderColor: "hover:border-purple-400/50",
-      bgColor: "hover:bg-purple-400/10",
+      color: "text-fuchsia-400",
+      borderColor: "hover:border-fuchsia-400/50",
+      bgColor: "hover:bg-fuchsia-400/10",
     },
     {
       label: t("vodStreams.history.daysTracked", "Days Tracked"),
@@ -286,17 +286,25 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   for (let i = 0; i <= maxPeak + tickStep; i += tickStep) yTicks.push(i);
   const yMax = yTicks[yTicks.length - 1];
 
-  // Trend line: moving average (window 3)
+  // Trend line: linear regression for stable global trend positioning
   const trendPoints = [];
-  if (showTrendLine && enriched.length >= 3) {
-    const window = Math.min(3, Math.floor(enriched.length / 2));
-    for (let i = 0; i < enriched.length; i++) {
-      const start = Math.max(0, i - Math.floor(window / 2));
-      const end = Math.min(enriched.length, start + window);
-      const slice = enriched.slice(start, end);
-      const avg = slice.reduce((s, d) => s + d.peak, 0) / slice.length;
+  if (showTrendLine && enriched.length >= 2) {
+    const n = enriched.length;
+    const sumX = (n * (n - 1)) / 2;
+    const sumY = enriched.reduce((s, d) => s + d.peak, 0);
+    const sumXY = enriched.reduce((s, d, i) => s + i * d.peak, 0);
+    const sumXX = enriched.reduce((s, _, i) => s + i * i, 0);
+
+    const denominator = n * sumXX - sumX * sumX;
+    const slope =
+      denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
+    const intercept = (sumY - slope * sumX) / n;
+
+    for (let i = 0; i < n; i++) {
+      const predicted = Math.max(0, Math.min(yMax, slope * i + intercept));
       const cx = chartPadding.left + i * barGap + barGap / 2;
-      const cy = chartPadding.top + innerHeight - (avg / yMax) * innerHeight;
+      const cy =
+        chartPadding.top + innerHeight - (predicted / yMax) * innerHeight;
       trendPoints.push(`${cx},${cy}`);
     }
   }
@@ -348,16 +356,16 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
               <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
             </linearGradient>
             <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.6" />
             </linearGradient>
             <linearGradient id="barGradientMin" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f97316" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#ea580c" stopOpacity="0.5" />
+              <stop offset="0%" stopColor="#fb7185" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
             </linearGradient>
             <linearGradient id="barGradientWeekend" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.5" />
+              <stop offset="0%" stopColor="#e879f9" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#c026d3" stopOpacity="0.5" />
             </linearGradient>
           </defs>
 
@@ -546,7 +554,7 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
                     y={y - 6}
                     textAnchor="middle"
                     fontSize={10}
-                    fill="#f97316"
+                    fill="#fb7185"
                   >
                     {"\u25BD"}
                   </text>
@@ -574,9 +582,9 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
             <polyline
               points={trendPoints.join(" ")}
               fill="none"
-              stroke="#22d3ee"
+              stroke="#facc15"
               strokeWidth="2"
-              strokeOpacity="0.6"
+              strokeOpacity="0.8"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray="6 3"
@@ -615,26 +623,26 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-purple-400" />
+          <span className="w-3 h-3 rounded-sm bg-fuchsia-400" />
           <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.legendWeekend", "Weekend")}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-amber-500" />
+          <span className="w-3 h-3 rounded-sm bg-emerald-400" />
           <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.legendHighest", "Highest Peak")}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-orange-500" />
+          <span className="w-3 h-3 rounded-sm bg-rose-400" />
           <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.legendLowest", "Lowest Peak")}
           </span>
         </div>
         {showTrendLine && (
           <div className="flex items-center gap-2">
-            <span className="w-5 h-0 border-t-2 border-dashed border-cyan-400" />
+            <span className="w-5 h-0 border-t-2 border-dashed border-yellow-400" />
             <span className="text-xs text-theme-text-muted">
               {t("vodStreams.history.legendTrend", "Trend")}
             </span>
