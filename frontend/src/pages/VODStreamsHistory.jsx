@@ -711,9 +711,17 @@ export default function VODStreamsHistory() {
   const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
+
+  const currentMonthKey = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  }, []);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState("30d");
-  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey);
   const [showTrendLine, setShowTrendLine] = useState(true);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportRef = useRef(null);
@@ -806,6 +814,21 @@ export default function VODStreamsHistory() {
       (item?.date || "").startsWith(selectedMonth),
     );
   }, [dailyPeaks, allDailyPeaks, selectedMonth]);
+
+  useEffect(() => {
+    if (monthOptions.length === 0) return;
+
+    const hasSelected = monthOptions.some((opt) => opt.value === selectedMonth);
+    if (!hasSelected) {
+      setSelectedMonth("all");
+    }
+  }, [monthOptions, selectedMonth]);
+
+  useEffect(() => {
+    if (selectedMonth !== "all" && timeRange !== "all") {
+      setTimeRange("all");
+    }
+  }, [selectedMonth, timeRange]);
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -963,7 +986,7 @@ export default function VODStreamsHistory() {
                     setTimeRange("all");
                   }
                 }}
-                className="h-9 px-3 rounded-lg bg-theme-card border border-theme text-xs sm:text-sm text-theme-text-muted hover:text-theme-text"
+                className="h-9 px-3 pr-8 rounded-lg bg-theme-card border border-theme text-xs sm:text-sm text-theme-text hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-colors appearance-none shadow-sm"
               >
                 <option value="all">
                   {t("vodStreams.history.monthAll", "All Months")}
