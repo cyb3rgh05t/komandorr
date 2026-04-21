@@ -356,8 +356,8 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
               <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
             </linearGradient>
             <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.6" />
             </linearGradient>
             <linearGradient id="barGradientMin" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fb7185" stopOpacity="0.9" />
@@ -367,6 +367,13 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
               <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
               <stop offset="100%" stopColor="#16a34a" stopOpacity="0.5" />
             </linearGradient>
+            <filter id="trendGlow">
+              <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
           {/* Y-axis grid lines */}
@@ -583,11 +590,12 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
               points={trendPoints.join(" ")}
               fill="none"
               stroke="#facc15"
-              strokeWidth="2"
-              strokeOpacity="0.8"
+              strokeWidth="3"
+              strokeOpacity="1"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray="6 3"
+              filter="url(#trendGlow)"
+              style={{ pointerEvents: "none" }}
             />
           )}
 
@@ -642,7 +650,7 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
         </div>
         {showTrendLine && (
           <div className="flex items-center gap-2">
-            <span className="w-5 h-0 border-t-2 border-dashed border-yellow-400" />
+            <span className="w-5 h-0.5 bg-yellow-400" />
             <span className="text-xs text-theme-text-muted">
               {t("vodStreams.history.legendTrend", "Trend")}
             </span>
