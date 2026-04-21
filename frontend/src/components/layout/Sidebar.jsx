@@ -288,11 +288,37 @@ export default function Sidebar() {
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: vpnInfoMapSidebar = {} } = useQuery({
+    queryKey: ["vpn-proxy-vpn-info-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/vpn-proxy/containers/vpn-info-batch");
+      } catch {
+        return {};
+      }
+    },
+    staleTime: 10000,
+    refetchInterval: 30000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+
   const vpnErrorCount = vpnContainers.filter((c) => {
     const s = (c.docker_status || c.status || "").toLowerCase();
-    return (
-      s === "unhealthy" || s === "stopped" || s === "exited" || s === "dead"
-    );
+    const isRunningLike =
+      s === "running" || s === "healthy" || s === "starting";
+    if (s === "unhealthy") return true;
+    if (!isRunningLike) return false;
+
+    const info = vpnInfoMapSidebar?.[c.id] || {};
+    const vpnStatus = (info.vpn_status || "").toLowerCase();
+    const hasIp = Boolean(info.public_ip);
+    const vpnConnected =
+      (vpnStatus === "running" ||
+        vpnStatus === "healthy" ||
+        vpnStatus === "connected") &&
+      hasIp;
+    return !vpnConnected;
   }).length;
 
   // Fetch NFS Mount dashboard for error badge

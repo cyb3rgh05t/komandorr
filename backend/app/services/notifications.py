@@ -92,6 +92,11 @@ class NotificationService:
         now = datetime.now(timezone.utc)
         last = self._error_cooldowns.get(key)
         if last and (now - last).total_seconds() < self._error_cooldown_seconds:
+            remaining = int(self._error_cooldown_seconds - (now - last).total_seconds())
+            logger.debug(
+                f"Notification cooldown active for key={key} "
+                f"(remaining={max(0, remaining)}s)"
+            )
             return False
         self._error_cooldowns[key] = now
         return True
@@ -436,6 +441,22 @@ class NotificationService:
             f"🔒 <b>VPN Error</b>\n\n"
             f"📦 <b>Container:</b> {container_name}\n"
             f"❌ <b>Error:</b> {error}\n"
+        )
+        if url:
+            message += f"🔗 <b>URL:</b> {url}\n"
+        message += f"\n<i>{timestamp}</i>"
+        return await self._dispatch("vpn_error", message)
+
+    async def notify_vpn_stopped(
+        self, container_name: str, status: str, url: str = ""
+    ) -> bool:
+        """Send a one-shot VPN stopped/exited notification (no cooldown)."""
+        timestamp = self._get_timestamp()
+        message = (
+            f"🔒 <b>VPN Container Stopped</b>\n\n"
+            f"📦 <b>Container:</b> {container_name}\n"
+            f"⏹ <b>Status:</b> {status or 'unknown'}\n"
+            f"ℹ️ <b>Behavior:</b> Sent once until container recovers\n"
         )
         if url:
             message += f"🔗 <b>URL:</b> {url}\n"

@@ -30,6 +30,31 @@ const isActiveStatus = (s) => {
   return lower === "running" || lower === "healthy" || lower === "starting";
 };
 
+const isStoppedStatus = (s) => {
+  const lower = (s || "").toLowerCase();
+  return ["stopped", "exited", "dead", "removed", "created"].includes(lower);
+};
+
+const isUnhealthyStatus = (s) => {
+  const lower = (s || "").toLowerCase();
+  return lower === "unhealthy";
+};
+
+const isVpnConnected = (info) => {
+  const vpnStatus = (info?.vpn_status || "").toLowerCase();
+  return (
+    ["running", "healthy", "connected"].includes(vpnStatus) &&
+    Boolean(info?.public_ip)
+  );
+};
+
+const isNotConnectedStatus = (container, info) => {
+  const status = container.docker_status || container.status;
+  if (!isActiveStatus(status)) return false;
+  if (isUnhealthyStatus(status)) return false;
+  return !isVpnConnected(info);
+};
+
 const StatusBadge = ({ status }) => {
   const statusLower = (status || "").toLowerCase();
   let color = "bg-gray-500/20 text-gray-400 border-gray-500/30";
@@ -167,9 +192,17 @@ export default function VpnProxy() {
       result = result.filter((c) =>
         isActiveStatus(c.docker_status || c.status),
       );
+    } else if (statusFilter === "unhealthy") {
+      result = result.filter((c) =>
+        isUnhealthyStatus(c.docker_status || c.status),
+      );
+    } else if (statusFilter === "not_connected") {
+      result = result.filter((c) =>
+        isNotConnectedStatus(c, vpnInfoMap[c.id] || {}),
+      );
     } else if (statusFilter === "stopped") {
-      result = result.filter(
-        (c) => !isActiveStatus(c.docker_status || c.status),
+      result = result.filter((c) =>
+        isStoppedStatus(c.docker_status || c.status),
       );
     } else if (statusFilter === "clients") {
       result = result.filter((c) => (depsMap[c.id] || []).length > 0);
@@ -217,7 +250,15 @@ export default function VpnProxy() {
   const runningCount = containers.filter((c) =>
     isActiveStatus(c.docker_status || c.status),
   ).length;
-  const stoppedCount = containers.length - runningCount;
+  const unhealthyCount = containers.filter((c) =>
+    isUnhealthyStatus(c.docker_status || c.status),
+  ).length;
+  const stoppedCount = containers.filter((c) =>
+    isStoppedStatus(c.docker_status || c.status),
+  ).length;
+  const notConnectedCount = containers.filter((c) =>
+    isNotConnectedStatus(c, vpnInfoMap[c.id] || {}),
+  ).length;
 
   const vpnNotConfigured =
     connectionStatus !== undefined &&
@@ -229,7 +270,7 @@ export default function VpnProxy() {
     const deps = depsMap[container.id] || [];
     const status = container.docker_status || container.status || "unknown";
     const isRunning = isActiveStatus(status);
-    const isConnected = info.vpn_status === "running" && info.public_ip;
+    const isConnected = isVpnConnected(info);
 
     const predefinedLocations = [];
     if (container.config?.SERVER_COUNTRIES)
@@ -807,7 +848,7 @@ export default function VpnProxy() {
       </div>
 
       {/* Stats Cards (clickable filters) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <button
           onClick={() => setStatusFilter(null)}
           className="bg-theme-card border border-theme rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-yellow-500/10 hover:border-yellow-500/50"
@@ -854,10 +895,10 @@ export default function VpnProxy() {
         </button>
         <button
           onClick={() =>
-            setStatusFilter(statusFilter === "stopped" ? null : "stopped")
+            setStatusFilter(statusFilter === "unhealthy" ? null : "unhealthy")
           }
           className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-red-500/10 ${
-            statusFilter === "stopped"
+            statusFilter === "unhealthy"
               ? "border-red-500 ring-1 ring-red-500/20"
               : "border-theme hover:border-red-500/50"
           }`}
@@ -865,14 +906,68 @@ export default function VpnProxy() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
-                <Power className="w-3.5 h-3.5 text-red-400" />
+                <Activity className="w-3.5 h-3.5 text-red-400" />
                 <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
-                  Offline
+                  Unhealthy
                 </span>
               </div>
-              <p className="text-2xl font-bold text-red-400">{stoppedCount}</p>
+              <p className="text-2xl font-bold text-red-400">
+                {unhealthyCount}
+              </p>
             </div>
-            <Power className="w-6 h-6 text-red-400" />
+            <Activity className="w-6 h-6 text-red-400" />
+          </div>
+        </button>
+        <button
+          onClick={() =>
+            setStatusFilter(
+              statusFilter === "not_connected" ? null : "not_connected",
+            )
+          }
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-amber-500/10 ${
+            statusFilter === "not_connected"
+              ? "border-amber-500 ring-1 ring-amber-500/20"
+              : "border-theme hover:border-amber-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Not Connected
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-amber-400">
+                {notConnectedCount}
+              </p>
+            </div>
+            <WifiOff className="w-6 h-6 text-amber-400" />
+          </div>
+        </button>
+        <button
+          onClick={() =>
+            setStatusFilter(statusFilter === "stopped" ? null : "stopped")
+          }
+          className={`bg-theme-card border rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-gray-500/10 ${
+            statusFilter === "stopped"
+              ? "border-gray-500 ring-1 ring-gray-500/20"
+              : "border-theme hover:border-gray-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Power className="w-3.5 h-3.5 text-theme-text-muted" />
+                <span className="text-[11px] text-theme-text-muted uppercase tracking-wider font-medium">
+                  Stopped/Exited
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-theme-text-muted">
+                {stoppedCount}
+              </p>
+            </div>
+            <Power className="w-6 h-6 text-theme-text-muted" />
           </div>
         </button>
         <button

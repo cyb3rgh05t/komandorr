@@ -14,12 +14,13 @@ class HealthChecker:
 
     def __init__(self):
         self._running = False
-        self._vpn_error_state: dict[str, bool] = {}  # track per-container error state
+        self._vpn_issue_state: dict[str, str] = {}
         self._nfs_error_state: dict[str, bool] = (
             {}
         )  # track per-instance NFS error state
         self._traffic_high_count: dict[str, int] = {}  # consecutive high-traffic checks
         self._traffic_high_state: dict[str, bool] = {}  # track per-service alert state
+        self._storage_last_notify_day: dict[str, str] = {}
 
     def stop(self):
         self._running = False
@@ -52,6 +53,32 @@ class HealthChecker:
 
     # ── VPN ────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _classify_vpn_issue(
+        docker_status: str, vpn_status: str, has_ip: bool
+    ) -> tuple[str | None, str]:
+        """Return (issue_type, reason). issue_type is one of stopped/unhealthy/not_connected."""
+        stopped_states = {"stopped", "exited", "dead", "removed", "created"}
+        unhealthy_states = {"unhealthy"}
+        connected_states = {"running", "healthy", "connected"}
+
+        ds = (docker_status or "").lower()
+        vs = (vpn_status or "").lower()
+
+        if ds in stopped_states:
+            return "stopped", f"Container status: {ds}"
+
+        if ds in unhealthy_states or vs in unhealthy_states:
+            return "unhealthy", f"VPN status: {vs or ds or 'unhealthy'}"
+
+        if vs not in connected_states or not has_ip:
+            reason = f"VPN status: {vs or 'unknown'}"
+            if not has_ip:
+                reason += ", no public IP"
+            return "not_connected", reason
+
+        return None, ""
+
     async def _check_vpn(self):
         """Check VPN container health via VPN Proxy Manager API."""
         from app.config import settings
@@ -75,6 +102,7 @@ class HealthChecker:
 
                 # Fetch full container list to get docker_name / name
                 container_names: dict[str, str] = {}
+                container_statuses: dict[str, str] = {}
                 try:
                     containers_resp = await client.get(
                         f"{base}/api/containers", headers=headers
@@ -86,6 +114,9 @@ class HealthChecker:
                         container_names[cid] = (
                             c.get("docker_name") or c.get("name") or f"Container {cid}"
                         )
+                        container_statuses[cid] = (
+                            c.get("docker_status") or c.get("status") or ""
+                        )
                 except Exception:
                     pass
         except Exception as e:
@@ -95,40 +126,90 @@ class HealthChecker:
         for container_id, info in data.items():
             vpn_status = (info.get("vpn_status") or "").lower()
             has_ip = bool(info.get("public_ip"))
-            is_error = vpn_status != "running" or not has_ip
+            container_id_str = str(container_id)
+            docker_status = (container_statuses.get(container_id_str) or "").lower()
 
             # Resolve container name: container list > vpn-info > fallback
             container_name = (
-                container_names.get(str(container_id))
+                container_names.get(container_id_str)
                 or info.get("container_name")
                 or f"Container {container_id}"
             )
 
-            was_error = self._vpn_error_state.get(str(container_id), False)
+            issue_type, reason = self._classify_vpn_issue(
+                docker_status=docker_status,
+                vpn_status=vpn_status,
+                has_ip=has_ip,
+            )
+            previous_issue = self._vpn_issue_state.get(container_id_str)
 
-            if is_error:
-                self._vpn_error_state[str(container_id)] = True
-                reason = f"VPN status: {vpn_status or 'unknown'}"
-                if not has_ip:
-                    reason += ", no public IP"
-                try:
-                    await notification_service.notify_vpn_error(
-                        container_name=container_name, error=reason, url=url
-                    )
-                except Exception:
-                    pass
-            else:
+            logger.debug(
+                f"VPN check [{container_name}]: docker_status={docker_status or 'unknown'} "
+                f"vpn_status={vpn_status or 'unknown'} has_ip={has_ip} -> "
+                f"issue={issue_type or 'healthy'} ({reason or 'ok'})"
+            )
+
+            if issue_type is None:
                 # VPN is healthy now — send recovery if it was previously in error
-                self._vpn_error_state[str(container_id)] = False
-                if was_error:
+                self._vpn_issue_state[container_id_str] = "healthy"
+                if previous_issue and previous_issue != "healthy":
+                    logger.info(
+                        f"VPN recovered [{container_name}]: previous_issue={previous_issue}"
+                    )
                     try:
-                        await notification_service.notify_vpn_recovery(
+                        sent = await notification_service.notify_vpn_recovery(
                             container_name=container_name,
                             public_ip=info.get("public_ip", ""),
                             url=url,
                         )
+                        logger.debug(
+                            f"VPN recovery notification [{container_name}]: sent={sent}"
+                        )
                     except Exception:
                         pass
+                continue
+
+            self._vpn_issue_state[container_id_str] = issue_type
+
+            # stopped/exited should notify only once until recovery
+            if issue_type == "stopped":
+                if previous_issue != "stopped":
+                    logger.warning(
+                        f"VPN stopped [{container_name}]: "
+                        f"docker_status={docker_status or 'unknown'} (one-shot notification)"
+                    )
+                    try:
+                        sent = await notification_service.notify_vpn_stopped(
+                            container_name=container_name,
+                            status=docker_status or "unknown",
+                            url=url,
+                        )
+                        logger.debug(
+                            f"VPN stopped notification [{container_name}]: sent={sent}"
+                        )
+                    except Exception:
+                        pass
+                else:
+                    logger.debug(
+                        f"VPN stopped still active [{container_name}]: "
+                        f"suppressing repeat notification"
+                    )
+                continue
+
+            # unhealthy / not_connected should continue with cooldown behavior
+            logger.warning(
+                f"VPN issue [{container_name}]: type={issue_type} reason={reason}"
+            )
+            try:
+                sent = await notification_service.notify_vpn_error(
+                    container_name=container_name, error=reason, url=url
+                )
+                logger.debug(
+                    f"VPN error notification [{container_name}]: "
+                    f"type={issue_type} sent={sent}"
+                )
+            except Exception:
+                pass
 
     # ── NFS ────────────────────────────────────────────────────────
 
@@ -171,21 +252,25 @@ class HealthChecker:
                         return_exceptions=True,
                     )
 
-                def safe_json(r):
+                failed_endpoints = []
+
+                def safe_json(r, endpoint_name):
                     if isinstance(r, Exception):
+                        failed_endpoints.append(endpoint_name)
                         return []
                     try:
                         r.raise_for_status()
                         return r.json()
                     except Exception:
+                        failed_endpoints.append(endpoint_name)
                         return []
 
-                mounts = safe_json(resps[0])
-                mount_statuses = safe_json(resps[1])
-                exports = safe_json(resps[2])
-                export_statuses = safe_json(resps[3])
-                mergerfs_configs = safe_json(resps[4])
-                mergerfs_statuses = safe_json(resps[5])
+                mounts = safe_json(resps[0], "/nfs/mounts")
+                mount_statuses = safe_json(resps[1], "/nfs/status")
+                exports = safe_json(resps[2], "/nfs/exports")
+                export_statuses = safe_json(resps[3], "/nfs/exports-status")
+                mergerfs_configs = safe_json(resps[4], "/mergerfs/configs")
+                mergerfs_statuses = safe_json(resps[5], "/mergerfs/status")
 
                 # Check if ALL responses failed → instance completely unreachable
                 all_failed = all(isinstance(r, Exception) for r in resps)
@@ -208,6 +293,11 @@ class HealthChecker:
                 mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses}
 
                 issues = []
+                if failed_endpoints:
+                    issues.append(
+                        f"API endpoint check failed: {', '.join(sorted(set(failed_endpoints)))}"
+                    )
+
                 for m in mounts:
                     if m.get("enabled") and not mount_status_map.get(m["id"], {}).get(
                         "mounted"
@@ -305,8 +395,19 @@ class HealthChecker:
     async def _check_storage(self):
         """Check storage usage across all monitored services."""
         from app.services.monitor import monitor
+        from datetime import datetime, timezone
 
         STORAGE_WARNING_THRESHOLD = 90.0
+        STORAGE_RISKY_STATUSES = {
+            "degraded",
+            "failed",
+            "faulted",
+            "offline",
+            "unavail",
+            "unavailable",
+        }
+        current_issue_keys = set()
+        today = datetime.now(timezone.utc).date().isoformat()
 
         for service in monitor.get_all_services():
             storage = getattr(service, "storage", None)
@@ -317,8 +418,12 @@ class HealthChecker:
 
             # Check storage paths for high usage
             for path in getattr(storage, "storage_paths", []) or []:
-                percent = getattr(path, "percent", 0) or 0
+                percent = float(getattr(path, "percent", 0) or 0)
                 if percent >= STORAGE_WARNING_THRESHOLD:
+                    issue_key = f"storage_path:{hostname}:{path.path}"
+                    current_issue_keys.add(issue_key)
+                    if self._storage_last_notify_day.get(issue_key) == today:
+                        continue
                     try:
                         await notification_service.notify_storage_warning(
                             hostname=hostname,
@@ -326,34 +431,56 @@ class HealthChecker:
                             percent=percent,
                             free_gb=getattr(path, "free", 0) or 0,
                         )
+                        self._storage_last_notify_day[issue_key] = today
                     except Exception:
                         pass
 
             # Check RAID arrays
             for raid in getattr(storage, "raid_arrays", []) or []:
-                if getattr(raid, "status", "") in ("degraded", "failed"):
+                raid_status = (getattr(raid, "status", "") or "").lower()
+                if raid_status in STORAGE_RISKY_STATUSES:
+                    issue_key = f"storage_raid:{hostname}:{raid.device}"
+                    current_issue_keys.add(issue_key)
+                    if self._storage_last_notify_day.get(issue_key) == today:
+                        continue
                     try:
                         await notification_service.notify_storage_warning(
                             hostname=hostname,
-                            path=f"RAID: {raid.device}",
+                            path=f"RAID: {raid.device} ({raid_status or 'unknown'})",
                             percent=0,
                             free_gb=0,
                         )
+                        self._storage_last_notify_day[issue_key] = today
                     except Exception:
                         pass
 
             # Check ZFS pools
             for pool in getattr(storage, "zfs_pools", []) or []:
-                if getattr(pool, "status", "") in ("degraded", "failed"):
+                pool_status = (getattr(pool, "status", "") or "").lower()
+                pool_state = (getattr(pool, "state", "") or "").lower()
+                if (
+                    pool_status in STORAGE_RISKY_STATUSES
+                    or pool_state in STORAGE_RISKY_STATUSES
+                ):
+                    issue_key = f"storage_zfs:{hostname}:{pool.pool}"
+                    current_issue_keys.add(issue_key)
+                    if self._storage_last_notify_day.get(issue_key) == today:
+                        continue
                     try:
                         await notification_service.notify_storage_warning(
                             hostname=hostname,
-                            path=f"ZFS: {pool.pool}",
+                            path=f"ZFS: {pool.pool} ({pool_status or pool_state or 'unknown'})",
                             percent=0,
                             free_gb=0,
                         )
+                        self._storage_last_notify_day[issue_key] = today
                     except Exception:
                         pass
+
+        # Reset per-day suppression when an issue is resolved
+        resolved_keys = set(self._storage_last_notify_day.keys()) - current_issue_keys
+        for key in resolved_keys:
+            self._storage_last_notify_day.pop(key, None)
 
     # ── Uploader ───────────────────────────────────────────────────
 
