@@ -305,9 +305,23 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
       const cx = chartPadding.left + i * barGap + barGap / 2;
       const cy =
         chartPadding.top + innerHeight - (predicted / yMax) * innerHeight;
-      trendPoints.push(`${cx},${cy}`);
+      trendPoints.push({ x: cx, y: cy });
     }
   }
+
+  // Build curved path from trend points using quadratic Bézier curves
+  const buildCurvedPath = (points) => {
+    if (points.length < 2) return "";
+    let path = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const cp = {
+        x: (points[i - 1].x + points[i].x) / 2,
+        y: (points[i - 1].y + points[i].y) / 2,
+      };
+      path += ` Q ${cp.x} ${cp.y} ${points[i].x} ${points[i].y}`;
+    }
+    return path;
+  };
 
   return (
     <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
@@ -586,15 +600,15 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
 
           {/* Trend Line */}
           {trendPoints.length > 1 && (
-            <polyline
-              points={trendPoints.join(" ")}
+            <path
+              d={buildCurvedPath(trendPoints)}
               fill="none"
-              stroke="#facc15"
-              strokeWidth="3"
-              strokeOpacity="1"
+              stroke="#ffffff"
+              strokeWidth="2"
+              strokeOpacity="0.6"
               strokeLinecap="round"
               strokeLinejoin="round"
-              filter="url(#trendGlow)"
+              strokeDasharray="4 4"
               style={{ pointerEvents: "none" }}
             />
           )}
@@ -650,7 +664,7 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
         </div>
         {showTrendLine && (
           <div className="flex items-center gap-2">
-            <span className="w-5 h-0.5 bg-yellow-400" />
+            <span className="w-5 h-0.5 border-t-2 border-dashed border-white/60" />
             <span className="text-xs text-theme-text-muted">
               {t("vodStreams.history.legendTrend", "Trend")}
             </span>
