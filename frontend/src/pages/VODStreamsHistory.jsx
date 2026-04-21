@@ -286,25 +286,19 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   for (let i = 0; i <= maxPeak + tickStep; i += tickStep) yTicks.push(i);
   const yMax = yTicks[yTicks.length - 1];
 
-  // Trend line: linear regression for stable global trend positioning
+  // Trend line: EMA-smoothed daily peaks for a visually curved trend
   const trendPoints = [];
   if (showTrendLine && enriched.length >= 2) {
-    const n = enriched.length;
-    const sumX = (n * (n - 1)) / 2;
-    const sumY = enriched.reduce((s, d) => s + d.peak, 0);
-    const sumXY = enriched.reduce((s, d, i) => s + i * d.peak, 0);
-    const sumXX = enriched.reduce((s, _, i) => s + i * i, 0);
+    const alpha = 0.35;
+    let ema = enriched[0].peak;
 
-    const denominator = n * sumXX - sumX * sumX;
-    const slope =
-      denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
-    const intercept = (sumY - slope * sumX) / n;
-
-    for (let i = 0; i < n; i++) {
-      const predicted = Math.max(0, Math.min(yMax, slope * i + intercept));
+    for (let i = 0; i < enriched.length; i++) {
+      const value = enriched[i].peak;
+      ema = i === 0 ? value : alpha * value + (1 - alpha) * ema;
+      const smoothed = Math.max(0, Math.min(yMax, ema));
       const cx = chartPadding.left + i * barGap + barGap / 2;
       const cy =
-        chartPadding.top + innerHeight - (predicted / yMax) * innerHeight;
+        chartPadding.top + innerHeight - (smoothed / yMax) * innerHeight;
       trendPoints.push({ x: cx, y: cy });
     }
   }
