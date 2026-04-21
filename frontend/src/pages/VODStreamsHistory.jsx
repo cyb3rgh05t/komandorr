@@ -713,6 +713,7 @@ export default function VODStreamsHistory() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState("30d");
+  const [selectedMonth, setSelectedMonth] = useState("all");
   const [showTrendLine, setShowTrendLine] = useState(true);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportRef = useRef(null);
@@ -745,6 +746,15 @@ export default function VODStreamsHistory() {
     placeholderData: (prev) => prev,
   });
 
+  const { data: allDailyPeaks } = useQuery({
+    queryKey: ["plex-daily-peaks", 0],
+    queryFn: () => api.get("/plex/stats/daily-peaks?days=0"),
+    staleTime: 60000,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: true,
+    placeholderData: (prev) => prev,
+  });
+
   const { data: plexStats, isFetching: statsFetching } = useQuery({
     queryKey: ["plex-stats"],
     queryFn: () => getPlexStats(),
@@ -762,12 +772,48 @@ export default function VODStreamsHistory() {
     return new Date(peaksUpdatedAt).toLocaleTimeString();
   }, [peaksUpdatedAt]);
 
+  const monthOptions = useMemo(() => {
+    const source = Array.isArray(allDailyPeaks) ? allDailyPeaks : [];
+    const unique = new Set(
+      source
+        .map((item) => (item?.date || "").slice(0, 7))
+        .filter((value) => value.length === 7),
+    );
+
+    return Array.from(unique)
+      .sort((a, b) => (a < b ? 1 : -1))
+      .map((ym) => {
+        const [year, month] = ym.split("-");
+        const date = new Date(Number(year), Number(month) - 1, 1);
+        return {
+          value: ym,
+          label: date.toLocaleDateString(undefined, {
+            month: "long",
+            year: "numeric",
+          }),
+        };
+      });
+  }, [allDailyPeaks]);
+
+  const displayedPeaks = useMemo(() => {
+    const rangePeaks = Array.isArray(dailyPeaks) ? dailyPeaks : [];
+    if (selectedMonth === "all") {
+      return rangePeaks;
+    }
+
+    const source = Array.isArray(allDailyPeaks) ? allDailyPeaks : [];
+    return source.filter((item) =>
+      (item?.date || "").startsWith(selectedMonth),
+    );
+  }, [dailyPeaks, allDailyPeaks, selectedMonth]);
+
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
       await Promise.all([
         queryClient.refetchQueries({ queryKey: ["plex-daily-peaks", days] }),
+        queryClient.refetchQueries({ queryKey: ["plex-daily-peaks", 0] }),
         queryClient.refetchQueries({ queryKey: ["plex-stats"] }),
       ]);
       toast.success(t("common.refreshed", "Refreshed successfully"));
@@ -820,7 +866,7 @@ export default function VODStreamsHistory() {
               <div className="absolute right-0 top-full mt-1.5 bg-theme-card border border-theme rounded-lg shadow-xl z-50 min-w-[100px] overflow-hidden">
                 <button
                   onClick={() => {
-                    exportData(dailyPeaks, "csv");
+                    exportData(displayedPeaks, "csv");
                     setShowExportMenu(false);
                   }}
                   className="flex items-center w-full px-4 py-2.5 text-xs text-left text-theme-text-muted hover:text-theme-primary hover:bg-theme-primary/10 transition-colors"
@@ -830,7 +876,7 @@ export default function VODStreamsHistory() {
                 <div className="border-t border-theme" />
                 <button
                   onClick={() => {
-                    exportData(dailyPeaks, "json");
+                    exportData(displayedPeaks, "json");
                     setShowExportMenu(false);
                   }}
                   className="flex items-center w-full px-4 py-2.5 text-xs text-left text-theme-text-muted hover:text-theme-primary hover:bg-theme-primary/10 transition-colors"
@@ -882,30 +928,56 @@ export default function VODStreamsHistory() {
       ) : (
         <>
           <StatsCards
-            data={dailyPeaks}
+            data={displayedPeaks}
             allTimePeak={plexStats?.peak_concurrent}
             t={t}
           />
           {/* Time Range Filter */}
           <div>
-            <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
-              {TIME_RANGES.map((range) => (
-                <button
-                  key={range.key}
-                  onClick={() => setTimeRange(range.key)}
-                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
-                    timeRange === range.key
-                      ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                  }`}
-                >
-                  {range.label}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+                {TIME_RANGES.map((range) => (
+                  <button
+                    key={range.key}
+                    onClick={() => {
+                      setTimeRange(range.key);
+                      setSelectedMonth("all");
+                    }}
+                    className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                      timeRange === range.key
+                        ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                        : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                    }`}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+
+              <select
+                value={selectedMonth}
+                onChange={(e) => {
+                  const month = e.target.value;
+                  setSelectedMonth(month);
+                  if (month !== "all") {
+                    setTimeRange("all");
+                  }
+                }}
+                className="h-9 px-3 rounded-lg bg-theme-card border border-theme text-xs sm:text-sm text-theme-text-muted hover:text-theme-text"
+              >
+                <option value="all">
+                  {t("vodStreams.history.monthAll", "All Months")}
+                </option>
+                {monthOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <PeakChart
-            data={dailyPeaks}
+            data={displayedPeaks}
             allTimePeak={plexStats?.peak_concurrent}
             showTrendLine={showTrendLine}
             t={t}
