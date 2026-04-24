@@ -20,6 +20,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
+import PageHeader from "../components/PageHeader";
 
 // Mini sparkline chart component - Line/Area chart style
 const MiniChart = ({ data = [], serviceId }) => {
@@ -351,43 +352,45 @@ export default function Monitor() {
         </>
       ) : (
         <>
-          {/* Search Bar & Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="relative w-full sm:max-w-xs">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder={t("monitor.searchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
-              />
-            </div>
+          <PageHeader
+            icon={Activity}
+            title={t("nav.monitor", "Monitor")}
+            actions={
+              <>
+                <button
+                  onClick={handleRefresh}
+                  disabled={isFetching}
+                  className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={`text-theme-primary transition-transform duration-500 ${
+                      isFetching ? "animate-spin" : ""
+                    }`}
+                  />
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={handleRefresh}
-                disabled={isFetching}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <RefreshCw
-                  size={16}
-                  className={`text-theme-primary transition-transform duration-500 ${
-                    isFetching ? "animate-spin" : ""
-                  }`}
-                />
-
-                <span>
-                  {isFetching
-                    ? t("common.refreshing", "Refreshing")
-                    : t("monitor.refresh")}
-                </span>
-              </button>
-            </div>
-          </div>
+                  <span>
+                    {isFetching
+                      ? t("common.refreshing", "Refreshing")
+                      : t("monitor.refresh")}
+                  </span>
+                </button>
+                <div className="relative w-full sm:w-64">
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    placeholder={t("monitor.searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+                  />
+                </div>
+              </>
+            }
+          />
 
           {/* Stats Overview */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

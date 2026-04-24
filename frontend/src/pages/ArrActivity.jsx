@@ -27,6 +27,7 @@ import {
   FolderUp,
 } from "lucide-react";
 import { arrActivityApi } from "../services/arrActivityApi";
+import PageHeader from "../components/PageHeader";
 
 const ActivityBadge = ({ status, t }) => {
   const statusLower = (status || "").toLowerCase();
@@ -475,51 +476,57 @@ export default function ArrActivity() {
       )}
 
       {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-theme-card border border-theme rounded-lg py-2.5 pl-10 pr-3 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
-            placeholder={t("common.search", "Search...")}
-          />
-        </div>
-        <button
-          onClick={refreshAll}
-          disabled={
-            isRefreshing ||
-            isFetchingQueue ||
-            isFetchingStatus ||
-            isFetchingSystem ||
-            isFetchingHistory
-          }
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCcw
-            size={16}
-            className={`text-theme-primary transition-transform duration-500 ${
-              isRefreshing ||
-              isFetchingQueue ||
-              isFetchingStatus ||
-              isFetchingSystem ||
-              isFetchingHistory
-                ? "animate-spin"
-                : ""
-            }`}
-          />
-          <span className="text-xs sm:text-sm">
-            {isRefreshing ||
-            isFetchingQueue ||
-            isFetchingStatus ||
-            isFetchingSystem ||
-            isFetchingHistory
-              ? t("common.refreshing", "Refreshing")
-              : t("common.refresh", "Refresh")}
-          </span>
-        </button>
-      </div>
+      <PageHeader
+        icon={Download}
+        title={t("nav.arrActivity", "Downloads")}
+        actions={
+          <>
+            <button
+              onClick={refreshAll}
+              disabled={
+                isRefreshing ||
+                isFetchingQueue ||
+                isFetchingStatus ||
+                isFetchingSystem ||
+                isFetchingHistory
+              }
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCcw
+                size={16}
+                className={`text-theme-primary transition-transform duration-500 ${
+                  isRefreshing ||
+                  isFetchingQueue ||
+                  isFetchingStatus ||
+                  isFetchingSystem ||
+                  isFetchingHistory
+                    ? "animate-spin"
+                    : ""
+                }`}
+              />
+              <span className="text-xs sm:text-sm">
+                {isRefreshing ||
+                isFetchingQueue ||
+                isFetchingStatus ||
+                isFetchingSystem ||
+                isFetchingHistory
+                  ? t("common.refreshing", "Refreshing")
+                  : t("common.refresh", "Refresh")}
+              </span>
+            </button>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-theme-card border border-theme rounded-lg py-2.5 pl-10 pr-3 text-sm text-theme-text placeholder:text-theme-text-muted focus:outline-none focus:border-theme-primary focus:ring-1 focus:ring-theme-primary"
+                placeholder={t("common.search", "Search...")}
+              />
+            </div>
+          </>
+        }
+      />
 
       {/* Loading Skeleton */}
       {isInitialLoading && (

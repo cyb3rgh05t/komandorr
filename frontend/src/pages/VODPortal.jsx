@@ -20,6 +20,7 @@ import {
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "../components/ConfirmDialog";
+import PageHeader from "../components/PageHeader";
 
 const CACHE_KEY = "overseerr_users_cache";
 const CACHE_TIMESTAMP_KEY = "overseerr_users_cache_timestamp";
@@ -397,42 +398,49 @@ export default function VODPortal() {
         )}
 
       {/* Header with Search & Refresh */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder={t("vodPortal.searchPlaceholder") || "Search users..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
-          />
-        </div>
-
-        <button
-          onClick={() => {
-            clearUsersCache();
-            fetchUsers(true, true, searchTerm); // skipCache=true, force=true
-          }}
-          disabled={usersLoading}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
-        >
-          <RefreshCw
-            size={16}
-            className={`text-theme-primary transition-transform duration-500 ${
-              usersLoading ? "animate-spin" : ""
-            }`}
-          />
-          <span className="text-xs sm:text-sm">
-            {usersLoading
-              ? t("vodPortal.refreshing") || "Refreshing..."
-              : t("vodPortal.refresh") || "Refresh"}
-          </span>
-        </button>
-      </div>
+      <PageHeader
+        icon={Users}
+        title={t("nav.vodPortal", "VoD Portal")}
+        actions={
+          <>
+            <button
+              onClick={() => {
+                clearUsersCache();
+                fetchUsers(true, true, searchTerm); // skipCache=true, force=true
+              }}
+              disabled={usersLoading}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                size={16}
+                className={`text-theme-primary transition-transform duration-500 ${
+                  usersLoading ? "animate-spin" : ""
+                }`}
+              />
+              <span className="text-xs sm:text-sm">
+                {usersLoading
+                  ? t("vodPortal.refreshing") || "Refreshing..."
+                  : t("vodPortal.refresh") || "Refresh"}
+              </span>
+            </button>
+            <div className="relative w-full sm:w-64">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder={
+                  t("vodPortal.searchPlaceholder") || "Search users..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+              />
+            </div>
+          </>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">

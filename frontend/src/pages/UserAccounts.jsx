@@ -8,6 +8,7 @@ import { formatDateTime } from "../utils/dateUtils";
 import { useItemsPerPage } from "../utils/usePersistedState";
 import ConfirmDialog from "../components/ConfirmDialog";
 import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
+import PageHeader from "../components/PageHeader";
 import {
   Users,
   Trash2,
@@ -554,41 +555,46 @@ const UserAccounts = () => {
       )}
 
       {/* Header with Search & Refresh */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder={
-              t("userAccounts.searchPlaceholder") || "Search users..."
-            }
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
-          />
-        </div>
-
-        <button
-          onClick={handleRefresh}
-          disabled={loading || isFetching}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-initial"
-        >
-          <RefreshCw
-            size={16}
-            className={`text-theme-primary transition-transform duration-500 ${
-              isFetching ? "animate-spin" : ""
-            }`}
-          />
-          <span className="text-xs sm:text-sm">
-            {isFetching
-              ? t("common.refreshing", "Refreshing")
-              : t("common.refresh")}
-          </span>
-        </button>
-      </div>
+      <PageHeader
+        icon={Users}
+        title={t("nav.userAccounts", "User Accounts")}
+        actions={
+          <>
+            <button
+              onClick={handleRefresh}
+              disabled={loading || isFetching}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                size={16}
+                className={`text-theme-primary transition-transform duration-500 ${
+                  isFetching ? "animate-spin" : ""
+                }`}
+              />
+              <span className="text-xs sm:text-sm">
+                {isFetching
+                  ? t("common.refreshing", "Refreshing")
+                  : t("common.refresh")}
+              </span>
+            </button>
+            <div className="relative w-full sm:w-64">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder={
+                  t("userAccounts.searchPlaceholder") || "Search users..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+              />
+            </div>
+          </>
+        }
+      />
 
       {/* Stats Cards */}
       {/* Row 1: 6 columns - Plex Server, Plex Users, Total Users, Redeemed Invites */}

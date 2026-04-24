@@ -13,6 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import { api } from "../services/api";
+import PageHeader from "../components/PageHeader";
 
 // Traffic chart component - Line/Area chart style for bandwidth history
 const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
@@ -335,40 +336,44 @@ export default function Traffic() {
         </>
       ) : (
         <>
-          {/* Header with Search & Refresh */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="relative w-full sm:max-w-xs">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder={t("traffic.page.searchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
-              />
-            </div>
-
-            <button
-              onClick={handleRefresh}
-              disabled={isFetching}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto"
-            >
-              <RefreshCw
-                size={16}
-                className={`text-theme-primary ${
-                  isFetching ? "animate-spin" : ""
-                }`}
-              />
-              <span className="text-xs sm:text-sm">
-                {isFetching
-                  ? t("common.refreshing", "Refreshing")
-                  : t("traffic.page.refresh")}
-              </span>
-            </button>
-          </div>
+          <PageHeader
+            icon={TrendingUp}
+            title={t("nav.traffic", "Traffic")}
+            actions={
+              <>
+                <button
+                  onClick={handleRefresh}
+                  disabled={isFetching}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={`text-theme-primary ${
+                      isFetching ? "animate-spin" : ""
+                    }`}
+                  />
+                  <span className="text-xs sm:text-sm">
+                    {isFetching
+                      ? t("common.refreshing", "Refreshing")
+                      : t("traffic.page.refresh")}
+                  </span>
+                </button>
+                <div className="relative w-full sm:w-64">
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    placeholder={t("traffic.page.searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
+                  />
+                </div>
+              </>
+            }
+          />
 
           {/* Summary Cards - Optimized for tablet */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-4">

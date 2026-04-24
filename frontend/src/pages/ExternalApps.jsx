@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import PageHeader from "@/components/PageHeader";
 import {
   DndContext,
   closestCenter,
@@ -415,44 +416,48 @@ export default function ExternalApps() {
       )}
 
       {/* Search & Actions */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-          <input
-            type="text"
-            placeholder={t("externalApps.searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            to="/settings?tab=external_apps"
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
-          >
-            <Plus size={16} className="text-theme-primary" />
-            <span className="text-xs sm:text-sm">External App</span>
-          </Link>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw
-              size={16}
-              className={`text-theme-primary transition-transform duration-500 ${
-                isFetching ? "animate-spin" : ""
-              }`}
-            />
-            <span className="text-xs sm:text-sm">
-              {isFetching
-                ? t("common.refreshing", "Refreshing")
-                : t("common.refresh", "Refresh")}
-            </span>
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={AppWindow}
+        title={t("nav.externalApps", "External Apps")}
+        actions={
+          <>
+            <Link
+              to="/settings?tab=external_apps"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+            >
+              <Plus size={16} className="text-theme-primary" />
+              <span className="text-xs sm:text-sm">External App</span>
+            </Link>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                size={16}
+                className={`text-theme-primary transition-transform duration-500 ${
+                  isFetching ? "animate-spin" : ""
+                }`}
+              />
+              <span className="text-xs sm:text-sm">
+                {isFetching
+                  ? t("common.refreshing", "Refreshing")
+                  : t("common.refresh", "Refresh")}
+              </span>
+            </button>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+              <input
+                type="text"
+                placeholder={t("externalApps.searchPlaceholder")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+              />
+            </div>
+          </>
+        }
+      />
 
       {/* Group Filter Tabs */}
       {groups.length > 0 && (
