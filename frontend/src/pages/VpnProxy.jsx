@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -32,7 +32,7 @@ const isActiveStatus = (s) => {
 
 const isStoppedStatus = (s) => {
   const lower = (s || "").toLowerCase();
-  return ["stopped", "exited", "dead", "removed", "created"].includes(lower);
+  return ["stopped", "exited", "dead", "removed"].includes(lower);
 };
 
 const isUnhealthyStatus = (s) => {
@@ -54,6 +54,34 @@ const isNotConnectedStatus = (container, info) => {
   if (isUnhealthyStatus(status)) return false;
   return !isVpnConnected(info);
 };
+
+const NAME_COLLATOR = new Intl.Collator("de", {
+  sensitivity: "base",
+  numeric: true,
+});
+
+const getStatusPriority = (status) => {
+  const lower = (status || "").toLowerCase();
+  if (["running", "healthy"].includes(lower)) return 0;
+  if (lower === "unhealthy") return 1;
+  if (["starting", "restarting", "paused"].includes(lower)) return 2;
+  if (lower === "created") return 3;
+  if (["stopped", "exited", "dead", "removed", "error"].includes(lower)) {
+    return 4;
+  }
+  return 5;
+};
+
+const sortContainersByStatusAndName = (items) =>
+  [...items].sort((a, b) => {
+    const statusDiff = getStatusPriority(a?.docker_status || a?.status) - getStatusPriority(b?.docker_status || b?.status);
+    if (statusDiff !== 0) return statusDiff;
+
+    const nameDiff = NAME_COLLATOR.compare(a?.name || "", b?.name || "");
+    if (nameDiff !== 0) return nameDiff;
+
+    return String(a?.id || "").localeCompare(String(b?.id || ""));
+  });
 
 const StatusBadge = ({ status }) => {
   const statusLower = (status || "").toLowerCase();
@@ -95,7 +123,10 @@ export default function VpnProxy() {
   const [activeTab, setActiveTab] = useState(
     searchParams.get("provider") || "all",
   );
-  const [statusFilter, setStatusFilter] = useState(null);
+  const [activeCategoryTab, setActiveCategoryTab] = useState("proxy");
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("status") || null,
+  );
   const [copiedUrl, setCopiedUrl] = useState(null);
 
   const copyToClipboard = (url) => {
@@ -204,6 +235,10 @@ export default function VpnProxy() {
       result = result.filter((c) =>
         isStoppedStatus(c.docker_status || c.status),
       );
+    } else if (statusFilter === "created") {
+      result = result.filter(
+        (c) => (c.docker_status || c.status || "").toLowerCase() === "created",
+      );
     } else if (statusFilter === "clients") {
       result = result.filter((c) => (depsMap[c.id] || []).length > 0);
     }
@@ -217,7 +252,7 @@ export default function VpnProxy() {
           vpnInfoMap[c.id]?.public_ip?.includes(q),
       );
     }
-    return result;
+    return sortContainersByStatusAndName(result);
   }, [containers, activeTab, statusFilter, search, vpnInfoMap, depsMap]);
 
   // Group filtered containers by type
@@ -245,6 +280,54 @@ export default function VpnProxy() {
       ),
     [filtered],
   );
+
+  const categoryTabs = useMemo(
+    () => [
+      {
+        key: "proxy",
+        label: "Proxy Containers",
+        icon: Network,
+        iconClass: "text-theme-primary",
+        items: proxyContainers,
+      },
+      {
+        key: "socks5",
+        label: "SOCKS5 Proxy Containers",
+        icon: Shield,
+        iconClass: "text-purple-400",
+        items: socks5Containers,
+      },
+      {
+        key: "vpn",
+        label: "VPN Only Containers",
+        icon: Shield,
+        iconClass: "text-theme-primary",
+        items: vpnOnlyContainers,
+      },
+    ],
+    [proxyContainers, socks5Containers, vpnOnlyContainers],
+  );
+
+  const activeCategory =
+    categoryTabs.find(
+      (tab) => tab.key === activeCategoryTab && tab.items.length > 0,
+    ) || categoryTabs.find((tab) => tab.items.length > 0) || categoryTabs[0];
+
+  const visibleContainers = activeCategory?.items || [];
+
+  useEffect(() => {
+    if (
+      categoryTabs.some(
+        (tab) => tab.key === activeCategoryTab && tab.items.length > 0,
+      )
+    ) {
+      return;
+    }
+    const firstNonEmpty = categoryTabs.find((tab) => tab.items.length > 0);
+    if (firstNonEmpty && firstNonEmpty.key !== activeCategoryTab) {
+      setActiveCategoryTab(firstNonEmpty.key);
+    }
+  }, [activeCategoryTab, categoryTabs]);
 
   // Stats
   const runningCount = containers.filter((c) =>
@@ -1098,62 +1181,58 @@ export default function VpnProxy() {
         </div>
       )}
 
-      {/* Container Cards - Grouped by Type */}
+      {/* Container Cards */}
       {!isLoading && filtered.length > 0 && (
-        <div className="space-y-8">
-          {/* Proxy Containers */}
-          {proxyContainers.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Network className="w-5 h-5 text-theme-primary" />
-                <h2 className="text-lg font-semibold text-theme-text">
-                  Proxy Containers
-                </h2>
-                <span className="text-xs text-theme-text-muted bg-theme-hover px-2 py-1 rounded-full">
-                  {proxyContainers.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {proxyContainers.map((container) => renderCard(container))}
-              </div>
-            </div>
-          )}
+        <div className="space-y-5">
+          <div className="flex flex-wrap gap-2">
+            {categoryTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeCategory?.key === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveCategoryTab(tab.key)}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-theme-primary text-black border-theme-primary"
+                      : "bg-theme-card border-theme text-theme-text hover:border-theme-primary"
+                  }`}
+                >
+                  <Icon
+                    className={`w-4 h-4 ${isActive ? "text-black" : tab.iconClass}`}
+                  />
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      isActive
+                        ? "bg-black/10 text-black/80"
+                        : "bg-theme-hover text-theme-text-muted"
+                    }`}
+                  >
+                    {tab.items.length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-          {/* SOCKS5 Proxy Containers */}
-          {socks5Containers.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Shield className="w-5 h-5 text-purple-400" />
+          <div className="flex items-center gap-3">
+            {activeCategory && (
+              <>
+                <activeCategory.icon className={`w-5 h-5 ${activeCategory.iconClass}`} />
                 <h2 className="text-lg font-semibold text-theme-text">
-                  SOCKS5 Proxy Containers
+                  {activeCategory.label}
                 </h2>
                 <span className="text-xs text-theme-text-muted bg-theme-hover px-2 py-1 rounded-full">
-                  {socks5Containers.length}
+                  {visibleContainers.length}
                 </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {socks5Containers.map((container) => renderCard(container))}
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
 
-          {/* VPN Only Containers */}
-          {vpnOnlyContainers.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Shield className="w-5 h-5 text-theme-primary" />
-                <h2 className="text-lg font-semibold text-theme-text">
-                  VPN Only Containers
-                </h2>
-                <span className="text-xs text-theme-text-muted bg-theme-hover px-2 py-1 rounded-full">
-                  {vpnOnlyContainers.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {vpnOnlyContainers.map((container) => renderCard(container))}
-              </div>
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {visibleContainers.map((container) => renderCard(container))}
+          </div>
         </div>
       )}
       {/* Empty State */}
