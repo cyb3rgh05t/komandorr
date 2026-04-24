@@ -174,12 +174,33 @@ async def get_monitoring_status(username: str = Depends(require_auth)):
         return {"configured": False}
 
 
+@router.get("/monitoring/instances")
+async def get_monitoring_instances(username: str = Depends(require_auth)):
+    """Get configured O11 monitoring instances from VPN Proxy Manager."""
+    if not _is_configured():
+        return []
+    try:
+        return await proxy_get("/settings/o11/instances") or []
+    except Exception:
+        return []
+
+
 @router.get("/monitoring")
 async def get_monitoring(username: str = Depends(require_auth)):
     """Get monitoring data (readers, system stats)."""
     if not _is_configured():
         return {}
     return await proxy_get("/monitoring") or {}
+
+
+@router.get("/monitoring/instance/{instance_id}")
+async def get_instance_monitoring(
+    instance_id: str, username: str = Depends(require_auth)
+):
+    """Get monitoring data for a specific O11 instance."""
+    if not _is_configured():
+        return {}
+    return await proxy_get(f"/monitoring/instance/{instance_id}") or {}
 
 
 @router.get("/monitoring/network-usage")
@@ -190,6 +211,23 @@ async def get_network_usage(
     if not _is_configured():
         return {}
     return await proxy_get(f"/monitoring/network-usage?provider={provider}") or {}
+
+
+@router.get("/monitoring/instance/{instance_id}/network-usage")
+async def get_instance_network_usage(
+    instance_id: str,
+    provider: str = "demagentatv",
+    username: str = Depends(require_auth),
+):
+    """Get network usage data for a provider on a specific O11 instance."""
+    if not _is_configured():
+        return {}
+    return (
+        await proxy_get(
+            f"/monitoring/instance/{instance_id}/network-usage?provider={provider}"
+        )
+        or {}
+    )
 
 
 @router.post("/containers/{container_id}/dependents/{docker_name}/{action}")

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -194,7 +194,7 @@ function NetworkUsageGrid({ usage, category }) {
 export default function VpnProxyMonitor() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  const [providerId, setProviderId] = useState("demagentatv");
+  const [activeInstanceId, setActiveInstanceId] = useState(null);
   const [tab, setTab] = useState("network");
   const [networkTab, setNetworkTab] = useState("all");
 
@@ -207,9 +207,43 @@ export default function VpnProxyMonitor() {
 
   const configured = statusData?.configured ?? null;
 
+  const { data: instances = [] } = useQuery({
+    queryKey: ["vpn-monitor-instances"],
+    queryFn: () => api.get("/vpn-proxy/monitoring/instances"),
+    enabled: configured === true,
+    staleTime: 30000,
+    refetchInterval: 30000,
+    placeholderData: (prev) => prev,
+  });
+
+  const configuredInstances = useMemo(
+    () => instances.filter((instance) => instance?.configured),
+    [instances],
+  );
+
+  useEffect(() => {
+    if (!configuredInstances.length) return;
+    if (
+      activeInstanceId &&
+      configuredInstances.some((instance) => instance.id === activeInstanceId)
+    ) {
+      return;
+    }
+    setActiveInstanceId(configuredInstances[0].id);
+  }, [activeInstanceId, configuredInstances]);
+
+  const activeInstance =
+    configuredInstances.find((instance) => instance.id === activeInstanceId) ||
+    configuredInstances[0] ||
+    null;
+  const providerId = activeInstance?.provider_id || "";
+
   const { data: monitorData, isFetching: monitorFetching } = useQuery({
-    queryKey: ["vpn-monitor-data"],
-    queryFn: () => api.get("/vpn-proxy/monitoring"),
+    queryKey: ["vpn-monitor-data", activeInstanceId],
+    queryFn: () =>
+      activeInstanceId
+        ? api.get(`/vpn-proxy/monitoring/instance/${activeInstanceId}`)
+        : api.get("/vpn-proxy/monitoring"),
     enabled: configured === true,
     staleTime: 3000,
     refetchInterval: 5000,
@@ -217,9 +251,13 @@ export default function VpnProxyMonitor() {
   });
 
   const { data: networkData, isFetching: networkFetching } = useQuery({
-    queryKey: ["vpn-monitor-network", providerId],
+    queryKey: ["vpn-monitor-network", activeInstanceId, providerId],
     queryFn: () =>
-      api.get(`/vpn-proxy/monitoring/network-usage?provider=${providerId}`),
+      activeInstanceId
+        ? api.get(
+            `/vpn-proxy/monitoring/instance/${activeInstanceId}/network-usage?provider=${providerId}`,
+          )
+        : api.get(`/vpn-proxy/monitoring/network-usage?provider=${providerId}`),
     enabled: configured === true && providerId.length > 0,
     staleTime: 3000,
     refetchInterval: 5000,
@@ -231,6 +269,7 @@ export default function VpnProxyMonitor() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["vpn-monitor-data"] });
     queryClient.invalidateQueries({ queryKey: ["vpn-monitor-network"] });
+    queryClient.invalidateQueries({ queryKey: ["vpn-monitor-instances"] });
   };
 
   const readers = monitorData?.Readers || [];
@@ -326,7 +365,27 @@ export default function VpnProxyMonitor() {
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {configuredInstances.length > 1 && (
+            <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+              {configuredInstances.map((instance) => (
+                <button
+                  key={instance.id}
+                  onClick={() => setActiveInstanceId(instance.id)}
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    activeInstance?.id === instance.id
+                      ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                  }`}
+                >
+                  <Activity className="w-4 h-4" />
+                  {instance.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
@@ -489,15 +548,16 @@ export default function VpnProxyMonitor() {
                   );
                 })}
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
-                <input
-                  type="text"
-                  placeholder="Provider ID..."
-                  value={providerId}
-                  onChange={(e) => setProviderId(e.target.value)}
-                  className="w-48 pl-9 pr-4 py-2 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-text-muted text-sm focus:outline-none focus:border-theme-primary"
-                />
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-theme-card border border-theme rounded-lg text-xs sm:text-sm text-theme-text-muted">
+                <Activity className="w-4 h-4 text-theme-primary" />
+                <span className="text-theme-text">
+                  {activeInstance?.name || "Default Instance"}
+                </span>
+                {providerId && (
+                  <span className="font-mono text-theme-primary">
+                    {providerId}
+                  </span>
+                )}
               </div>
             </div>
             <NetworkUsageGrid usage={usage} category={networkTab} />
