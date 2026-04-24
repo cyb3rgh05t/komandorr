@@ -74,7 +74,9 @@ const getStatusPriority = (status) => {
 
 const sortContainersByStatusAndName = (items) =>
   [...items].sort((a, b) => {
-    const statusDiff = getStatusPriority(a?.docker_status || a?.status) - getStatusPriority(b?.docker_status || b?.status);
+    const statusDiff =
+      getStatusPriority(a?.docker_status || a?.status) -
+      getStatusPriority(b?.docker_status || b?.status);
     if (statusDiff !== 0) return statusDiff;
 
     const nameDiff = NAME_COLLATOR.compare(a?.name || "", b?.name || "");
@@ -311,7 +313,9 @@ export default function VpnProxy() {
   const activeCategory =
     categoryTabs.find(
       (tab) => tab.key === activeCategoryTab && tab.items.length > 0,
-    ) || categoryTabs.find((tab) => tab.items.length > 0) || categoryTabs[0];
+    ) ||
+    categoryTabs.find((tab) => tab.items.length > 0) ||
+    categoryTabs[0];
 
   const visibleContainers = activeCategory?.items || [];
 
@@ -1219,7 +1223,9 @@ export default function VpnProxy() {
           <div className="flex items-center gap-3">
             {activeCategory && (
               <>
-                <activeCategory.icon className={`w-5 h-5 ${activeCategory.iconClass}`} />
+                <activeCategory.icon
+                  className={`w-5 h-5 ${activeCategory.iconClass}`}
+                />
                 <h2 className="text-lg font-semibold text-theme-text">
                   {activeCategory.label}
                 </h2>
