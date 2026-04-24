@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { api } from "../services/api";
+import PageHeader from "../components/PageHeader";
 
 const CATEGORIES = ["Script", "Manifest", "Media"];
 
@@ -365,38 +366,42 @@ export default function VpnProxyMonitor() {
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {configuredInstances.length > 1 && (
-            <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
-              {configuredInstances.map((instance) => (
-                <button
-                  key={instance.id}
-                  onClick={() => setActiveInstanceId(instance.id)}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    activeInstance?.id === instance.id
-                      ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                  }`}
-                >
-                  <Activity className="w-4 h-4" />
-                  {instance.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCw
-            className={`w-4 h-4 text-theme-primary ${refreshing ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </button>
-      </div>
+      <PageHeader
+        icon={Activity}
+        title="VPN Monitor"
+        actions={
+          <>
+            {configuredInstances.length > 1 && (
+              <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+                {configuredInstances.map((instance) => (
+                  <button
+                    key={instance.id}
+                    onClick={() => setActiveInstanceId(instance.id)}
+                    className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      activeInstance?.id === instance.id
+                        ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                        : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                    }`}
+                  >
+                    <Activity className="w-4 h-4" />
+                    {instance.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`w-4 h-4 text-theme-primary ${refreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
+          </>
+        }
+      />
 
       {/* System Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

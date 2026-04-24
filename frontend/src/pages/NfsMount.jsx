@@ -15,6 +15,7 @@ import {
   Activity,
 } from "lucide-react";
 import { api } from "../services/api";
+import PageHeader from "../components/PageHeader";
 
 function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
   return (
@@ -613,38 +614,44 @@ export default function NfsMount() {
       )}
 
       {/* Live/Offline Indicator & Refresh */}
-      <div className="flex justify-end items-center gap-2 sm:gap-3">
-        {anyConnected ? (
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg justify-center">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-theme-text">
-              Live
-            </span>
-          </div>
-        ) : instances.length > 0 ? (
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg justify-center">
-            <span className="relative flex h-3 w-3">
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-theme-text">
-              Offline
-            </span>
-          </div>
-        ) : null}
-        <button
-          onClick={() => refetchDash()}
-          disabled={dashFetching}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCw
-            className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
-          />
-          <span className="text-xs sm:text-sm">Refresh</span>
-        </button>
-      </div>
+      <PageHeader
+        icon={HardDrive}
+        title="NFS Manager"
+        actions={
+          <>
+            {anyConnected ? (
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span className="text-xs sm:text-sm font-medium text-theme-text">
+                  Live
+                </span>
+              </div>
+            ) : instances.length > 0 ? (
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card border border-theme rounded-lg">
+                <span className="relative flex h-3 w-3">
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                <span className="text-xs sm:text-sm font-medium text-theme-text">
+                  Offline
+                </span>
+              </div>
+            ) : null}
+            <button
+              onClick={() => refetchDash()}
+              disabled={dashFetching}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
+              />
+              <span className="text-xs sm:text-sm">Refresh</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Active Manager Content */}
       {activeManager && (
