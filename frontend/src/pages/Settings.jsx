@@ -32,6 +32,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { testPlexConnection } from "@/services/plexService";
 import { api } from "@/services/api";
+import PageHeader from "@/components/PageHeader";
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -981,6 +982,7 @@ export default function Settings() {
 
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-24">
+      <PageHeader icon={SettingsIcon} title={t("nav.settings", "Settings")} />
       {/* Sticky Save Bar */}
       {pendingChanges && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-lg">

@@ -17,8 +17,10 @@ import {
   ArrowUpCircle,
   Layers,
   WifiOff,
+  Image,
 } from "lucide-react";
 import { api } from "../services/api";
+import PageHeader from "../components/PageHeader";
 
 function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return "—";
@@ -217,18 +219,22 @@ export default function Posterizarr() {
       )}
 
       {/* Refresh button */}
-      <div className="flex justify-end">
-        <button
-          onClick={refetchAll}
-          disabled={dashFetching}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RefreshCw
-            className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </button>
-      </div>
+      <PageHeader
+        icon={Image}
+        title="Posterizarr"
+        actions={
+          <button
+            onClick={refetchAll}
+            disabled={dashFetching}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw
+              className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </button>
+        }
+      />
 
       {/* Loading */}
       {dashLoading && !dashboard && (
