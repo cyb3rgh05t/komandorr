@@ -273,12 +273,12 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   const chartHeight = 480;
   const chartPadding = { top: 85, right: 16, bottom: 60, left: 48 };
   const innerWidth =
-    Math.max(enriched.length * 44, 300) -
+    Math.max(enriched.length * 64, 300) -
     chartPadding.left -
     chartPadding.right;
   const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
   const barGap = innerWidth / enriched.length;
-  const barWidth = Math.min(Math.max(barGap * 0.75, 20), 64);
+  const barWidth = Math.min(Math.max(barGap * 0.72, 28), 84);
   const svgWidth = innerWidth + chartPadding.left + chartPadding.right;
 
   // Y-axis ticks
@@ -559,11 +559,51 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
                     )}
                   </g>
                 )}
+                {/* Stream count badge above bar */}
+                {!isHovered && (
+                  <g>
+                    <rect
+                      x={x + barWidth / 2 - 18}
+                      y={y - 24}
+                      width={36}
+                      height={18}
+                      rx={9}
+                      className={
+                        isPeakDay
+                          ? "fill-amber-500/20 stroke-amber-400/60"
+                          : isMinDay
+                            ? "fill-rose-500/20 stroke-rose-400/60"
+                            : isWeekend
+                              ? "fill-emerald-500/15 stroke-emerald-400/50"
+                              : "fill-cyan-500/15 stroke-cyan-400/50"
+                      }
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={x + barWidth / 2}
+                      y={y - 11}
+                      textAnchor="middle"
+                      fontSize={11}
+                      fontWeight="700"
+                      className={
+                        isPeakDay
+                          ? "fill-amber-300"
+                          : isMinDay
+                            ? "fill-rose-300"
+                            : isWeekend
+                              ? "fill-emerald-300"
+                              : "fill-cyan-300"
+                      }
+                    >
+                      {item.peak}
+                    </text>
+                  </g>
+                )}
                 {/* Peak day crown */}
                 {isPeakDay && !isHovered && (
                   <text
                     x={x + barWidth / 2}
-                    y={y - 8}
+                    y={y - 30}
                     textAnchor="middle"
                     fontSize={14}
                   >
@@ -574,7 +614,7 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
                 {isMinDay && !isHovered && (
                   <text
                     x={x + barWidth / 2}
-                    y={y - 6}
+                    y={y - 28}
                     textAnchor="middle"
                     fontSize={10}
                     fill="#fb7185"
