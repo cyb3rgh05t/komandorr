@@ -269,16 +269,16 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   const peakDayIndex = enriched.findIndex((d) => d.peak === maxPeak);
   const minDayIndex = enriched.findIndex((d) => d.peak === minPeakVal);
 
-  // Chart dimensions - taller chart, tight bars, more top space for tooltips
+  // Chart dimensions - taller chart, larger bars with more spacing
   const chartHeight = 480;
   const chartPadding = { top: 85, right: 16, bottom: 60, left: 48 };
   const innerWidth =
-    Math.max(enriched.length * 22, 300) -
+    Math.max(enriched.length * 44, 300) -
     chartPadding.left -
     chartPadding.right;
   const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
   const barGap = innerWidth / enriched.length;
-  const barWidth = Math.min(Math.max(barGap * 0.88, 8), 32);
+  const barWidth = Math.min(Math.max(barGap * 0.55, 14), 48);
   const svgWidth = innerWidth + chartPadding.left + chartPadding.right;
 
   // Y-axis ticks
