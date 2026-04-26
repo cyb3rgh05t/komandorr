@@ -278,7 +278,7 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
     chartPadding.right;
   const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
   const barGap = innerWidth / enriched.length;
-  const barWidth = Math.min(Math.max(barGap * 0.55, 14), 48);
+  const barWidth = Math.min(Math.max(barGap * 0.75, 20), 64);
   const svgWidth = innerWidth + chartPadding.left + chartPadding.right;
 
   // Y-axis ticks
