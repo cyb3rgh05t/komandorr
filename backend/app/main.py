@@ -32,6 +32,7 @@ from app.api.notifications import router as notifications_router
 from app.api.vpn_proxy import router as vpn_proxy_router
 from app.api.posterizarr import router as posterizarr_router
 from app.api.nfs_mount import router as nfs_mount_router
+from app.api.autoscan import router as autoscan_router
 from app.services.monitor import monitor
 from app.middleware.auth import basic_auth_middleware
 
@@ -207,6 +208,7 @@ app.include_router(notifications_router)
 app.include_router(vpn_proxy_router)
 app.include_router(posterizarr_router)
 app.include_router(nfs_mount_router)
+app.include_router(autoscan_router)
 
 
 @app.get("/docs", include_in_schema=False)

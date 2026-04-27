@@ -79,6 +79,18 @@ class NfsMountSettings(BaseModel):
     instances: list[NfsMountInstance] = []
 
 
+class AutoscanInstance(BaseModel):
+    id: str
+    name: str
+    url: str
+    username: str = ""
+    password: str = ""
+
+
+class AutoscanSettings(BaseModel):
+    instances: list[AutoscanInstance] = []
+
+
 class ArrInstance(BaseModel):
     id: str
     name: str
@@ -116,6 +128,7 @@ class SettingsResponse(BaseModel):
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
     nfs_mount: Optional[NfsMountSettings] = None
+    autoscan: Optional[AutoscanSettings] = None
     arr: Optional[ArrSettings] = None
     external_apps: Optional[ExternalAppsSettings] = None
 
@@ -131,6 +144,7 @@ class SettingsUpdate(BaseModel):
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
     nfs_mount: Optional[NfsMountSettings] = None
+    autoscan: Optional[AutoscanSettings] = None
     arr: Optional[ArrSettings] = None
     external_apps: Optional[ExternalAppsSettings] = None
 
@@ -286,6 +300,25 @@ async def get_settings(username: str = Depends(require_auth)):
         ]
     nfs_mount_settings = NfsMountSettings(instances=nfs_mount_instances)
 
+    # Get Autoscan settings from config or defaults
+    autoscan_config = config_data.get("autoscan", {})
+    autoscan_instances = []
+    if "instances" in autoscan_config:
+        autoscan_instances = [
+            AutoscanInstance(**inst) for inst in autoscan_config["instances"]
+        ]
+    elif autoscan_config.get("url"):
+        autoscan_instances = [
+            AutoscanInstance(
+                id="autoscan-default",
+                name="Autoscan",
+                url=autoscan_config.get("url", ""),
+                username=autoscan_config.get("username", ""),
+                password=autoscan_config.get("password", ""),
+            )
+        ]
+    autoscan_settings = AutoscanSettings(instances=autoscan_instances)
+
     # Get *arr settings from config - support both old and legacy formats
     arr_config = config_data.get("arr", {})
     arr_settings = None
@@ -357,6 +390,7 @@ async def get_settings(username: str = Depends(require_auth)):
         vpn_proxy=vpn_proxy_settings,
         posterizarr=posterizarr_settings,
         nfs_mount=nfs_mount_settings,
+        autoscan=autoscan_settings,
         arr=arr_settings,
         external_apps=external_apps_settings,
     )
@@ -528,6 +562,34 @@ async def update_settings(
         ]
         logger.debug(
             f"Updated NFS Mount instances: {len(updates.nfs_mount.instances)} instances"
+        )
+
+    # Update Autoscan settings
+    if updates.autoscan is not None:
+        config_data["autoscan"] = {
+            "instances": [
+                {
+                    "id": inst.id,
+                    "name": inst.name,
+                    "url": inst.url,
+                    "username": inst.username,
+                    "password": inst.password,
+                }
+                for inst in updates.autoscan.instances
+            ]
+        }
+        settings.AUTOSCAN_INSTANCES = [
+            {
+                "id": inst.id,
+                "name": inst.name,
+                "url": inst.url,
+                "username": inst.username,
+                "password": inst.password,
+            }
+            for inst in updates.autoscan.instances
+        ]
+        logger.debug(
+            f"Updated Autoscan instances: {len(updates.autoscan.instances)} instances"
         )
 
     # Update *arr settings

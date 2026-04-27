@@ -27,6 +27,7 @@ import {
   Send,
   Palette,
   HardDrive,
+  Webhook,
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -107,6 +108,16 @@ export default function Settings() {
   const [showNfsMountKeys, setShowNfsMountKeys] = useState({});
   const [nfsMountTestStatus, setNfsMountTestStatus] = useState({});
 
+  // Autoscan settings state (multi-instance, optional Basic Auth)
+  const [autoscanInstances, setAutoscanInstances] = useState([]);
+  const [showAddAutoscan, setShowAddAutoscan] = useState(false);
+  const [newAutoscanName, setNewAutoscanName] = useState("");
+  const [newAutoscanUrl, setNewAutoscanUrl] = useState("");
+  const [newAutoscanUsername, setNewAutoscanUsername] = useState("");
+  const [newAutoscanPassword, setNewAutoscanPassword] = useState("");
+  const [showAutoscanPasswords, setShowAutoscanPasswords] = useState({});
+  const [autoscanTestStatus, setAutoscanTestStatus] = useState({});
+
   // *arr instances state
   const [arrInstances, setArrInstances] = useState([]);
   const [showAddArr, setShowAddArr] = useState(false);
@@ -128,6 +139,7 @@ export default function Settings() {
   const [newAppGroup, setNewAppGroup] = useState("");
   const appIconInputRef = useRef(null);
   const addNfsMountRef = useRef(null);
+  const addAutoscanRef = useRef(null);
   const addAppRef = useRef(null);
   const addArrRef = useRef(null);
   const addPlexRef = useRef(null);
@@ -142,6 +154,8 @@ export default function Settings() {
   posterizarrInstancesRef.current = posterizarrInstances;
   const nfsMountInstancesRef = useRef(nfsMountInstances);
   nfsMountInstancesRef.current = nfsMountInstances;
+  const autoscanInstancesRef = useRef(autoscanInstances);
+  autoscanInstancesRef.current = autoscanInstances;
   const arrInstancesRef = useRef(arrInstances);
   arrInstancesRef.current = arrInstances;
   const externalAppsRef = useRef(externalApps);
@@ -229,6 +243,7 @@ export default function Settings() {
       "vpn_proxy",
       "posterizarr",
       "nfs_mount",
+      "autoscan",
       "external_apps",
       "notifications",
       "arr",
@@ -326,6 +341,7 @@ export default function Settings() {
       }
       setPosterizarrInstances(data.posterizarr?.instances || []);
       setNfsMountInstances(data.nfs_mount?.instances || []);
+      setAutoscanInstances(data.autoscan?.instances || []);
       setArrInstances(data.arr?.instances || data.instances || []);
       setExternalApps(data.external_apps?.apps || []);
 
@@ -348,6 +364,9 @@ export default function Settings() {
       }
       if (data.nfs_mount?.instances?.length > 0) {
         validateNfsMountOnLoad(data.nfs_mount.instances);
+      }
+      if (data.autoscan?.instances?.length > 0) {
+        validateAutoscanOnLoad(data.autoscan.instances);
       }
       if (data.arr?.instances || data.instances) {
         const instances =
@@ -457,6 +476,25 @@ export default function Settings() {
         statusMap[inst.id] = "fail";
       });
       setNfsMountTestStatus(statusMap);
+    }
+  };
+
+  const validateAutoscanOnLoad = async (instances) => {
+    try {
+      const result = await api.get("/autoscan/status");
+      if (result.instances) {
+        const statusMap = {};
+        result.instances.forEach((inst) => {
+          statusMap[inst.id] = inst.connected ? "ok" : "fail";
+        });
+        setAutoscanTestStatus(statusMap);
+      }
+    } catch (error) {
+      const statusMap = {};
+      instances.forEach((inst) => {
+        statusMap[inst.id] = "fail";
+      });
+      setAutoscanTestStatus(statusMap);
     }
   };
 
@@ -738,6 +776,25 @@ export default function Settings() {
         ];
       }
 
+      // Prepare Autoscan instances payload, including pending new instance (if filled)
+      let autoscanPayload = autoscanInstancesRef.current;
+      const hasPendingAutoscan = newAutoscanName && newAutoscanUrl;
+      if (hasPendingAutoscan) {
+        const pendingId = `autoscan-${newAutoscanName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        autoscanPayload = [
+          ...autoscanInstancesRef.current,
+          {
+            id: pendingId,
+            name: newAutoscanName,
+            url: newAutoscanUrl,
+            username: newAutoscanUsername,
+            password: newAutoscanPassword,
+          },
+        ];
+      }
+
       // Prepare *arr instances payload, including pending new instance (if filled)
       let instancesPayload = arrInstancesRef.current;
       const hasPendingNew = newArrName && newArrUrl && newArrApiKey;
@@ -793,6 +850,9 @@ export default function Settings() {
         },
         nfs_mount: {
           instances: nfsMountPayload || [],
+        },
+        autoscan: {
+          instances: autoscanPayload || [],
         },
         arr: {
           instances: instancesPayload || [],
@@ -855,6 +915,14 @@ export default function Settings() {
         setNewNfsMountUrl("");
         setNewNfsMountApiKey("");
         setShowAddNfsMount(false);
+      }
+      // If we auto-included a pending Autoscan instance, clear the add form
+      if (hasPendingAutoscan) {
+        setNewAutoscanName("");
+        setNewAutoscanUrl("");
+        setNewAutoscanUsername("");
+        setNewAutoscanPassword("");
+        setShowAddAutoscan(false);
       }
       // Reload settings from backend to reflect persisted config/migrations
       console.log("Reloading settings from backend...");
@@ -971,6 +1039,7 @@ export default function Settings() {
     { id: "vpn_proxy", label: "VPN-Proxy", icon: Shield },
     { id: "posterizarr", label: "Posterizarr", icon: Palette },
     { id: "nfs_mount", label: "NFS Mount", icon: HardDrive },
+    { id: "autoscan", label: "Autoscan", icon: Webhook },
     { id: "arr", label: "*arr Instances", icon: Film },
     { id: "external_apps", label: "External Apps", icon: Globe },
     {
@@ -3072,6 +3141,433 @@ export default function Settings() {
                         setNewNfsMountName("");
                         setNewNfsMountUrl("");
                         setNewNfsMountApiKey("");
+                      }}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {/* Autoscan Settings (Multi-Instance, optional Basic Auth) */}
+        {activeTab === "autoscan" && (
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Webhook className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    Autoscan Instances
+                  </h3>
+                  <p className="text-sm text-theme-muted">
+                    Connect to one or more docker-autoscan instances for scan
+                    triggers, queue and target monitoring (optional Basic Auth).
+                  </p>
+                </div>
+              </div>
+              {!showAddAutoscan && autoscanInstances.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddAutoscan(true);
+                    setTimeout(
+                      () =>
+                        addAutoscanRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                      100,
+                    );
+                  }}
+                  className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                >
+                  <Plus size={16} className="text-theme-primary" />
+                  Add Instance
+                </button>
+              )}
+            </div>
+
+            {/* Existing Autoscan instances */}
+            {autoscanInstances.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {autoscanInstances.map((inst, idx) => (
+                  <div
+                    key={inst.id}
+                    className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                    <div className="relative space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Webhook className="w-4 h-4 text-theme-primary" />
+                          <span className="font-semibold text-theme-text">
+                            {inst.name || inst.id}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAutoscanInstances((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            );
+                            setPendingChanges(true);
+                          }}
+                          className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            value={inst.name}
+                            onChange={(e) => {
+                              setAutoscanInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  name: e.target.value,
+                                };
+                                return next;
+                              });
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="My Autoscan"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            URL
+                          </label>
+                          <input
+                            type="url"
+                            value={inst.url}
+                            onChange={(e) => {
+                              setAutoscanInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  url: e.target.value,
+                                };
+                                return next;
+                              });
+                              setAutoscanTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: null,
+                              }));
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="http://autoscan:3030"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            Username{" "}
+                            <span className="text-xs text-theme-muted font-normal">
+                              (optional)
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            value={inst.username || ""}
+                            onChange={(e) => {
+                              setAutoscanInstances((prev) => {
+                                const next = [...prev];
+                                next[idx] = {
+                                  ...next[idx],
+                                  username: e.target.value,
+                                };
+                                return next;
+                              });
+                              setAutoscanTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: null,
+                              }));
+                              setPendingChanges(true);
+                            }}
+                            className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                            placeholder="admin"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            Password{" "}
+                            <span className="text-xs text-theme-muted font-normal">
+                              (optional)
+                            </span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={
+                                showAutoscanPasswords[inst.id]
+                                  ? "text"
+                                  : "password"
+                              }
+                              value={inst.password || ""}
+                              onChange={(e) => {
+                                setAutoscanInstances((prev) => {
+                                  const next = [...prev];
+                                  next[idx] = {
+                                    ...next[idx],
+                                    password: e.target.value,
+                                  };
+                                  return next;
+                                });
+                                setAutoscanTestStatus((prev) => ({
+                                  ...prev,
+                                  [inst.id]: null,
+                                }));
+                                setPendingChanges(true);
+                              }}
+                              className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="Basic Auth password"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowAutoscanPasswords((prev) => ({
+                                  ...prev,
+                                  [inst.id]: !prev[inst.id],
+                                }))
+                              }
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                            >
+                              {showAutoscanPasswords[inst.id] ? (
+                                <EyeOff size={14} />
+                              ) : (
+                                <Eye size={14} />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Test Connection Button */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!inst.url) {
+                            toast.error("Please enter a URL");
+                            return;
+                          }
+                          setAutoscanTestStatus((prev) => ({
+                            ...prev,
+                            [inst.id]: "loading",
+                          }));
+                          try {
+                            const result = await api.post(
+                              "/autoscan/test-connection",
+                              {
+                                url: inst.url,
+                                username: inst.username || "",
+                                password: inst.password || "",
+                              },
+                            );
+                            if (result?.connected) {
+                              setAutoscanTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "ok",
+                              }));
+                              toast.success(`${inst.name} connected`);
+                            } else {
+                              setAutoscanTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "fail",
+                              }));
+                              toast.error(result?.error || "Connection failed");
+                            }
+                          } catch (e) {
+                            setAutoscanTestStatus((prev) => ({
+                              ...prev,
+                              [inst.id]: "fail",
+                            }));
+                            toast.error(
+                              e.message || "Cannot connect to Autoscan",
+                            );
+                          }
+                        }}
+                        disabled={
+                          autoscanTestStatus[inst.id] === "loading" || !inst.url
+                        }
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                          autoscanTestStatus[inst.id] === "ok"
+                            ? "!bg-green-600 hover:!bg-green-700 !text-white !border-green-600"
+                            : autoscanTestStatus[inst.id] === "fail"
+                              ? "!bg-red-600 hover:!bg-red-700 !text-white !border-red-600"
+                              : ""
+                        }`}
+                      >
+                        {autoscanTestStatus[inst.id] === "loading" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Testing...
+                          </span>
+                        ) : autoscanTestStatus[inst.id] === "ok" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} />
+                            Connected
+                          </span>
+                        ) : (
+                          "Test Connection"
+                        )}
+                      </button>
+
+                      {autoscanTestStatus[inst.id] === "fail" && (
+                        <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <p>
+                            Cannot connect to {inst.name}. Check URL and Basic
+                            Auth credentials.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new Autoscan instance */}
+            {showAddAutoscan || autoscanInstances.length === 0 ? (
+              <div
+                ref={addAutoscanRef}
+                className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                <div className="relative space-y-3">
+                  <h4 className="text-sm font-semibold text-theme-text">
+                    Add Autoscan Instance
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newAutoscanName}
+                        onChange={(e) => setNewAutoscanName(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="My Autoscan"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        URL
+                      </label>
+                      <input
+                        type="url"
+                        value={newAutoscanUrl}
+                        onChange={(e) => setNewAutoscanUrl(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="http://autoscan:3030"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        Username{" "}
+                        <span className="text-xs text-theme-muted font-normal">
+                          (optional)
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newAutoscanUsername}
+                        onChange={(e) => setNewAutoscanUsername(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="admin"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        Password{" "}
+                        <span className="text-xs text-theme-muted font-normal">
+                          (optional)
+                        </span>
+                      </label>
+                      <input
+                        type="password"
+                        value={newAutoscanPassword}
+                        onChange={(e) => setNewAutoscanPassword(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="Basic Auth password"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newAutoscanName || !newAutoscanUrl) return;
+                        const id = `autoscan-${newAutoscanName
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+                        setAutoscanInstances((prev) => [
+                          ...prev,
+                          {
+                            id,
+                            name: newAutoscanName,
+                            url: newAutoscanUrl,
+                            username: newAutoscanUsername,
+                            password: newAutoscanPassword,
+                          },
+                        ]);
+                        setNewAutoscanName("");
+                        setNewAutoscanUrl("");
+                        setNewAutoscanUsername("");
+                        setNewAutoscanPassword("");
+                        setShowAddAutoscan(false);
+                        setPendingChanges(true);
+                      }}
+                      disabled={!newAutoscanName || !newAutoscanUrl}
+                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-4 h-4 text-theme-primary" />
+                      Add Instance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddAutoscan(false);
+                        setNewAutoscanName("");
+                        setNewAutoscanUrl("");
+                        setNewAutoscanUsername("");
+                        setNewAutoscanPassword("");
                       }}
                       className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
                     >

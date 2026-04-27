@@ -13,6 +13,12 @@ import {
   Upload,
   WifiOff,
   Activity,
+  Cpu,
+  MemoryStick,
+  Bell,
+  FileText,
+  Flame,
+  Clock,
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
@@ -35,6 +41,40 @@ function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
   );
 }
 
+function formatUptime(seconds) {
+  if (!seconds || seconds <= 0) return "\u2014";
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function ProgressBar({ percent, label }) {
+  const value = Math.max(0, Math.min(100, Number(percent) || 0));
+  const color =
+    value >= 90
+      ? "bg-red-500"
+      : value >= 75
+        ? "bg-amber-500"
+        : "bg-emerald-500";
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-theme-text-muted">{label}</span>
+        <span className="font-mono text-theme-text">{value.toFixed(1)}%</span>
+      </div>
+      <div className="h-2 bg-theme-hover rounded-full overflow-hidden">
+        <div
+          className={`${color} h-full rounded-full transition-all`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ManagerSection({ manager, tabsSlot }) {
   const mounts = manager.nfs_mounts || [];
   const mountStatuses = manager.nfs_mount_statuses || {};
@@ -44,6 +84,12 @@ function ManagerSection({ manager, tabsSlot }) {
   const mergerfsStatuses = manager.mergerfs_statuses || {};
   const vpnConfigs = manager.vpn_configs || [];
   const vpnStatuses = manager.vpn_statuses || {};
+  const systemStatus = manager.system_status || {};
+  const systemStats = manager.system_stats || {};
+  const firewallStatus = manager.firewall_status || {};
+  const notifications = manager.notifications || [];
+  const monitorMetrics = manager.monitor_metrics || {};
+  const logLines = manager.logs || [];
 
   const mountedCount = mounts.filter(
     (m) => mountStatuses[m.id]?.mounted,
@@ -106,6 +152,37 @@ function ManagerSection({ manager, tabsSlot }) {
 
       {/* Manager Tabs (injected from parent) */}
       {tabsSlot}
+
+      {/* System Resources */}
+      {(systemStats.cpu_percent !== undefined ||
+        systemStats.memory_percent !== undefined ||
+        systemStats.disk_percent !== undefined ||
+        systemStatus.uptime_seconds) && (
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-theme-primary" />
+              <h3 className="text-base font-semibold text-theme-text">
+                System Resources
+              </h3>
+              {systemStatus.uptime_seconds ? (
+                <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                  <Clock className="w-3 h-3" />
+                  {formatUptime(systemStatus.uptime_seconds)}
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <ProgressBar percent={systemStats.cpu_percent ?? 0} label="CPU" />
+            <ProgressBar
+              percent={systemStats.memory_percent ?? 0}
+              label="RAM"
+            />
+            <ProgressBar percent={systemStats.disk_percent ?? 0} label="Disk" />
+          </div>
+        </div>
+      )}
 
       {/* NFS Client Mounts */}
       {mounts.length > 0 && (
@@ -517,6 +594,183 @@ function ManagerSection({ manager, tabsSlot }) {
             })}
           </div>
         </div>
+      )}
+
+      {/* Firewall Protection */}
+      {(firewallStatus.protected_servers !== undefined ||
+        firewallStatus.protected_exports !== undefined ||
+        firewallStatus.rules !== undefined) && (
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-theme-primary" />
+              <h3 className="text-base font-semibold text-theme-text">
+                Firewall Protection
+              </h3>
+              {firewallStatus.enabled !== undefined && (
+                <span
+                  className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full border ${
+                    firewallStatus.enabled
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      : "bg-red-500/15 text-red-400 border-red-500/30"
+                  }`}
+                >
+                  {firewallStatus.enabled ? "Enabled" : "Disabled"}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-theme-hover border border-theme rounded-lg p-4">
+              <p className="text-xs text-theme-muted uppercase tracking-wider">
+                Protected Servers
+              </p>
+              <p className="text-2xl font-bold text-theme-text mt-1">
+                {firewallStatus.protected_servers ?? 0}
+              </p>
+            </div>
+            <div className="bg-theme-hover border border-theme rounded-lg p-4">
+              <p className="text-xs text-theme-muted uppercase tracking-wider">
+                Protected Exports
+              </p>
+              <p className="text-2xl font-bold text-theme-text mt-1">
+                {firewallStatus.protected_exports ?? 0}
+              </p>
+            </div>
+            <div className="bg-theme-hover border border-theme rounded-lg p-4">
+              <p className="text-xs text-theme-muted uppercase tracking-wider">
+                Active Rules
+              </p>
+              <p className="text-2xl font-bold text-theme-text mt-1">
+                {firewallStatus.rules ?? 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Monitored Servers */}
+      {monitorMetrics &&
+        Object.keys(monitorMetrics).length > 0 &&
+        (Array.isArray(monitorMetrics)
+          ? monitorMetrics.length > 0
+          : Object.keys(monitorMetrics).length > 0) && (
+          <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+            <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Server className="w-5 h-5 text-theme-primary" />
+                <h3 className="text-base font-semibold text-theme-text">
+                  Monitored Servers
+                </h3>
+              </div>
+            </div>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(Array.isArray(monitorMetrics)
+                ? monitorMetrics
+                : Object.entries(monitorMetrics).map(([k, v]) => ({
+                    name: k,
+                    ...v,
+                  }))
+              ).map((srv, idx) => (
+                <div
+                  key={srv.id || srv.name || idx}
+                  className="bg-theme-hover border border-theme rounded-lg p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-theme-text">
+                      {srv.name || srv.host || `Server ${idx + 1}`}
+                    </span>
+                    {srv.online !== undefined && (
+                      <span
+                        className={`inline-flex w-2 h-2 rounded-full ${
+                          srv.online ? "bg-emerald-400" : "bg-red-400"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  {srv.cpu_percent !== undefined && (
+                    <ProgressBar percent={srv.cpu_percent} label="CPU" />
+                  )}
+                  {srv.memory_percent !== undefined && (
+                    <ProgressBar percent={srv.memory_percent} label="RAM" />
+                  )}
+                  {srv.disk_percent !== undefined && (
+                    <ProgressBar percent={srv.disk_percent} label="Disk" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {/* Notification Channels */}
+      {notifications.length > 0 && (
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-theme-primary" />
+              <h3 className="text-base font-semibold text-theme-text">
+                Notification Channels
+              </h3>
+              <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                {notifications.length}
+              </span>
+            </div>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {notifications.map((n, i) => (
+              <div
+                key={n.id || i}
+                className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
+              >
+                <Bell className="w-4 h-4 text-theme-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-theme-text truncate">
+                    {n.name || n.type || "Channel"}
+                  </p>
+                  {n.type && (
+                    <p className="text-xs text-theme-text-muted uppercase">
+                      {n.type}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                    n.enabled
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      : "bg-gray-500/15 text-gray-400 border-gray-500/30"
+                  }`}
+                >
+                  {n.enabled ? "On" : "Off"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* System Logs */}
+      {logLines.length > 0 && (
+        <details className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden group">
+          <summary className="bg-theme-primary/10 border-b border-theme px-4 py-3 cursor-pointer flex items-center gap-2 list-none">
+            <FileText className="w-5 h-5 text-theme-primary" />
+            <h3 className="text-base font-semibold text-theme-text">
+              System Logs
+            </h3>
+            <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+              {logLines.length} lines
+            </span>
+            <span className="ml-auto text-xs text-theme-text-muted group-open:hidden">
+              Show
+            </span>
+            <span className="ml-auto text-xs text-theme-text-muted hidden group-open:inline">
+              Hide
+            </span>
+          </summary>
+          <pre className="p-4 max-h-96 overflow-auto text-xs font-mono text-theme-text-muted whitespace-pre-wrap">
+            {logLines.slice(-200).join("\n")}
+          </pre>
+        </details>
       )}
     </div>
   );

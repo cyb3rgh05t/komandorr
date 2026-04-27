@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # NFS Mount Manager Configuration (multi-instance)
     NFS_MOUNT_INSTANCES: list = []
 
+    # Autoscan Configuration (multi-instance, optional Basic Auth)
+    AUTOSCAN_INSTANCES: list = []
+
     # CORS Configuration
     CORS_ORIGINS: str = "http://localhost:3000"
 
@@ -188,6 +191,20 @@ class Settings(BaseSettings):
                         "name": "NFS Mount Manager",
                         "url": nfs_mount_config.get("url", ""),
                         "api_key": nfs_mount_config.get("api_key", ""),
+                    }
+                ]
+        if "autoscan" in config_data:
+            autoscan_config = config_data["autoscan"]
+            if "instances" in autoscan_config:
+                self.AUTOSCAN_INSTANCES = autoscan_config["instances"]
+            elif autoscan_config.get("url"):
+                self.AUTOSCAN_INSTANCES = [
+                    {
+                        "id": "autoscan-default",
+                        "name": "Autoscan",
+                        "url": autoscan_config.get("url", ""),
+                        "username": autoscan_config.get("username", ""),
+                        "password": autoscan_config.get("password", ""),
                     }
                 ]
 

@@ -14,6 +14,7 @@ import {
   Activity,
   TrendingUp,
   HardDrive,
+  Webhook,
   Mail,
   Users,
   BarChart3,
@@ -482,6 +483,11 @@ export default function Sidebar() {
       label: t("nav.vodPortal"),
       icon: TvIcon,
       path: "/vod-portal",
+    },
+    {
+      label: "Autoscan",
+      icon: Webhook,
+      path: "/autoscan",
     },
 
     {

@@ -172,19 +172,59 @@ async def get_dashboard(username: str = Depends(require_auth)):
             continue
 
         try:
-            mounts = await _proxy_get(base_url, api_key, "/nfs/mounts") or []
-            mount_statuses = await _proxy_get(base_url, api_key, "/nfs/status") or []
-            mergerfs_configs = (
-                await _proxy_get(base_url, api_key, "/mergerfs/configs") or []
+            # Try aggregated endpoint first (single call)
+            summary = await _proxy_get(base_url, api_key, "/system/dashboard-summary")
+            if summary and isinstance(summary, dict):
+                mounts = summary.get("nfs_mounts") or []
+                mount_statuses = summary.get("nfs_status") or []
+                exports = summary.get("nfs_exports") or []
+                export_statuses = summary.get("nfs_exports_status") or []
+                mergerfs_configs = summary.get("mergerfs_configs") or []
+                mergerfs_statuses = summary.get("mergerfs_status") or []
+                vpn_configs = summary.get("vpn_configs") or []
+                vpn_statuses = summary.get("vpn_status") or []
+                system_status = summary.get("system_status") or {}
+                system_stats = summary.get("system_stats") or {}
+                kernel_params = summary.get("kernel_params") or {}
+                rps_xps = summary.get("rps_xps") or {}
+                firewall_status = summary.get("firewall_status") or {}
+                logs = summary.get("logs") or []
+            else:
+                # Fallback to individual endpoints
+                mounts = await _proxy_get(base_url, api_key, "/nfs/mounts") or []
+                mount_statuses = (
+                    await _proxy_get(base_url, api_key, "/nfs/status") or []
+                )
+                mergerfs_configs = (
+                    await _proxy_get(base_url, api_key, "/mergerfs/configs") or []
+                )
+                mergerfs_statuses = (
+                    await _proxy_get(base_url, api_key, "/mergerfs/status") or []
+                )
+                vpn_configs = await _proxy_get(base_url, api_key, "/vpn/configs") or []
+                vpn_statuses = await _proxy_get(base_url, api_key, "/vpn/status") or []
+                exports = await _proxy_get(base_url, api_key, "/nfs/exports") or []
+                export_statuses = (
+                    await _proxy_get(base_url, api_key, "/nfs/exports-status") or []
+                )
+                system_status = (
+                    await _proxy_get(base_url, api_key, "/system/status") or {}
+                )
+                system_stats = (
+                    await _proxy_get(base_url, api_key, "/system/stats") or {}
+                )
+                kernel_params = {}
+                rps_xps = {}
+                firewall_status = (
+                    await _proxy_get(base_url, api_key, "/firewall/status") or {}
+                )
+                logs = []
+            # Always try to fetch monitoring + notifications (separate from main summary)
+            notifications = (
+                await _proxy_get(base_url, api_key, "/notifications/configs") or []
             )
-            mergerfs_statuses = (
-                await _proxy_get(base_url, api_key, "/mergerfs/status") or []
-            )
-            vpn_configs = await _proxy_get(base_url, api_key, "/vpn/configs") or []
-            vpn_statuses = await _proxy_get(base_url, api_key, "/vpn/status") or []
-            exports = await _proxy_get(base_url, api_key, "/nfs/exports") or []
-            export_statuses = (
-                await _proxy_get(base_url, api_key, "/nfs/exports-status") or []
+            monitor_metrics = (
+                await _proxy_get(base_url, api_key, "/monitor/metrics") or {}
             )
         except httpx.HTTPStatusError as e:
             logger.error(
@@ -229,6 +269,14 @@ async def get_dashboard(username: str = Depends(require_auth)):
                     "mergerfs_statuses": mergerfs_status_map,
                     "vpn_configs": vpn_configs,
                     "vpn_statuses": vpn_status_map,
+                    "system_status": system_status,
+                    "system_stats": system_stats,
+                    "kernel_params": kernel_params,
+                    "rps_xps": rps_xps,
+                    "firewall_status": firewall_status,
+                    "logs": logs,
+                    "notifications": notifications,
+                    "monitor_metrics": monitor_metrics,
                 }
             )
         except Exception as e:
