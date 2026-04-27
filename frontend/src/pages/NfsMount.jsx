@@ -15,7 +15,7 @@ import {
   Activity,
   Cpu,
   MemoryStick,
-  Bell,
+  Tag,
   FileText,
   Flame,
   Clock,
@@ -87,7 +87,6 @@ function ManagerSection({ manager, tabsSlot }) {
   const systemStatus = manager.system_status || {};
   const systemStats = manager.system_stats || {};
   const firewallStatus = manager.firewall_status || {};
-  const notifications = manager.notifications || [];
   const monitorMetrics = manager.monitor_metrics || {};
   const logLines = manager.logs || [];
 
@@ -123,7 +122,13 @@ function ManagerSection({ manager, tabsSlot }) {
   return (
     <div className="space-y-4">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <StatCard
+          label="Instance"
+          value={manager.name || manager.id || "—"}
+          icon={Tag}
+          color="theme-primary"
+        />
         <StatCard
           label="NFS Mounts"
           value={`${mountedCount}/${mounts.length}`}
@@ -703,74 +708,123 @@ function ManagerSection({ manager, tabsSlot }) {
           </div>
         )}
 
-      {/* Notification Channels */}
-      {notifications.length > 0 && (
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Bell className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-base font-semibold text-theme-text">
-                Notification Channels
-              </h3>
-              <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                {notifications.length}
-              </span>
-            </div>
-          </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {notifications.map((n, i) => (
-              <div
-                key={n.id || i}
-                className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
-              >
-                <Bell className="w-4 h-4 text-theme-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-theme-text truncate">
-                    {n.name || n.type || "Channel"}
-                  </p>
-                  {n.type && (
-                    <p className="text-xs text-theme-text-muted uppercase">
-                      {n.type}
-                    </p>
-                  )}
-                </div>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
-                    n.enabled
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                      : "bg-gray-500/15 text-gray-400 border-gray-500/30"
-                  }`}
-                >
-                  {n.enabled ? "On" : "Off"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* System Logs */}
       {logLines.length > 0 && (
-        <details className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden group">
-          <summary className="bg-theme-primary/10 border-b border-theme px-4 py-3 cursor-pointer flex items-center gap-2 list-none">
+        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
             <FileText className="w-5 h-5 text-theme-primary" />
             <h3 className="text-base font-semibold text-theme-text">
-              System Logs
+              Recent Logs
             </h3>
-            <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-              {logLines.length} lines
+            <span className="text-xs text-theme-text-muted font-mono">
+              Last {Math.min(logLines.length, 50)} entries
             </span>
-            <span className="ml-auto text-xs text-theme-text-muted group-open:hidden">
-              Show
-            </span>
-            <span className="ml-auto text-xs text-theme-text-muted hidden group-open:inline">
-              Hide
-            </span>
-          </summary>
-          <pre className="p-4 max-h-96 overflow-auto text-xs font-mono text-theme-text-muted whitespace-pre-wrap">
-            {logLines.slice(-200).join("\n")}
-          </pre>
-        </details>
+          </div>
+          <div
+            className="max-h-[28rem] overflow-auto bg-theme-bg/40"
+            ref={(el) => {
+              if (el) el.scrollTop = el.scrollHeight;
+            }}
+          >
+            {logLines.slice(-50).map((entry, i) => {
+              // Logs may be plain string OR object {timestamp,level,message,...}
+              let ts = "";
+              let level = "";
+              let msg = "";
+              if (entry && typeof entry === "object") {
+                ts =
+                  entry.timestamp ||
+                  entry.time ||
+                  entry.date ||
+                  entry.created_at ||
+                  "";
+                level = String(
+                  entry.level || entry.severity || "",
+                ).toUpperCase();
+                msg =
+                  entry.message || entry.msg || entry.text || entry.line || "";
+                if (!msg) {
+                  // Fallback: stringify whatever non-meta fields are left
+                  const {
+                    timestamp,
+                    time,
+                    date,
+                    created_at,
+                    level: _l,
+                    severity,
+                    ...rest
+                  } = entry;
+                  msg = Object.keys(rest).length ? JSON.stringify(rest) : "";
+                }
+              } else {
+                const raw = String(entry || "");
+                const m = raw.match(
+                  /^([\d\-/: T.,Z+]+?)\s+(?:\[)?(INFO|DEBUG|WARN|WARNING|ERROR|TRACE|FATAL)(?:\])?\s+(.*)$/i,
+                );
+                ts = m ? m[1].trim() : "";
+                level = m ? m[2].toUpperCase() : "";
+                msg = m ? m[3] : raw;
+              }
+              const levelStyle = (() => {
+                switch (level) {
+                  case "ERROR":
+                  case "FATAL":
+                    return "bg-red-500/15 text-red-400 border-red-500/30";
+                  case "WARN":
+                  case "WARNING":
+                    return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+                  case "DEBUG":
+                  case "TRACE":
+                    return "bg-purple-500/15 text-purple-400 border-purple-500/30";
+                  case "INFO":
+                    return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+                  default:
+                    return "bg-theme-hover text-theme-text-muted border-theme";
+                }
+              })();
+              const tsDisplay = (() => {
+                if (!ts) return "";
+                try {
+                  const d = new Date(ts);
+                  if (!isNaN(d.getTime())) {
+                    return d.toLocaleString([], {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
+                    });
+                  }
+                } catch {
+                  /* fallthrough */
+                }
+                return String(ts);
+              })();
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-4 py-1 text-xs font-mono leading-tight"
+                >
+                  {tsDisplay && (
+                    <span className="text-theme-text-muted shrink-0">
+                      {tsDisplay}
+                    </span>
+                  )}
+                  {level && (
+                    <span
+                      className={`inline-flex items-center justify-center min-w-[52px] px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-md border shrink-0 ${levelStyle}`}
+                    >
+                      {level}
+                    </span>
+                  )}
+                  <span className="text-theme-text truncate">{msg}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
