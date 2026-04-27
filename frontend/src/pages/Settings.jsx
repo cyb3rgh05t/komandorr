@@ -28,6 +28,7 @@ import {
   Palette,
   HardDrive,
   Webhook,
+  FolderOpen,
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -3654,18 +3655,33 @@ export default function Settings() {
                 )}
               </div>
 
-              {/* Existing apps list */}
-              {externalApps.length > 0 && (
-                <div className="space-y-3 mb-4">
-                  {externalApps.map((app, idx) => (
-                    <div
-                      key={app.id}
-                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-                      <div className="relative flex flex-col gap-3">
-                        {/* Compact view */}
-                        <div className="flex items-center gap-3">
+              {/* Existing apps list — grouped */}
+              {externalApps.length > 0
+                ? (() => {
+                    const groups = [
+                      ...new Set(
+                        externalApps.map((a) => a.group || "").filter(Boolean),
+                      ),
+                    ];
+                    const ungrouped = externalApps
+                      .map((a, i) => ({ app: a, idx: i }))
+                      .filter((x) => !x.app.group);
+                    const sections = groups.map((g) => ({
+                      name: g,
+                      items: externalApps
+                        .map((a, i) => ({ app: a, idx: i }))
+                        .filter((x) => x.app.group === g),
+                    }));
+                    if (ungrouped.length > 0)
+                      sections.push({ name: null, items: ungrouped });
+
+                    const renderRow = ({ app, idx }) => (
+                      <div
+                        key={app.id}
+                        className="group bg-theme-card border border-theme rounded-xl shadow-sm hover:shadow-md hover:border-theme-primary/50 transition-all"
+                      >
+                        {/* Compact row */}
+                        <div className="flex items-center gap-3 p-3">
                           <div className="flex-shrink-0">
                             {app.icon &&
                             (app.icon.startsWith("/") ||
@@ -3673,87 +3689,26 @@ export default function Settings() {
                               <img
                                 src={app.icon}
                                 alt=""
-                                className="w-9 h-9 rounded-lg object-contain bg-theme-hover border border-theme"
+                                className="w-10 h-10 rounded-lg object-contain bg-theme-hover border border-theme"
                                 onError={(e) => {
                                   e.target.style.display = "none";
                                 }}
                               />
                             ) : (
-                              <div className="w-9 h-9 rounded-lg bg-theme-hover border border-theme flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-lg bg-theme-hover border border-theme flex items-center justify-center">
                                 <Globe className="w-4 h-4 text-theme-text-muted" />
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-theme-text truncate">
+                            <p className="text-sm font-semibold text-theme-text truncate">
                               {app.name || "Unnamed App"}
                             </p>
                             <p className="text-xs text-theme-text-muted truncate">
                               {app.url || "No URL"}
                             </p>
                           </div>
-                          {app.group && (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-theme-hover border border-theme text-theme-text-muted flex-shrink-0">
-                              {app.group}
-                            </span>
-                          )}
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <div className="flex flex-col gap-0.5 mr-1">
-                              <button
-                                type="button"
-                                disabled={idx === 0}
-                                onClick={() => {
-                                  const updated = [...externalApps];
-                                  [updated[idx - 1], updated[idx]] = [
-                                    updated[idx],
-                                    updated[idx - 1],
-                                  ];
-                                  setExternalApps(updated);
-                                  if (editingAppIdx === idx)
-                                    setEditingAppIdx(idx - 1);
-                                  else if (editingAppIdx === idx - 1)
-                                    setEditingAppIdx(idx);
-                                  setPendingChanges(true);
-                                }}
-                                className="p-1 bg-theme-hover border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
-                                title="Move up"
-                              >
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={idx === externalApps.length - 1}
-                                onClick={() => {
-                                  const updated = [...externalApps];
-                                  [updated[idx], updated[idx + 1]] = [
-                                    updated[idx + 1],
-                                    updated[idx],
-                                  ];
-                                  setExternalApps(updated);
-                                  if (editingAppIdx === idx)
-                                    setEditingAppIdx(idx + 1);
-                                  else if (editingAppIdx === idx + 1)
-                                    setEditingAppIdx(idx);
-                                  setPendingChanges(true);
-                                }}
-                                className="p-1 bg-theme-hover border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded transition-all disabled:opacity-30 disabled:pointer-events-none"
-                                title="Move down"
-                              >
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditingAppIdx(
-                                  editingAppIdx === idx ? null : idx,
-                                )
-                              }
-                              className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
-                              title="Edit app"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
                             <button
                               type="button"
                               onClick={() => {
@@ -3787,10 +3742,28 @@ export default function Settings() {
                                 };
                                 input.click();
                               }}
-                              className="p-2 bg-theme-primary/10 hover:bg-theme border border-theme hover:border-theme-primary text-theme-primary rounded transition-all"
+                              className="p-2 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded-lg transition-all"
                               title="Upload icon"
                             >
                               <Upload className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditingAppIdx(
+                                  editingAppIdx === idx ? null : idx,
+                                )
+                              }
+                              className={`p-2 border rounded-lg transition-all ${
+                                editingAppIdx === idx
+                                  ? "bg-theme-primary/15 border-theme-primary text-theme-primary"
+                                  : "bg-theme-hover hover:bg-theme-primary/10 border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary"
+                              }`}
+                              title={
+                                editingAppIdx === idx ? "Close" : "Edit app"
+                              }
+                            >
+                              <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               type="button"
@@ -3802,7 +3775,7 @@ export default function Settings() {
                                   setEditingAppIdx(null);
                                 setPendingChanges(true);
                               }}
-                              className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded transition-all"
+                              className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg transition-all"
                               title="Remove app"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -3812,7 +3785,7 @@ export default function Settings() {
 
                         {/* Expanded edit view */}
                         {editingAppIdx === idx && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-theme">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 px-4 pb-4 pt-1 border-t border-theme">
                             <div>
                               <label className="block text-xs font-medium text-theme-text-muted mb-1">
                                 App Name
@@ -3897,10 +3870,58 @@ export default function Settings() {
                           </div>
                         )}
                       </div>
+                    );
+
+                    return (
+                      <div className="space-y-5 mb-4">
+                        {sections.map((section) => (
+                          <div key={section.name || "__ungrouped"}>
+                            <div className="flex items-center gap-2 mb-2">
+                              {section.name ? (
+                                <>
+                                  <FolderOpen
+                                    size={14}
+                                    className="text-theme-primary"
+                                  />
+                                  <h4 className="text-xs font-semibold text-theme-text uppercase tracking-wider">
+                                    {section.name}
+                                  </h4>
+                                </>
+                              ) : (
+                                <>
+                                  <Globe
+                                    size={14}
+                                    className="text-theme-text-muted"
+                                  />
+                                  <h4 className="text-xs font-semibold text-theme-text-muted uppercase tracking-wider">
+                                    Ungrouped
+                                  </h4>
+                                </>
+                              )}
+                              <span className="text-xs text-theme-text-muted">
+                                ({section.items.length})
+                              </span>
+                              <div className="flex-1 border-t border-theme/60 ml-1" />
+                            </div>
+                            <div className="space-y-2">
+                              {section.items.map(renderRow)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()
+                : !showAddApp && (
+                    <div className="bg-theme-card border border-theme border-dashed rounded-xl p-8 text-center mb-4">
+                      <Globe className="w-10 h-10 mx-auto text-theme-text-muted/50 mb-3" />
+                      <p className="text-sm font-medium text-theme-text mb-1">
+                        No external apps yet
+                      </p>
+                      <p className="text-xs text-theme-text-muted">
+                        Click "Add App" above to get started.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
               {/* Add new app */}
               {showAddApp ? (

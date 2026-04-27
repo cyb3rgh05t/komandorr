@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import {
   DndContext,
@@ -56,6 +57,9 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 // Map icon names to lucide components
@@ -90,7 +94,7 @@ const iconMap = {
   external: ExternalLink,
 };
 
-function SortableAppCard({ app, getIcon, t }) {
+function SortableAppCard({ app, getIcon, t, editMode }) {
   const {
     attributes,
     listeners,
@@ -98,14 +102,14 @@ function SortableAppCard({ app, getIcon, t }) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: app.id });
+  } = useSortable({ id: app.id, disabled: !editMode });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : "auto",
-    touchAction: "none",
+    touchAction: editMode ? "none" : "auto",
   };
 
   const IconComponent = getIcon(app.icon);
@@ -124,24 +128,26 @@ function SortableAppCard({ app, getIcon, t }) {
   }
 
   const handleClick = (e) => {
-    // Don't navigate if we just finished dragging
-    if (isDragging) {
+    if (editMode || isDragging) {
       e.preventDefault();
     }
   };
+
+  const dragProps = editMode ? { ...attributes, ...listeners } : {};
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 relative overflow-hidden cursor-grab active:cursor-grabbing ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""}`}
+      {...dragProps}
+      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col items-center gap-3 hover:border-theme-primary/50 hover:shadow-xl hover:shadow-theme-primary/5 relative overflow-hidden ${editMode ? "cursor-grab active:cursor-grabbing" : ""} ${isDragging ? "shadow-2xl ring-2 ring-theme-primary/50" : ""} ${editMode ? "ring-1 ring-theme-primary/30" : ""}`}
     >
-      {/* Drag indicator */}
-      <div className="absolute top-1.5 right-1.5 p-1 rounded text-theme-text-muted/40 group-hover:text-theme-primary/70 transition-colors pointer-events-none">
-        <GripVertical className="w-3.5 h-3.5" />
-      </div>
+      {/* Drag indicator (only in edit mode) */}
+      {editMode && (
+        <div className="absolute top-1.5 right-1.5 p-1 rounded text-theme-primary/70 transition-colors pointer-events-none">
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+      )}
 
       {/* Background glow */}
       <div className="absolute inset-0 bg-gradient-to-br from-theme-primary/0 via-transparent to-theme-primary/0 group-hover:from-theme-primary/5 group-hover:to-theme-primary/3 transition-all duration-500 pointer-events-none" />
@@ -196,17 +202,6 @@ function SortableAppCard({ app, getIcon, t }) {
             {displayUrl}
           </p>
         </div>
-
-        {/* Open link badge */}
-        <div className="relative flex items-center gap-1 px-2.5 py-1 rounded-lg bg-theme-hover/50 border border-theme group-hover:border-theme-primary/30 group-hover:bg-theme-primary/10 transition-all duration-300">
-          <ExternalLink
-            size={10}
-            className="text-theme-text-muted group-hover:text-theme-primary transition-colors"
-          />
-          <span className="text-[9px] font-medium text-theme-text-muted group-hover:text-theme-primary transition-colors uppercase tracking-wider">
-            {t("externalApps.open", "Open")}
-          </span>
-        </div>
       </a>
     </div>
   );
@@ -215,6 +210,7 @@ function SortableAppCard({ app, getIcon, t }) {
 export default function ExternalApps() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const {
     data: settingsData,
@@ -231,6 +227,10 @@ export default function ExternalApps() {
   const [groupOrder, setGroupOrder] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState("all");
+  const [editMode, setEditMode] = useState(false);
+  const [draftApps, setDraftApps] = useState([]);
+  const [draftGroupOrder, setDraftGroupOrder] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync localApps and groupOrder from server data
   useEffect(() => {
@@ -240,7 +240,47 @@ export default function ExternalApps() {
     setGroupOrder(serverGroupOrder);
   }, [settingsData]);
 
-  const apps = localApps;
+  const apps = editMode ? draftApps : localApps;
+  const currentGroupOrder = editMode ? draftGroupOrder : groupOrder;
+
+  const enterEditMode = () => {
+    setDraftApps(localApps);
+    setDraftGroupOrder(groupOrder);
+    setEditMode(true);
+  };
+
+  const cancelEdit = () => {
+    setDraftApps([]);
+    setDraftGroupOrder([]);
+    setEditMode(false);
+    toast.info(t("externalApps.editCanceled", "Changes discarded"));
+  };
+
+  const saveEdit = async () => {
+    setIsSaving(true);
+    try {
+      await api.post("/settings", {
+        external_apps: { apps: draftApps, group_order: draftGroupOrder },
+      });
+      setLocalApps(draftApps);
+      setGroupOrder(draftGroupOrder);
+      queryClient.setQueryData(["settings-external-apps"], (old) => ({
+        ...old,
+        external_apps: {
+          ...old?.external_apps,
+          apps: draftApps,
+          group_order: draftGroupOrder,
+        },
+      }));
+      setEditMode(false);
+      toast.success(t("externalApps.layoutSaved", "Layout saved"));
+    } catch (e) {
+      console.error("Failed to save layout:", e);
+      toast.error(t("externalApps.layoutSaveFailed", "Failed to save layout"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -249,76 +289,38 @@ export default function ExternalApps() {
     }),
   );
 
-  const handleDragEnd = useCallback(
-    async (event) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
+  const handleDragEnd = useCallback((event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-      const oldIndex = localApps.findIndex((a) => a.id === active.id);
-      const newIndex = localApps.findIndex((a) => a.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reordered = arrayMove(localApps, oldIndex, newIndex);
-      setLocalApps(reordered);
-
-      // Persist to backend
-      try {
-        await api.post("/settings", {
-          external_apps: { apps: reordered, group_order: groupOrder },
-        });
-        queryClient.setQueryData(["settings-external-apps"], (old) => ({
-          ...old,
-          external_apps: {
-            ...old?.external_apps,
-            apps: reordered,
-            group_order: groupOrder,
-          },
-        }));
-      } catch (e) {
-        console.error("Failed to save reorder:", e);
-        setLocalApps(localApps);
-      }
-    },
-    [localApps, groupOrder, queryClient],
-  );
+    setDraftApps((prev) => {
+      const oldIndex = prev.findIndex((a) => a.id === active.id);
+      const newIndex = prev.findIndex((a) => a.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }, []);
 
   const handleGroupMove = useCallback(
-    async (groupName, direction) => {
-      const currentGroups = [...groupOrder];
-      // Ensure all existing groups are in the order array
-      const allGroups = [
-        ...new Set(localApps.map((a) => a.group).filter(Boolean)),
-      ];
-      allGroups.forEach((g) => {
-        if (!currentGroups.includes(g)) currentGroups.push(g);
-      });
-
-      const idx = currentGroups.indexOf(groupName);
-      if (idx === -1) return;
-      const newIdx = idx + direction;
-      if (newIdx < 0 || newIdx >= currentGroups.length) return;
-
-      const reordered = arrayMove(currentGroups, idx, newIdx);
-      setGroupOrder(reordered);
-
-      try {
-        await api.post("/settings", {
-          external_apps: { apps: localApps, group_order: reordered },
+    (groupName, direction) => {
+      setDraftGroupOrder((prev) => {
+        const currentGroups = [...prev];
+        const allGroups = [
+          ...new Set(draftApps.map((a) => a.group).filter(Boolean)),
+        ];
+        allGroups.forEach((g) => {
+          if (!currentGroups.includes(g)) currentGroups.push(g);
         });
-        queryClient.setQueryData(["settings-external-apps"], (old) => ({
-          ...old,
-          external_apps: {
-            ...old?.external_apps,
-            apps: localApps,
-            group_order: reordered,
-          },
-        }));
-      } catch (e) {
-        console.error("Failed to save group order:", e);
-        setGroupOrder(currentGroups);
-      }
+
+        const idx = currentGroups.indexOf(groupName);
+        if (idx === -1) return prev;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= currentGroups.length) return prev;
+
+        return arrayMove(currentGroups, idx, newIdx);
+      });
     },
-    [localApps, groupOrder, queryClient],
+    [draftApps],
   );
 
   const filteredApps = apps.filter(
@@ -337,14 +339,14 @@ export default function ExternalApps() {
     const allGroups = Array.from(set);
     // Sort: groups in groupOrder first (by their order), then remaining alphabetically
     return allGroups.sort((a, b) => {
-      const idxA = groupOrder.indexOf(a);
-      const idxB = groupOrder.indexOf(b);
+      const idxA = currentGroupOrder.indexOf(a);
+      const idxB = currentGroupOrder.indexOf(b);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;
       return a.localeCompare(b, undefined, { sensitivity: "base" });
     });
-  }, [apps, groupOrder]);
+  }, [apps, currentGroupOrder]);
 
   // Group filtered apps
   const groupedApps = useMemo(() => {
@@ -428,9 +430,46 @@ export default function ExternalApps() {
               <Plus size={16} className="text-theme-primary" />
               <span className="text-xs sm:text-sm">External App</span>
             </Link>
+            {!editMode ? (
+              <button
+                onClick={enterEditMode}
+                disabled={apps.length === 0}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Pencil size={16} className="text-theme-primary" />
+                <span className="text-xs sm:text-sm">
+                  {t("externalApps.editLayout", "Edit Layout")}
+                </span>
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={saveEdit}
+                  disabled={isSaving}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 !bg-emerald-500/15 hover:!bg-emerald-500/25 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Check size={16} />
+                  <span className="text-xs sm:text-sm">
+                    {isSaving
+                      ? t("common.saving", "Saving")
+                      : t("common.save", "Save")}
+                  </span>
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={isSaving}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 !bg-red-500/15 hover:!bg-red-500/25 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <X size={16} />
+                  <span className="text-xs sm:text-sm">
+                    {t("common.cancel", "Cancel")}
+                  </span>
+                </button>
+              </>
+            )}
             <button
               onClick={() => refetch()}
-              disabled={isFetching}
+              disabled={isFetching || editMode}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
@@ -592,7 +631,7 @@ export default function ExternalApps() {
                       <span className="text-xs text-theme-text-muted">
                         ({group.apps.length})
                       </span>
-                      {namedGroups.length > 1 && (
+                      {editMode && namedGroups.length > 1 && (
                         <div className="flex items-center gap-0.5 ml-1">
                           <button
                             onClick={() => handleGroupMove(group.name, -1)}
@@ -640,6 +679,7 @@ export default function ExternalApps() {
                           app={app}
                           getIcon={getIcon}
                           t={t}
+                          editMode={editMode}
                         />
                       ))}
                     </div>
