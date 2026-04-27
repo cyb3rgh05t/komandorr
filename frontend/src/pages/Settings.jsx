@@ -1029,7 +1029,7 @@ export default function Settings() {
       icon: Shield,
     },
     { id: "plex", label: "Plex Servers", icon: Server },
-    { id: "plex_sync", label: "Plex VOD Sync", icon: FilmIcon },
+    { id: "plex_sync", label: "VOD Sync", icon: FilmIcon },
     { id: "overseerr", label: "VoD Portal", icon: Server },
     {
       id: "uploader",
@@ -1040,7 +1040,7 @@ export default function Settings() {
     { id: "posterizarr", label: "Posterizarr", icon: Palette },
     { id: "nfs_mount", label: "NFS Mount", icon: HardDrive },
     { id: "autoscan", label: "Autoscan", icon: Webhook },
-    { id: "arr", label: "*arr Instances", icon: Film },
+    { id: "arr", label: "Media Managers", icon: Film },
     { id: "external_apps", label: "External Apps", icon: Globe },
     {
       id: "notifications",
@@ -2112,7 +2112,7 @@ export default function Settings() {
                 <div>
                   <h3 className="text-lg font-semibold text-theme-text">
                     {t("uploaderSettings.settings", {
-                      defaultValue: "Uploader Settings",
+                      defaultValue: "Uploader",
                     })}
                   </h3>
                 </div>
@@ -4357,163 +4357,198 @@ export default function Settings() {
 
                   {/* ── Event Routing ── */}
                   <div className="space-y-3 pt-2">
-                    <span className="text-sm font-medium text-theme-text">
-                      {t("settings.eventRouting") || "Event Routing"}
-                    </span>
-                    <p className="text-xs text-theme-muted">
-                      {t("settings.eventRoutingHelp") ||
-                        "Enable events and choose which targets receive them"}
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {telegramEventTypes.map((evt) => {
-                        const evtCfg = telegramEvents[evt.id] || {
-                          enabled: false,
-                          targets: [],
-                        };
-                        const eventColors = {
-                          service_offline:
-                            "from-red-500/20 to-red-500/5 border-red-500/30",
-                          service_problem:
-                            "from-yellow-500/20 to-yellow-500/5 border-yellow-500/30",
-                          service_recovery:
-                            "from-green-500/20 to-green-500/5 border-green-500/30",
-                          invite_created:
-                            "from-blue-500/20 to-blue-500/5 border-blue-500/30",
-                          invite_redeemed:
-                            "from-purple-500/20 to-purple-500/5 border-purple-500/30",
-                          user_added:
-                            "from-emerald-500/20 to-emerald-500/5 border-emerald-500/30",
-                          user_removed:
-                            "from-orange-500/20 to-orange-500/5 border-orange-500/30",
-                          storage_warning:
-                            "from-amber-500/20 to-amber-500/5 border-amber-500/30",
-                          vpn_error:
-                            "from-red-400/20 to-red-400/5 border-red-400/30",
-                          vpn_recovery:
-                            "from-green-400/20 to-green-400/5 border-green-400/30",
-                          nfs_error:
-                            "from-rose-500/20 to-rose-500/5 border-rose-500/30",
-                          nfs_recovery:
-                            "from-teal-400/20 to-teal-400/5 border-teal-400/30",
-                          traffic_high:
-                            "from-orange-400/20 to-orange-400/5 border-orange-400/30",
-                          traffic_recovery:
-                            "from-cyan-400/20 to-cyan-400/5 border-cyan-400/30",
-                          uploader_failed:
-                            "from-pink-500/20 to-pink-500/5 border-pink-500/30",
-                          posterizarr_error:
-                            "from-violet-500/20 to-violet-500/5 border-violet-500/30",
-                        };
-                        const dotColors = {
-                          service_offline: "bg-red-500",
-                          service_problem: "bg-yellow-500",
-                          service_recovery: "bg-green-500",
-                          invite_created: "bg-blue-500",
-                          invite_redeemed: "bg-purple-500",
-                          user_added: "bg-emerald-500",
-                          user_removed: "bg-orange-500",
-                          storage_warning: "bg-amber-500",
-                          vpn_error: "bg-red-400",
-                          vpn_recovery: "bg-green-400",
-                          nfs_error: "bg-rose-500",
-                          nfs_recovery: "bg-teal-400",
-                          traffic_high: "bg-orange-400",
-                          traffic_recovery: "bg-cyan-400",
-                          uploader_failed: "bg-pink-500",
-                          posterizarr_error: "bg-violet-500",
-                        };
-
-                        return (
-                          <div
-                            key={evt.id}
-                            className={`relative p-3 rounded-xl border bg-gradient-to-br transition-all duration-200 ${
-                              evtCfg.enabled
-                                ? eventColors[evt.id] ||
-                                  "from-gray-500/20 to-gray-500/5 border-gray-500/30"
-                                : "from-theme-hover/30 to-theme-hover/10 border-theme opacity-60"
-                            }`}
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <span className="text-sm font-medium text-theme-text">
+                          {t("settings.eventRouting") || "Event Routing"}
+                        </span>
+                        <p className="text-xs text-theme-muted mt-0.5">
+                          {t("settings.eventRoutingHelp") ||
+                            "Enable events and choose which targets receive them"}
+                        </p>
+                      </div>
+                      {telegramEventTypes.length > 0 && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = { ...telegramEvents };
+                              const allTargetIds = telegramTargets.map(
+                                (t) => t.id,
+                              );
+                              telegramEventTypes.forEach((evt) => {
+                                updated[evt.id] = {
+                                  enabled: true,
+                                  targets: allTargetIds,
+                                };
+                              });
+                              setTelegramEvents(updated);
+                              setPendingChanges(true);
+                            }}
+                            className="flex items-center justify-center gap-2 px-3 py-1.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded-lg text-xs font-medium transition-all shadow-sm"
                           >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div
-                                  className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                                    evtCfg.enabled
-                                      ? dotColors[evt.id] || "bg-gray-400"
-                                      : "bg-gray-600"
-                                  }`}
-                                />
-                                <span className="text-sm font-medium text-theme-text truncate">
-                                  {evt.label}
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const updated = { ...telegramEvents };
-                                  updated[evt.id] = {
-                                    ...evtCfg,
-                                    enabled: !evtCfg.enabled,
-                                  };
-                                  setTelegramEvents(updated);
-                                  setPendingChanges(true);
-                                }}
-                                className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+                            {t("settings.enableAll", "Enable all")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = { ...telegramEvents };
+                              telegramEventTypes.forEach((evt) => {
+                                updated[evt.id] = {
+                                  enabled: false,
+                                  targets: [],
+                                };
+                              });
+                              setTelegramEvents(updated);
+                              setPendingChanges(true);
+                            }}
+                            className="flex items-center justify-center gap-2 px-3 py-1.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary text-theme-text-muted hover:text-theme-primary rounded-lg text-xs font-medium transition-all shadow-sm"
+                          >
+                            {t("settings.disableAll", "Disable all")}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {(() => {
+                      const dotColors = {
+                        service_offline: "bg-red-500",
+                        service_problem: "bg-yellow-500",
+                        service_recovery: "bg-green-500",
+                        invite_created: "bg-blue-500",
+                        invite_redeemed: "bg-purple-500",
+                        user_added: "bg-emerald-500",
+                        user_removed: "bg-orange-500",
+                        storage_warning: "bg-amber-500",
+                        vpn_error: "bg-red-400",
+                        vpn_recovery: "bg-green-400",
+                        nfs_error: "bg-rose-500",
+                        nfs_recovery: "bg-teal-400",
+                        traffic_high: "bg-orange-400",
+                        traffic_recovery: "bg-cyan-400",
+                        uploader_failed: "bg-pink-500",
+                        posterizarr_error: "bg-violet-500",
+                        autoscan_error: "bg-red-300",
+                        autoscan_recovery: "bg-lime-400",
+                      };
+                      return (
+                        <div className="flex flex-col gap-2">
+                          {telegramEventTypes.map((evt) => {
+                            const evtCfg = telegramEvents[evt.id] || {
+                              enabled: false,
+                              targets: [],
+                            };
+                            const dot = dotColors[evt.id] || "bg-gray-400";
+                            return (
+                              <div
+                                key={evt.id}
+                                className={`bg-theme-card border rounded-xl px-3 sm:px-4 py-3 transition-all ${
                                   evtCfg.enabled
-                                    ? "bg-green-500"
-                                    : "bg-gray-600"
+                                    ? "border-theme hover:border-theme-primary/40 shadow-sm"
+                                    : "border-theme/60 opacity-60 hover:opacity-80"
                                 }`}
                               >
-                                <span
-                                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                                    evtCfg.enabled ? "translate-x-4" : ""
-                                  }`}
-                                />
-                              </button>
-                            </div>
-                            {evtCfg.enabled && telegramTargets.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
-                                {telegramTargets.map((tgt) => {
-                                  const selected = (
-                                    evtCfg.targets || []
-                                  ).includes(tgt.id);
-                                  return (
-                                    <button
-                                      key={tgt.id}
-                                      type="button"
-                                      onClick={() => {
-                                        const updated = {
-                                          ...telegramEvents,
-                                        };
-                                        const currentTargets =
-                                          evtCfg.targets || [];
-                                        updated[evt.id] = {
-                                          ...evtCfg,
-                                          targets: selected
-                                            ? currentTargets.filter(
-                                                (tid) => tid !== tgt.id,
-                                              )
-                                            : [...currentTargets, tgt.id],
-                                        };
-                                        setTelegramEvents(updated);
-                                        setPendingChanges(true);
-                                      }}
-                                      className={`px-2 py-0.5 text-[11px] rounded-md border transition-all ${
-                                        selected
-                                          ? "bg-theme-primary/20 border-theme-primary text-theme-primary font-medium"
-                                          : "bg-theme-card/50 border-theme/50 text-theme-muted hover:border-theme-primary/50"
+                                {/* Header row: dot + label + toggle */}
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                                      evtCfg.enabled ? dot : "bg-gray-600"
+                                    }`}
+                                  />
+                                  <span className="flex-1 min-w-0 text-sm font-semibold text-theme-text truncate">
+                                    {evt.label}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = { ...telegramEvents };
+                                      const currentTargets =
+                                        evtCfg.targets || [];
+                                      const allTargetIds = telegramTargets.map(
+                                        (t) => t.id,
+                                      );
+                                      updated[evt.id] = {
+                                        ...evtCfg,
+                                        enabled: !evtCfg.enabled,
+                                        targets:
+                                          !evtCfg.enabled &&
+                                          currentTargets.length === 0
+                                            ? allTargetIds
+                                            : currentTargets,
+                                      };
+                                      setTelegramEvents(updated);
+                                      setPendingChanges(true);
+                                    }}
+                                    className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
+                                      evtCfg.enabled
+                                        ? "bg-emerald-500/80"
+                                        : "bg-gray-600/60"
+                                    }`}
+                                    aria-label={`Toggle ${evt.label}`}
+                                  >
+                                    <span
+                                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                                        evtCfg.enabled ? "translate-x-4" : ""
                                       }`}
-                                    >
-                                      {tgt.label || tgt.chat_id}
-                                    </button>
-                                  );
-                                })}
+                                    />
+                                  </button>
+                                </div>
+
+                                {/* Target chips row (only when enabled) */}
+                                {evtCfg.enabled && (
+                                  <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {telegramTargets.length > 0 ? (
+                                      telegramTargets.map((tgt) => {
+                                        const selected = (
+                                          evtCfg.targets || []
+                                        ).includes(tgt.id);
+                                        return (
+                                          <button
+                                            key={tgt.id}
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = {
+                                                ...telegramEvents,
+                                              };
+                                              const currentTargets =
+                                                evtCfg.targets || [];
+                                              updated[evt.id] = {
+                                                ...evtCfg,
+                                                targets: selected
+                                                  ? currentTargets.filter(
+                                                      (tid) => tid !== tgt.id,
+                                                    )
+                                                  : [...currentTargets, tgt.id],
+                                              };
+                                              setTelegramEvents(updated);
+                                              setPendingChanges(true);
+                                            }}
+                                            className={`px-2 py-0.5 text-[11px] rounded-md border transition-all ${
+                                              selected
+                                                ? "bg-theme-primary/20 border-theme-primary text-theme-primary font-medium"
+                                                : "bg-theme-hover border-theme/60 text-theme-text-muted hover:border-theme-primary/50"
+                                            }`}
+                                          >
+                                            {tgt.label || tgt.chat_id}
+                                          </button>
+                                        );
+                                      })
+                                    ) : (
+                                      <span className="text-[11px] text-theme-text-muted italic">
+                                        {t(
+                                          "settings.noTargetsConfigured",
+                                          "No targets configured",
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Global Test */}

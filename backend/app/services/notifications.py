@@ -30,6 +30,8 @@ EVENT_TYPES = [
     "traffic_recovery",
     "uploader_failed",
     "posterizarr_error",
+    "autoscan_error",
+    "autoscan_recovery",
 ]
 
 # Human-readable labels for events (used in messages / UI)
@@ -50,6 +52,8 @@ EVENT_LABELS = {
     "traffic_recovery": "Traffic Recovery",
     "uploader_failed": "Uploader Failed",
     "posterizarr_error": "Posterizarr Error",
+    "autoscan_error": "Autoscan Error",
+    "autoscan_recovery": "Autoscan Recovery",
 }
 
 
@@ -300,6 +304,38 @@ class NotificationService:
 
         return await self.send_telegram_message(message)
 
+    # ── unified message template ──────────────────────────────────
+
+    def _format_message(
+        self,
+        emoji: str,
+        title: str,
+        fields: list[tuple[str, str, str]],
+    ) -> str:
+        """Build a Telegram message using the canonical Komandorr template.
+
+        Layout::
+
+            {emoji} <b>{title}</b>
+
+            {field_emoji} <b>{field_label}:</b> {field_value}
+            ...
+
+            <i>{timestamp}</i>
+
+        ``fields`` is a list of ``(emoji, label, value)`` tuples. Rows whose
+        value is empty/None are skipped, so callers can pass optional fields
+        without conditional logic.
+        """
+        lines = [f"{emoji} <b>{title}</b>", ""]
+        for fe, label, value in fields:
+            if value is None or value == "":
+                continue
+            lines.append(f"{fe} <b>{label}:</b> {value}")
+        lines.append("")
+        lines.append(f"<i>{self._get_timestamp()}</i>")
+        return "\n".join(lines)
+
     # ── service status (existing) ─────────────────────────────────
 
     async def notify_service_status_change(
@@ -337,17 +373,16 @@ class NotificationService:
         else:
             return False
 
-        timestamp = self._get_timestamp()
-        message = (
-            f"{emoji} <b>Service {status_text}</b>\n\n"
-            f"📌 <b>Service:</b> {service_name}\n"
-            f"🔗 <b>URL:</b> {service_url}\n"
-            f"📊 <b>Status:</b> {old_status} → {new_status}\n"
+        message = self._format_message(
+            emoji,
+            f"Service {status_text}",
+            [
+                ("📌", "Service", service_name),
+                ("🔗", "URL", service_url),
+                ("📊", "Status", f"{old_status} → {new_status}"),
+                ("ℹ️", "Details", details),
+            ],
         )
-        if details:
-            message += f"ℹ️ <b>Details:</b> {details}\n"
-        message += f"\n<i>{timestamp}</i>"
-
         return await self._dispatch(event_type, message)
 
     # ── invite events ─────────────────────────────────────────────
@@ -359,30 +394,30 @@ class NotificationService:
         server_name: str = "",
         usage_limit: Optional[int] = None,
     ) -> bool:
-        timestamp = self._get_timestamp()
-        limit = str(usage_limit) if usage_limit else "Unlimited"
-        message = (
-            f"📨 <b>Invite Created</b>\n\n"
-            f"🔑 <b>Code:</b> <code>{code}</code>\n"
-            f"👤 <b>By:</b> {created_by}\n"
+        message = self._format_message(
+            "📨",
+            "Invite Created",
+            [
+                ("🔑", "Code", f"<code>{code}</code>"),
+                ("👤", "By", created_by),
+                ("🖥", "Server", server_name),
+                ("🔢", "Limit", str(usage_limit) if usage_limit else "Unlimited"),
+            ],
         )
-        if server_name:
-            message += f"🖥 <b>Server:</b> {server_name}\n"
-        message += f"🔢 <b>Limit:</b> {limit}\n" f"\n<i>{timestamp}</i>"
         return await self._dispatch("invite_created", message)
 
     async def notify_invite_redeemed(
         self, code: str, email: str, server_name: str = ""
     ) -> bool:
-        timestamp = self._get_timestamp()
-        message = (
-            f"🎉 <b>Invite Redeemed</b>\n\n"
-            f"🔑 <b>Code:</b> <code>{code}</code>\n"
-            f"📧 <b>Email:</b> {email}\n"
+        message = self._format_message(
+            "🎉",
+            "Invite Redeemed",
+            [
+                ("🔑", "Code", f"<code>{code}</code>"),
+                ("📧", "Email", email),
+                ("🖥", "Server", server_name),
+            ],
         )
-        if server_name:
-            message += f"🖥 <b>Server:</b> {server_name}\n"
-        message += f"\n<i>{timestamp}</i>"
         return await self._dispatch("invite_redeemed", message)
 
     # ── user events ───────────────────────────────────────────────
@@ -390,25 +425,29 @@ class NotificationService:
     async def notify_user_added(
         self, email: str, server_name: str = "", added_by: str = ""
     ) -> bool:
-        timestamp = self._get_timestamp()
-        message = f"👤 <b>User Added to Plex</b>\n\n" f"📧 <b>Email:</b> {email}\n"
-        if server_name:
-            message += f"🖥 <b>Server:</b> {server_name}\n"
-        if added_by:
-            message += f"👤 <b>By:</b> {added_by}\n"
-        message += f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "👤",
+            "User Added to Plex",
+            [
+                ("📧", "Email", email),
+                ("🖥", "Server", server_name),
+                ("👤", "By", added_by),
+            ],
+        )
         return await self._dispatch("user_added", message)
 
     async def notify_user_removed(
         self, email: str, server_name: str = "", removed_by: str = ""
     ) -> bool:
-        timestamp = self._get_timestamp()
-        message = f"🚫 <b>User Removed from Plex</b>\n\n" f"📧 <b>Email:</b> {email}\n"
-        if server_name:
-            message += f"🖥 <b>Server:</b> {server_name}\n"
-        if removed_by:
-            message += f"👤 <b>By:</b> {removed_by}\n"
-        message += f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "🚫",
+            "User Removed from Plex",
+            [
+                ("📧", "Email", email),
+                ("🖥", "Server", server_name),
+                ("👤", "By", removed_by),
+            ],
+        )
         return await self._dispatch("user_removed", message)
 
     # ── storage events ────────────────────────────────────────────
@@ -417,14 +456,15 @@ class NotificationService:
         self, hostname: str, path: str, percent: float, free_gb: float
     ) -> bool:
         # Daily gate is handled entirely in health_checker; no cooldown needed here
-        timestamp = self._get_timestamp()
-        message = (
-            f"💾 <b>Storage Warning</b>\n\n"
-            f"🖥 <b>Host:</b> {hostname}\n"
-            f"📂 <b>Path:</b> {path}\n"
-            f"📊 <b>Usage:</b> {percent:.1f}%\n"
-            f"💿 <b>Free:</b> {free_gb:.1f} GB\n"
-            f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "💾",
+            "Storage Warning",
+            [
+                ("🖥", "Host", hostname),
+                ("📂", "Path", path),
+                ("📊", "Usage", f"{percent:.1f}%"),
+                ("💿", "Free", f"{free_gb:.1f} GB"),
+            ],
         )
         return await self._dispatch("storage_warning", message)
 
@@ -435,31 +475,31 @@ class NotificationService:
     ) -> bool:
         if not self._check_cooldown(f"vpn_error:{container_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"🔒 <b>VPN Error</b>\n\n"
-            f"📦 <b>Container:</b> {container_name}\n"
-            f"❌ <b>Error:</b> {error}\n"
+        message = self._format_message(
+            "🔒",
+            "VPN Error",
+            [
+                ("📦", "Container", container_name),
+                ("❌", "Error", error),
+                ("🔗", "URL", url),
+            ],
         )
-        if url:
-            message += f"🔗 <b>URL:</b> {url}\n"
-        message += f"\n<i>{timestamp}</i>"
         return await self._dispatch("vpn_error", message)
 
     async def notify_vpn_stopped(
         self, container_name: str, status: str, url: str = ""
     ) -> bool:
         """Send a one-shot VPN stopped/exited notification (no cooldown)."""
-        timestamp = self._get_timestamp()
-        message = (
-            f"🔒 <b>VPN Container Stopped</b>\n\n"
-            f"📦 <b>Container:</b> {container_name}\n"
-            f"⏹ <b>Status:</b> {status or 'unknown'}\n"
-            f"ℹ️ <b>Behavior:</b> Sent once until container recovers\n"
+        message = self._format_message(
+            "🔒",
+            "VPN Container Stopped",
+            [
+                ("📦", "Container", container_name),
+                ("⏹", "Status", status or "unknown"),
+                ("ℹ️", "Behavior", "Sent once until container recovers"),
+                ("🔗", "URL", url),
+            ],
         )
-        if url:
-            message += f"🔗 <b>URL:</b> {url}\n"
-        message += f"\n<i>{timestamp}</i>"
         return await self._dispatch("vpn_error", message)
 
     async def notify_vpn_recovery(
@@ -467,17 +507,16 @@ class NotificationService:
     ) -> bool:
         if not self._check_cooldown(f"vpn_recovery:{container_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"🔒 <b>VPN Recovery</b>\n\n"
-            f"📦 <b>Container:</b> {container_name}\n"
-            f"✅ <b>Status:</b> VPN running\n"
+        message = self._format_message(
+            "🔒",
+            "VPN Recovery",
+            [
+                ("📦", "Container", container_name),
+                ("✅", "Status", "VPN running"),
+                ("🌐", "Public IP", public_ip),
+                ("🔗", "URL", url),
+            ],
         )
-        if public_ip:
-            message += f"🌐 <b>Public IP:</b> {public_ip}\n"
-        if url:
-            message += f"🔗 <b>URL:</b> {url}\n"
-        message += f"\n<i>{timestamp}</i>"
         return await self._dispatch("vpn_recovery", message)
 
     # ── NFS events ────────────────────────────────────────────────
@@ -485,24 +524,26 @@ class NotificationService:
     async def notify_nfs_error(self, instance_name: str, error: str) -> bool:
         if not self._check_cooldown(f"nfs_error:{instance_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"📁 <b>NFS Error</b>\n\n"
-            f"🖥 <b>Instance:</b> {instance_name}\n"
-            f"❌ <b>Error:</b> {error}\n"
-            f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "📁",
+            "NFS Error",
+            [
+                ("🖥", "Instance", instance_name),
+                ("❌", "Error", error),
+            ],
         )
         return await self._dispatch("nfs_error", message)
 
     async def notify_nfs_recovery(self, instance_name: str) -> bool:
         if not self._check_cooldown(f"nfs_recovery:{instance_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"📁 <b>NFS Recovery</b>\n\n"
-            f"🖥 <b>Instance:</b> {instance_name}\n"
-            f"✅ <b>Status:</b> All mounts/exports healthy\n"
-            f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "📁",
+            "NFS Recovery",
+            [
+                ("🖥", "Instance", instance_name),
+                ("✅", "Status", "All mounts/exports healthy"),
+            ],
         )
         return await self._dispatch("nfs_recovery", message)
 
@@ -513,25 +554,27 @@ class NotificationService:
     ) -> bool:
         if not self._check_cooldown(f"traffic_high:{service_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"📡 <b>Traffic High</b>\n\n"
-            f"🖥 <b>Service:</b> {service_name}\n"
-            f"⚠️ <b>Bandwidth:</b> {percent:.0f}% ({bandwidth})\n"
-            f"⏱ <b>Duration:</b> Sustained for 2+ minutes\n"
-            f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "📡",
+            "Traffic High",
+            [
+                ("🖥", "Service", service_name),
+                ("⚠️", "Bandwidth", f"{percent:.0f}% ({bandwidth})"),
+                ("⏱", "Duration", "Sustained for 2+ minutes"),
+            ],
         )
         return await self._dispatch("traffic_high", message)
 
     async def notify_traffic_recovery(self, service_name: str, percent: float) -> bool:
         if not self._check_cooldown(f"traffic_recovery:{service_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"📡 <b>Traffic Recovery</b>\n\n"
-            f"🖥 <b>Service:</b> {service_name}\n"
-            f"✅ <b>Status:</b> Bandwidth back to normal ({percent:.0f}%)\n"
-            f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "📡",
+            "Traffic Recovery",
+            [
+                ("🖥", "Service", service_name),
+                ("✅", "Status", f"Bandwidth back to normal ({percent:.0f}%)"),
+            ],
         )
         return await self._dispatch("traffic_recovery", message)
 
@@ -542,13 +585,14 @@ class NotificationService:
     ) -> bool:
         if not self._check_cooldown("uploader_failed"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"📤 <b>Uploader Failed Items</b>\n\n" f"🔢 <b>Failed:</b> {failed_count}\n"
+        message = self._format_message(
+            "📤",
+            "Uploader Failed Items",
+            [
+                ("🔢", "Failed", str(failed_count)),
+                ("ℹ️", "Details", details),
+            ],
         )
-        if details:
-            message += f"ℹ️ <b>Details:</b> {details}\n"
-        message += f"\n<i>{timestamp}</i>"
         return await self._dispatch("uploader_failed", message)
 
     # ── Posterizarr events ────────────────────────────────────────
@@ -556,14 +600,43 @@ class NotificationService:
     async def notify_posterizarr_error(self, instance_name: str, error: str) -> bool:
         if not self._check_cooldown(f"posterizarr_error:{instance_name}"):
             return False
-        timestamp = self._get_timestamp()
-        message = (
-            f"🖼 <b>Posterizarr Error</b>\n\n"
-            f"🖥 <b>Instance:</b> {instance_name}\n"
-            f"❌ <b>Error:</b> {error}\n"
-            f"\n<i>{timestamp}</i>"
+        message = self._format_message(
+            "🖼",
+            "Posterizarr Error",
+            [
+                ("🖥", "Instance", instance_name),
+                ("❌", "Error", error),
+            ],
         )
         return await self._dispatch("posterizarr_error", message)
+
+    # ── Autoscan events ───────────────────────────────
+
+    async def notify_autoscan_error(self, instance_name: str, error: str) -> bool:
+        if not self._check_cooldown(f"autoscan_error:{instance_name}"):
+            return False
+        message = self._format_message(
+            "🔗",
+            "Autoscan Error",
+            [
+                ("🖥", "Instance", instance_name),
+                ("❌", "Error", error),
+            ],
+        )
+        return await self._dispatch("autoscan_error", message)
+
+    async def notify_autoscan_recovery(self, instance_name: str) -> bool:
+        if not self._check_cooldown(f"autoscan_recovery:{instance_name}"):
+            return False
+        message = self._format_message(
+            "🔗",
+            "Autoscan Recovery",
+            [
+                ("🖥", "Instance", instance_name),
+                ("✅", "Status", "All targets reachable"),
+            ],
+        )
+        return await self._dispatch("autoscan_recovery", message)
 
     # ── status tracking (unchanged) ──────────────────────────────
 

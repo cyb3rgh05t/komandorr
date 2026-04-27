@@ -22,6 +22,8 @@ class HealthChecker:
         self._nfs_error_state: dict[str, bool] = (
             {}
         )  # track per-instance NFS error state
+        self._autoscan_error_state: dict[str, bool] = {}
+        self._autoscan_target_state: dict[str, set[str]] = {}
         self._traffic_high_count: dict[str, int] = {}  # consecutive high-traffic checks
         self._traffic_high_state: dict[str, bool] = {}  # track per-service alert state
         self._storage_last_notify_day: dict[str, str] = self._load_state()
@@ -63,6 +65,7 @@ class HealthChecker:
                     self._check_vpn(),
                     self._check_nfs(),
                     self._check_posterizarr(),
+                    self._check_autoscan(),
                     self._check_storage(),
                     self._check_uploader(),
                     self._check_traffic(),
@@ -413,6 +416,97 @@ class HealthChecker:
                         )
                     except Exception:
                         pass
+
+    # ── Autoscan ─────────────────────────────────────────
+
+    async def _check_autoscan(self):
+        """Check Autoscan instance reachability + per-target availability."""
+        import base64 as _b64
+        from app.config import settings
+
+        instances = list(getattr(settings, "AUTOSCAN_INSTANCES", []) or [])
+        if not instances:
+            return
+
+        for inst in instances:
+            inst_url = (inst.get("url") or "").rstrip("/")
+            inst_name = inst.get("name") or inst.get("id") or "autoscan"
+            user = inst.get("username") or ""
+            pwd = inst.get("password") or ""
+            if not inst_url:
+                continue
+
+            headers = {}
+            if user or pwd:
+                token = _b64.b64encode(f"{user}:{pwd}".encode()).decode()
+                headers["Authorization"] = f"Basic {token}"
+
+            # 1) instance reachability via /api/health
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.get(f"{inst_url}/api/health", headers=headers)
+                    resp.raise_for_status()
+            except Exception as e:
+                logger.debug(f"Health checker: Autoscan '{inst_name}' unreachable: {e}")
+                if not self._autoscan_error_state.get(inst_name):
+                    self._autoscan_error_state[inst_name] = True
+                    try:
+                        await notification_service.notify_autoscan_error(
+                            inst_name, f"Instance unreachable: {e}"
+                        )
+                    except Exception:
+                        pass
+                continue
+
+            # 2) per-target availability via /api/stats
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.get(f"{inst_url}/api/stats", headers=headers)
+                    resp.raise_for_status()
+                    stats = resp.json() or {}
+            except Exception as e:
+                logger.debug(
+                    f"Health checker: Autoscan '{inst_name}' /stats failed: {e}"
+                )
+                stats = {}
+
+            targets_avail = stats.get("targets_available") or {}
+            unavailable = {name for name, ok in targets_avail.items() if ok is False}
+            previous = self._autoscan_target_state.get(inst_name, set())
+
+            new_down = unavailable - previous
+            recovered = previous - unavailable
+
+            if new_down:
+                try:
+                    await notification_service.notify_autoscan_error(
+                        inst_name,
+                        f"Targets unreachable: {', '.join(sorted(new_down))}",
+                    )
+                except Exception:
+                    pass
+
+            if recovered and not unavailable and previous:
+                # All targets back AND we previously had outages → recovery
+                try:
+                    await notification_service.notify_autoscan_recovery(inst_name)
+                except Exception:
+                    pass
+            elif recovered and unavailable:
+                # Partial recovery — just log, no spam notification
+                logger.info(
+                    f"Autoscan '{inst_name}': partial recovery for {sorted(recovered)}, still down: {sorted(unavailable)}"
+                )
+
+            self._autoscan_target_state[inst_name] = unavailable
+
+            # Instance reachable again → clear instance-level error
+            if self._autoscan_error_state.get(inst_name) and not unavailable:
+                self._autoscan_error_state[inst_name] = False
+                try:
+                    await notification_service.notify_autoscan_recovery(inst_name)
+                except Exception:
+                    pass
 
     # ── Storage ────────────────────────────────────────────────────
 
