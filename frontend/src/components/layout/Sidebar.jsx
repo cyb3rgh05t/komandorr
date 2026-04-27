@@ -1155,7 +1155,7 @@ export default function Sidebar() {
                         )}
                         {showAutoscanQueueBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-cyan-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-blue-500 text-white ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                             title={`${autoscanQueueCount} pending scans`}
