@@ -391,6 +391,66 @@ export default function Sidebar() {
     return posterizarrHistory.history[0].errors || 0;
   }, [posterizarrHistory]);
 
+  // Fetch Autoscan status + dashboard for queue + error badge
+  const { data: autoscanStatus } = useQuery({
+    queryKey: ["autoscan-status-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/autoscan/status");
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10000,
+    refetchInterval: 30000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const { data: autoscanDashboard } = useQuery({
+    queryKey: ["autoscan-dashboard-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/autoscan/dashboard");
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10000,
+    refetchInterval: 30000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+    enabled: (autoscanStatus?.instances?.length || 0) > 0,
+  });
+
+  const autoscanQueueCount = useMemo(() => {
+    const insts = autoscanDashboard?.instances || [];
+    let total = 0;
+    insts.forEach((i) => {
+      const stats = i.stats || {};
+      const queue = i.queue || [];
+      total += stats.scans_remaining ?? queue.length ?? 0;
+    });
+    return total;
+  }, [autoscanDashboard]);
+
+  const autoscanErrorCount = useMemo(() => {
+    const insts = autoscanStatus?.instances || [];
+    let count = 0;
+    insts.forEach((i) => {
+      if (i.connected === false) count++;
+    });
+    // Per-target unavailability (treat as errors)
+    const dashInsts = autoscanDashboard?.instances || [];
+    dashInsts.forEach((i) => {
+      const avail = i.stats?.targets_available || {};
+      Object.values(avail).forEach((v) => {
+        if (v === false) count++;
+      });
+    });
+    return count;
+  }, [autoscanStatus, autoscanDashboard]);
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
@@ -1030,6 +1090,13 @@ export default function Sidebar() {
                   const showPosterizarrBadge =
                     isPosterizarr && posterizarrErrorCount > 0;
 
+                  // Autoscan badges (queue + errors)
+                  const isAutoscan = item.path === "/autoscan";
+                  const showAutoscanQueueBadge =
+                    isAutoscan && autoscanQueueCount > 0;
+                  const showAutoscanErrorBadge =
+                    isAutoscan && autoscanErrorCount > 0;
+
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -1084,6 +1151,26 @@ export default function Sidebar() {
                             }`}
                           >
                             {posterizarrErrorCount}
+                          </span>
+                        )}
+                        {showAutoscanQueueBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-cyan-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                            title={`${autoscanQueueCount} pending scans`}
+                          >
+                            {autoscanQueueCount}
+                          </span>
+                        )}
+                        {showAutoscanErrorBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                            title={`${autoscanErrorCount} errors`}
+                          >
+                            {autoscanErrorCount}
                           </span>
                         )}
                       </Link>
