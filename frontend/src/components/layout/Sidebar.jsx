@@ -764,7 +764,7 @@ export default function Sidebar() {
                         </span>
                         {(hasPlexBadge || hasServicesBadge) && (
                           <span
-                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-yellow-500 text-white ${
+                            className={`inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-yellow-500 text-black ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -782,7 +782,7 @@ export default function Sidebar() {
                         )}{" "}
                         {hasVodPlexSyncBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-black ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -791,7 +791,7 @@ export default function Sidebar() {
                         )}{" "}
                         {hasPlexActivityBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-black ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -800,7 +800,7 @@ export default function Sidebar() {
                         )}
                         {hasActiveUploadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-black ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -818,7 +818,7 @@ export default function Sidebar() {
                         )}
                         {hasActiveDownloadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-black ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -827,7 +827,7 @@ export default function Sidebar() {
                         )}
                         {hasStuckDownloadsBadge && (
                           <span
-                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-yellow-500 text-white ${
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-yellow-500 text-black ${
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
@@ -1015,14 +1015,21 @@ export default function Sidebar() {
                                   <span className="flex-1 overflow-hidden whitespace-nowrap text-sm">
                                     {subItem.label}
                                   </span>
-                                  {badges.map((badge, index) => (
-                                    <span
-                                      key={index}
-                                      className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full ${badge.color} text-white`}
-                                    >
-                                      {badge.count}
-                                    </span>
-                                  ))}
+                                  {badges.map((badge, index) => {
+                                    const isLight =
+                                      badge.color.includes("green") ||
+                                      badge.color.includes("yellow") ||
+                                      badge.color.includes("amber") ||
+                                      badge.color.includes("lime");
+                                    return (
+                                      <span
+                                        key={index}
+                                        className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full ${badge.color} ${isLight ? "text-black" : "text-white"}`}
+                                      >
+                                        {badge.count}
+                                      </span>
+                                    );
+                                  })}
                                 </Link>
                               </li>
                             );
