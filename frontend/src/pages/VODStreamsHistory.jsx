@@ -299,10 +299,10 @@ function MonthComparisonCard({ data, t }) {
           ? "down"
           : "flat";
 
-  // Chart geometry
+  // Chart geometry — narrow viewBox so bars stay compact; SVG is centered in card
   const W = 360;
   const H = 200;
-  const PAD = { top: 20, right: 12, bottom: 30, left: 36 };
+  const PAD = { top: 20, right: 24, bottom: 30, left: 36 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
@@ -316,17 +316,26 @@ function MonthComparisonCard({ data, t }) {
   const barW = Math.min(28, groupGap * 0.32);
 
   return (
-    <div className="bg-theme-card border border-theme rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-theme-primary" />
-          <h3 className="text-sm font-bold text-theme-text">
-            {t("vodStreams.history.monthCompare", "Month Comparison")}
-          </h3>
+    <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-theme">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-theme-primary/15">
+            <Calendar className="w-5 h-5 text-theme-primary" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-theme-text">
+              {t("vodStreams.history.monthCompare", "Month Comparison")}
+            </h3>
+            <p className="text-xs text-theme-text-muted mt-0.5">
+              {stats.curFull} <span className="opacity-60">vs</span>{" "}
+              {stats.prevFull}
+            </p>
+          </div>
         </div>
         {overallPct != null && (
           <span
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
               overallDir === "up"
                 ? "bg-green-500/15 text-green-400"
                 : overallDir === "down"
@@ -346,126 +355,132 @@ function MonthComparisonCard({ data, t }) {
           </span>
         )}
       </div>
-      <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-2">
-        {stats.curFull} <span className="opacity-60">vs</span> {stats.prevFull}
-      </p>
 
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
-        <defs>
-          <linearGradient id="cmpCurGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.55" />
-          </linearGradient>
-          <linearGradient id="cmpPrevGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.45" />
-          </linearGradient>
-        </defs>
+      {/* Body */}
+      <div className="px-3 sm:px-5 py-6 sm:py-8">
+        <div className="w-full max-w-md mx-auto">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="overflow-visible w-full block"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <defs>
+              <linearGradient id="cmpCurGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0.55" />
+              </linearGradient>
+              <linearGradient id="cmpPrevGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.45" />
+              </linearGradient>
+            </defs>
 
-        {/* horizontal grid lines (4) */}
-        {[0, 0.25, 0.5, 0.75, 1].map((r, i) => {
-          const y = PAD.top + innerH - r * innerH;
-          return (
+            {/* horizontal grid lines (4) */}
+            {[0, 0.25, 0.5, 0.75, 1].map((r, i) => {
+              const y = PAD.top + innerH - r * innerH;
+              return (
+                <line
+                  key={i}
+                  x1={PAD.left}
+                  y1={y}
+                  x2={PAD.left + innerW}
+                  y2={y}
+                  stroke="currentColor"
+                  className="text-theme-text-muted"
+                  strokeOpacity={0.1}
+                  strokeDasharray="3 5"
+                />
+              );
+            })}
+
+            {renderGroups.map((g, i) => {
+              const cx = PAD.left + i * groupGap + groupGap / 2;
+              const curH = (g.cur / g.max) * innerH;
+              const prevH = (g.prev / g.max) * innerH;
+              const curX = cx - barW - 3;
+              const prevX = cx + 3;
+              const curY = PAD.top + innerH - curH;
+              const prevY = PAD.top + innerH - prevH;
+              return (
+                <g key={g.key}>
+                  {/* Previous month bar */}
+                  <rect
+                    x={prevX}
+                    y={prevY}
+                    width={barW}
+                    height={Math.max(prevH, 1)}
+                    rx={3}
+                    fill="url(#cmpPrevGrad)"
+                  />
+                  <text
+                    x={prevX + barW / 2}
+                    y={prevY - 4}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontWeight={700}
+                    className="fill-violet-300"
+                  >
+                    {g.prev}
+                  </text>
+                  {/* Current month bar */}
+                  <rect
+                    x={curX}
+                    y={curY}
+                    width={barW}
+                    height={Math.max(curH, 1)}
+                    rx={3}
+                    fill="url(#cmpCurGrad)"
+                  />
+                  <text
+                    x={curX + barW / 2}
+                    y={curY - 4}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontWeight={700}
+                    className="fill-cyan-300"
+                  >
+                    {g.cur}
+                  </text>
+                  {/* group label */}
+                  <text
+                    x={cx}
+                    y={PAD.top + innerH + 16}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontWeight={600}
+                    className="fill-theme-text-muted"
+                  >
+                    {g.label}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* x-axis line */}
             <line
-              key={i}
               x1={PAD.left}
-              y1={y}
+              y1={PAD.top + innerH}
               x2={PAD.left + innerW}
-              y2={y}
+              y2={PAD.top + innerH}
               stroke="currentColor"
               className="text-theme-text-muted"
-              strokeOpacity={0.1}
-              strokeDasharray="3 5"
+              strokeOpacity={0.25}
             />
-          );
-        })}
+          </svg>
+        </div>
+      </div>
 
-        {renderGroups.map((g, i) => {
-          const cx = PAD.left + i * groupGap + groupGap / 2;
-          const curH = (g.cur / g.max) * innerH;
-          const prevH = (g.prev / g.max) * innerH;
-          const curX = cx - barW - 3;
-          const prevX = cx + 3;
-          const curY = PAD.top + innerH - curH;
-          const prevY = PAD.top + innerH - prevH;
-          return (
-            <g key={g.key}>
-              {/* Previous month bar */}
-              <rect
-                x={prevX}
-                y={prevY}
-                width={barW}
-                height={Math.max(prevH, 1)}
-                rx={3}
-                fill="url(#cmpPrevGrad)"
-              />
-              <text
-                x={prevX + barW / 2}
-                y={prevY - 4}
-                textAnchor="middle"
-                fontSize={10}
-                fontWeight={700}
-                className="fill-violet-300"
-              >
-                {g.prev}
-              </text>
-              {/* Current month bar */}
-              <rect
-                x={curX}
-                y={curY}
-                width={barW}
-                height={Math.max(curH, 1)}
-                rx={3}
-                fill="url(#cmpCurGrad)"
-              />
-              <text
-                x={curX + barW / 2}
-                y={curY - 4}
-                textAnchor="middle"
-                fontSize={10}
-                fontWeight={700}
-                className="fill-cyan-300"
-              >
-                {g.cur}
-              </text>
-              {/* group label */}
-              <text
-                x={cx}
-                y={PAD.top + innerH + 16}
-                textAnchor="middle"
-                fontSize={10}
-                fontWeight={600}
-                className="fill-theme-text-muted"
-              >
-                {g.label}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* x-axis line */}
-        <line
-          x1={PAD.left}
-          y1={PAD.top + innerH}
-          x2={PAD.left + innerW}
-          y2={PAD.top + innerH}
-          stroke="currentColor"
-          className="text-theme-text-muted"
-          strokeOpacity={0.25}
-        />
-      </svg>
-
-      {/* Legend */}
-      <div className="flex items-center gap-4 mt-1">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-cyan-400 to-cyan-600" />
-          <span className="text-[10px] text-theme-text-muted">
+      {/* Footer Legend */}
+      <div className="flex items-center justify-between gap-4 px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-cyan-400 to-cyan-600" />
+          <span className="text-xs text-theme-text-muted">
             {stats.curLabel}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-violet-400 to-violet-600" />
-          <span className="text-[10px] text-theme-text-muted">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-violet-400 to-violet-600" />
+          <span className="text-xs text-theme-text-muted">
             {stats.prevLabel}
           </span>
         </div>
@@ -515,10 +530,10 @@ function MonthlyTrendCard({ data, t }) {
   const maxPeak = Math.max(...months.map((m) => m.peak), 1);
   const minPeak = Math.min(...months.map((m) => m.peak));
 
-  // Chart geometry
+  // Chart geometry — narrow viewBox so bars stay compact; SVG is centered in card
   const W = 360;
   const H = 200;
-  const PAD = { top: 20, right: 8, bottom: 30, left: 36 };
+  const PAD = { top: 20, right: 12, bottom: 30, left: 36 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const slot = innerW / months.length;
@@ -531,210 +546,228 @@ function MonthlyTrendCard({ data, t }) {
   const yMax = yTicks[yTicks.length - 1];
 
   return (
-    <div className="bg-theme-card border border-theme rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-theme-primary" />
-          <h3 className="text-sm font-bold text-theme-text">
-            {t("vodStreams.history.monthlyTrend", "Monthly Peak Trend")}
-          </h3>
-        </div>
-        <span className="text-[10px] text-theme-text-muted uppercase tracking-wider">
-          {t("vodStreams.history.last12Months", "Last 12 Months")}
-        </span>
-      </div>
-      <p className="text-[10px] text-theme-text-muted mb-2">
-        {t("vodStreams.history.peakPerMonth", "Peak concurrent per month")}
-      </p>
-
-      <svg
-        width="100%"
-        viewBox={`0 0 ${W} ${H}`}
-        className="overflow-visible"
-        onMouseLeave={() => setHoverIdx(null)}
-      >
-        <defs>
-          <linearGradient id="mtBarGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
-          </linearGradient>
-          <linearGradient id="mtBarBest" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-            <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.6" />
-          </linearGradient>
-          <linearGradient id="mtBarWorst" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
-          </linearGradient>
-        </defs>
-
-        {/* y-axis grid + labels */}
-        {yTicks.map((tick) => {
-          const y = PAD.top + innerH - (tick / yMax) * innerH;
-          return (
-            <g key={`y-${tick}`}>
-              <line
-                x1={PAD.left}
-                y1={y}
-                x2={PAD.left + innerW}
-                y2={y}
-                stroke="currentColor"
-                className="text-theme-text-muted"
-                strokeOpacity={0.1}
-                strokeDasharray="3 5"
-              />
-              <text
-                x={PAD.left - 6}
-                y={y + 3}
-                textAnchor="end"
-                fontSize={9}
-                className="fill-theme-text-muted"
-              >
-                {tick}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Bars */}
-        {months.map((m, i) => {
-          const ratio = m.peak / yMax;
-          const h = ratio * innerH;
-          const x = PAD.left + i * slot + (slot - barW) / 2;
-          const y = PAD.top + innerH - h;
-          const isBest = m.peak === maxPeak && maxPeak > 0;
-          const isWorst =
-            m.peak === minPeak && minPeak !== maxPeak && months.length > 1;
-          const fill = isBest
-            ? "url(#mtBarBest)"
-            : isWorst
-              ? "url(#mtBarWorst)"
-              : "url(#mtBarGrad)";
-          const isHover = hoverIdx === i;
-          return (
-            <g
-              key={m.ym}
-              onMouseEnter={() => setHoverIdx(i)}
-              className="cursor-pointer"
-            >
-              {/* hover column */}
-              {isHover && (
-                <rect
-                  x={PAD.left + i * slot}
-                  y={PAD.top}
-                  width={slot}
-                  height={innerH}
-                  className="fill-theme-text-muted"
-                  opacity={0.05}
-                />
+    <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
+      {/* Card Header */}
+      <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-theme">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-theme-primary/15">
+            <BarChart3 className="w-5 h-5 text-theme-primary" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-base font-semibold text-theme-text">
+                {t("vodStreams.history.monthlyTrend", "Monthly Peak Trend")}
+              </h3>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md">
+                <Calendar size={10} className="text-cyan-400" />
+                <span className="text-[10px] font-semibold text-cyan-400 tracking-wide">
+                  {t("vodStreams.history.last12Months", "LAST 12 MONTHS")}
+                </span>
+              </span>
+            </div>
+            <p className="text-xs text-theme-text-muted mt-0.5">
+              {t(
+                "vodStreams.history.peakPerMonth",
+                "Peak concurrent per month",
               )}
-              <rect
-                x={x}
-                y={y}
-                width={barW}
-                height={Math.max(h, 1)}
-                rx={3}
-                fill={fill}
-                style={{ transition: "all 0.2s" }}
-              />
-              {/* peak value above bar */}
-              <text
-                x={x + barW / 2}
-                y={y - 4}
-                textAnchor="middle"
-                fontSize={9}
-                fontWeight={700}
-                className={
-                  isBest
-                    ? "fill-amber-300"
-                    : isWorst
-                      ? "fill-rose-300"
-                      : "fill-cyan-300"
-                }
-              >
-                {m.peak}
-              </text>
-              {/* tooltip */}
-              {isHover && (
-                <g pointerEvents="none">
-                  <rect
-                    x={Math.max(4, Math.min(x + barW / 2 - 60, W - 124))}
-                    y={Math.max(4, y - 50)}
-                    width={120}
-                    height={42}
-                    rx={6}
-                    className="fill-theme-card stroke-theme-text-muted/30"
-                    strokeWidth={1}
-                    style={{
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5))",
-                    }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Card Body */}
+      <div className="px-3 sm:px-5 py-6 sm:py-8">
+        <div className="w-full max-w-md mx-auto">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="overflow-visible w-full block"
+            preserveAspectRatio="xMidYMid meet"
+            onMouseLeave={() => setHoverIdx(null)}
+          >
+            <defs>
+              <linearGradient id="mtBarGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
+              </linearGradient>
+              <linearGradient id="mtBarBest" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+                <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.6" />
+              </linearGradient>
+              <linearGradient id="mtBarWorst" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
+              </linearGradient>
+            </defs>
+
+            {/* y-axis grid + labels */}
+            {yTicks.map((tick) => {
+              const y = PAD.top + innerH - (tick / yMax) * innerH;
+              return (
+                <g key={`y-${tick}`}>
+                  <line
+                    x1={PAD.left}
+                    y1={y}
+                    x2={PAD.left + innerW}
+                    y2={y}
+                    stroke="currentColor"
+                    className="text-theme-text-muted"
+                    strokeOpacity={0.1}
+                    strokeDasharray="3 5"
                   />
                   <text
-                    x={Math.max(64, Math.min(x + barW / 2, W - 64))}
-                    y={Math.max(20, y - 34)}
-                    textAnchor="middle"
-                    fontSize={10}
-                    fontWeight={600}
-                    className="fill-theme-text"
-                  >
-                    {m.fullLabel}
-                  </text>
-                  <text
-                    x={Math.max(64, Math.min(x + barW / 2, W - 64))}
-                    y={Math.max(34, y - 20)}
-                    textAnchor="middle"
+                    x={PAD.left - 6}
+                    y={y + 3}
+                    textAnchor="end"
                     fontSize={9}
                     className="fill-theme-text-muted"
                   >
-                    Peak {m.peak} · Avg {m.avg.toFixed(1)} · {m.days}d
+                    {tick}
                   </text>
                 </g>
-              )}
-              {/* x-axis label */}
-              <text
-                x={x + barW / 2}
-                y={PAD.top + innerH + 14}
-                textAnchor="middle"
-                fontSize={9}
-                fontWeight={isHover ? 700 : 500}
-                className="fill-theme-text-muted"
-                opacity={isHover ? 1 : 0.85}
-              >
-                {m.label}
-              </text>
-            </g>
-          );
-        })}
+              );
+            })}
 
-        {/* x-axis line */}
-        <line
-          x1={PAD.left}
-          y1={PAD.top + innerH}
-          x2={PAD.left + innerW}
-          y2={PAD.top + innerH}
-          stroke="currentColor"
-          className="text-theme-text-muted"
-          strokeOpacity={0.25}
-        />
-      </svg>
+            {/* Bars */}
+            {months.map((m, i) => {
+              const ratio = m.peak / yMax;
+              const h = ratio * innerH;
+              const x = PAD.left + i * slot + (slot - barW) / 2;
+              const y = PAD.top + innerH - h;
+              const isBest = m.peak === maxPeak && maxPeak > 0;
+              const isWorst =
+                m.peak === minPeak && minPeak !== maxPeak && months.length > 1;
+              const fill = isBest
+                ? "url(#mtBarBest)"
+                : isWorst
+                  ? "url(#mtBarWorst)"
+                  : "url(#mtBarGrad)";
+              const isHover = hoverIdx === i;
+              return (
+                <g
+                  key={m.ym}
+                  onMouseEnter={() => setHoverIdx(i)}
+                  className="cursor-pointer"
+                >
+                  {/* hover column */}
+                  {isHover && (
+                    <rect
+                      x={PAD.left + i * slot}
+                      y={PAD.top}
+                      width={slot}
+                      height={innerH}
+                      className="fill-theme-text-muted"
+                      opacity={0.05}
+                    />
+                  )}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barW}
+                    height={Math.max(h, 1)}
+                    rx={3}
+                    fill={fill}
+                    style={{ transition: "all 0.2s" }}
+                  />
+                  {/* peak value above bar */}
+                  <text
+                    x={x + barW / 2}
+                    y={y - 4}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fontWeight={700}
+                    className={
+                      isBest
+                        ? "fill-amber-300"
+                        : isWorst
+                          ? "fill-rose-300"
+                          : "fill-cyan-300"
+                    }
+                  >
+                    {m.peak}
+                  </text>
+                  {/* tooltip */}
+                  {isHover && (
+                    <g pointerEvents="none">
+                      <rect
+                        x={Math.max(4, Math.min(x + barW / 2 - 60, W - 124))}
+                        y={Math.max(4, y - 50)}
+                        width={120}
+                        height={42}
+                        rx={6}
+                        className="fill-theme-card stroke-theme-text-muted/30"
+                        strokeWidth={1}
+                        style={{
+                          filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5))",
+                        }}
+                      />
+                      <text
+                        x={Math.max(64, Math.min(x + barW / 2, W - 64))}
+                        y={Math.max(20, y - 34)}
+                        textAnchor="middle"
+                        fontSize={10}
+                        fontWeight={600}
+                        className="fill-theme-text"
+                      >
+                        {m.fullLabel}
+                      </text>
+                      <text
+                        x={Math.max(64, Math.min(x + barW / 2, W - 64))}
+                        y={Math.max(34, y - 20)}
+                        textAnchor="middle"
+                        fontSize={9}
+                        className="fill-theme-text-muted"
+                      >
+                        Peak {m.peak} · Avg {m.avg.toFixed(1)} · {m.days}d
+                      </text>
+                    </g>
+                  )}
+                  {/* x-axis label */}
+                  <text
+                    x={x + barW / 2}
+                    y={PAD.top + innerH + 14}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fontWeight={isHover ? 700 : 500}
+                    className="fill-theme-text-muted"
+                    opacity={isHover ? 1 : 0.85}
+                  >
+                    {m.label}
+                  </text>
+                </g>
+              );
+            })}
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 mt-1">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-cyan-400 to-cyan-600" />
-          <span className="text-[10px] text-theme-text-muted">
+            {/* x-axis line */}
+            <line
+              x1={PAD.left}
+              y1={PAD.top + innerH}
+              x2={PAD.left + innerW}
+              y2={PAD.top + innerH}
+              stroke="currentColor"
+              className="text-theme-text-muted"
+              strokeOpacity={0.25}
+            />
+          </svg>
+        </div>
+      </div>
+
+      {/* Card Footer Legend */}
+      <div className="flex flex-wrap items-center justify-between gap-4 px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-cyan-400 to-cyan-600" />
+          <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.legendNormal", "Monthly")}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-amber-400 to-amber-600" />
-          <span className="text-[10px] text-theme-text-muted">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-amber-400 to-amber-600" />
+          <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.bestMonth", "Best")}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-rose-400 to-rose-600" />
-          <span className="text-[10px] text-theme-text-muted">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-rose-400 to-rose-600" />
+          <span className="text-xs text-theme-text-muted">
             {t("vodStreams.history.worstMonth", "Worst")}
           </span>
         </div>
@@ -1263,39 +1296,46 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
       </div>
 
       {/* Chart Footer Legend */}
-      <div className="flex flex-wrap items-center justify-start gap-5 sm:gap-8 px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-cyan-500" />
-          <span className="text-xs text-theme-text-muted">
-            {t("vodStreams.history.legendWeekday", "Weekday")}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-green-400" />
-          <span className="text-xs text-theme-text-muted">
-            {t("vodStreams.history.legendWeekend", "Weekend")}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-theme-primary" />
-          <span className="text-xs text-theme-text-muted">
-            {t("vodStreams.history.legendHighest", "Highest Peak")}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-sm bg-rose-400" />
-          <span className="text-xs text-theme-text-muted">
-            {t("vodStreams.history.legendLowest", "Lowest Peak")}
-          </span>
-        </div>
-        {showTrendLine && (
+      <div className="relative px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10 min-h-[48px]">
+        {/* Peak items pinned to the left edge */}
+        <div className="absolute left-5 sm:left-8 top-1/2 -translate-y-1/2 flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-0.5 border-t-2 border-dashed border-white/60" />
+            <span className="w-3 h-3 rounded-sm bg-theme-primary" />
             <span className="text-xs text-theme-text-muted">
-              {t("vodStreams.history.legendTrend", "Trend")}
+              {t("vodStreams.history.legendHighest", "Highest Peak")}
             </span>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-sm bg-rose-400" />
+            <span className="text-xs text-theme-text-muted">
+              {t("vodStreams.history.legendLowest", "Lowest Peak")}
+            </span>
+          </div>
+        </div>
+
+        {/* Day-type items always centered */}
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-sm bg-cyan-500" />
+            <span className="text-xs text-theme-text-muted">
+              {t("vodStreams.history.legendWeekday", "Weekday")}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-sm bg-green-400" />
+            <span className="text-xs text-theme-text-muted">
+              {t("vodStreams.history.legendWeekend", "Weekend")}
+            </span>
+          </div>
+          {showTrendLine && (
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-0.5 border-t-2 border-dashed border-white/60" />
+              <span className="text-xs text-theme-text-muted">
+                {t("vodStreams.history.legendTrend", "Trend")}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1595,11 +1635,6 @@ export default function VODStreamsHistory() {
             allTimePeak={plexStats?.peak_concurrent}
             t={t}
           />
-          {/* Monthly insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <MonthComparisonCard data={allDailyPeaks} t={t} />
-            <MonthlyTrendCard data={allDailyPeaks} t={t} />
-          </div>
           {/* Time Range Filter */}
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1681,6 +1716,11 @@ export default function VODStreamsHistory() {
             showTrendLine={showTrendLine}
             t={t}
           />
+          {/* Monthly insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <MonthComparisonCard data={allDailyPeaks} t={t} />
+            <MonthlyTrendCard data={allDailyPeaks} t={t} />
+          </div>
         </>
       )}
     </div>
