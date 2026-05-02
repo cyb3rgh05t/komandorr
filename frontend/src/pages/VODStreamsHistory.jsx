@@ -223,6 +223,235 @@ function getMonthBadge(data) {
     .toUpperCase();
 }
 
+// --- Month Comparison Card (current vs previous calendar month) ---
+function MonthComparisonCard({ data, t }) {
+  const stats = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return null;
+    // Newest "last" date defines the "current" month
+    const sorted = [...data].sort((a, b) => (a.date < b.date ? -1 : 1));
+    const lastDate = new Date(sorted[sorted.length - 1].date + "T00:00:00");
+    const curYM = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, "0")}`;
+    const prevDate = new Date(lastDate);
+    prevDate.setMonth(prevDate.getMonth() - 1);
+    const prevYM = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
+
+    const cur = sorted.filter((d) => (d.date || "").startsWith(curYM));
+    const prev = sorted.filter((d) => (d.date || "").startsWith(prevYM));
+
+    const summarize = (items) => {
+      if (items.length === 0) return null;
+      const peaks = items.map((i) => i.peak);
+      return {
+        max: Math.max(...peaks),
+        avg: peaks.reduce((a, b) => a + b, 0) / peaks.length,
+        days: items.length,
+      };
+    };
+
+    return {
+      curLabel: lastDate.toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      }),
+      prevLabel: prevDate.toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      }),
+      cur: summarize(cur),
+      prev: summarize(prev),
+    };
+  }, [data]);
+
+  if (!stats || !stats.cur) return null;
+
+  const renderDelta = (curVal, prevVal) => {
+    if (prevVal == null || prevVal === 0)
+      return (
+        <span className="text-[10px] text-theme-text-muted">
+          {t("vodStreams.history.noPriorData", "no prior data")}
+        </span>
+      );
+    const diff = curVal - prevVal;
+    const pct = (diff / prevVal) * 100;
+    const dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
+    return (
+      <span
+        className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
+          dir === "up"
+            ? "text-green-400"
+            : dir === "down"
+              ? "text-red-400"
+              : "text-theme-text-muted"
+        }`}
+      >
+        {dir === "up" ? (
+          <ArrowUp size={12} />
+        ) : dir === "down" ? (
+          <ArrowDown size={12} />
+        ) : (
+          <Minus size={12} />
+        )}
+        {pct > 0 ? "+" : ""}
+        {pct.toFixed(1)}%
+      </span>
+    );
+  };
+
+  const Row = ({ label, curVal, prevVal, format }) => {
+    const fmt = (v) =>
+      v == null
+        ? "—"
+        : format === "decimal"
+          ? Number(v).toFixed(1)
+          : Math.round(v);
+    return (
+      <div className="flex items-center justify-between gap-3 py-2 border-t border-theme/40 first:border-t-0">
+        <span className="text-xs text-theme-text-muted">{label}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-bold text-theme-text">
+            {fmt(curVal)}
+          </span>
+          <span className="text-[11px] text-theme-text-muted">
+            vs {fmt(prevVal)}
+          </span>
+          {renderDelta(curVal, prevVal)}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-theme-card border border-theme rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-theme-primary" />
+          <h3 className="text-sm font-bold text-theme-text">
+            {t("vodStreams.history.monthCompare", "Month Comparison")}
+          </h3>
+        </div>
+        <span className="text-[10px] text-theme-text-muted uppercase tracking-wider">
+          {stats.curLabel} <span className="text-theme-text-muted/60">vs</span>{" "}
+          {stats.prevLabel}
+        </span>
+      </div>
+      <Row
+        label={t("vodStreams.history.peak", "Peak")}
+        curVal={stats.cur?.max}
+        prevVal={stats.prev?.max}
+      />
+      <Row
+        label={t("vodStreams.history.avgPeak", "Avg Peak")}
+        curVal={stats.cur?.avg}
+        prevVal={stats.prev?.avg}
+        format="decimal"
+      />
+      <Row
+        label={t("vodStreams.history.daysTracked", "Days Tracked")}
+        curVal={stats.cur?.days}
+        prevVal={stats.prev?.days}
+      />
+    </div>
+  );
+}
+
+// --- Monthly Trend Card (last 12 months mini bars) ---
+function MonthlyTrendCard({ data, t }) {
+  const months = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return [];
+    const map = new Map();
+    data.forEach((item) => {
+      const ym = (item?.date || "").slice(0, 7);
+      if (ym.length !== 7) return;
+      const cur = map.get(ym) || { peak: 0, sum: 0, count: 0 };
+      cur.peak = Math.max(cur.peak, item.peak || 0);
+      cur.sum += item.peak || 0;
+      cur.count += 1;
+      map.set(ym, cur);
+    });
+    const sorted = Array.from(map.entries())
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .slice(-12);
+    return sorted.map(([ym, v]) => {
+      const [year, month] = ym.split("-");
+      const date = new Date(Number(year), Number(month) - 1, 1);
+      return {
+        ym,
+        label: date.toLocaleDateString(undefined, { month: "short" }),
+        fullLabel: date.toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        }),
+        peak: v.peak,
+        avg: v.count > 0 ? v.sum / v.count : 0,
+        days: v.count,
+      };
+    });
+  }, [data]);
+
+  if (months.length === 0) return null;
+
+  const maxPeak = Math.max(...months.map((m) => m.peak), 1);
+  const bestPeak = maxPeak;
+  const worstPeak = Math.min(...months.map((m) => m.peak));
+
+  return (
+    <div className="bg-theme-card border border-theme rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-theme-primary" />
+          <h3 className="text-sm font-bold text-theme-text">
+            {t("vodStreams.history.monthlyTrend", "Monthly Peak Trend")}
+          </h3>
+        </div>
+        <span className="text-[10px] text-theme-text-muted uppercase tracking-wider">
+          {t("vodStreams.history.last12Months", "Last 12 Months")}
+        </span>
+      </div>
+      <div className="flex items-end justify-between gap-1.5 h-24">
+        {months.map((m) => {
+          const ratio = m.peak / maxPeak;
+          const h = Math.max(ratio * 100, 4);
+          const isBest = m.peak === bestPeak && bestPeak > 0;
+          const isWorst =
+            m.peak === worstPeak && worstPeak !== bestPeak && months.length > 1;
+          const fill = isBest
+            ? "from-amber-400 to-amber-600"
+            : isWorst
+              ? "from-rose-400 to-rose-600"
+              : "from-cyan-400 to-cyan-600";
+          return (
+            <div
+              key={m.ym}
+              className="flex-1 flex flex-col items-center gap-1 group relative min-w-0"
+              title={`${m.fullLabel}\nPeak: ${m.peak}\nAvg: ${m.avg.toFixed(1)}\nDays: ${m.days}`}
+            >
+              <div className="relative w-full flex items-end justify-center h-full">
+                <div
+                  className={`w-full max-w-[28px] rounded-t bg-gradient-to-b ${fill} transition-all`}
+                  style={{ height: `${h}%` }}
+                />
+                <span className="absolute -top-4 text-[9px] font-bold text-theme-text opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  {m.peak}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-1.5">
+        {months.map((m) => (
+          <span
+            key={m.ym}
+            className="flex-1 text-center text-[9px] text-theme-text-muted truncate"
+          >
+            {m.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   const [hoveredBar, setHoveredBar] = useState(null);
 
@@ -275,21 +504,23 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   // Per-day slot width adapts to count so sparse months still fill the chart
   const slotWidth =
     enriched.length <= 2
-      ? 220
+      ? 360
       : enriched.length <= 5
-        ? 160
+        ? 220
         : enriched.length <= 10
-          ? 110
+          ? 130
           : enriched.length <= 20
-            ? 80
-            : 64;
+            ? 90
+            : enriched.length <= 35
+              ? 64
+              : enriched.length <= 60
+                ? 48
+                : 36;
   const innerWidth =
-    Math.max(enriched.length * slotWidth, 600) -
-    chartPadding.left -
-    chartPadding.right;
+    enriched.length * slotWidth - chartPadding.left - chartPadding.right;
   const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
   const barGap = innerWidth / enriched.length;
-  const barWidth = Math.min(Math.max(barGap * 0.55, 28), 110);
+  const barWidth = Math.min(Math.max(barGap * 0.55, 28), 140);
   const svgWidth = innerWidth + chartPadding.left + chartPadding.right;
 
   // Y-axis ticks
@@ -371,8 +602,8 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
       </div>
 
       {/* Chart Body */}
-      <div className="px-3 sm:px-5 py-6 sm:py-8 overflow-x-auto">
-        <svg width={svgWidth} height={chartHeight} className="min-w-full">
+      <div className="px-3 sm:px-5 py-6 sm:py-8 overflow-x-auto flex justify-center">
+        <svg width={svgWidth} height={chartHeight}>
           <defs>
             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
@@ -1022,6 +1253,11 @@ export default function VODStreamsHistory() {
             allTimePeak={plexStats?.peak_concurrent}
             t={t}
           />
+          {/* Monthly insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <MonthComparisonCard data={allDailyPeaks} t={t} />
+            <MonthlyTrendCard data={allDailyPeaks} t={t} />
+          </div>
           {/* Time Range Filter */}
           <div>
             <div className="flex flex-wrap items-center gap-2">
