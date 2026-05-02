@@ -223,11 +223,10 @@ function getMonthBadge(data) {
     .toUpperCase();
 }
 
-// --- Month Comparison Card (current vs previous calendar month) ---
+// --- Month Comparison Card (current vs previous calendar month, grouped bars) ---
 function MonthComparisonCard({ data, t }) {
   const stats = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return null;
-    // Newest "last" date defines the "current" month
     const sorted = [...data].sort((a, b) => (a.date < b.date ? -1 : 1));
     const lastDate = new Date(sorted[sorted.length - 1].date + "T00:00:00");
     const curYM = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, "0")}`;
@@ -237,9 +236,8 @@ function MonthComparisonCard({ data, t }) {
 
     const cur = sorted.filter((d) => (d.date || "").startsWith(curYM));
     const prev = sorted.filter((d) => (d.date || "").startsWith(prevYM));
-
     const summarize = (items) => {
-      if (items.length === 0) return null;
+      if (items.length === 0) return { max: 0, avg: 0, days: 0 };
       const peaks = items.map((i) => i.peak);
       return {
         max: Math.max(...peaks),
@@ -247,114 +245,236 @@ function MonthComparisonCard({ data, t }) {
         days: items.length,
       };
     };
-
     return {
-      curLabel: lastDate.toLocaleDateString(undefined, {
+      curLabel: lastDate.toLocaleDateString(undefined, { month: "short" }),
+      prevLabel: prevDate.toLocaleDateString(undefined, { month: "short" }),
+      curFull: lastDate.toLocaleDateString(undefined, {
         month: "long",
         year: "numeric",
       }),
-      prevLabel: prevDate.toLocaleDateString(undefined, {
+      prevFull: prevDate.toLocaleDateString(undefined, {
         month: "long",
         year: "numeric",
       }),
       cur: summarize(cur),
       prev: summarize(prev),
+      hasCur: cur.length > 0,
+      hasPrev: prev.length > 0,
     };
   }, [data]);
 
-  if (!stats || !stats.cur) return null;
+  if (!stats || !stats.hasCur) return null;
 
-  const renderDelta = (curVal, prevVal) => {
-    if (prevVal == null || prevVal === 0)
-      return (
-        <span className="text-[10px] text-theme-text-muted">
-          {t("vodStreams.history.noPriorData", "no prior data")}
-        </span>
-      );
-    const diff = curVal - prevVal;
-    const pct = (diff / prevVal) * 100;
-    const dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
-    return (
-      <span
-        className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
-          dir === "up"
-            ? "text-green-400"
-            : dir === "down"
-              ? "text-red-400"
-              : "text-theme-text-muted"
-        }`}
-      >
-        {dir === "up" ? (
-          <ArrowUp size={12} />
-        ) : dir === "down" ? (
-          <ArrowDown size={12} />
-        ) : (
-          <Minus size={12} />
-        )}
-        {pct > 0 ? "+" : ""}
-        {pct.toFixed(1)}%
-      </span>
-    );
-  };
+  const groups = [
+    {
+      key: "peak",
+      label: t("vodStreams.history.peak", "Peak"),
+      cur: stats.cur.max,
+      prev: stats.prev.max,
+    },
+    {
+      key: "avg",
+      label: t("vodStreams.history.avgPeak", "Avg Peak"),
+      cur: Number(stats.cur.avg.toFixed(1)),
+      prev: Number(stats.prev.avg.toFixed(1)),
+    },
+    {
+      key: "days",
+      label: t("vodStreams.history.daysTracked", "Days"),
+      cur: stats.cur.days,
+      prev: stats.prev.days,
+    },
+  ];
 
-  const Row = ({ label, curVal, prevVal, format }) => {
-    const fmt = (v) =>
-      v == null
-        ? "—"
-        : format === "decimal"
-          ? Number(v).toFixed(1)
-          : Math.round(v);
-    return (
-      <div className="flex items-center justify-between gap-3 py-2 border-t border-theme/40 first:border-t-0">
-        <span className="text-xs text-theme-text-muted">{label}</span>
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-bold text-theme-text">
-            {fmt(curVal)}
-          </span>
-          <span className="text-[11px] text-theme-text-muted">
-            vs {fmt(prevVal)}
-          </span>
-          {renderDelta(curVal, prevVal)}
-        </div>
-      </div>
-    );
-  };
+  const overallPct =
+    stats.prev.max > 0
+      ? ((stats.cur.max - stats.prev.max) / stats.prev.max) * 100
+      : null;
+  const overallDir =
+    overallPct == null
+      ? "flat"
+      : overallPct > 0
+        ? "up"
+        : overallPct < 0
+          ? "down"
+          : "flat";
+
+  // Chart geometry
+  const W = 360;
+  const H = 200;
+  const PAD = { top: 20, right: 12, bottom: 30, left: 36 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+
+  // Per-group, normalize to that group's own max (since scales differ)
+  const renderGroups = groups.map((g) => {
+    const max = Math.max(g.cur, g.prev, 1);
+    return { ...g, max };
+  });
+
+  const groupGap = innerW / renderGroups.length;
+  const barW = Math.min(28, groupGap * 0.32);
 
   return (
     <div className="bg-theme-card border border-theme rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-theme-primary" />
           <h3 className="text-sm font-bold text-theme-text">
             {t("vodStreams.history.monthCompare", "Month Comparison")}
           </h3>
         </div>
-        <span className="text-[10px] text-theme-text-muted uppercase tracking-wider">
-          {stats.curLabel} <span className="text-theme-text-muted/60">vs</span>{" "}
-          {stats.prevLabel}
-        </span>
+        {overallPct != null && (
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+              overallDir === "up"
+                ? "bg-green-500/15 text-green-400"
+                : overallDir === "down"
+                  ? "bg-rose-500/15 text-rose-400"
+                  : "bg-theme-hover text-theme-text-muted"
+            }`}
+          >
+            {overallDir === "up" ? (
+              <ArrowUp size={12} />
+            ) : overallDir === "down" ? (
+              <ArrowDown size={12} />
+            ) : (
+              <Minus size={12} />
+            )}
+            {overallPct > 0 ? "+" : ""}
+            {overallPct.toFixed(1)}%
+          </span>
+        )}
       </div>
-      <Row
-        label={t("vodStreams.history.peak", "Peak")}
-        curVal={stats.cur?.max}
-        prevVal={stats.prev?.max}
-      />
-      <Row
-        label={t("vodStreams.history.avgPeak", "Avg Peak")}
-        curVal={stats.cur?.avg}
-        prevVal={stats.prev?.avg}
-        format="decimal"
-      />
-      <Row
-        label={t("vodStreams.history.daysTracked", "Days Tracked")}
-        curVal={stats.cur?.days}
-        prevVal={stats.prev?.days}
-      />
+      <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-2">
+        {stats.curFull} <span className="opacity-60">vs</span> {stats.prevFull}
+      </p>
+
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+        <defs>
+          <linearGradient id="cmpCurGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.55" />
+          </linearGradient>
+          <linearGradient id="cmpPrevGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.45" />
+          </linearGradient>
+        </defs>
+
+        {/* horizontal grid lines (4) */}
+        {[0, 0.25, 0.5, 0.75, 1].map((r, i) => {
+          const y = PAD.top + innerH - r * innerH;
+          return (
+            <line
+              key={i}
+              x1={PAD.left}
+              y1={y}
+              x2={PAD.left + innerW}
+              y2={y}
+              stroke="currentColor"
+              className="text-theme-text-muted"
+              strokeOpacity={0.1}
+              strokeDasharray="3 5"
+            />
+          );
+        })}
+
+        {renderGroups.map((g, i) => {
+          const cx = PAD.left + i * groupGap + groupGap / 2;
+          const curH = (g.cur / g.max) * innerH;
+          const prevH = (g.prev / g.max) * innerH;
+          const curX = cx - barW - 3;
+          const prevX = cx + 3;
+          const curY = PAD.top + innerH - curH;
+          const prevY = PAD.top + innerH - prevH;
+          return (
+            <g key={g.key}>
+              {/* Previous month bar */}
+              <rect
+                x={prevX}
+                y={prevY}
+                width={barW}
+                height={Math.max(prevH, 1)}
+                rx={3}
+                fill="url(#cmpPrevGrad)"
+              />
+              <text
+                x={prevX + barW / 2}
+                y={prevY - 4}
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={700}
+                className="fill-violet-300"
+              >
+                {g.prev}
+              </text>
+              {/* Current month bar */}
+              <rect
+                x={curX}
+                y={curY}
+                width={barW}
+                height={Math.max(curH, 1)}
+                rx={3}
+                fill="url(#cmpCurGrad)"
+              />
+              <text
+                x={curX + barW / 2}
+                y={curY - 4}
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={700}
+                className="fill-cyan-300"
+              >
+                {g.cur}
+              </text>
+              {/* group label */}
+              <text
+                x={cx}
+                y={PAD.top + innerH + 16}
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={600}
+                className="fill-theme-text-muted"
+              >
+                {g.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* x-axis line */}
+        <line
+          x1={PAD.left}
+          y1={PAD.top + innerH}
+          x2={PAD.left + innerW}
+          y2={PAD.top + innerH}
+          stroke="currentColor"
+          className="text-theme-text-muted"
+          strokeOpacity={0.25}
+        />
+      </svg>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-1">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-cyan-400 to-cyan-600" />
+          <span className="text-[10px] text-theme-text-muted">
+            {stats.curLabel}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-violet-400 to-violet-600" />
+          <span className="text-[10px] text-theme-text-muted">
+            {stats.prevLabel}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
 
-// --- Monthly Trend Card (last 12 months mini bars) ---
+// --- Monthly Trend Card (last 12 months SVG bar chart) ---
 function MonthlyTrendCard({ data, t }) {
   const months = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];
@@ -388,15 +508,31 @@ function MonthlyTrendCard({ data, t }) {
     });
   }, [data]);
 
+  const [hoverIdx, setHoverIdx] = useState(null);
+
   if (months.length === 0) return null;
 
   const maxPeak = Math.max(...months.map((m) => m.peak), 1);
-  const bestPeak = maxPeak;
-  const worstPeak = Math.min(...months.map((m) => m.peak));
+  const minPeak = Math.min(...months.map((m) => m.peak));
+
+  // Chart geometry
+  const W = 360;
+  const H = 200;
+  const PAD = { top: 20, right: 8, bottom: 30, left: 36 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+  const slot = innerW / months.length;
+  const barW = Math.min(slot * 0.65, 22);
+
+  // y ticks (4)
+  const yTicks = [];
+  const tickStep = Math.max(1, Math.ceil(maxPeak / 4));
+  for (let v = 0; v <= maxPeak + tickStep; v += tickStep) yTicks.push(v);
+  const yMax = yTicks[yTicks.length - 1];
 
   return (
     <div className="bg-theme-card border border-theme rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-theme-primary" />
           <h3 className="text-sm font-bold text-theme-text">
@@ -407,46 +543,201 @@ function MonthlyTrendCard({ data, t }) {
           {t("vodStreams.history.last12Months", "Last 12 Months")}
         </span>
       </div>
-      <div className="flex items-end justify-between gap-1.5 h-24">
-        {months.map((m) => {
-          const ratio = m.peak / maxPeak;
-          const h = Math.max(ratio * 100, 4);
-          const isBest = m.peak === bestPeak && bestPeak > 0;
-          const isWorst =
-            m.peak === worstPeak && worstPeak !== bestPeak && months.length > 1;
-          const fill = isBest
-            ? "from-amber-400 to-amber-600"
-            : isWorst
-              ? "from-rose-400 to-rose-600"
-              : "from-cyan-400 to-cyan-600";
+      <p className="text-[10px] text-theme-text-muted mb-2">
+        {t("vodStreams.history.peakPerMonth", "Peak concurrent per month")}
+      </p>
+
+      <svg
+        width="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        className="overflow-visible"
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <defs>
+          <linearGradient id="mtBarGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
+          </linearGradient>
+          <linearGradient id="mtBarBest" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="mtBarWorst" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
+          </linearGradient>
+        </defs>
+
+        {/* y-axis grid + labels */}
+        {yTicks.map((tick) => {
+          const y = PAD.top + innerH - (tick / yMax) * innerH;
           return (
-            <div
-              key={m.ym}
-              className="flex-1 flex flex-col items-center gap-1 group relative min-w-0"
-              title={`${m.fullLabel}\nPeak: ${m.peak}\nAvg: ${m.avg.toFixed(1)}\nDays: ${m.days}`}
-            >
-              <div className="relative w-full flex items-end justify-center h-full">
-                <div
-                  className={`w-full max-w-[28px] rounded-t bg-gradient-to-b ${fill} transition-all`}
-                  style={{ height: `${h}%` }}
-                />
-                <span className="absolute -top-4 text-[9px] font-bold text-theme-text opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  {m.peak}
-                </span>
-              </div>
-            </div>
+            <g key={`y-${tick}`}>
+              <line
+                x1={PAD.left}
+                y1={y}
+                x2={PAD.left + innerW}
+                y2={y}
+                stroke="currentColor"
+                className="text-theme-text-muted"
+                strokeOpacity={0.1}
+                strokeDasharray="3 5"
+              />
+              <text
+                x={PAD.left - 6}
+                y={y + 3}
+                textAnchor="end"
+                fontSize={9}
+                className="fill-theme-text-muted"
+              >
+                {tick}
+              </text>
+            </g>
           );
         })}
-      </div>
-      <div className="flex justify-between mt-1.5">
-        {months.map((m) => (
-          <span
-            key={m.ym}
-            className="flex-1 text-center text-[9px] text-theme-text-muted truncate"
-          >
-            {m.label}
+
+        {/* Bars */}
+        {months.map((m, i) => {
+          const ratio = m.peak / yMax;
+          const h = ratio * innerH;
+          const x = PAD.left + i * slot + (slot - barW) / 2;
+          const y = PAD.top + innerH - h;
+          const isBest = m.peak === maxPeak && maxPeak > 0;
+          const isWorst =
+            m.peak === minPeak && minPeak !== maxPeak && months.length > 1;
+          const fill = isBest
+            ? "url(#mtBarBest)"
+            : isWorst
+              ? "url(#mtBarWorst)"
+              : "url(#mtBarGrad)";
+          const isHover = hoverIdx === i;
+          return (
+            <g
+              key={m.ym}
+              onMouseEnter={() => setHoverIdx(i)}
+              className="cursor-pointer"
+            >
+              {/* hover column */}
+              {isHover && (
+                <rect
+                  x={PAD.left + i * slot}
+                  y={PAD.top}
+                  width={slot}
+                  height={innerH}
+                  className="fill-theme-text-muted"
+                  opacity={0.05}
+                />
+              )}
+              <rect
+                x={x}
+                y={y}
+                width={barW}
+                height={Math.max(h, 1)}
+                rx={3}
+                fill={fill}
+                style={{ transition: "all 0.2s" }}
+              />
+              {/* peak value above bar */}
+              <text
+                x={x + barW / 2}
+                y={y - 4}
+                textAnchor="middle"
+                fontSize={9}
+                fontWeight={700}
+                className={
+                  isBest
+                    ? "fill-amber-300"
+                    : isWorst
+                      ? "fill-rose-300"
+                      : "fill-cyan-300"
+                }
+              >
+                {m.peak}
+              </text>
+              {/* tooltip */}
+              {isHover && (
+                <g pointerEvents="none">
+                  <rect
+                    x={Math.max(4, Math.min(x + barW / 2 - 60, W - 124))}
+                    y={Math.max(4, y - 50)}
+                    width={120}
+                    height={42}
+                    rx={6}
+                    className="fill-theme-card stroke-theme-text-muted/30"
+                    strokeWidth={1}
+                    style={{
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5))",
+                    }}
+                  />
+                  <text
+                    x={Math.max(64, Math.min(x + barW / 2, W - 64))}
+                    y={Math.max(20, y - 34)}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontWeight={600}
+                    className="fill-theme-text"
+                  >
+                    {m.fullLabel}
+                  </text>
+                  <text
+                    x={Math.max(64, Math.min(x + barW / 2, W - 64))}
+                    y={Math.max(34, y - 20)}
+                    textAnchor="middle"
+                    fontSize={9}
+                    className="fill-theme-text-muted"
+                  >
+                    Peak {m.peak} · Avg {m.avg.toFixed(1)} · {m.days}d
+                  </text>
+                </g>
+              )}
+              {/* x-axis label */}
+              <text
+                x={x + barW / 2}
+                y={PAD.top + innerH + 14}
+                textAnchor="middle"
+                fontSize={9}
+                fontWeight={isHover ? 700 : 500}
+                className="fill-theme-text-muted"
+                opacity={isHover ? 1 : 0.85}
+              >
+                {m.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* x-axis line */}
+        <line
+          x1={PAD.left}
+          y1={PAD.top + innerH}
+          x2={PAD.left + innerW}
+          y2={PAD.top + innerH}
+          stroke="currentColor"
+          className="text-theme-text-muted"
+          strokeOpacity={0.25}
+        />
+      </svg>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-4 mt-1">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-cyan-400 to-cyan-600" />
+          <span className="text-[10px] text-theme-text-muted">
+            {t("vodStreams.history.legendNormal", "Monthly")}
           </span>
-        ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-amber-400 to-amber-600" />
+          <span className="text-[10px] text-theme-text-muted">
+            {t("vodStreams.history.bestMonth", "Best")}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-b from-rose-400 to-rose-600" />
+          <span className="text-[10px] text-theme-text-muted">
+            {t("vodStreams.history.worstMonth", "Worst")}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -602,56 +893,351 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
       </div>
 
       {/* Chart Body */}
-      <div className="px-3 sm:px-5 py-6 sm:py-8 overflow-x-auto flex justify-center">
-        <svg width={svgWidth} height={chartHeight}>
-          <defs>
-            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
-            </linearGradient>
-            <linearGradient id="barGradientHover" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
-            </linearGradient>
-            <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.6" />
-            </linearGradient>
-            <linearGradient id="barGradientMin" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#fb7185" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
-            </linearGradient>
-            <linearGradient id="barGradientWeekend" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.5" />
-            </linearGradient>
-            <filter id="trendGlow">
-              <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+      <div className="relative">
+        <div className="px-3 sm:px-5 py-6 sm:py-8 overflow-x-auto">
+          <svg width={svgWidth} height={chartHeight}>
+            <defs>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
+              </linearGradient>
+              <linearGradient id="barGradientHover" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="barGradientPeak" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+                <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.6" />
+              </linearGradient>
+              <linearGradient id="barGradientMin" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fb7185" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#e11d48" stopOpacity="0.5" />
+              </linearGradient>
+              <linearGradient
+                id="barGradientWeekend"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#16a34a" stopOpacity="0.5" />
+              </linearGradient>
+              <filter id="trendGlow">
+                <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-          {/* Y-axis grid lines */}
-          {yTicks.map((tick) => {
-            const y =
-              chartPadding.top + innerHeight - (tick / yMax) * innerHeight;
-            return (
-              <g key={`y-${tick}`}>
-                <line
-                  x1={chartPadding.left}
-                  y1={y}
-                  x2={chartPadding.left + innerWidth}
-                  y2={y}
-                  stroke="currentColor"
-                  className="text-theme-text-muted"
-                  strokeOpacity={0.1}
-                  strokeDasharray="3 6"
-                />
+            {/* Y-axis grid lines */}
+            {yTicks.map((tick) => {
+              const y =
+                chartPadding.top + innerHeight - (tick / yMax) * innerHeight;
+              return (
+                <g key={`y-${tick}`}>
+                  <line
+                    x1={chartPadding.left}
+                    y1={y}
+                    x2={chartPadding.left + innerWidth}
+                    y2={y}
+                    stroke="currentColor"
+                    className="text-theme-text-muted"
+                    strokeOpacity={0.1}
+                    strokeDasharray="3 6"
+                  />
+                  <text
+                    x={chartPadding.left - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    className="text-theme-text-muted"
+                    fill="currentColor"
+                    fontSize={11}
+                    fontWeight="500"
+                  >
+                    {tick}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Bars */}
+            {enriched.map((item, i) => {
+              const barHeight = (item.peak / yMax) * innerHeight;
+              const x =
+                chartPadding.left + i * barGap + (barGap - barWidth) / 2;
+              const y = chartPadding.top + innerHeight - barHeight;
+              const isHovered = hoveredBar === i;
+              const isPeakDay = i === peakDayIndex;
+              const isMinDay = i === minDayIndex && enriched.length > 2;
+              const isWeekend = item.dayType === "weekend";
+
+              let fill = isWeekend
+                ? "url(#barGradientWeekend)"
+                : "url(#barGradient)";
+              if (isMinDay) fill = "url(#barGradientMin)";
+              if (isPeakDay) fill = "url(#barGradientPeak)";
+              if (isHovered && !isPeakDay && !isMinDay)
+                fill = "url(#barGradientHover)";
+
+              // Tooltip positioning - smart clamp so it never gets cut off
+              const tw = 170;
+              const th = item.diff !== null ? 72 : 50;
+              const tx = Math.max(
+                4,
+                Math.min(x + barWidth / 2 - tw / 2, svgWidth - tw - 4),
+              );
+              let ty = y - th - 12;
+              if (ty < 4) ty = y + Math.max(barHeight, 2) + 10;
+
+              return (
+                <g
+                  key={item.date}
+                  onMouseEnter={() => setHoveredBar(i)}
+                  onMouseLeave={() => setHoveredBar(null)}
+                  className="cursor-pointer"
+                >
+                  {/* Hover highlight column */}
+                  {isHovered && (
+                    <rect
+                      x={chartPadding.left + i * barGap}
+                      y={chartPadding.top}
+                      width={barGap}
+                      height={innerHeight}
+                      fill="currentColor"
+                      className="text-theme-text-muted"
+                      opacity={0.04}
+                      rx={4}
+                    />
+                  )}
+                  {/* Bar */}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barWidth}
+                    height={Math.max(barHeight, 2)}
+                    rx={3}
+                    fill={fill}
+                    style={{ transition: "all 0.2s ease" }}
+                  />
+                  {/* Tooltip on hover */}
+                  {isHovered && (
+                    <g>
+                      {/* Tooltip background */}
+                      <rect
+                        x={tx}
+                        y={ty}
+                        width={tw}
+                        height={th}
+                        rx={10}
+                        className="fill-theme-card stroke-theme-text-muted/20"
+                        strokeWidth="1"
+                        style={{
+                          filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.6))",
+                        }}
+                      />
+                      {/* Arrow pointer */}
+                      {ty < y && (
+                        <polygon
+                          points={`${x + barWidth / 2 - 5},${ty + th} ${x + barWidth / 2 + 5},${ty + th} ${x + barWidth / 2},${ty + th + 6}`}
+                          className="fill-theme-card"
+                        />
+                      )}
+                      {/* Date */}
+                      <text
+                        x={tx + tw / 2}
+                        y={ty + 18}
+                        textAnchor="middle"
+                        className="fill-theme-text-muted"
+                        fill="currentColor"
+                        fontSize={11}
+                        fontWeight="500"
+                      >
+                        {formatDate(item.date)}
+                      </text>
+                      {/* Peak value */}
+                      <text
+                        x={tx + tw / 2}
+                        y={ty + 38}
+                        textAnchor="middle"
+                        className="fill-theme-text"
+                        fill="currentColor"
+                        fontSize={15}
+                        fontWeight="bold"
+                      >
+                        {item.peak} streams
+                      </text>
+                      {/* Diff from previous day */}
+                      {item.diff !== null && (
+                        <text
+                          x={tx + tw / 2}
+                          y={ty + 58}
+                          textAnchor="middle"
+                          fill={
+                            item.diff > 0
+                              ? "#4ade80"
+                              : item.diff < 0
+                                ? "#f87171"
+                                : "currentColor"
+                          }
+                          className={
+                            item.diff === 0
+                              ? "fill-theme-text-muted"
+                              : undefined
+                          }
+                          fontSize={11}
+                          fontWeight="600"
+                        >
+                          {item.diff > 0
+                            ? "\u25B2"
+                            : item.diff < 0
+                              ? "\u25BC"
+                              : "\u2014"}{" "}
+                          {item.diff > 0 ? "+" : ""}
+                          {item.diff} ({item.diffPercent > 0 ? "+" : ""}
+                          {item.diffPercent}%)
+                        </text>
+                      )}
+                    </g>
+                  )}
+                  {/* Stream count badge above bar */}
+                  {!isHovered && (
+                    <g>
+                      <rect
+                        x={x + barWidth / 2 - 18}
+                        y={y - 24}
+                        width={36}
+                        height={18}
+                        rx={9}
+                        className={
+                          isPeakDay
+                            ? "fill-amber-500/20 stroke-amber-400/60"
+                            : isMinDay
+                              ? "fill-rose-500/20 stroke-rose-400/60"
+                              : isWeekend
+                                ? "fill-emerald-500/15 stroke-emerald-400/50"
+                                : "fill-cyan-500/15 stroke-cyan-400/50"
+                        }
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={x + barWidth / 2}
+                        y={y - 11}
+                        textAnchor="middle"
+                        fontSize={11}
+                        fontWeight="700"
+                        className={
+                          isPeakDay
+                            ? "fill-amber-300"
+                            : isMinDay
+                              ? "fill-rose-300"
+                              : isWeekend
+                                ? "fill-emerald-300"
+                                : "fill-cyan-300"
+                        }
+                      >
+                        {item.peak}
+                      </text>
+                    </g>
+                  )}
+                  {/* Peak day crown */}
+                  {isPeakDay && !isHovered && (
+                    <text
+                      x={x + barWidth / 2}
+                      y={y - 30}
+                      textAnchor="middle"
+                      fontSize={14}
+                    >
+                      {"\uD83D\uDC51"}
+                    </text>
+                  )}
+                  {/* Min day marker */}
+                  {isMinDay && !isHovered && (
+                    <text
+                      x={x + barWidth / 2}
+                      y={y - 28}
+                      textAnchor="middle"
+                      fontSize={10}
+                      fill="#fb7185"
+                    >
+                      {"\u25BD"}
+                    </text>
+                  )}
+                  {/* X-axis label */}
+                  <text
+                    x={x + barWidth / 2}
+                    y={chartPadding.top + innerHeight + 20}
+                    textAnchor="end"
+                    className="text-theme-text-muted"
+                    fill="currentColor"
+                    fontSize={10}
+                    fontWeight={isHovered ? "600" : "400"}
+                    opacity={isHovered ? 1 : 0.7}
+                    transform={`rotate(-45, ${x + barWidth / 2}, ${chartPadding.top + innerHeight + 20})`}
+                  >
+                    {formatDate(item.date, true)}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Trend Line */}
+            {trendPoints.length > 1 && (
+              <path
+                d={buildCurvedPath(trendPoints)}
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="2"
+                strokeOpacity="0.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="4 4"
+                style={{ pointerEvents: "none" }}
+              />
+            )}
+
+            {/* X-axis line */}
+            <line
+              x1={chartPadding.left}
+              y1={chartPadding.top + innerHeight}
+              x2={chartPadding.left + innerWidth}
+              y2={chartPadding.top + innerHeight}
+              stroke="currentColor"
+              className="text-theme-text-muted"
+              strokeOpacity={0.2}
+            />
+            {/* Y-axis line */}
+            <line
+              x1={chartPadding.left}
+              y1={chartPadding.top}
+              x2={chartPadding.left}
+              y2={chartPadding.top + innerHeight}
+              stroke="currentColor"
+              className="text-theme-text-muted"
+              strokeOpacity={0.2}
+            />
+          </svg>
+        </div>
+
+        {/* Sticky Y-axis overlay (stays fixed when bars scroll) */}
+        <div
+          className="absolute top-0 left-0 h-full pointer-events-none bg-theme-card py-6 sm:py-8"
+          style={{ width: `calc(${chartPadding.left}px + 0.75rem)` }}
+        >
+          <svg
+            width={chartPadding.left + 12}
+            height={chartHeight}
+            className="block"
+          >
+            {yTicks.map((tick) => {
+              const y =
+                chartPadding.top + innerHeight - (tick / yMax) * innerHeight;
+              return (
                 <text
-                  x={chartPadding.left - 10}
+                  key={`yfix-${tick}`}
+                  x={chartPadding.left + 2}
                   y={y + 4}
                   textAnchor="end"
                   className="text-theme-text-muted"
@@ -661,267 +1247,23 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
                 >
                   {tick}
                 </text>
-              </g>
-            );
-          })}
-
-          {/* Bars */}
-          {enriched.map((item, i) => {
-            const barHeight = (item.peak / yMax) * innerHeight;
-            const x = chartPadding.left + i * barGap + (barGap - barWidth) / 2;
-            const y = chartPadding.top + innerHeight - barHeight;
-            const isHovered = hoveredBar === i;
-            const isPeakDay = i === peakDayIndex;
-            const isMinDay = i === minDayIndex && enriched.length > 2;
-            const isWeekend = item.dayType === "weekend";
-
-            let fill = isWeekend
-              ? "url(#barGradientWeekend)"
-              : "url(#barGradient)";
-            if (isMinDay) fill = "url(#barGradientMin)";
-            if (isPeakDay) fill = "url(#barGradientPeak)";
-            if (isHovered && !isPeakDay && !isMinDay)
-              fill = "url(#barGradientHover)";
-
-            // Tooltip positioning - smart clamp so it never gets cut off
-            const tw = 170;
-            const th = item.diff !== null ? 72 : 50;
-            const tx = Math.max(
-              4,
-              Math.min(x + barWidth / 2 - tw / 2, svgWidth - tw - 4),
-            );
-            let ty = y - th - 12;
-            if (ty < 4) ty = y + Math.max(barHeight, 2) + 10;
-
-            return (
-              <g
-                key={item.date}
-                onMouseEnter={() => setHoveredBar(i)}
-                onMouseLeave={() => setHoveredBar(null)}
-                className="cursor-pointer"
-              >
-                {/* Hover highlight column */}
-                {isHovered && (
-                  <rect
-                    x={chartPadding.left + i * barGap}
-                    y={chartPadding.top}
-                    width={barGap}
-                    height={innerHeight}
-                    fill="currentColor"
-                    className="text-theme-text-muted"
-                    opacity={0.04}
-                    rx={4}
-                  />
-                )}
-                {/* Bar */}
-                <rect
-                  x={x}
-                  y={y}
-                  width={barWidth}
-                  height={Math.max(barHeight, 2)}
-                  rx={3}
-                  fill={fill}
-                  style={{ transition: "all 0.2s ease" }}
-                />
-                {/* Tooltip on hover */}
-                {isHovered && (
-                  <g>
-                    {/* Tooltip background */}
-                    <rect
-                      x={tx}
-                      y={ty}
-                      width={tw}
-                      height={th}
-                      rx={10}
-                      className="fill-theme-card stroke-theme-text-muted/20"
-                      strokeWidth="1"
-                      style={{
-                        filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.6))",
-                      }}
-                    />
-                    {/* Arrow pointer */}
-                    {ty < y && (
-                      <polygon
-                        points={`${x + barWidth / 2 - 5},${ty + th} ${x + barWidth / 2 + 5},${ty + th} ${x + barWidth / 2},${ty + th + 6}`}
-                        className="fill-theme-card"
-                      />
-                    )}
-                    {/* Date */}
-                    <text
-                      x={tx + tw / 2}
-                      y={ty + 18}
-                      textAnchor="middle"
-                      className="fill-theme-text-muted"
-                      fill="currentColor"
-                      fontSize={11}
-                      fontWeight="500"
-                    >
-                      {formatDate(item.date)}
-                    </text>
-                    {/* Peak value */}
-                    <text
-                      x={tx + tw / 2}
-                      y={ty + 38}
-                      textAnchor="middle"
-                      className="fill-theme-text"
-                      fill="currentColor"
-                      fontSize={15}
-                      fontWeight="bold"
-                    >
-                      {item.peak} streams
-                    </text>
-                    {/* Diff from previous day */}
-                    {item.diff !== null && (
-                      <text
-                        x={tx + tw / 2}
-                        y={ty + 58}
-                        textAnchor="middle"
-                        fill={
-                          item.diff > 0
-                            ? "#4ade80"
-                            : item.diff < 0
-                              ? "#f87171"
-                              : "currentColor"
-                        }
-                        className={
-                          item.diff === 0 ? "fill-theme-text-muted" : undefined
-                        }
-                        fontSize={11}
-                        fontWeight="600"
-                      >
-                        {item.diff > 0
-                          ? "\u25B2"
-                          : item.diff < 0
-                            ? "\u25BC"
-                            : "\u2014"}{" "}
-                        {item.diff > 0 ? "+" : ""}
-                        {item.diff} ({item.diffPercent > 0 ? "+" : ""}
-                        {item.diffPercent}%)
-                      </text>
-                    )}
-                  </g>
-                )}
-                {/* Stream count badge above bar */}
-                {!isHovered && (
-                  <g>
-                    <rect
-                      x={x + barWidth / 2 - 18}
-                      y={y - 24}
-                      width={36}
-                      height={18}
-                      rx={9}
-                      className={
-                        isPeakDay
-                          ? "fill-amber-500/20 stroke-amber-400/60"
-                          : isMinDay
-                            ? "fill-rose-500/20 stroke-rose-400/60"
-                            : isWeekend
-                              ? "fill-emerald-500/15 stroke-emerald-400/50"
-                              : "fill-cyan-500/15 stroke-cyan-400/50"
-                      }
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={x + barWidth / 2}
-                      y={y - 11}
-                      textAnchor="middle"
-                      fontSize={11}
-                      fontWeight="700"
-                      className={
-                        isPeakDay
-                          ? "fill-amber-300"
-                          : isMinDay
-                            ? "fill-rose-300"
-                            : isWeekend
-                              ? "fill-emerald-300"
-                              : "fill-cyan-300"
-                      }
-                    >
-                      {item.peak}
-                    </text>
-                  </g>
-                )}
-                {/* Peak day crown */}
-                {isPeakDay && !isHovered && (
-                  <text
-                    x={x + barWidth / 2}
-                    y={y - 30}
-                    textAnchor="middle"
-                    fontSize={14}
-                  >
-                    {"\uD83D\uDC51"}
-                  </text>
-                )}
-                {/* Min day marker */}
-                {isMinDay && !isHovered && (
-                  <text
-                    x={x + barWidth / 2}
-                    y={y - 28}
-                    textAnchor="middle"
-                    fontSize={10}
-                    fill="#fb7185"
-                  >
-                    {"\u25BD"}
-                  </text>
-                )}
-                {/* X-axis label */}
-                <text
-                  x={x + barWidth / 2}
-                  y={chartPadding.top + innerHeight + 20}
-                  textAnchor="end"
-                  className="text-theme-text-muted"
-                  fill="currentColor"
-                  fontSize={10}
-                  fontWeight={isHovered ? "600" : "400"}
-                  opacity={isHovered ? 1 : 0.7}
-                  transform={`rotate(-45, ${x + barWidth / 2}, ${chartPadding.top + innerHeight + 20})`}
-                >
-                  {formatDate(item.date, true)}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Trend Line */}
-          {trendPoints.length > 1 && (
-            <path
-              d={buildCurvedPath(trendPoints)}
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="2"
-              strokeOpacity="0.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray="4 4"
-              style={{ pointerEvents: "none" }}
+              );
+            })}
+            <line
+              x1={chartPadding.left}
+              y1={chartPadding.top}
+              x2={chartPadding.left}
+              y2={chartPadding.top + innerHeight}
+              stroke="currentColor"
+              className="text-theme-text-muted"
+              strokeOpacity={0.4}
             />
-          )}
-
-          {/* X-axis line */}
-          <line
-            x1={chartPadding.left}
-            y1={chartPadding.top + innerHeight}
-            x2={chartPadding.left + innerWidth}
-            y2={chartPadding.top + innerHeight}
-            stroke="currentColor"
-            className="text-theme-text-muted"
-            strokeOpacity={0.2}
-          />
-          {/* Y-axis line */}
-          <line
-            x1={chartPadding.left}
-            y1={chartPadding.top}
-            x2={chartPadding.left}
-            y2={chartPadding.top + innerHeight}
-            stroke="currentColor"
-            className="text-theme-text-muted"
-            strokeOpacity={0.2}
-          />
-        </svg>
+          </svg>
+        </div>
       </div>
 
       {/* Chart Footer Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10">
+      <div className="flex flex-wrap items-center justify-start gap-5 sm:gap-8 px-5 sm:px-8 py-4 border-t border-theme bg-theme-hover/10">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-sm bg-cyan-500" />
           <span className="text-xs text-theme-text-muted">
