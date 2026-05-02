@@ -272,13 +272,24 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   // Chart dimensions - taller chart, larger bars with more spacing
   const chartHeight = 480;
   const chartPadding = { top: 85, right: 16, bottom: 60, left: 48 };
+  // Per-day slot width adapts to count so sparse months still fill the chart
+  const slotWidth =
+    enriched.length <= 2
+      ? 220
+      : enriched.length <= 5
+        ? 160
+        : enriched.length <= 10
+          ? 110
+          : enriched.length <= 20
+            ? 80
+            : 64;
   const innerWidth =
-    Math.max(enriched.length * 64, 300) -
+    Math.max(enriched.length * slotWidth, 600) -
     chartPadding.left -
     chartPadding.right;
   const innerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
   const barGap = innerWidth / enriched.length;
-  const barWidth = Math.min(Math.max(barGap * 0.72, 28), 84);
+  const barWidth = Math.min(Math.max(barGap * 0.55, 28), 110);
   const svgWidth = innerWidth + chartPadding.left + chartPadding.right;
 
   // Y-axis ticks
