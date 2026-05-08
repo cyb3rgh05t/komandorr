@@ -1122,14 +1122,14 @@ export default function Settings() {
                     </h3>
                   </div>
                 </div>
-                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                   {/* Decorative gradient overlay */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
                   <div className="relative">
                     {/* Enable/Disable Auth */}
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                      <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-text-muted/40 transition-colors">
                         <div>
                           <h3 className="font-medium text-theme-text mb-1">
                             {t("auth.enableAuth")}
@@ -1180,7 +1180,7 @@ export default function Settings() {
                       </h3>
                     </div>
                   </div>
-                  <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                  <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                     {/* Decorative gradient overlay */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
@@ -1276,7 +1276,7 @@ export default function Settings() {
                     </h3>
                   </div>
                 </div>
-                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                   {/* Decorative gradient overlay */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
@@ -1365,7 +1365,7 @@ export default function Settings() {
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                      <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-text-muted/40 transition-colors">
                         <div>
                           <h3 className="font-medium text-theme-text mb-1">
                             {t("settings.enableFileLogging")}
@@ -1407,7 +1407,7 @@ export default function Settings() {
                     </h3>
                   </div>
                 </div>
-                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                   {/* Decorative gradient overlay */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
@@ -1529,7 +1529,7 @@ export default function Settings() {
                   {plexInstances.map((inst, idx) => (
                     <div
                       key={inst.id}
-                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                       <div className="relative space-y-3">
@@ -1768,7 +1768,7 @@ export default function Settings() {
               {showAddPlex || plexInstances.length === 0 ? (
                 <div
                   ref={addPlexRef}
-                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden mb-4"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                   <div className="relative space-y-3">
@@ -1965,7 +1965,7 @@ export default function Settings() {
                   </h3>
                 </div>
               </div>
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                 {/* Decorative gradient overlay */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
@@ -2118,7 +2118,7 @@ export default function Settings() {
                   </h3>
                 </div>
               </div>
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
                 <div className="relative">
@@ -2259,7 +2259,7 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
                 <div className="relative space-y-4">
@@ -2451,7 +2451,7 @@ export default function Settings() {
                   {posterizarrInstances.map((inst, idx) => (
                     <div
                       key={inst.id}
-                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                       <div className="relative space-y-3">
@@ -2685,7 +2685,7 @@ export default function Settings() {
               {showAddPosterizarr || posterizarrInstances.length === 0 ? (
                 <div
                   ref={addPosterizarrRef}
-                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden mb-4"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                   <div className="relative space-y-3">
@@ -2837,7 +2837,7 @@ export default function Settings() {
                   {nfsMountInstances.map((inst, idx) => (
                     <div
                       key={inst.id}
-                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                       <div className="relative space-y-3">
@@ -3070,7 +3070,7 @@ export default function Settings() {
               {showAddNfsMount || nfsMountInstances.length === 0 ? (
                 <div
                   ref={addNfsMountRef}
-                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden mb-4"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                   <div className="relative space-y-3">
@@ -3219,7 +3219,7 @@ export default function Settings() {
                   {autoscanInstances.map((inst, idx) => (
                     <div
                       key={inst.id}
-                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                       <div className="relative space-y-3">
@@ -3487,7 +3487,7 @@ export default function Settings() {
               {showAddAutoscan || autoscanInstances.length === 0 ? (
                 <div
                   ref={addAutoscanRef}
-                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden mb-4"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                   <div className="relative space-y-3">
@@ -3678,7 +3678,7 @@ export default function Settings() {
                     const renderRow = ({ app, idx }) => (
                       <div
                         key={app.id}
-                        className="group bg-theme-card border border-theme rounded-xl shadow-sm hover:shadow-md hover:border-theme-primary/50 transition-all"
+                        className="group bg-theme-card border border-theme rounded-xl shadow-sm hover:shadow-md hover:border-theme-text-muted/40 transition-all"
                       >
                         {/* Compact row */}
                         <div className="flex items-center gap-3 p-3">
@@ -3927,7 +3927,7 @@ export default function Settings() {
               {showAddApp ? (
                 <div
                   ref={addAppRef}
-                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
                   <div className="relative space-y-4">
@@ -4094,7 +4094,7 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-5 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
                 <div className="relative space-y-5">
@@ -4687,7 +4687,7 @@ export default function Settings() {
                   </button>
                 )}
               </div>
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-text-muted/40 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
 
                 <div className="relative space-y-6">

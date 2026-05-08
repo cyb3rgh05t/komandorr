@@ -792,7 +792,7 @@ const Storage = () => {
           </div>
 
           {/* UnionFS paths count */}
-          <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
+          <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-text-muted/40 hover:bg-theme-hover/50">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">

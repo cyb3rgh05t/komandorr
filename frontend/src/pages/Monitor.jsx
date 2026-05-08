@@ -396,7 +396,7 @@ export default function Monitor() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <button
               onClick={() => setStatusFilter(null)}
-              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-theme-primary hover:bg-theme-primary/10"
+              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-theme-text-muted/40 hover:bg-theme-hover/50"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">

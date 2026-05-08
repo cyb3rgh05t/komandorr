@@ -716,7 +716,7 @@ export default function Dashboard() {
           {/* Total Services */}
           <button
             onClick={() => setStatusFilter(null)}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 flex items-center gap-2"
+            className="bg-theme-card border border-theme rounded-lg px-3 py-2 transition-all hover:shadow-md hover:border-theme-text-muted/40 hover:bg-theme-hover/50 flex items-center gap-2"
           >
             <Server className="w-5 h-5 text-theme-primary flex-shrink-0" />
             <div className="text-left min-w-0">

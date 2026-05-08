@@ -176,7 +176,7 @@ export default function DashboardServiceCard({
       >
         {/* Response Time */}
         {service.response_time && (
-          <div className="flex flex-col gap-1 px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg hover:border-theme-primary/30 transition-all shadow-sm">
+          <div className="flex flex-col gap-1 px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg hover:border-theme-text-muted/40 transition-all shadow-sm">
             <div className="flex items-center gap-1.5">
               <Zap size={12} className="text-theme-primary" />
               <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
@@ -191,7 +191,7 @@ export default function DashboardServiceCard({
 
         {/* Last Check */}
         {service.last_check && (
-          <div className="flex flex-col gap-1 px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg hover:border-theme-primary/30 transition-all shadow-sm">
+          <div className="flex flex-col gap-1 px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg hover:border-theme-text-muted/40 transition-all shadow-sm">
             <div className="flex items-center gap-1.5">
               <Clock size={12} className="text-theme-text-muted" />
               <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">

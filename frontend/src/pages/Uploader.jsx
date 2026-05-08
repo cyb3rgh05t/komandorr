@@ -673,7 +673,7 @@ export default function Uploader() {
                           return (
                             <tr
                               key={`${job.file_name}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                              className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                             >
                               <td className="py-3 px-4 font-medium truncate max-w-[220px]">
                                 {job.file_name}
@@ -802,7 +802,7 @@ export default function Uploader() {
                           return (
                             <tr
                               key={`${file.filename}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                              className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                             >
                               <td className="py-3 px-4 whitespace-nowrap">
                                 {rowNumber}
@@ -1018,7 +1018,7 @@ export default function Uploader() {
                           return (
                             <tr
                               key={`${job.file_name}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                              className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                             >
                               <td className="py-3 px-4 font-medium truncate max-w-[300px]">
                                 {job.file_name}
@@ -1226,7 +1226,7 @@ export default function Uploader() {
                           return (
                             <tr
                               key={`${job.file_name}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                              className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                             >
                               <td className="py-3 px-4 font-medium truncate max-w-[220px]">
                                 {job.file_name}

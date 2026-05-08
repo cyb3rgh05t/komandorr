@@ -350,7 +350,7 @@ export default function ArrActivity() {
                 return (
                   <tr
                     key={item.id || idx}
-                    className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                    className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                   >
                     <td className="py-3 px-4">
                       <div className="min-w-0">
@@ -1164,7 +1164,7 @@ export default function ArrActivity() {
                                     return (
                                       <tr
                                         key={record.id || idx}
-                                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                                        className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                                       >
                                         <td className="py-3 px-4">
                                           <div className="flex items-center gap-2 min-w-0">

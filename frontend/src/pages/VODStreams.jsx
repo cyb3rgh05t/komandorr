@@ -740,7 +740,7 @@ export default function VODStreams() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <div
           onClick={() => setActiveFilter("all")}
-          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
+          className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-theme-text-muted/40 hover:bg-theme-hover/50"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -1286,7 +1286,7 @@ export default function VODStreams() {
                     return (
                       <tr
                         key={activity.uuid || `activity-${Math.random()}`}
-                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                        className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                       >
                         {/* Title Column */}
                         <td className="py-3 px-4">

@@ -514,7 +514,7 @@ const InvitesManager = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             <div
               onClick={() => setFilter("all")}
-              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
+              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:border-theme-text-muted/40 hover:bg-theme-hover/50"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -969,7 +969,7 @@ const InvitesManager = () => {
                   return (
                     <tr
                       key={invite.id}
-                      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                      className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
                     >
                       {/* Code Column */}
                       <td className="py-3 px-4">
