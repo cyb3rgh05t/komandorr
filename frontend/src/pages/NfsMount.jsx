@@ -210,7 +210,7 @@ function ManagerSection({ manager, tabsSlot }) {
               return (
                 <div
                   key={m.id}
-                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-text-muted/40 transition-all"
+                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
@@ -311,7 +311,7 @@ function ManagerSection({ manager, tabsSlot }) {
               return (
                 <div
                   key={exp.id}
-                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-text-muted/40 transition-all"
+                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
@@ -399,7 +399,7 @@ function ManagerSection({ manager, tabsSlot }) {
               return (
                 <div
                   key={c.id}
-                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-text-muted/40 transition-all"
+                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
@@ -530,7 +530,7 @@ function ManagerSection({ manager, tabsSlot }) {
               return (
                 <div
                   key={v.id}
-                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-text-muted/40 transition-all"
+                  className="bg-theme-hover border border-theme rounded-xl p-5 hover:border-theme-primary/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">

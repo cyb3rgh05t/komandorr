@@ -783,7 +783,7 @@ const UserAccounts = () => {
 
       {/* Row 3: 4 columns - Watch History Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-text-muted/40 hover:bg-theme-hover/50 col-span-2 sm:col-span-1">
+        <div className="bg-theme-card border border-theme rounded-lg p-4 shadow-sm hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10 col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
@@ -1014,7 +1014,7 @@ const UserAccounts = () => {
                   return paginatedUsers.map((user) => (
                     <tr
                       key={user.id}
-                      className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
+                      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                     >
                       {/* User Column (Avatar + Username) */}
                       <td className="py-3 px-4">
@@ -1671,7 +1671,7 @@ const UserAccounts = () => {
                     return (
                       <div
                         key={index}
-                        className="group relative flex gap-4 p-4 bg-theme-card border border-theme rounded-xl hover:border-theme-text-muted/40 hover:shadow-lg transition-all duration-200"
+                        className="group relative flex gap-4 p-4 bg-theme-card border border-theme rounded-xl hover:border-theme-primary/50 hover:shadow-lg transition-all duration-200"
                       >
                         {/* Type Badge */}
                         <div

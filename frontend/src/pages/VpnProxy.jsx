@@ -388,7 +388,7 @@ export default function VpnProxy() {
     return (
       <div
         key={container.id}
-        className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-text-muted/40 transition-all"
+        className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary transition-all"
       >
         {/* Card Header */}
         <div className="px-4 py-3 bg-theme-hover border-b border-theme flex items-center justify-between gap-2">

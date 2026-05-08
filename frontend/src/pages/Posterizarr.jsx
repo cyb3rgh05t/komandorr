@@ -288,7 +288,7 @@ export default function Posterizarr() {
           {/* ── Stat Cards ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {/* Status */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-text-muted/40 hover:bg-theme-hover/50 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -313,7 +313,7 @@ export default function Posterizarr() {
             </div>
 
             {/* Version */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-text-muted/40 hover:bg-theme-hover/50 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -341,7 +341,7 @@ export default function Posterizarr() {
             </div>
 
             {/* Next Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-text-muted/40 hover:bg-theme-hover/50 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -360,7 +360,7 @@ export default function Posterizarr() {
             </div>
 
             {/* Last Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-text-muted/40 hover:bg-theme-hover/50 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs text-theme-text-muted uppercase tracking-wider">
@@ -472,7 +472,7 @@ export default function Posterizarr() {
                     {schedules.map((s, i) => (
                       <tr
                         key={`s-${i}`}
-                        className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
+                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                       >
                         <td className="px-3 py-2.5">
                           <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted">
@@ -494,7 +494,7 @@ export default function Posterizarr() {
                     {activeJobs.map((job, i) => (
                       <tr
                         key={`j-${i}`}
-                        className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
+                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                       >
                         <td className="px-3 py-2.5">
                           <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border border-green-500/30 shadow-sm shadow-green-500/20">
@@ -613,7 +613,7 @@ export default function Posterizarr() {
                       {assetFolders.map((folder, i) => (
                         <tr
                           key={i}
-                          className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-2.5">
@@ -710,7 +710,7 @@ export default function Posterizarr() {
                       return (
                         <tr
                           key={item.id || i}
-                          className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="px-3 py-2.5">
                             <span className="text-sm font-bold text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">

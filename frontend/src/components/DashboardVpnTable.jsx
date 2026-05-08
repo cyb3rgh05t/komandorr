@@ -148,7 +148,7 @@ function VpnRow({ container, vpnInfo, deps }) {
 
   return (
     <tr
-      className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors cursor-pointer"
+      className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors cursor-pointer"
       onClick={() => navigate("/vpn-proxy")}
     >
       {/* Name */}

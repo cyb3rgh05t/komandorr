@@ -652,7 +652,7 @@ export default function VpnProxyMonitor() {
                       {filteredReaders.map((r, i) => (
                         <tr
                           key={`${r.StreamName}-${r.User}-${i}`}
-                          className="group border-b border-theme last:border-b-0 hover:bg-theme-hover/50 transition-colors"
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="py-3 px-4">
                             <span className="font-medium text-theme-text group-hover:text-theme-primary transition-colors">
