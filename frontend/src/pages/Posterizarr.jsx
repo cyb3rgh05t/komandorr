@@ -18,6 +18,11 @@ import {
   Layers,
   WifiOff,
   Image,
+  Globe,
+  Activity,
+  HardDrive,
+  Database,
+  Tv,
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
@@ -420,25 +425,33 @@ export default function Posterizarr() {
             </div>
 
             {/* Info grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-b border-theme">
-              <AssetCounter
+            <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-b border-theme">
+              <MiniStatCard
+                icon={Globe}
+                accent="blue"
                 label="Timezone"
                 value={scheduler?.timezone || "—"}
                 isText
               />
-              <AssetCounter
+              <MiniStatCard
+                icon={Timer}
+                accent="primary"
                 label="Last Run"
                 value={formatTimestamp(scheduler?.last_run)}
                 isText
               />
-              <AssetCounter
+              <MiniStatCard
+                icon={Calendar}
+                accent="purple"
                 label="Next Run"
                 value={formatTimestamp(
                   scheduler?.next_run || schedulerStatus.next_run,
                 )}
                 isText
               />
-              <AssetCounter
+              <MiniStatCard
+                icon={scheduler?.is_executing ? Play : Pause}
+                accent={scheduler?.is_executing ? "green" : "primary"}
                 label="Executing"
                 value={scheduler?.is_executing ? "Yes" : "No"}
                 isText
@@ -531,20 +544,28 @@ export default function Posterizarr() {
                   Plex Export
                 </h3>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-0">
-                <AssetCounter
+              <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <MiniStatCard
+                  icon={RefreshCw}
+                  accent="primary"
                   label="Total Runs"
                   value={plexStatistics.total_runs}
                 />
-                <AssetCounter
+                <MiniStatCard
+                  icon={Database}
+                  accent="blue"
                   label="Library Records"
                   value={plexStatistics.total_library_records}
                 />
-                <AssetCounter
+                <MiniStatCard
+                  icon={Tv}
+                  accent="purple"
                   label="Episode Records"
                   value={plexStatistics.total_episode_records}
                 />
-                <AssetCounter
+                <MiniStatCard
+                  icon={Clock}
+                  accent="amber"
                   label="Latest Run"
                   value={formatTimestamp(plexStatistics.latest_run)}
                   isText
@@ -570,12 +591,34 @@ export default function Posterizarr() {
                 </span>
               </div>
               {/* Summary counters */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-0 border-b border-theme">
-                <AssetCounter label="Posters" value={stats.posters} />
-                <AssetCounter label="Backgrounds" value={stats.backgrounds} />
-                <AssetCounter label="Seasons" value={stats.seasons} />
-                <AssetCounter label="Title Cards" value={stats.titlecards} />
-                <AssetCounter
+              <div className="p-4 grid grid-cols-2 sm:grid-cols-5 gap-3 border-b border-theme">
+                <MiniStatCard
+                  icon={Image}
+                  accent="primary"
+                  label="Posters"
+                  value={stats.posters}
+                />
+                <MiniStatCard
+                  icon={Layers}
+                  accent="blue"
+                  label="Backgrounds"
+                  value={stats.backgrounds}
+                />
+                <MiniStatCard
+                  icon={Calendar}
+                  accent="purple"
+                  label="Seasons"
+                  value={stats.seasons}
+                />
+                <MiniStatCard
+                  icon={Film}
+                  accent="rose"
+                  label="Title Cards"
+                  value={stats.titlecards}
+                />
+                <MiniStatCard
+                  icon={HardDrive}
+                  accent="amber"
                   label="Total Size"
                   value={formatBytes(stats.total_size)}
                   isText
@@ -839,6 +882,76 @@ function AssetCounter({ label, value, isText = false }) {
       <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mt-0.5">
         {label}
       </p>
+    </div>
+  );
+}
+
+/* ── Mini stat card with icon badge (Scheduler / Exports / Assets) ── */
+function MiniStatCard({
+  icon: Icon,
+  label,
+  value,
+  accent = "primary",
+  isText = false,
+}) {
+  const accents = {
+    primary: {
+      bg: "bg-theme-primary/10",
+      text: "text-theme-primary",
+      border: "border-theme-primary/30",
+    },
+    green: {
+      bg: "bg-green-500/10",
+      text: "text-green-400",
+      border: "border-green-500/30",
+    },
+    blue: {
+      bg: "bg-blue-500/10",
+      text: "text-blue-400",
+      border: "border-blue-500/30",
+    },
+    purple: {
+      bg: "bg-purple-500/10",
+      text: "text-purple-400",
+      border: "border-purple-500/30",
+    },
+    amber: {
+      bg: "bg-amber-500/10",
+      text: "text-amber-400",
+      border: "border-amber-500/30",
+    },
+    rose: {
+      bg: "bg-rose-500/10",
+      text: "text-rose-400",
+      border: "border-rose-500/30",
+    },
+  };
+  const a = accents[accent] || accents.primary;
+  const display =
+    value != null
+      ? isText
+        ? value
+        : typeof value === "number"
+          ? value.toLocaleString()
+          : value
+      : "—";
+  return (
+    <div className="group flex items-center gap-3 p-3 rounded-lg bg-theme-bg/40 border border-theme hover:border-theme-primary hover:bg-theme-primary/5 hover:shadow-md transition-all">
+      <div
+        className={`p-2 rounded-lg ${a.bg} ${a.text} border ${a.border} shrink-0`}
+      >
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] uppercase tracking-wider text-theme-text-muted truncate">
+          {label}
+        </p>
+        <p
+          className={`font-bold text-theme-text truncate group-hover:text-theme-primary transition-colors ${isText ? "text-sm" : "text-lg"}`}
+        >
+          {display}
+        </p>
+      </div>
     </div>
   );
 }

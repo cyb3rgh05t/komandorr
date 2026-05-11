@@ -65,6 +65,27 @@ function InstanceSection({ instance, tabsSlot }) {
   const targetsAvailable = stats.targets_available || {};
   const targets = config.targets || {};
 
+  // Resolve availability for a target by trying multiple key variants that
+  // docker-autoscan may use in stats.targets_available (display name, type,
+  // url, lower-cased). If none is present we treat it as unavailable so the
+  // badge actually reflects the current state instead of staying "Available".
+  const resolveAvailable = (displayName, type, url) => {
+    if (!targetsAvailable || typeof targetsAvailable !== "object") return false;
+    const candidates = [
+      displayName,
+      type,
+      url,
+      typeof displayName === "string" ? displayName.toLowerCase() : null,
+      typeof type === "string" ? type.toLowerCase() : null,
+    ].filter(Boolean);
+    for (const key of candidates) {
+      if (key in targetsAvailable) {
+        return Boolean(targetsAvailable[key]);
+      }
+    }
+    return false;
+  };
+
   const targetEntries = Object.entries(targets).flatMap(([type, items]) => {
     if (!items) return [];
     const list = Array.isArray(items)
@@ -83,10 +104,12 @@ function InstanceSection({ instance, tabsSlot }) {
         type,
         name: displayName,
         cfg: c,
-        available: targetsAvailable[displayName] !== false,
+        available: resolveAvailable(displayName, type, c.url),
       };
     });
   });
+
+  const availableTargetsCount = targetEntries.filter((t) => t.available).length;
 
   return (
     <div className="space-y-4">
@@ -117,9 +140,7 @@ function InstanceSection({ instance, tabsSlot }) {
         />
         <StatCard
           label="Targets"
-          value={`${
-            Object.values(targetsAvailable).filter(Boolean).length
-          }/${Object.keys(targetsAvailable).length || targetEntries.length}`}
+          value={`${availableTargetsCount}/${targetEntries.length}`}
           icon={Target}
           color="purple-400"
         />
