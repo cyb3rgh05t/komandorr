@@ -397,288 +397,136 @@ export default function Posterizarr() {
             setActiveTab={setActiveTab}
           />
 
-          {/* ── Scheduler ── */}
-          <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-            <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-lg font-semibold text-theme-text">
-                Scheduler
-              </h3>
-              <span
-                className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
-                  scheduler?.enabled || schedulerStatus.enabled
-                    ? "bg-green-500/20 text-green-400 border-green-500/30"
-                    : "bg-red-500/20 text-red-400 border-red-500/30"
-                }`}
-              >
+          {/* ── Scheduler / Plex Export / Asset Stats in 3er-Grid ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {/* ── Scheduler ── */}
+            <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
+              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-theme-primary" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Scheduler
+                </h3>
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${
+                  className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
                     scheduler?.enabled || schedulerStatus.enabled
-                      ? "bg-green-400 animate-pulse"
-                      : "bg-red-400"
+                      ? "bg-green-500/20 text-green-400 border-green-500/30"
+                      : "bg-red-500/20 text-red-400 border-red-500/30"
                   }`}
-                />
-                {scheduler?.enabled || schedulerStatus.enabled
-                  ? "Active"
-                  : "Inactive"}
-              </span>
-            </div>
-
-            {/* Info grid */}
-            <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-b border-theme">
-              <MiniStatCard
-                icon={Globe}
-                accent="blue"
-                label="Timezone"
-                value={scheduler?.timezone || "—"}
-                isText
-              />
-              <MiniStatCard
-                icon={Timer}
-                accent="primary"
-                label="Last Run"
-                value={formatTimestamp(scheduler?.last_run)}
-                isText
-              />
-              <MiniStatCard
-                icon={Calendar}
-                accent="purple"
-                label="Next Run"
-                value={formatTimestamp(
-                  scheduler?.next_run || schedulerStatus.next_run,
-                )}
-                isText
-              />
-              <MiniStatCard
-                icon={scheduler?.is_executing ? Play : Pause}
-                accent={scheduler?.is_executing ? "green" : "primary"}
-                label="Executing"
-                value={scheduler?.is_executing ? "Yes" : "No"}
-                isText
-              />
-            </div>
-
-            {/* Schedules & Jobs as table */}
-            {(schedules.length > 0 || activeJobs.length > 0) && (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-theme-primary">
-                      <th className="text-left py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Type
-                        </span>
-                      </th>
-                      <th className="text-left py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Name
-                        </span>
-                      </th>
-                      <th className="text-right py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Time
-                        </span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {schedules.map((s, i) => (
-                      <tr
-                        key={`s-${i}`}
-                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                      >
-                        <td className="px-3 py-2.5">
-                          <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted">
-                            Schedule
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
-                            {s.description || "Scheduled Run"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-right">
-                          <span className="text-xs font-bold text-theme-primary font-mono group-hover:text-theme-primary transition-colors">
-                            {s.time}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {activeJobs.map((job, i) => (
-                      <tr
-                        key={`j-${i}`}
-                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                      >
-                        <td className="px-3 py-2.5">
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border border-green-500/30 shadow-sm shadow-green-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            <span className="text-[11px] font-semibold">
-                              Active Job
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
-                            {job.name}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-right">
-                          <span className="text-xs font-bold text-theme-text font-mono whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                            {formatTimestamp(job.next_run)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* ── Plex Export ── */}
-          {plexExport?.success && (
-            <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
-                <Film className="w-5 h-5 text-theme-primary" />
-                <h3 className="text-lg font-semibold text-theme-text">
-                  Plex Export
-                </h3>
-              </div>
-              <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <MiniStatCard
-                  icon={RefreshCw}
-                  accent="primary"
-                  label="Total Runs"
-                  value={plexStatistics.total_runs}
-                />
-                <MiniStatCard
-                  icon={Database}
-                  accent="blue"
-                  label="Library Records"
-                  value={plexStatistics.total_library_records}
-                />
-                <MiniStatCard
-                  icon={Tv}
-                  accent="purple"
-                  label="Episode Records"
-                  value={plexStatistics.total_episode_records}
-                />
-                <MiniStatCard
-                  icon={Clock}
-                  accent="amber"
-                  label="Latest Run"
-                  value={formatTimestamp(plexStatistics.latest_run)}
-                  isText
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ── Assets Stats ── */}
-          {assetsStats?.success && (
-            <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-theme-primary" />
-                <h3 className="text-lg font-semibold text-theme-text">
-                  Asset Statistics
-                </h3>
-                <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                  {(stats.posters || 0) +
-                    (stats.backgrounds || 0) +
-                    (stats.seasons || 0) +
-                    (stats.titlecards || 0)}{" "}
-                  assets
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      scheduler?.enabled || schedulerStatus.enabled
+                        ? "bg-green-400 animate-pulse"
+                        : "bg-red-400"
+                    }`}
+                  />
+                  {scheduler?.enabled || schedulerStatus.enabled
+                    ? "Active"
+                    : "Inactive"}
                 </span>
               </div>
-              {/* Summary counters */}
-              <div className="p-4 grid grid-cols-2 sm:grid-cols-5 gap-3 border-b border-theme">
+
+              {/* Info grid */}
+              <div className="p-4 grid grid-cols-2 gap-3 border-b border-theme">
                 <MiniStatCard
-                  icon={Image}
-                  accent="primary"
-                  label="Posters"
-                  value={stats.posters}
+                  icon={Globe}
+                  accent="blue"
+                  label="Timezone"
+                  value={scheduler?.timezone || "—"}
+                  isText
                 />
                 <MiniStatCard
-                  icon={Layers}
-                  accent="blue"
-                  label="Backgrounds"
-                  value={stats.backgrounds}
+                  icon={Timer}
+                  accent="primary"
+                  label="Last Run"
+                  value={formatTimestamp(scheduler?.last_run)}
+                  isText
                 />
                 <MiniStatCard
                   icon={Calendar}
                   accent="purple"
-                  label="Seasons"
-                  value={stats.seasons}
+                  label="Next Run"
+                  value={formatTimestamp(
+                    scheduler?.next_run || schedulerStatus.next_run,
+                  )}
+                  isText
                 />
                 <MiniStatCard
-                  icon={Film}
-                  accent="rose"
-                  label="Title Cards"
-                  value={stats.titlecards}
-                />
-                <MiniStatCard
-                  icon={HardDrive}
-                  accent="amber"
-                  label="Total Size"
-                  value={formatBytes(stats.total_size)}
+                  icon={scheduler?.is_executing ? Play : Pause}
+                  accent={scheduler?.is_executing ? "green" : "primary"}
+                  label="Executing"
+                  value={scheduler?.is_executing ? "Yes" : "No"}
                   isText
                 />
               </div>
-              {/* Folders table */}
-              {assetFolders.length > 0 && (
+
+              {/* Schedules & Jobs as table */}
+              {(schedules.length > 0 || activeJobs.length > 0) && (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-theme-primary">
                         <th className="text-left py-3 px-2">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                            Library
+                            Type
+                          </span>
+                        </th>
+                        <th className="text-left py-3 px-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                            Name
                           </span>
                         </th>
                         <th className="text-right py-3 px-2">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                            Posters
-                          </span>
-                        </th>
-                        <th className="text-right py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                            Files
-                          </span>
-                        </th>
-                        <th className="text-right py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                            Size
+                            Time
                           </span>
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {assetFolders.map((folder, i) => (
+                      {schedules.map((s, i) => (
                         <tr
-                          key={i}
+                          key={`s-${i}`}
                           className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
                         >
                           <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-2.5">
-                              <FolderOpen className="w-4 h-4 text-theme-primary flex-shrink-0" />
-                              <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
-                                {folder.name}
+                            <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted">
+                              Schedule
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
+                              {s.description || "Scheduled Run"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            <span className="text-xs font-bold text-theme-primary font-mono group-hover:text-theme-primary transition-colors">
+                              {s.time}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {activeJobs.map((job, i) => (
+                        <tr
+                          key={`j-${i}`}
+                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                        >
+                          <td className="px-3 py-2.5">
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border border-green-500/30 shadow-sm shadow-green-500/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                              <span className="text-[11px] font-semibold">
+                                Active Job
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                              {folder.poster_count ?? "—"}
+                          <td className="px-3 py-2.5">
+                            <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
+                              {job.name}
                             </span>
                           </td>
                           <td className="px-3 py-2.5 text-right">
-                            <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                              {folder.files?.toLocaleString() ?? "—"}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                              {formatBytes(folder.size)}
+                            <span className="text-xs font-bold text-theme-text font-mono whitespace-nowrap group-hover:text-theme-primary transition-colors">
+                              {formatTimestamp(job.next_run)}
                             </span>
                           </td>
                         </tr>
@@ -688,7 +536,162 @@ export default function Posterizarr() {
                 </div>
               )}
             </div>
-          )}
+
+            {/* ── Plex Export ── */}
+            {plexExport?.success && (
+              <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
+                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+                  <Film className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    Plex Export
+                  </h3>
+                </div>
+                <div className="p-4 grid grid-cols-2 gap-3">
+                  <MiniStatCard
+                    icon={RefreshCw}
+                    accent="primary"
+                    label="Total Runs"
+                    value={plexStatistics.total_runs}
+                  />
+                  <MiniStatCard
+                    icon={Database}
+                    accent="blue"
+                    label="Library Records"
+                    value={plexStatistics.total_library_records}
+                  />
+                  <MiniStatCard
+                    icon={Tv}
+                    accent="purple"
+                    label="Episode Records"
+                    value={plexStatistics.total_episode_records}
+                  />
+                  <MiniStatCard
+                    icon={Clock}
+                    accent="amber"
+                    label="Latest Run"
+                    value={formatTimestamp(plexStatistics.latest_run)}
+                    isText
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ── Assets Stats ── */}
+            {assetsStats?.success && (
+              <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
+                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    Asset Statistics
+                  </h3>
+                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                    {(stats.posters || 0) +
+                      (stats.backgrounds || 0) +
+                      (stats.seasons || 0) +
+                      (stats.titlecards || 0)}{" "}
+                    assets
+                  </span>
+                </div>
+                {/* Summary counters */}
+                <div className="p-4 grid grid-cols-2 gap-3 border-b border-theme">
+                  <MiniStatCard
+                    icon={Image}
+                    accent="primary"
+                    label="Posters"
+                    value={stats.posters}
+                  />
+                  <MiniStatCard
+                    icon={Layers}
+                    accent="blue"
+                    label="Backgrounds"
+                    value={stats.backgrounds}
+                  />
+                  <MiniStatCard
+                    icon={Calendar}
+                    accent="purple"
+                    label="Seasons"
+                    value={stats.seasons}
+                  />
+                  <MiniStatCard
+                    icon={Film}
+                    accent="rose"
+                    label="Title Cards"
+                    value={stats.titlecards}
+                  />
+                  <MiniStatCard
+                    icon={HardDrive}
+                    accent="amber"
+                    label="Total Size"
+                    value={formatBytes(stats.total_size)}
+                    isText
+                  />
+                </div>
+                {/* Folders table */}
+                {assetFolders.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-theme-primary">
+                          <th className="text-left py-3 px-2">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                              Library
+                            </span>
+                          </th>
+                          <th className="text-right py-3 px-2">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                              Posters
+                            </span>
+                          </th>
+                          <th className="text-right py-3 px-2">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                              Files
+                            </span>
+                          </th>
+                          <th className="text-right py-3 px-2">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                              Size
+                            </span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assetFolders.map((folder, i) => (
+                          <tr
+                            key={i}
+                            className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                          >
+                            <td className="px-3 py-2.5">
+                              <div className="flex items-center gap-2.5">
+                                <FolderOpen className="w-4 h-4 text-theme-primary flex-shrink-0" />
+                                <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
+                                  {folder.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5 text-right">
+                              <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
+                                {folder.poster_count ?? "—"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 text-right">
+                              <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
+                                {folder.files?.toLocaleString() ?? "—"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 text-right">
+                              <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
+                                {formatBytes(folder.size)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* ── Runtime History ── */}
           {historyItems.length > 0 && (
