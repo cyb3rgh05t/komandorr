@@ -46,6 +46,7 @@ export default function Sidebar() {
     downloads: false,
     uploader: false,
     vodplexsync: false,
+    autoscan: false,
   });
 
   // Toggle tab expansion
@@ -559,7 +560,20 @@ export default function Sidebar() {
     {
       label: "Autoscan",
       icon: Webhook,
-      path: "/autoscan",
+      isTab: true,
+      tabName: "autoscan",
+      items: [
+        {
+          path: "/autoscan",
+          label: t("autoscan.tabs.overview", "Overview"),
+          icon: LayoutDashboard,
+        },
+        {
+          path: "/autoscan?tab=history",
+          label: t("autoscan.tabs.history", "History"),
+          icon: History,
+        },
+      ],
     },
 
     {
@@ -920,6 +934,14 @@ export default function Sidebar() {
                               subItem.path === "/vod-streams" &&
                               vodStreamsCount > 0;
 
+                            // Autoscan Overview sub-item: queue + error badges
+                            const isAutoscanOverview =
+                              subItem.path === "/autoscan";
+                            const autoscanQueueSubBadge =
+                              isAutoscanOverview && autoscanQueueCount > 0;
+                            const autoscanErrorSubBadge =
+                              isAutoscanOverview && autoscanErrorCount > 0;
+
                             // Build array of badges to show
                             const badges = [];
 
@@ -1002,6 +1024,18 @@ export default function Sidebar() {
                               badges.push({
                                 count: vodStreamsCount,
                                 color: "bg-green-500",
+                              });
+                            }
+                            if (autoscanQueueSubBadge) {
+                              badges.push({
+                                count: autoscanQueueCount,
+                                color: "bg-blue-500",
+                              });
+                            }
+                            if (autoscanErrorSubBadge) {
+                              badges.push({
+                                count: autoscanErrorCount,
+                                color: "bg-red-500",
                               });
                             }
 
@@ -1109,13 +1143,6 @@ export default function Sidebar() {
                   const showPosterizarrBadge =
                     isPosterizarr && posterizarrErrorCount > 0;
 
-                  // Autoscan badges (queue + errors)
-                  const isAutoscan = item.path === "/autoscan";
-                  const showAutoscanQueueBadge =
-                    isAutoscan && autoscanQueueCount > 0;
-                  const showAutoscanErrorBadge =
-                    isAutoscan && autoscanErrorCount > 0;
-
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -1170,26 +1197,6 @@ export default function Sidebar() {
                             }`}
                           >
                             {posterizarrErrorCount}
-                          </span>
-                        )}
-                        {showAutoscanQueueBadge && (
-                          <span
-                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-blue-500 text-white ${
-                              isOpen ? "" : "md:hidden 2xl:inline-flex"
-                            }`}
-                            title={`${autoscanQueueCount} pending scans`}
-                          >
-                            {autoscanQueueCount}
-                          </span>
-                        )}
-                        {showAutoscanErrorBadge && (
-                          <span
-                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white ${
-                              isOpen ? "" : "md:hidden 2xl:inline-flex"
-                            }`}
-                            title={`${autoscanErrorCount} errors`}
-                          >
-                            {autoscanErrorCount}
                           </span>
                         )}
                       </Link>

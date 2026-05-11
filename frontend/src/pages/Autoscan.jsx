@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   RefreshCw,
@@ -14,7 +14,6 @@ import {
   Target,
   Tag,
   History,
-  LayoutDashboard,
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
@@ -58,8 +57,7 @@ function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
   );
 }
 
-function InstanceSection({ instance, tabsSlot }) {
-  const [subTab, setSubTab] = useState("overview");
+function InstanceSection({ instance, tabsSlot, subTab }) {
   const stats = instance.stats || {};
   const queue = instance.queue || [];
   const history = instance.history || [];
@@ -151,39 +149,6 @@ function InstanceSection({ instance, tabsSlot }) {
       </div>
 
       {tabsSlot}
-
-      {/* Sub-Tabs: Overview / History */}
-      <div className="flex items-center gap-1 border-b border-theme">
-        <button
-          type="button"
-          onClick={() => setSubTab("overview")}
-          className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-            subTab === "overview"
-              ? "border-theme-primary text-theme-primary"
-              : "border-transparent text-theme-text-muted hover:text-theme-text"
-          }`}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          Overview
-        </button>
-        <button
-          type="button"
-          onClick={() => setSubTab("history")}
-          className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-            subTab === "history"
-              ? "border-theme-primary text-theme-primary"
-              : "border-transparent text-theme-text-muted hover:text-theme-text"
-          }`}
-        >
-          <History className="w-4 h-4" />
-          History
-          {history.length > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-semibold rounded-full bg-theme-primary/20 text-theme-primary">
-              {history.length}
-            </span>
-          )}
-        </button>
-      </div>
 
       {subTab === "overview" && (
         <>
@@ -477,6 +442,9 @@ export default function Autoscan() {
   const dashInstances = dashboard?.instances || [];
   const notConfigured = instances.length === 0 && !dashLoading;
 
+  const [searchParams] = useSearchParams();
+  const subTab = searchParams.get("tab") === "history" ? "history" : "overview";
+
   const [activeTab, setActiveTab] = useState(null);
   const effectiveTab =
     activeTab && dashInstances.find((i) => i.id === activeTab)
@@ -597,6 +565,7 @@ export default function Autoscan() {
           {activeInstance.connected ? (
             <InstanceSection
               instance={activeInstance}
+              subTab={subTab}
               tabsSlot={
                 dashInstances.length > 1 ? (
                   <div>
