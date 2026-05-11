@@ -13,6 +13,8 @@ import {
   FileText,
   Target,
   Tag,
+  History,
+  LayoutDashboard,
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
@@ -57,6 +59,7 @@ function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
 }
 
 function InstanceSection({ instance, tabsSlot }) {
+  const [subTab, setSubTab] = useState("overview");
   const stats = instance.stats || {};
   const queue = instance.queue || [];
   const history = instance.history || [];
@@ -149,249 +152,299 @@ function InstanceSection({ instance, tabsSlot }) {
 
       {tabsSlot}
 
-      {targetEntries.length > 0 && (
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-theme">
-            <div className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-theme-primary" />
-              <h3 className="text-base font-semibold text-theme-text">
-                Target Status
-              </h3>
-            </div>
-          </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {targetEntries.map((tg) => (
-              <div
-                key={`${tg.type}-${tg.name}`}
-                className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
-              >
-                <Server className="w-4 h-4 text-theme-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-theme-text truncate">
-                    {tg.name}
-                  </p>
-                  {tg.cfg.url && (
-                    <p className="text-xs text-theme-text-muted font-mono truncate mt-0.5">
-                      {tg.cfg.url}
-                    </p>
-                  )}
-                </div>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border shrink-0 ${
-                    tg.available
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                      : "bg-red-500/15 text-red-400 border-red-500/30"
-                  }`}
-                >
-                  {tg.available ? (
-                    <CheckCircle className="w-3 h-3" />
-                  ) : (
-                    <XCircle className="w-3 h-3" />
-                  )}
-                  {tg.available ? "Available" : "Unavailable"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-theme flex items-center gap-3">
-          <ListOrdered className="w-5 h-5 text-theme-primary shrink-0" />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-theme-text">
-              Pending Scans
-            </h3>
-            <p className="text-xs text-theme-text-muted mt-0.5">
-              {queue.length === 0
-                ? "No folders waiting right now"
-                : `${queue.length} folder${queue.length === 1 ? "" : "s"} queued`}
-            </p>
-          </div>
-        </div>
-        {queue.length === 0 ? (
-          <div className="p-4">
-            <div className="border border-dashed border-theme rounded-lg px-4 py-3 text-sm text-theme-text-muted">
-              Queue is empty
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 space-y-2">
-            {queue.map((q, i) => (
-              <div
-                key={`${q.folder || i}-${i}`}
-                className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-mono text-theme-text truncate">
-                    {q.folder}
-                  </p>
-                  <p className="text-xs text-theme-text-muted mt-0.5">
-                    {formatTime(q.time)}
-                  </p>
-                </div>
-                {q.priority !== undefined && (
-                  <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
-                    prio {q.priority}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Sub-Tabs: Overview / History */}
+      <div className="flex items-center gap-1 border-b border-theme">
+        <button
+          type="button"
+          onClick={() => setSubTab("overview")}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            subTab === "overview"
+              ? "border-theme-primary text-theme-primary"
+              : "border-transparent text-theme-text-muted hover:text-theme-text"
+          }`}
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab("history")}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            subTab === "history"
+              ? "border-theme-primary text-theme-primary"
+              : "border-transparent text-theme-text-muted hover:text-theme-text"
+          }`}
+        >
+          <History className="w-4 h-4" />
+          History
+          {history.length > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-semibold rounded-full bg-theme-primary/20 text-theme-primary">
+              {history.length}
+            </span>
+          )}
+        </button>
       </div>
 
-      {history.length > 0 && (
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-theme-primary" />
-            <h3 className="text-base font-semibold text-theme-text">
-              Scan History
-            </h3>
-            <span className="ml-auto text-xs text-theme-text-muted">
-              Last {Math.min(history.length, 10)} events
-            </span>
-          </div>
-          <div className="p-4 space-y-2">
-            {history.slice(0, 10).map((h, i) => {
-              const ok =
-                (h.status || "").toLowerCase() === "success" ||
-                (h.status || "").toLowerCase() === "ok";
-              const rawTs =
-                h.completed_at ||
-                h.attempted_at ||
-                h.timestamp ||
-                h.time ||
-                h.date ||
-                h.created_at;
-              const time = (() => {
-                if (!rawTs) return "";
-                try {
-                  const d = new Date(rawTs);
-                  if (isNaN(d.getTime())) return String(rawTs);
-                  return d.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: false,
-                  });
-                } catch {
-                  return String(rawTs);
-                }
-              })();
-              const rawTarget = h.target || h.target_name || h.targetType || "";
-              // Strip URLs / extract bare name (e.g. "plex (http://...)" -> "plex")
-              const targetLabel = (() => {
-                const s = String(rawTarget);
-                const m = s.match(/^[a-zA-Z0-9_\-]+/);
-                return m ? m[0].toLowerCase() : s.toLowerCase();
-              })();
-              return (
-                <div
-                  key={`${h.folder || i}-${i}`}
-                  className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
-                >
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    {ok ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-                    )}
-                    {time && (
-                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
-                        {time}
-                      </span>
-                    )}
-                    {h.target && (
-                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-300 border-purple-500/30 lowercase">
-                        {targetLabel}
-                      </span>
-                    )}
+      {subTab === "overview" && (
+        <>
+          {targetEntries.length > 0 && (
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-theme">
+                <div className="flex items-center gap-2">
+                  <Server className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-base font-semibold text-theme-text">
+                    Target Status
+                  </h3>
+                </div>
+              </div>
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {targetEntries.map((tg) => (
+                  <div
+                    key={`${tg.type}-${tg.name}`}
+                    className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
+                  >
+                    <Server className="w-4 h-4 text-theme-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-theme-text truncate">
+                        {tg.name}
+                      </p>
+                      {tg.cfg.url && (
+                        <p className="text-xs text-theme-text-muted font-mono truncate mt-0.5">
+                          {tg.cfg.url}
+                        </p>
+                      )}
+                    </div>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
-                        ok
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border shrink-0 ${
+                        tg.available
                           ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                           : "bg-red-500/15 text-red-400 border-red-500/30"
                       }`}
                     >
-                      {h.status || "?"}
+                      {tg.available ? (
+                        <CheckCircle className="w-3 h-3" />
+                      ) : (
+                        <XCircle className="w-3 h-3" />
+                      )}
+                      {tg.available ? "Available" : "Unavailable"}
                     </span>
                   </div>
-                  <p className="text-sm font-mono text-theme-text-muted truncate pl-6">
-                    {h.folder}
-                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-theme flex items-center gap-3">
+              <ListOrdered className="w-5 h-5 text-theme-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-theme-text">
+                  Pending Scans
+                </h3>
+                <p className="text-xs text-theme-text-muted mt-0.5">
+                  {queue.length === 0
+                    ? "No folders waiting right now"
+                    : `${queue.length} folder${queue.length === 1 ? "" : "s"} queued`}
+                </p>
+              </div>
+            </div>
+            {queue.length === 0 ? (
+              <div className="p-4">
+                <div className="border border-dashed border-theme rounded-lg px-4 py-3 text-sm text-theme-text-muted">
+                  Queue is empty
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              <div className="p-4 space-y-2">
+                {queue.map((q, i) => (
+                  <div
+                    key={`${q.folder || i}-${i}`}
+                    className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-mono text-theme-text truncate">
+                        {q.folder}
+                      </p>
+                      <p className="text-xs text-theme-text-muted mt-0.5">
+                        {formatTime(q.time)}
+                      </p>
+                    </div>
+                    {q.priority !== undefined && (
+                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30">
+                        prio {q.priority}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        </>
       )}
 
-      {logs.length > 0 && (
-        <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
-            <FileText className="w-5 h-5 text-theme-primary" />
-            <h3 className="text-base font-semibold text-theme-text">
-              Recent Logs
-            </h3>
-            <span className="text-xs text-theme-text-muted font-mono">
-              Last {Math.min(logs.length, 50)} entries
-            </span>
+      {subTab === "history" &&
+        (history.length > 0 ? (
+          <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-theme-primary" />
+              <h3 className="text-base font-semibold text-theme-text">
+                Scan History
+              </h3>
+              <span className="ml-auto text-xs text-theme-text-muted">
+                Last {Math.min(history.length, 10)} events
+              </span>
+            </div>
+            <div className="p-4 space-y-2">
+              {history.slice(0, 10).map((h, i) => {
+                const ok =
+                  (h.status || "").toLowerCase() === "success" ||
+                  (h.status || "").toLowerCase() === "ok";
+                const rawTs =
+                  h.completed_at ||
+                  h.attempted_at ||
+                  h.timestamp ||
+                  h.time ||
+                  h.date ||
+                  h.created_at;
+                const time = (() => {
+                  if (!rawTs) return "";
+                  try {
+                    const d = new Date(rawTs);
+                    if (isNaN(d.getTime())) return String(rawTs);
+                    return d.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
+                    });
+                  } catch {
+                    return String(rawTs);
+                  }
+                })();
+                const rawTarget =
+                  h.target || h.target_name || h.targetType || "";
+                // Strip URLs / extract bare name (e.g. "plex (http://...)" -> "plex")
+                const targetLabel = (() => {
+                  const s = String(rawTarget);
+                  const m = s.match(/^[a-zA-Z0-9_\-]+/);
+                  return m ? m[0].toLowerCase() : s.toLowerCase();
+                })();
+                return (
+                  <div
+                    key={`${h.folder || i}-${i}`}
+                    className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                  >
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      {ok ? (
+                        <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-400 shrink-0" />
+                      )}
+                      {time && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                          {time}
+                        </span>
+                      )}
+                      {h.target && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-300 border-purple-500/30 lowercase">
+                          {targetLabel}
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                          ok
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                            : "bg-red-500/15 text-red-400 border-red-500/30"
+                        }`}
+                      >
+                        {h.status || "?"}
+                      </span>
+                    </div>
+                    <p className="text-sm font-mono text-theme-text-muted truncate pl-6">
+                      {h.folder}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div
-            className="max-h-[28rem] overflow-auto bg-theme-bg/40"
-            ref={(el) => {
-              if (el) el.scrollTop = el.scrollHeight;
-            }}
-          >
-            {logs.slice(-50).map((line, i) => {
-              const raw = String(line || "");
-              // Try to extract: timestamp [LEVEL] message
-              const m = raw.match(
-                /^([\d\-/: T.,Z+]+?)\s+(?:\[)?(INFO|DEBUG|WARN|WARNING|ERROR|TRACE|FATAL)(?:\])?\s+(.*)$/i,
-              );
-              const ts = m ? m[1].trim() : "";
-              const level = (m ? m[2] : "").toUpperCase();
-              const msg = m ? m[3] : raw;
-              const levelStyle = (() => {
-                switch (level) {
-                  case "ERROR":
-                  case "FATAL":
-                    return "bg-red-500/15 text-red-400 border-red-500/30";
-                  case "WARN":
-                  case "WARNING":
-                    return "bg-amber-500/15 text-amber-400 border-amber-500/30";
-                  case "DEBUG":
-                  case "TRACE":
-                    return "bg-purple-500/15 text-purple-400 border-purple-500/30";
-                  case "INFO":
-                    return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-                  default:
-                    return "bg-theme-hover text-theme-text-muted border-theme";
-                }
-              })();
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 px-4 py-1 text-xs font-mono leading-tight"
-                >
-                  {ts && (
-                    <span className="text-theme-text-muted shrink-0">{ts}</span>
-                  )}
-                  {level && (
-                    <span
-                      className={`inline-flex items-center justify-center min-w-[52px] px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-md border shrink-0 ${levelStyle}`}
+        ) : (
+          <div className="bg-theme-card rounded-xl border border-theme shadow-lg p-8 text-center">
+            <History className="w-10 h-10 mx-auto text-theme-text-muted mb-3" />
+            <p className="text-sm text-theme-text-muted">No scan history yet</p>
+          </div>
+        ))}
+
+      {subTab === "overview" && (
+        <>
+          {logs.length > 0 && (
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                <FileText className="w-5 h-5 text-theme-primary" />
+                <h3 className="text-base font-semibold text-theme-text">
+                  Recent Logs
+                </h3>
+                <span className="text-xs text-theme-text-muted font-mono">
+                  Last {Math.min(logs.length, 50)} entries
+                </span>
+              </div>
+              <div
+                className="max-h-[28rem] overflow-auto bg-theme-bg/40"
+                ref={(el) => {
+                  if (el) el.scrollTop = el.scrollHeight;
+                }}
+              >
+                {logs.slice(-50).map((line, i) => {
+                  const raw = String(line || "");
+                  // Try to extract: timestamp [LEVEL] message
+                  const m = raw.match(
+                    /^([\d\-/: T.,Z+]+?)\s+(?:\[)?(INFO|DEBUG|WARN|WARNING|ERROR|TRACE|FATAL)(?:\])?\s+(.*)$/i,
+                  );
+                  const ts = m ? m[1].trim() : "";
+                  const level = (m ? m[2] : "").toUpperCase();
+                  const msg = m ? m[3] : raw;
+                  const levelStyle = (() => {
+                    switch (level) {
+                      case "ERROR":
+                      case "FATAL":
+                        return "bg-red-500/15 text-red-400 border-red-500/30";
+                      case "WARN":
+                      case "WARNING":
+                        return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+                      case "DEBUG":
+                      case "TRACE":
+                        return "bg-purple-500/15 text-purple-400 border-purple-500/30";
+                      case "INFO":
+                        return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+                      default:
+                        return "bg-theme-hover text-theme-text-muted border-theme";
+                    }
+                  })();
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 px-4 py-1 text-xs font-mono leading-tight"
                     >
-                      {level}
-                    </span>
-                  )}
-                  <span className="text-theme-text truncate">{msg}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                      {ts && (
+                        <span className="text-theme-text-muted shrink-0">
+                          {ts}
+                        </span>
+                      )}
+                      {level && (
+                        <span
+                          className={`inline-flex items-center justify-center min-w-[52px] px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-md border shrink-0 ${levelStyle}`}
+                        >
+                          {level}
+                        </span>
+                      )}
+                      <span className="text-theme-text truncate">{msg}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
