@@ -66,8 +66,9 @@ export default function Sidebar() {
         return [];
       }
     },
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 3000,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -83,8 +84,9 @@ export default function Sidebar() {
         return { sessions: [] };
       }
     },
-    refetchInterval: 5000,
-    staleTime: 3000,
+    refetchInterval: 3000,
+    staleTime: 2000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -104,8 +106,9 @@ export default function Sidebar() {
         return [];
       }
     },
-    refetchInterval: 5000,
-    staleTime: 3000,
+    refetchInterval: 3000,
+    staleTime: 2000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -124,8 +127,9 @@ export default function Sidebar() {
         return {};
       }
     },
-    refetchInterval: 5000,
-    staleTime: 3000,
+    refetchInterval: 3000,
+    staleTime: 2000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -182,8 +186,9 @@ export default function Sidebar() {
         return { jobs: [] };
       }
     },
-    refetchInterval: 5000,
-    staleTime: 3000,
+    refetchInterval: 3000,
+    staleTime: 2000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -199,8 +204,9 @@ export default function Sidebar() {
         return { count: 0 };
       }
     },
-    refetchInterval: 15000,
-    staleTime: 10000,
+    refetchInterval: 5000,
+    staleTime: 3000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -216,8 +222,9 @@ export default function Sidebar() {
         return { files: [] };
       }
     },
-    refetchInterval: 10000,
-    staleTime: 5000,
+    refetchInterval: 5000,
+    staleTime: 3000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -234,8 +241,9 @@ export default function Sidebar() {
         return null;
       }
     },
-    refetchInterval: 30000,
-    staleTime: 15000,
+    refetchInterval: 10000,
+    staleTime: 5000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
@@ -261,8 +269,9 @@ export default function Sidebar() {
         return [];
       }
     },
-    staleTime: 10000,
-    refetchInterval: 10000,
+    staleTime: 3000,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -283,8 +292,9 @@ export default function Sidebar() {
         return [];
       }
     },
-    staleTime: 10000,
-    refetchInterval: 30000,
+    staleTime: 5000,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -298,8 +308,9 @@ export default function Sidebar() {
         return {};
       }
     },
-    staleTime: 10000,
-    refetchInterval: 30000,
+    staleTime: 5000,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -332,8 +343,9 @@ export default function Sidebar() {
         return null;
       }
     },
-    staleTime: 10000,
-    refetchInterval: 30000,
+    staleTime: 5000,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
     retry: false,
     placeholderData: (previousData) => previousData,
   });

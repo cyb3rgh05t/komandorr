@@ -583,8 +583,7 @@ class NotificationService:
     async def notify_uploader_failed(
         self, failed_count: int, details: str = ""
     ) -> bool:
-        if not self._check_cooldown("uploader_failed"):
-            return False
+        # Daily gate is handled entirely in health_checker; no cooldown needed here
         message = self._format_message(
             "📤",
             "Uploader Failed Items",
@@ -598,8 +597,7 @@ class NotificationService:
     # ── Posterizarr events ────────────────────────────────────────
 
     async def notify_posterizarr_error(self, instance_name: str, error: str) -> bool:
-        if not self._check_cooldown(f"posterizarr_error:{instance_name}"):
-            return False
+        # Daily gate is handled entirely in health_checker; no cooldown needed here
         message = self._format_message(
             "🖼",
             "Posterizarr Error",

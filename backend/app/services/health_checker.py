@@ -26,14 +26,21 @@ class HealthChecker:
         self._autoscan_target_state: dict[str, set[str]] = {}
         self._traffic_high_count: dict[str, int] = {}  # consecutive high-traffic checks
         self._traffic_high_state: dict[str, bool] = {}  # track per-service alert state
-        self._storage_last_notify_day: dict[str, str] = self._load_state()
+        # Unified per-issue daily-gate state (storage/posterizarr/uploader/...).
+        # Keys are namespaced by prefix (e.g. "storage_path:...", "posterizarr:...", "uploader:failed").
+        self._issue_last_notify_day: dict[str, str] = self._load_state()
 
     def _load_state(self) -> dict[str, str]:
         """Load persisted daily-gate state from disk."""
         try:
             if _STATE_FILE.exists():
                 data = json.loads(_STATE_FILE.read_text())
-                return data.get("storage_last_notify_day", {})
+                # New unified key, fallback to legacy storage-only key
+                return (
+                    data.get("issue_last_notify_day")
+                    or data.get("storage_last_notify_day")
+                    or {}
+                )
         except Exception as e:
             logger.warning(f"Could not load health state: {e}")
         return {}
@@ -43,7 +50,7 @@ class HealthChecker:
         try:
             _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
             _STATE_FILE.write_text(
-                json.dumps({"storage_last_notify_day": self._storage_last_notify_day})
+                json.dumps({"issue_last_notify_day": self._issue_last_notify_day})
             )
         except Exception as e:
             logger.warning(f"Could not save health state: {e}")
@@ -370,8 +377,14 @@ class HealthChecker:
     # ── Posterizarr ────────────────────────────────────────────────
 
     async def _check_posterizarr(self):
-        """Check Posterizarr runtime history for errors."""
+        """Check Posterizarr runtime history for errors.
+
+        Daily-gate pattern (same as storage): at most one notification per
+        instance per day; gate is cleared automatically once the latest run
+        reports zero errors so the next failure notifies again.
+        """
         from app.config import settings
+        from datetime import datetime, timezone
 
         instances = (
             list(settings.POSTERIZARR_INSTANCES)
@@ -380,6 +393,9 @@ class HealthChecker:
         )
         if not instances:
             return
+
+        today = datetime.now(timezone.utc).date().isoformat()
+        current_issue_keys: set[str] = set()
 
         for inst in instances:
             inst_url = inst.get("url", "")
@@ -405,17 +421,39 @@ class HealthChecker:
                 continue
 
             history_items = data.get("history", [])
-            if history_items:
-                latest = history_items[0]
-                error_count = latest.get("errors", 0) or 0
-                if error_count > 0:
-                    try:
-                        await notification_service.notify_posterizarr_error(
-                            inst_name,
-                            f"Latest run had {error_count} error(s)",
-                        )
-                    except Exception:
-                        pass
+            if not history_items:
+                continue
+
+            latest = history_items[0]
+            error_count = latest.get("errors", 0) or 0
+            if error_count <= 0:
+                continue
+
+            issue_key = f"posterizarr:{inst_name}"
+            current_issue_keys.add(issue_key)
+            if self._issue_last_notify_day.get(issue_key) == today:
+                continue
+            try:
+                await notification_service.notify_posterizarr_error(
+                    inst_name,
+                    f"Latest run had {error_count} error(s)",
+                )
+                self._issue_last_notify_day[issue_key] = today
+                self._save_state()
+            except Exception:
+                pass
+
+        # Clear gate for instances that have recovered so a new error re-notifies.
+        posterizarr_keys = {
+            k
+            for k in self._issue_last_notify_day.keys()
+            if k.startswith("posterizarr:")
+        }
+        resolved_keys = posterizarr_keys - current_issue_keys
+        if resolved_keys:
+            for key in resolved_keys:
+                self._issue_last_notify_day.pop(key, None)
+            self._save_state()
 
     # ── Autoscan ─────────────────────────────────────────
 
@@ -540,7 +578,7 @@ class HealthChecker:
                 if percent >= STORAGE_WARNING_THRESHOLD:
                     issue_key = f"storage_path:{hostname}:{path.path}"
                     current_issue_keys.add(issue_key)
-                    if self._storage_last_notify_day.get(issue_key) == today:
+                    if self._issue_last_notify_day.get(issue_key) == today:
                         continue
                     try:
                         await notification_service.notify_storage_warning(
@@ -549,7 +587,7 @@ class HealthChecker:
                             percent=percent,
                             free_gb=getattr(path, "free", 0) or 0,
                         )
-                        self._storage_last_notify_day[issue_key] = today
+                        self._issue_last_notify_day[issue_key] = today
                         self._save_state()
                     except Exception:
                         pass
@@ -560,7 +598,7 @@ class HealthChecker:
                 if raid_status in STORAGE_RISKY_STATUSES:
                     issue_key = f"storage_raid:{hostname}:{raid.device}"
                     current_issue_keys.add(issue_key)
-                    if self._storage_last_notify_day.get(issue_key) == today:
+                    if self._issue_last_notify_day.get(issue_key) == today:
                         continue
                     try:
                         await notification_service.notify_storage_warning(
@@ -569,7 +607,7 @@ class HealthChecker:
                             percent=0,
                             free_gb=0,
                         )
-                        self._storage_last_notify_day[issue_key] = today
+                        self._issue_last_notify_day[issue_key] = today
                         self._save_state()
                     except Exception:
                         pass
@@ -584,7 +622,7 @@ class HealthChecker:
                 ):
                     issue_key = f"storage_zfs:{hostname}:{pool.pool}"
                     current_issue_keys.add(issue_key)
-                    if self._storage_last_notify_day.get(issue_key) == today:
+                    if self._issue_last_notify_day.get(issue_key) == today:
                         continue
                     try:
                         await notification_service.notify_storage_warning(
@@ -593,23 +631,34 @@ class HealthChecker:
                             percent=0,
                             free_gb=0,
                         )
-                        self._storage_last_notify_day[issue_key] = today
+                        self._issue_last_notify_day[issue_key] = today
                         self._save_state()
                     except Exception:
                         pass
 
-        # Reset per-day suppression when an issue is resolved
-        resolved_keys = set(self._storage_last_notify_day.keys()) - current_issue_keys
+        # Reset per-day suppression when a storage issue is resolved.
+        # Scope to storage_* keys only — other features (posterizarr/uploader)
+        # manage their own keys in the same shared dict.
+        storage_keys = {
+            k for k in self._issue_last_notify_day.keys() if k.startswith("storage_")
+        }
+        resolved_keys = storage_keys - current_issue_keys
         if resolved_keys:
             for key in resolved_keys:
-                self._storage_last_notify_day.pop(key, None)
+                self._issue_last_notify_day.pop(key, None)
             self._save_state()
 
     # ── Uploader ───────────────────────────────────────────────────
 
     async def _check_uploader(self):
-        """Check uploader for failed jobs."""
+        """Check uploader for failed jobs.
+
+        Daily-gate pattern (same as storage): at most one notification per day;
+        gate is cleared automatically once the failed-count returns to zero so
+        the next failure notifies again.
+        """
         from app.config import settings
+        from datetime import datetime, timezone
 
         base_url = getattr(settings, "UPLOADER_BASE_URL", "")
         if not base_url:
@@ -625,11 +674,24 @@ class HealthChecker:
             logger.debug(f"Health checker: Uploader unreachable: {e}")
             return
 
-        if isinstance(data, dict) and data.get("count", 0) > 0:
+        today = datetime.now(timezone.utc).date().isoformat()
+        issue_key = "uploader:failed"
+        failed_count = int(data.get("count", 0) or 0) if isinstance(data, dict) else 0
+
+        if failed_count > 0:
+            if self._issue_last_notify_day.get(issue_key) == today:
+                return
             try:
-                await notification_service.notify_uploader_failed(data["count"])
+                await notification_service.notify_uploader_failed(failed_count)
+                self._issue_last_notify_day[issue_key] = today
+                self._save_state()
             except Exception:
                 pass
+        else:
+            # No failures → clear gate so the next failure re-notifies.
+            if issue_key in self._issue_last_notify_day:
+                self._issue_last_notify_day.pop(issue_key, None)
+                self._save_state()
 
     # ── Traffic ────────────────────────────────────────────────────
 
