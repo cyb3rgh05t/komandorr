@@ -67,10 +67,11 @@ function InstanceSection({ instance, tabsSlot }) {
 
   // Resolve availability for a target by trying multiple key variants that
   // docker-autoscan may use in stats.targets_available (display name, type,
-  // url, lower-cased). If none is present we treat it as unavailable so the
-  // badge actually reflects the current state instead of staying "Available".
+  // url, lower-cased). Only an explicit `false` for any matching key marks
+  // the target unavailable; a missing key (e.g. cache not yet populated)
+  // keeps it available so the badge does not flicker offline on first load.
   const resolveAvailable = (displayName, type, url) => {
-    if (!targetsAvailable || typeof targetsAvailable !== "object") return false;
+    if (!targetsAvailable || typeof targetsAvailable !== "object") return true;
     const candidates = [
       displayName,
       type,
@@ -80,10 +81,10 @@ function InstanceSection({ instance, tabsSlot }) {
     ].filter(Boolean);
     for (const key of candidates) {
       if (key in targetsAvailable) {
-        return Boolean(targetsAvailable[key]);
+        return targetsAvailable[key] !== false;
       }
     }
-    return false;
+    return true;
   };
 
   const targetEntries = Object.entries(targets).flatMap(([type, items]) => {
