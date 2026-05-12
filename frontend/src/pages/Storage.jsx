@@ -735,19 +735,17 @@ const Storage = () => {
           <>
             <button
               onClick={handleRefresh}
-              disabled={isRefreshing || isFetching || isFetchingSummary}
+              disabled={isRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary ${
-                  isRefreshing || isFetching || isFetchingSummary
-                    ? "animate-spin"
-                    : ""
+                  isRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {isRefreshing || isFetching || isFetchingSummary
+                {isRefreshing
                   ? t("common.refreshing", "Refreshing")
                   : t("storage.refresh", "Refresh")}
               </span>

@@ -163,6 +163,8 @@ export default function Posterizarr() {
 
   const isConnected = connStatus?.connected;
 
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+
   const refetchAll = () => {
     refetchDash();
     refetchScheduler();
@@ -229,12 +231,24 @@ export default function Posterizarr() {
         title="Posterizarr"
         actions={
           <button
-            onClick={refetchAll}
-            disabled={dashFetching}
+            onClick={async () => {
+              setManualRefreshing(true);
+              try {
+                await Promise.all([
+                  refetchDash(),
+                  refetchScheduler(),
+                  refetchHistory(),
+                  refetchAssets(),
+                ]);
+              } finally {
+                setManualRefreshing(false);
+              }
+            }}
+            disabled={manualRefreshing}
             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
-              className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
+              className={`w-4 h-4 text-theme-primary ${manualRefreshing ? "animate-spin" : ""}`}
             />
             Refresh
           </button>

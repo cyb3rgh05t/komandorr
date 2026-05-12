@@ -483,33 +483,17 @@ export default function ArrActivity() {
           <>
             <button
               onClick={refreshAll}
-              disabled={
-                isRefreshing ||
-                isFetchingQueue ||
-                isFetchingStatus ||
-                isFetchingSystem ||
-                isFetchingHistory
-              }
+              disabled={isRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCcw
                 size={16}
                 className={`text-theme-primary transition-transform duration-500 ${
-                  isRefreshing ||
-                  isFetchingQueue ||
-                  isFetchingStatus ||
-                  isFetchingSystem ||
-                  isFetchingHistory
-                    ? "animate-spin"
-                    : ""
+                  isRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {isRefreshing ||
-                isFetchingQueue ||
-                isFetchingStatus ||
-                isFetchingSystem ||
-                isFetchingHistory
+                {isRefreshing
                   ? t("common.refreshing", "Refreshing")
                   : t("common.refresh", "Refresh")}
               </span>

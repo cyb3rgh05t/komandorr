@@ -860,6 +860,7 @@ export default function NfsMount() {
   const notConfigured = instances.length === 0 && !dashLoading;
 
   const [activeTab, setActiveTab] = useState(null);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Auto-select first manager tab if none selected yet
   const effectiveTab =
@@ -948,12 +949,19 @@ export default function NfsMount() {
               </div>
             ) : null}
             <button
-              onClick={() => refetchDash()}
-              disabled={dashFetching}
+              onClick={async () => {
+                setManualRefreshing(true);
+                try {
+                  await refetchDash();
+                } finally {
+                  setManualRefreshing(false);
+                }
+              }}
+              disabled={manualRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
-                className={`w-4 h-4 text-theme-primary ${dashFetching ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-theme-primary ${manualRefreshing ? "animate-spin" : ""}`}
               />
               <span className="text-xs sm:text-sm">Refresh</span>
             </button>

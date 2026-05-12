@@ -1609,11 +1609,7 @@ export default function VODStreamsHistory() {
             <RefreshCw
               size={15}
               className={`text-theme-primary transition-transform duration-500 ${
-                isRefreshing
-                  ? "animate-spin"
-                  : isFetching
-                    ? "animate-spin opacity-40"
-                    : ""
+                isRefreshing ? "animate-spin" : ""
               }`}
             />
             <span className="text-xs sm:text-sm">
