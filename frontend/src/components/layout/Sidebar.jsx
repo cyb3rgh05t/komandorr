@@ -564,7 +564,7 @@ export default function Sidebar() {
       tabName: "autoscan",
       items: [
         {
-          path: "/autoscan",
+          path: "/autoscan?tab=overview",
           label: t("autoscan.tabs.overview", "Overview"),
           icon: LayoutDashboard,
         },
@@ -936,7 +936,7 @@ export default function Sidebar() {
 
                             // Autoscan Overview sub-item: queue + error badges
                             const isAutoscanOverview =
-                              subItem.path === "/autoscan";
+                              subItem.path === "/autoscan?tab=overview";
                             const autoscanQueueSubBadge =
                               isAutoscanOverview && autoscanQueueCount > 0;
                             const autoscanErrorSubBadge =
