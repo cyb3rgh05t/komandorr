@@ -467,7 +467,7 @@ export default function Posterizarr() {
                 />
                 <MiniStatCard
                   icon={scheduler?.is_executing ? Play : Pause}
-                  accent={scheduler?.is_executing ? "green" : "red"}
+                  accent={scheduler?.is_executing ? "green" : "rose"}
                   label="Executing"
                   value={scheduler?.is_executing ? "Yes" : "No"}
                   isText
