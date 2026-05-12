@@ -184,13 +184,8 @@ export default function Uploader() {
   const totalCompleted = completedData?.total_count || 0;
   const totalPages = Math.max(1, Math.ceil(totalCompleted / itemsPerPage));
 
-  // Combined refreshing state for animation
-  const isRefreshing =
-    queueFetching ||
-    queueStatsFetching ||
-    inProgressFetching ||
-    completedLoading ||
-    failedLoading;
+  // Manual refresh state (only true while user-initiated refresh runs)
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Reset to page 1 when items per page changes
   React.useEffect(() => {
@@ -279,16 +274,25 @@ export default function Uploader() {
     };
   }, [rawStatus, activeUploads]);
 
-  const refreshAll = () => {
-    refetchQueue();
-    refetchQueueStats();
-    refetchInProgress();
-    refetchAllCompleted();
-    refetchCompleted();
-    refetchCompletedToday();
-    refetchStatus();
-    refetchFailed();
-    toast.success(t("uploader.refreshSuccess", "Data refreshed successfully"));
+  const refreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetchQueue(),
+        refetchQueueStats(),
+        refetchInProgress(),
+        refetchAllCompleted(),
+        refetchCompleted(),
+        refetchCompletedToday(),
+        refetchStatus(),
+        refetchFailed(),
+      ]);
+      toast.success(
+        t("uploader.refreshSuccess", "Data refreshed successfully"),
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
