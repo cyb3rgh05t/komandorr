@@ -563,7 +563,7 @@ export default function Posterizarr() {
                 <div className="p-4 grid grid-cols-2 gap-3">
                   <MiniStatCard
                     icon={RefreshCw}
-                    accent="green
+                    accent="green"
                     label="Total Runs"
                     value={plexStatistics.total_runs}
                   />
