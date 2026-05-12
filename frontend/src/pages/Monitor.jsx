@@ -163,6 +163,7 @@ export default function Monitor() {
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -358,19 +359,26 @@ export default function Monitor() {
             actions={
               <>
                 <button
-                  onClick={handleRefresh}
-                  disabled={isFetching}
+                  onClick={async () => {
+                    setManualRefreshing(true);
+                    try {
+                      await handleRefresh();
+                    } finally {
+                      setManualRefreshing(false);
+                    }
+                  }}
+                  disabled={manualRefreshing}
                   className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-text transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw
                     size={16}
                     className={`text-theme-primary transition-transform duration-500 ${
-                      isFetching ? "animate-spin" : ""
+                      manualRefreshing ? "animate-spin" : ""
                     }`}
                   />
 
                   <span>
-                    {isFetching
+                    {manualRefreshing
                       ? t("common.refreshing", "Refreshing")
                       : t("monitor.refresh")}
                   </span>

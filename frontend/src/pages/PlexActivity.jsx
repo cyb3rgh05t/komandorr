@@ -325,6 +325,7 @@ const PlexActivity = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Fetch Plex instances
   const { data: instancesData } = useQuery({
@@ -440,18 +441,25 @@ const PlexActivity = () => {
               </span>
             </div>
             <button
-              onClick={handleRefresh}
-              disabled={isFetching}
+              onClick={async () => {
+                setManualRefreshing(true);
+                try {
+                  await handleRefresh();
+                } finally {
+                  setManualRefreshing(false);
+                }
+              }}
+              disabled={manualRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary transition-transform duration-500 ${
-                  isFetching ? "animate-spin" : ""
+                  manualRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {isFetching
+                {manualRefreshing
                   ? t("common.refreshing", "Refreshing")
                   : t("common.refresh")}
               </span>

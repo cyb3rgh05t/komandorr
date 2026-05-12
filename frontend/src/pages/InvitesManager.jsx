@@ -155,6 +155,7 @@ const InvitesManager = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
   const isFetching = useIsFetching();
+  const [manualRefreshing, setManualRefreshing] = useState(false);
   const [filter, setFilter] = useState("all"); // all, active, expired, used-up, disabled
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -457,24 +458,32 @@ const InvitesManager = () => {
           <>
             <button
               onClick={async () => {
-                await Promise.all([
-                  queryClient.refetchQueries(["invites", effectiveTab]),
-                  queryClient.refetchQueries(["inviteStats", effectiveTab]),
-                  queryClient.refetchQueries(["plexUsersCount", effectiveTab]),
-                ]);
-                toast.success(t("invites.refreshed"));
+                setManualRefreshing(true);
+                try {
+                  await Promise.all([
+                    queryClient.refetchQueries(["invites", effectiveTab]),
+                    queryClient.refetchQueries(["inviteStats", effectiveTab]),
+                    queryClient.refetchQueries([
+                      "plexUsersCount",
+                      effectiveTab,
+                    ]),
+                  ]);
+                  toast.success(t("invites.refreshed"));
+                } finally {
+                  setManualRefreshing(false);
+                }
               }}
-              disabled={isFetching}
+              disabled={manualRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary transition-transform duration-500 ${
-                  isFetching ? "animate-spin" : ""
+                  manualRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {isFetching
+                {manualRefreshing
                   ? t("common.refreshing", "Refreshing")
                   : t("common.refresh")}
               </span>

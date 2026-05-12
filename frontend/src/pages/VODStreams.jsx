@@ -308,6 +308,7 @@ export default function VODStreams() {
   const REFRESH_INTERVAL = 5000; // 5 seconds for real-time VOD stream monitoring
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useItemsPerPage("vodStreams");
@@ -703,18 +704,25 @@ export default function VODStreams() {
               </span>
             </div>
             <button
-              onClick={() => handleRefresh(true)}
-              disabled={isFetching}
+              onClick={async () => {
+                setManualRefreshing(true);
+                try {
+                  await handleRefresh(true);
+                } finally {
+                  setManualRefreshing(false);
+                }
+              }}
+              disabled={manualRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary transition-transform duration-500 ${
-                  isFetching ? "animate-spin" : ""
+                  manualRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {isFetching
+                {manualRefreshing
                   ? t("common.refreshing", "Refreshing")
                   : t("common.refresh")}
               </span>

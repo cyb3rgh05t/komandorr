@@ -123,6 +123,7 @@ const StatusBadge = ({ status }) => {
 export default function VpnProxy() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const [manualRefreshing, setManualRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(
     searchParams.get("provider") || "all",
   );
@@ -918,12 +919,19 @@ export default function VpnProxy() {
         actions={
           <>
             <button
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={async () => {
+                setManualRefreshing(true);
+                try {
+                  await refetch();
+                } finally {
+                  setManualRefreshing(false);
+                }
+              }}
+              disabled={manualRefreshing}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
-                className={`w-4 h-4 text-theme-primary ${isFetching ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-theme-primary ${manualRefreshing ? "animate-spin" : ""}`}
               />
               Refresh
             </button>

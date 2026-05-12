@@ -231,6 +231,7 @@ export default function ExternalApps() {
   const [draftApps, setDraftApps] = useState([]);
   const [draftGroupOrder, setDraftGroupOrder] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Sync localApps and groupOrder from server data
   useEffect(() => {
@@ -468,18 +469,25 @@ export default function ExternalApps() {
               </>
             )}
             <button
-              onClick={() => refetch()}
-              disabled={isFetching || editMode}
+              onClick={async () => {
+                setManualRefreshing(true);
+                try {
+                  await refetch();
+                } finally {
+                  setManualRefreshing(false);
+                }
+              }}
+              disabled={manualRefreshing || editMode}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary transition-transform duration-500 ${
-                  isFetching ? "animate-spin" : ""
+                  manualRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {isFetching
+                {manualRefreshing
                   ? t("common.refreshing", "Refreshing")
                   : t("common.refresh", "Refresh")}
               </span>

@@ -159,6 +159,7 @@ export default function Traffic() {
   const [searchTerm, setSearchTerm] = useState("");
   const [, setCurrentTime] = useState(Date.now()); // Force re-render for time updates
   const [activeTab, setActiveTab] = useState(null);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Update current time every second to refresh "X seconds ago" display
   useEffect(() => {
@@ -342,18 +343,25 @@ export default function Traffic() {
             actions={
               <>
                 <button
-                  onClick={handleRefresh}
-                  disabled={isFetching}
+                  onClick={async () => {
+                    setManualRefreshing(true);
+                    try {
+                      await handleRefresh();
+                    } finally {
+                      setManualRefreshing(false);
+                    }
+                  }}
+                  disabled={manualRefreshing}
                   className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50"
                 >
                   <RefreshCw
                     size={16}
                     className={`text-theme-primary ${
-                      isFetching ? "animate-spin" : ""
+                      manualRefreshing ? "animate-spin" : ""
                     }`}
                   />
                   <span className="text-xs sm:text-sm">
-                    {isFetching
+                    {manualRefreshing
                       ? t("common.refreshing", "Refreshing")
                       : t("traffic.page.refresh")}
                   </span>
