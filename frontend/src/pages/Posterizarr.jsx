@@ -451,7 +451,7 @@ export default function Posterizarr() {
                 />
                 <MiniStatCard
                   icon={Timer}
-                  accent="primary"
+                  accent="green"
                   label="Last Run"
                   value={formatTimestamp(scheduler?.last_run)}
                   isText
@@ -467,7 +467,7 @@ export default function Posterizarr() {
                 />
                 <MiniStatCard
                   icon={scheduler?.is_executing ? Play : Pause}
-                  accent={scheduler?.is_executing ? "green" : "primary"}
+                  accent={scheduler?.is_executing ? "green" : "red"}
                   label="Executing"
                   value={scheduler?.is_executing ? "Yes" : "No"}
                   isText
@@ -563,7 +563,7 @@ export default function Posterizarr() {
                 <div className="p-4 grid grid-cols-2 gap-3">
                   <MiniStatCard
                     icon={RefreshCw}
-                    accent="primary"
+                    accent="green
                     label="Total Runs"
                     value={plexStatistics.total_runs}
                   />
@@ -610,7 +610,7 @@ export default function Posterizarr() {
                 <div className="p-4 grid grid-cols-2 gap-3 border-b border-theme">
                   <MiniStatCard
                     icon={Image}
-                    accent="primary"
+                    accent="green"
                     label="Posters"
                     value={stats.posters}
                   />
