@@ -1007,44 +1007,6 @@ export default function ArrActivity() {
 
           return (
             <div className="space-y-4">
-              {/* Instance Tabs */}
-              <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
-                {filteredHistoryInstances.map((inst) => {
-                  const isSonarr = inst.type === "sonarr";
-                  const Icon = isSonarr ? Tv : Film;
-                  const isActive = inst.id === selectedId;
-                  const recordCount =
-                    inst.totalRecords || inst.records?.length || 0;
-
-                  return (
-                    <button
-                      key={inst.id}
-                      onClick={() => {
-                        setActiveHistoryInstance(inst.id);
-                        setHistoryPage(1);
-                      }}
-                      className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                          : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                      }`}
-                    >
-                      <Icon size={14} />
-                      <span>{inst.name}</span>
-                      <span
-                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                          isActive
-                            ? "bg-black/20 text-black"
-                            : "bg-theme-hover text-theme-text-muted"
-                        }`}
-                      >
-                        {recordCount}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Active Instance Content */}
               {activeInst &&
                 (() => {
@@ -1144,6 +1106,44 @@ export default function ArrActivity() {
                             <XCircle className="w-8 h-8 text-red-500 shrink-0" />
                           </div>
                         </div>
+                      </div>
+
+                      {/* Instance Tabs */}
+                      <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
+                        {filteredHistoryInstances.map((inst) => {
+                          const tabIsSonarr = inst.type === "sonarr";
+                          const TabIcon = tabIsSonarr ? Tv : Film;
+                          const tabIsActive = inst.id === selectedId;
+                          const tabRecordCount =
+                            inst.totalRecords || inst.records?.length || 0;
+
+                          return (
+                            <button
+                              key={inst.id}
+                              onClick={() => {
+                                setActiveHistoryInstance(inst.id);
+                                setHistoryPage(1);
+                              }}
+                              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
+                                tabIsActive
+                                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                              }`}
+                            >
+                              <TabIcon size={14} />
+                              <span>{inst.name}</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                  tabIsActive
+                                    ? "bg-black/20 text-black"
+                                    : "bg-theme-hover text-theme-text-muted"
+                                }`}
+                              >
+                                {tabRecordCount}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
 
                       <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">

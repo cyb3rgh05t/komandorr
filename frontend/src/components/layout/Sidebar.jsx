@@ -47,6 +47,7 @@ export default function Sidebar() {
     uploader: false,
     vodplexsync: false,
     autoscan: false,
+    posterizarr: false,
   });
 
   // Toggle tab expansion
@@ -630,7 +631,20 @@ export default function Sidebar() {
     {
       label: "Posterizarr",
       icon: Palette,
-      path: "/posterizarr",
+      isTab: true,
+      tabName: "posterizarr",
+      items: [
+        {
+          path: "/posterizarr?tab=overview",
+          label: t("posterizarr.tabs.overview", "Overview"),
+          icon: LayoutDashboard,
+        },
+        {
+          path: "/posterizarr?tab=history",
+          label: t("posterizarr.tabs.history", "History"),
+          icon: History,
+        },
+      ],
     },
     {
       label: "External Apps",
@@ -942,6 +956,13 @@ export default function Sidebar() {
                             const autoscanErrorSubBadge =
                               isAutoscanOverview && autoscanErrorCount > 0;
 
+                            // Posterizarr Overview sub-item: error badge
+                            const isPosterizarrOverview =
+                              subItem.path === "/posterizarr?tab=overview";
+                            const posterizarrErrorSubBadge =
+                              isPosterizarrOverview &&
+                              posterizarrErrorCount > 0;
+
                             // Build array of badges to show
                             const badges = [];
 
@@ -1035,6 +1056,12 @@ export default function Sidebar() {
                             if (autoscanErrorSubBadge) {
                               badges.push({
                                 count: autoscanErrorCount,
+                                color: "bg-red-500",
+                              });
+                            }
+                            if (posterizarrErrorSubBadge) {
+                              badges.push({
+                                count: posterizarrErrorCount,
                                 color: "bg-red-500",
                               });
                             }
