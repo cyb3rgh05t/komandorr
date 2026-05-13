@@ -192,7 +192,7 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
                 {targetEntries.map((tg) => (
                   <div
                     key={`${tg.type}-${tg.name}`}
-                    className="bg-theme-hover/40 border border-theme rounded-lg p-4 flex items-center gap-3"
+                    className="bg-theme-hover border border-theme rounded-lg p-4 flex items-center gap-3"
                   >
                     <Server className="w-4 h-4 text-theme-primary shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -323,7 +323,7 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
                 return (
                   <div
                     key={`${h.folder || i}-${i}`}
-                    className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                    className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                   >
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       {ok ? (
@@ -678,3 +678,4 @@ export default function Autoscan() {
     </div>
   );
 }
+

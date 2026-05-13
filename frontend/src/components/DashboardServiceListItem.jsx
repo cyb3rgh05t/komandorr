@@ -102,7 +102,7 @@ export default function DashboardServiceListItem({
       <div className="hidden md:flex items-center gap-3 flex-shrink-0">
         {/* Response Time */}
         {service.response_time && (
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-md">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-theme-hover border border-theme rounded-md">
             <Zap size={11} className="text-theme-primary" />
             <span className="text-xs font-bold text-theme-primary">
               {Math.round(service.response_time)}ms
@@ -112,7 +112,7 @@ export default function DashboardServiceListItem({
 
         {/* Last Check */}
         {service.last_check && (
-          <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-md">
+          <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-theme-hover border border-theme rounded-md">
             <Clock size={11} className="text-theme-text-muted" />
             <span className="text-xs font-bold text-theme-text">
               {formatDistanceToNow(service.last_check)}
@@ -203,3 +203,4 @@ export default function DashboardServiceListItem({
     </a>
   );
 }
+

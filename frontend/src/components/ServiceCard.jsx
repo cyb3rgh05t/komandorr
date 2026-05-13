@@ -89,11 +89,11 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
             </h3>
             <div className="flex flex-wrap items-center gap-1.5">
               {service.description && (
-                <span className="px-2.5 py-1 bg-theme-hover/50 border border-theme rounded-lg text-xs font-medium text-theme-text-muted backdrop-blur-sm">
+                <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-lg text-xs font-medium text-theme-text-muted backdrop-blur-sm">
                   {service.description}
                 </span>
               )}
-              <span className="px-2.5 py-1 bg-theme-hover/50 border border-theme rounded-lg text-xs font-medium text-theme-text-muted backdrop-blur-sm">
+              <span className="px-2.5 py-1 bg-theme-hover border border-theme rounded-lg text-xs font-medium text-theme-text-muted backdrop-blur-sm">
                 {t(`service.types.${service.type}`)}
               </span>
             </div>
@@ -135,7 +135,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
           href={service.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block px-3 py-2 bg-gradient-to-r from-theme-hover to-theme-card border border-theme rounded-lg text-xs text-theme-primary hover:text-theme-primary-hover hover:border-theme-primary/50 hover:shadow-md transition-all truncate font-medium"
+          className="block px-3 py-2 bg-theme-hover border border-theme rounded-lg text-xs text-theme-primary hover:text-theme-primary-hover hover:border-theme-primary/50 hover:shadow-md transition-all truncate font-medium"
         >
           {service.url}
         </a>
@@ -145,7 +145,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
       <div className="grid grid-cols-2 gap-2 mb-4">
         {/* Response Time */}
         {service.response_time && (
-          <div className="flex flex-col gap-1 px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg hover:border-theme-primary/30 transition-all shadow-sm">
+          <div className="flex flex-col gap-1 px-3 py-2 bg-theme-hover border border-theme rounded-lg hover:border-theme-primary/30 transition-all shadow-sm">
             <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
               {t("service.responseTime")}
             </span>
@@ -157,7 +157,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
 
         {/* Last Check */}
         {service.last_check && (
-          <div className="flex flex-col gap-1 px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg hover:border-theme-primary/30 transition-all shadow-sm">
+          <div className="flex flex-col gap-1 px-3 py-2 bg-theme-hover border border-theme rounded-lg hover:border-theme-primary/30 transition-all shadow-sm">
             <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
               {t("service.lastCheck")}
             </span>
@@ -168,7 +168,7 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
         )}
 
         {/* Service ID */}
-        <div className="col-span-2 flex items-center justify-between px-3 py-2 bg-gradient-to-br from-theme-hover to-theme-card border border-theme rounded-lg">
+        <div className="col-span-2 flex items-center justify-between px-3 py-2 bg-theme-hover border border-theme rounded-lg">
           <span className="text-[10px] font-semibold text-theme-text-muted uppercase tracking-wide">
             Service ID
           </span>
@@ -233,3 +233,5 @@ export default function ServiceCard({ service, onCheck, onEdit, onDelete }) {
     </a>
   );
 }
+
+

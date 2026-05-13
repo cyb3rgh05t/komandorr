@@ -1187,7 +1187,7 @@ export default function ArrActivity() {
                               return (
                                 <div
                                   key={record.id || idx}
-                                  className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                                  className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                                 >
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <div
@@ -1307,3 +1307,4 @@ export default function ArrActivity() {
     </div>
   );
 }
+

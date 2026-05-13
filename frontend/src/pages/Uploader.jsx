@@ -961,7 +961,7 @@ export default function Uploader() {
                     return (
                       <div
                         key={`${job.file_name}-${index}`}
-                        className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                        className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                       >
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1225,3 +1225,4 @@ export default function Uploader() {
 function Section({ children }) {
   return <section className="space-y-3">{children}</section>;
 }
+

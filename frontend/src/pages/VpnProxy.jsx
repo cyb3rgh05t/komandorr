@@ -522,7 +522,7 @@ export default function VpnProxy() {
                   : null;
 
                 return (
-                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
+                  <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
                     <p className="text-[10px] text-theme-text-muted uppercase tracking-wider font-semibold">
                       HTTP Proxy
                     </p>
@@ -613,7 +613,7 @@ export default function VpnProxy() {
                   : null;
 
                 return (
-                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
+                  <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
                     <p className="text-[10px] text-theme-text-muted uppercase tracking-wider font-semibold">
                       Shadowsocks
                     </p>
@@ -703,7 +703,7 @@ export default function VpnProxy() {
                   : null;
 
                 return (
-                  <div className="bg-theme-hover/50 border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
+                  <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3 col-span-2 space-y-2.5">
                     <p className="text-[10px] text-theme-text-muted uppercase tracking-wider font-semibold">
                       SOCKS5 Proxy
                     </p>
@@ -774,7 +774,7 @@ export default function VpnProxy() {
 
             {/* Extra Ports */}
             {container.extra_ports?.length > 0 && (
-              <div className="bg-theme-hover/50 border border-theme rounded-lg px-3 py-2">
+              <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                 <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
                   Extra Ports
                 </p>
@@ -786,7 +786,7 @@ export default function VpnProxy() {
 
             {/* Network */}
             {container.network_name && (
-              <div className="bg-theme-hover/50 border border-theme rounded-lg px-3 py-2">
+              <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
                 <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-0.5">
                   Network
                 </p>
@@ -799,7 +799,7 @@ export default function VpnProxy() {
 
           {/* Dependent Containers */}
           {deps.length > 0 && (
-            <div className="bg-theme-hover/50 border border-theme rounded-lg px-3 py-2">
+            <div className="bg-theme-hover border border-theme rounded-lg px-3 py-2">
               <p className="text-[10px] text-theme-text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
                 <Network className="w-3.5 h-3.5" />
                 Network Clients ({deps.length})
@@ -1291,3 +1291,4 @@ export default function VpnProxy() {
     </div>
   );
 }
+

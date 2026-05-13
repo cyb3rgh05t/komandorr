@@ -505,7 +505,7 @@ export default function Posterizarr() {
                     {schedules.map((s, i) => (
                       <div
                         key={`s-${i}`}
-                        className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                        className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                       >
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <Clock className="w-4 h-4 text-theme-text-muted shrink-0" />
@@ -524,7 +524,7 @@ export default function Posterizarr() {
                     {activeJobs.map((job, i) => (
                       <div
                         key={`j-${i}`}
-                        className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                        className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                       >
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <Play className="w-4 h-4 text-green-400 shrink-0" />
@@ -640,7 +640,7 @@ export default function Posterizarr() {
                       {assetFolders.map((folder, i) => (
                         <div
                           key={i}
-                          className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                          className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                         >
                           <div className="flex items-center gap-2 flex-wrap mb-1">
                             <FolderOpen className="w-4 h-4 text-theme-primary shrink-0" />
@@ -698,7 +698,7 @@ export default function Posterizarr() {
                   return (
                     <div
                       key={item.id || i}
-                      className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                      className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
                     >
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         {isSuccess ? (
@@ -883,3 +883,4 @@ function MiniStatCard({
     </div>
   );
 }
+

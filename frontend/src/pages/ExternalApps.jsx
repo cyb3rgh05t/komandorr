@@ -162,7 +162,7 @@ function SortableAppCard({ app, getIcon, t, editMode }) {
         onClick={handleClick}
         className="contents"
       >
-        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-theme-hover to-theme-card border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
+        <div className="relative w-14 h-14 rounded-2xl bg-theme-hover border border-theme group-hover:border-theme-primary/40 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-theme-primary/10">
           {isImageUrl ? (
             <img
               src={app.icon}
@@ -701,3 +701,4 @@ export default function ExternalApps() {
     </div>
   );
 }
+

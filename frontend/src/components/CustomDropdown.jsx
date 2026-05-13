@@ -28,7 +28,7 @@ export default function CustomDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 pr-10 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg text-theme-text hover:border-theme-primary hover:bg-theme-hover focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus-visible:outline-none transition-all cursor-pointer text-left flex items-center justify-between"
+        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg text-theme-text hover:border-theme-primary hover:bg-theme-hover focus:ring-2 focus:ring-theme-primary focus:border-theme-primary focus-visible:outline-none transition-all cursor-pointer text-left flex items-center justify-between"
       >
         <span>{selectedOption?.label || value}</span>
         <ChevronDown
@@ -61,3 +61,4 @@ export default function CustomDropdown({
     </div>
   );
 }
+

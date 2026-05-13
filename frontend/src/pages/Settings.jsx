@@ -1129,7 +1129,7 @@ export default function Settings() {
                   <div className="relative">
                     {/* Enable/Disable Auth */}
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                      <div className="flex items-center justify-between p-4 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
                         <div>
                           <h3 className="font-medium text-theme-text mb-1">
                             {t("auth.enableAuth")}
@@ -1365,7 +1365,7 @@ export default function Settings() {
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-theme-hover/50 backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
+                      <div className="flex items-center justify-between p-4 bg-theme-hover backdrop-blur-sm border border-theme rounded-lg hover:border-theme-primary/30 transition-colors">
                         <div>
                           <h3 className="font-medium text-theme-text mb-1">
                             {t("settings.enableFileLogging")}
@@ -4099,7 +4099,7 @@ export default function Settings() {
 
                 <div className="relative space-y-5">
                   {/* Enable Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-theme-hover/50 border border-theme rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-theme-hover border border-theme rounded-lg">
                     <div>
                       <span className="text-sm font-medium text-theme-text">
                         {t("settings.enableTelegram") ||
@@ -4199,7 +4199,7 @@ export default function Settings() {
                     {telegramTargets.map((target, idx) => (
                       <div
                         key={target.id}
-                        className="p-3 bg-theme-hover/30 border border-theme rounded-lg space-y-2"
+                        className="p-3 bg-theme-hover border border-theme rounded-lg space-y-2"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-theme-muted uppercase tracking-wide">
@@ -4703,7 +4703,7 @@ export default function Settings() {
                       {arrInstances.map((inst, idx) => (
                         <div
                           key={inst.id || idx}
-                          className="p-4 bg-theme-hover/50 border border-theme rounded-lg"
+                          className="p-4 bg-theme-hover border border-theme rounded-lg"
                         >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -4924,7 +4924,7 @@ export default function Settings() {
                     {showAddArr || arrInstances.length === 0 ? (
                       <div
                         ref={addArrRef}
-                        className="p-4 bg-theme-hover/50 border border-theme rounded-lg space-y-3"
+                        className="p-4 bg-theme-hover border border-theme rounded-lg space-y-3"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
@@ -5062,3 +5062,4 @@ export default function Settings() {
     </div>
   );
 }
+
