@@ -929,114 +929,81 @@ export default function Uploader() {
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}
-                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-theme-primary" />
-                    <h3 className="text-lg font-semibold text-theme-text">
-                      {t("uploader.sections.completed", "Completed Uploads")}
-                    </h3>
-                    {totalCompleted > 0 && (
-                      <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                        {totalCompleted}
-                      </span>
-                    )}
-                  </div>
+                <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-base font-semibold text-theme-text">
+                    {t("uploader.sections.completed", "Completed Uploads")}
+                  </h3>
+                  {totalCompleted > 0 && (
+                    <span className="ml-auto text-xs text-theme-text-muted">
+                      {totalCompleted} total
+                    </span>
+                  )}
                 </div>
-                <div className="overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] text-sm">
-                      <thead>
-                        <tr className="border-b border-theme-primary">
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.filename")}
+                <div className="p-4 space-y-2">
+                  {(!filteredCompletedJobs ||
+                    filteredCompletedJobs.length === 0) && (
+                    <div className="py-6 px-4 text-center text-sm text-theme-text-muted">
+                      {completedLoading
+                        ? t("common.loading")
+                        : t("uploader.empty.completed")}
+                    </div>
+                  )}
+                  {filteredCompletedJobs?.map((job, index) => {
+                    const normalizedDir =
+                      job.file_directory &&
+                      job.drive &&
+                      job.file_directory.startsWith(`${job.drive}/`)
+                        ? job.file_directory.slice(job.drive.length + 1)
+                        : job.file_directory || "";
+                    const completedAt =
+                      job.time_end_clean || job.time_end || "";
+                    return (
+                      <div
+                        key={`${job.file_name}-${index}`}
+                        className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                          {completedAt && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                              {completedAt}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.drive")}
+                          )}
+                          {job.drive && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-orange-500/15 text-orange-400 border-orange-500/30 lowercase">
+                              <HardDrive className="w-3 h-3" />
+                              {job.drive}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.directory")}
+                          )}
+                          {job.gdsa && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30 lowercase">
+                              {job.gdsa}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.key")}
+                          )}
+                          {job.file_size && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                              {job.file_size}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.size")}
+                          )}
+                          {job.time_elapsed && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-theme-card text-theme-text-muted border-theme">
+                              <Clock className="w-3 h-3" />
+                              {job.time_elapsed}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.duration")}
-                            </span>
-                          </th>
-                          <th className="text-right py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.completedAt")}
-                            </span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(!filteredCompletedJobs ||
-                          filteredCompletedJobs.length === 0) && (
-                          <tr>
-                            <td
-                              className="py-6 px-4 text-center text-theme-text-secondary"
-                              colSpan={7}
-                            >
-                              {completedLoading
-                                ? t("common.loading")
-                                : t("uploader.empty.completed")}
-                            </td>
-                          </tr>
+                          )}
+                        </div>
+                        <p className="text-sm font-mono text-theme-text truncate pl-6">
+                          {job.file_name}
+                        </p>
+                        {normalizedDir && (
+                          <p className="text-xs font-mono text-theme-text-muted truncate pl-6">
+                            {normalizedDir}
+                          </p>
                         )}
-                        {filteredCompletedJobs?.map((job, index) => {
-                          const normalizedDir =
-                            job.file_directory &&
-                            job.drive &&
-                            job.file_directory.startsWith(`${job.drive}/`)
-                              ? job.file_directory.slice(job.drive.length + 1)
-                              : job.file_directory || "";
-                          return (
-                            <tr
-                              key={`${job.file_name}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                            >
-                              <td className="py-3 px-4 font-medium truncate max-w-[300px]">
-                                {job.file_name}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {job.drive || "-"}
-                              </td>
-                              <td className="py-3 px-4 truncate max-w-[280px]">
-                                {normalizedDir || "-"}
-                              </td>
-                              <td className="py-3 px-4 truncate max-w-[120px]">
-                                {job.gdsa || "-"}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {job.file_size || "-"}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {job.time_elapsed || "-"}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap text-right">
-                                {job.time_end_clean || job.time_end || "-"}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {/* Pagination - pill style like Plex pages, outside the card */}

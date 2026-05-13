@@ -311,25 +311,33 @@ export default function Posterizarr() {
           {/* ── Stat Cards ── */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {/* Status */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
+            <div
+              className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all ${
+                status.running
+                  ? "hover:border-green-500/50 hover:bg-green-500/10"
+                  : "hover:border-theme-primary/50 hover:bg-theme-primary/10"
+              }`}
+            >
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     {status.running ? (
-                      <Play className="w-3 h-3 text-green-400" />
+                      <Play className="w-3 h-3 text-green-500" />
                     ) : (
                       <Pause className="w-3 h-3 text-theme-text-muted" />
                     )}
                     Status
                   </p>
                   <p
-                    className={`text-2xl font-bold ${status.running ? "text-green-400" : "text-theme-text"} truncate`}
+                    className={`text-2xl font-bold truncate ${
+                      status.running ? "text-green-500" : "text-theme-text"
+                    }`}
                   >
                     {status.running ? "Running" : "Idle"}
                   </p>
                 </div>
                 {status.running ? (
-                  <Play className="w-8 h-8 text-green-400 shrink-0" />
+                  <Play className="w-8 h-8 text-green-500 shrink-0" />
                 ) : (
                   <Pause className="w-8 h-8 text-theme-text-muted shrink-0" />
                 )}
@@ -337,43 +345,55 @@ export default function Posterizarr() {
             </div>
 
             {/* Version */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
+            <div
+              className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all ${
+                version.is_update_available
+                  ? "hover:border-yellow-500/50 hover:bg-yellow-500/10"
+                  : "hover:border-blue-500/50 hover:bg-blue-500/10"
+              }`}
+            >
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     {version.is_update_available ? (
-                      <ArrowUpCircle className="w-3 h-3 text-yellow-400" />
+                      <ArrowUpCircle className="w-3 h-3 text-yellow-500" />
                     ) : (
-                      <CheckCircle className="w-3 h-3 text-green-400" />
+                      <CheckCircle className="w-3 h-3 text-blue-500" />
                     )}
                     Version
                   </p>
-                  <p className="text-2xl font-bold text-theme-text truncate">
+                  <p
+                    className={`text-2xl font-bold truncate ${
+                      version.is_update_available
+                        ? "text-yellow-500"
+                        : "text-blue-500"
+                    }`}
+                  >
                     {version.local || "—"}
                   </p>
                   {version.is_update_available && (
-                    <p className="text-[10px] text-yellow-400 truncate">
+                    <p className="text-[10px] text-yellow-500 truncate">
                       Update: {version.remote}
                     </p>
                   )}
                 </div>
                 {version.is_update_available ? (
-                  <ArrowUpCircle className="w-8 h-8 text-yellow-400 shrink-0" />
+                  <ArrowUpCircle className="w-8 h-8 text-yellow-500 shrink-0" />
                 ) : (
-                  <CheckCircle className="w-8 h-8 text-green-400 shrink-0" />
+                  <CheckCircle className="w-8 h-8 text-blue-500 shrink-0" />
                 )}
               </div>
             </div>
 
             {/* Next Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary/50 hover:bg-theme-primary/10">
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-theme-primary" />
                     Next Run
                   </p>
-                  <p className="text-lg font-bold text-theme-text truncate">
+                  <p className="text-2xl font-bold text-theme-primary truncate">
                     {formatTimestamp(
                       schedulerStatus.next_run || scheduler?.next_run,
                     )}
@@ -384,14 +404,14 @@ export default function Posterizarr() {
             </div>
 
             {/* Last Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 transition-all">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-amber-500/50 hover:bg-amber-500/10">
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Timer className="w-3 h-3 text-theme-text-muted" />
+                    <Timer className="w-3 h-3 text-amber-500" />
                     Last Run
                   </p>
-                  <p className="text-lg font-bold text-theme-text truncate">
+                  <p className="text-2xl font-bold text-amber-500 truncate">
                     {historyItems.length > 0
                       ? formatTimestamp(historyItems[0]?.timestamp)
                       : formatTimestamp(scheduler?.last_run)}
@@ -403,7 +423,7 @@ export default function Posterizarr() {
                       </p>
                     )}
                 </div>
-                <Timer className="w-8 h-8 text-theme-text-muted shrink-0" />
+                <Timer className="w-8 h-8 text-amber-500 shrink-0" />
               </div>
             </div>
           </div>
@@ -715,148 +735,84 @@ export default function Posterizarr() {
 
           {/* ── Runtime History (History tab) ── */}
           {subTab === "history" && historyItems.length > 0 && (
-            <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-              <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
                 <Clock className="w-5 h-5 text-theme-primary" />
-                <h3 className="text-lg font-semibold text-theme-text">
+                <h3 className="text-base font-semibold text-theme-text">
                   Runtime History
                 </h3>
                 {history?.total != null && (
-                  <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
+                  <span className="ml-auto text-xs text-theme-text-muted">
+                    Last {Math.min(historyItems.length, history.total)} of{" "}
                     {history.total} runs
                   </span>
                 )}
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-theme-primary">
-                      <th className="text-left py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Date
+              <div className="p-4 space-y-2">
+                {historyItems.map((item, i) => {
+                  const isSuccess =
+                    item.status === "completed" || item.status === "success";
+                  const modeBadge =
+                    item.mode === "scheduled"
+                      ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                      : item.mode === "manual"
+                        ? "bg-purple-500/15 text-purple-400 border-purple-500/30"
+                        : "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
+                  return (
+                    <div
+                      key={item.id || i}
+                      className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                    >
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        {isSuccess ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-red-400 shrink-0" />
+                        )}
+                        <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                          {formatTime(item.timestamp)}
                         </span>
-                      </th>
-                      <th className="text-left py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Time
-                        </span>
-                      </th>
-                      <th className="text-left py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Mode
-                        </span>
-                      </th>
-                      <th className="text-left py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Duration
-                        </span>
-                      </th>
-                      <th className="text-right py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Images
-                        </span>
-                      </th>
-                      <th className="text-right py-3 px-2 hidden sm:table-cell">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Errors
-                        </span>
-                      </th>
-                      <th className="text-right py-3 px-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                          Status
-                        </span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historyItems.map((item, i) => {
-                      const isSuccess =
-                        item.status === "completed" ||
-                        item.status === "success";
-                      return (
-                        <tr
-                          key={item.id || i}
-                          className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border lowercase ${modeBadge}`}
                         >
-                          <td className="px-3 py-2.5">
-                            <span className="text-sm font-bold text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                              {formatDate(item.timestamp)}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span className="text-sm font-bold text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                              {formatTime(item.timestamp)}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            {item.mode === "scheduled" ? (
-                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-500/10 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/20">
-                                <Calendar className="w-3 h-3" />
-                                <span className="text-[11px] font-semibold capitalize">
-                                  Scheduled
-                                </span>
-                              </div>
-                            ) : item.mode === "manual" ? (
-                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-purple-500/20 to-purple-500/10 text-purple-400 border border-purple-500/30 shadow-sm shadow-purple-500/20">
-                                <Play className="w-3 h-3" />
-                                <span className="text-[11px] font-semibold capitalize">
-                                  Manual
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-yellow-500/20 to-yellow-500/10 text-yellow-400 border border-yellow-500/30 shadow-sm shadow-yellow-500/20">
-                                <span className="text-[11px] font-semibold capitalize">
-                                  {item.mode || "—"}
-                                </span>
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span className="text-xs font-bold text-theme-text font-mono whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                              {item.runtime_formatted || "—"}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                              {item.total_images ?? "—"}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-right hidden sm:table-cell">
-                            <span
-                              className={`text-xs font-bold font-mono ${
-                                item.errors > 0
-                                  ? "text-red-400"
-                                  : "text-theme-text-muted"
-                              }`}
-                            >
-                              {item.errors ?? "—"}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <div
-                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border shadow-sm ${
-                                isSuccess
-                                  ? "bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border-green-500/30 shadow-green-500/20"
-                                  : "bg-gradient-to-br from-red-500/20 to-red-500/10 text-red-400 border-red-500/30 shadow-red-500/20"
-                              }`}
-                            >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isSuccess
-                                    ? "bg-green-400 animate-pulse"
-                                    : "bg-red-400"
-                                }`}
-                              />
-                              <span className="text-[11px] font-semibold capitalize whitespace-nowrap">
-                                {item.status || "unknown"}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          {item.mode === "scheduled" && (
+                            <Calendar className="w-3 h-3" />
+                          )}
+                          {item.mode === "manual" && (
+                            <Play className="w-3 h-3" />
+                          )}
+                          {item.mode || "—"}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${
+                            isSuccess
+                              ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                              : "bg-red-500/15 text-red-400 border-red-500/30"
+                          }`}
+                        >
+                          {item.status || "unknown"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 flex-wrap pl-6 text-xs text-theme-text-muted font-mono">
+                        <span>{formatDate(item.timestamp)}</span>
+                        <span>
+                          <Timer className="inline w-3 h-3 mr-1 -mt-0.5" />
+                          {item.runtime_formatted || "—"}
+                        </span>
+                        <span>
+                          <Image className="inline w-3 h-3 mr-1 -mt-0.5" />
+                          {item.total_images ?? "—"} images
+                        </span>
+                        {item.errors > 0 && (
+                          <span className="text-red-400">
+                            <XCircle className="inline w-3 h-3 mr-1 -mt-0.5" />
+                            {item.errors} errors
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
