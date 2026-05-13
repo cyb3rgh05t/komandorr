@@ -260,7 +260,7 @@ const StorageServiceCard = ({ service, t }) => {
 
       {/* Storage Overview */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-theme-bg-primary/50 rounded-lg p-3 border border-theme-border">
+        <div className="bg-theme-hover rounded-lg p-3 border border-theme-border">
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.total", "Total")}
           </div>
@@ -268,7 +268,7 @@ const StorageServiceCard = ({ service, t }) => {
             {formatStorageSize(totalCapacity)}
           </div>
         </div>
-        <div className="bg-theme-bg-primary/50 rounded-lg p-3 border border-theme-border">
+        <div className="bg-theme-hover rounded-lg p-3 border border-theme-border">
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.used", "Used")}
           </div>
@@ -276,7 +276,7 @@ const StorageServiceCard = ({ service, t }) => {
             {formatStorageSize(totalUsed)}
           </div>
         </div>
-        <div className="bg-theme-bg-primary/50 rounded-lg p-3 border border-theme-border">
+        <div className="bg-theme-hover rounded-lg p-3 border border-theme-border">
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.free", "Free")}
           </div>
@@ -343,7 +343,7 @@ const StorageServiceCard = ({ service, t }) => {
               {storage.storage_paths.map((path, idx) => (
                 <div
                   key={idx}
-                  className="inline-flex items-center gap-2 bg-theme-bg-primary/50 px-2.5 py-1.5 rounded text-xs"
+                  className="inline-flex items-center gap-2 bg-theme-hover border border-theme-border px-2.5 py-1.5 rounded text-xs"
                 >
                   <span className="text-theme-text font-mono">
                     {path.path.split("/").pop() || path.path}
@@ -394,7 +394,7 @@ const StorageServiceCard = ({ service, t }) => {
               {storage.storage_paths.map((path, idx) => (
                 <div
                   key={idx}
-                  className="bg-theme-bg-primary/30 rounded p-2 text-xs"
+                  className="bg-theme-hover border border-theme-border rounded p-2 text-xs"
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-theme-text font-mono">
@@ -424,7 +424,7 @@ const StorageServiceCard = ({ service, t }) => {
                 {storage.raid_arrays.map((raid, idx) => (
                   <div
                     key={idx}
-                    className="bg-theme-bg-primary/30 rounded p-2 text-xs"
+                    className="bg-theme-hover border border-theme-border rounded p-2 text-xs"
                   >
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-theme-text font-mono">
@@ -485,7 +485,7 @@ const StorageServiceCard = ({ service, t }) => {
                 {zfsPools.map((pool, idx) => (
                   <div
                     key={idx}
-                    className="bg-theme-bg-primary/30 rounded p-2 text-xs"
+                    className="bg-theme-hover border border-theme-border rounded p-2 text-xs"
                   >
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-theme-text font-mono">
@@ -1122,3 +1122,6 @@ const Storage = () => {
 };
 
 export default Storage;
+
+
+

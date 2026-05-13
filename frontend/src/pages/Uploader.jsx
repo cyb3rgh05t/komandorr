@@ -714,110 +714,73 @@ export default function Uploader() {
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}
-                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-theme-primary" />
-                    <h3 className="text-lg font-semibold text-theme-text">
-                      {t("uploader.sections.queue", "Upload Queue")}
-                    </h3>
-                    {queueFiles.length > 0 && (
-                      <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                        {queueFiles.length}
-                      </span>
-                    )}
-                  </div>
+                <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-base font-semibold text-theme-text">
+                    {t("uploader.sections.queue", "Upload Queue")}
+                  </h3>
+                  {totalQueueFiles > 0 && (
+                    <span className="ml-auto text-xs text-theme-text-muted">
+                      {totalQueueFiles} total
+                    </span>
+                  )}
                 </div>
-                <div className="overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] text-sm">
-                      <thead>
-                        <tr className="border-b border-theme-primary">
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              #
+                <div className="p-4 space-y-2">
+                  {paginatedQueueFiles.length === 0 && (
+                    <div className="py-6 px-4 text-center text-sm text-theme-text-muted">
+                      {t("uploader.empty.queue")}
+                    </div>
+                  )}
+                  {paginatedQueueFiles.map((file, index) => {
+                    const normalizedDir =
+                      file.filedir &&
+                      file.drive &&
+                      file.filedir.startsWith(`${file.drive}/`)
+                        ? file.filedir.slice(file.drive.length + 1)
+                        : file.filedir || "";
+                    const added = file.created_at
+                      ? new Date(file.created_at * 1000).toLocaleString()
+                      : "";
+                    const rowNumber =
+                      (queuePageNumber - 1) * queueItemsPerPage + index + 1;
+                    return (
+                      <div
+                        key={`${file.filename}-${index}`}
+                        className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Activity className="w-4 h-4 text-theme-primary shrink-0" />
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                            #{rowNumber}
+                          </span>
+                          {added && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                              {added}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.filename")}
+                          )}
+                          {file.drive && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-orange-500/15 text-orange-400 border-orange-500/30 lowercase">
+                              <HardDrive className="w-3 h-3" />
+                              {file.drive}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.drive")}
+                          )}
+                          {file.filesize != null && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                              {formatSize(file.filesize)}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.directory")}
-                            </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.size")}
-                            </span>
-                          </th>
-                          <th className="text-right py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.added")}
-                            </span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedQueueFiles.length === 0 && (
-                          <tr>
-                            <td
-                              className="py-6 px-4 text-center text-theme-text-secondary"
-                              colSpan={6}
-                            >
-                              {t("uploader.empty.queue")}
-                            </td>
-                          </tr>
+                          )}
+                        </div>
+                        <p className="text-sm font-mono text-theme-text truncate pl-6">
+                          {file.filename}
+                        </p>
+                        {normalizedDir && (
+                          <p className="text-xs font-mono text-theme-text-muted truncate pl-6">
+                            {normalizedDir}
+                          </p>
                         )}
-                        {paginatedQueueFiles.map((file, index) => {
-                          const normalizedDir =
-                            file.filedir &&
-                            file.drive &&
-                            file.filedir.startsWith(`${file.drive}/`)
-                              ? file.filedir.slice(file.drive.length + 1)
-                              : file.filedir || "";
-                          const added = file.created_at
-                            ? new Date(file.created_at * 1000).toLocaleString()
-                            : "-";
-                          const rowNumber =
-                            (queuePageNumber - 1) * queueItemsPerPage +
-                            index +
-                            1;
-                          return (
-                            <tr
-                              key={`${file.filename}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                            >
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {rowNumber}
-                              </td>
-                              <td className="py-3 px-4 font-medium truncate max-w-[220px]">
-                                {file.filename}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {file.drive || "-"}
-                              </td>
-                              <td className="py-3 px-4 truncate max-w-[220px]">
-                                {normalizedDir || "-"}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {formatSize(file.filesize)}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap text-right">
-                                {added}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               {/* Queue Pagination */}
@@ -1107,111 +1070,76 @@ export default function Uploader() {
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}
-                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-theme-primary" />
-                    <h3 className="text-lg font-semibold text-theme-text">
-                      {t("uploader.sections.failed", "Failed Uploads")}
-                    </h3>
-                    {failedJobs.length > 0 && (
-                      <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary text-xs font-medium rounded-full">
-                        {failedJobs.length}
-                      </span>
-                    )}
-                  </div>
+                <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-theme-primary" />
+                  <h3 className="text-base font-semibold text-theme-text">
+                    {t("uploader.sections.failed", "Failed Uploads")}
+                  </h3>
+                  {failedJobs.length > 0 && (
+                    <span className="ml-auto text-xs text-theme-text-muted">
+                      {failedJobs.length} total
+                    </span>
+                  )}
                 </div>
-                <div className="overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] text-sm">
-                      <thead>
-                        <tr className="border-b border-theme-primary">
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.filename")}
+                <div className="p-4 space-y-2">
+                  {(!failedJobs || failedJobs.length === 0) && (
+                    <div className="py-6 px-4 text-center text-sm text-theme-text-muted">
+                      {failedLoading
+                        ? t("common.loading")
+                        : t("uploader.empty.failed", "No failed uploads")}
+                    </div>
+                  )}
+                  {failedJobs?.map((job, index) => {
+                    const normalizedDir =
+                      job.file_directory &&
+                      job.drive &&
+                      job.file_directory.startsWith(`${job.drive}/`)
+                        ? job.file_directory.slice(job.drive.length + 1)
+                        : job.file_directory || "";
+                    const failedAt = job.time_end_clean || job.time_end || "";
+                    return (
+                      <div
+                        key={`${job.file_name}-${index}`}
+                        className="bg-theme-hover border border-theme rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                          {failedAt && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                              {failedAt}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.drive")}
+                          )}
+                          {job.drive && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-orange-500/15 text-orange-400 border-orange-500/30 lowercase">
+                              <HardDrive className="w-3 h-3" />
+                              {job.drive}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.directory")}
+                          )}
+                          {job.file_size && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                              {job.file_size}
                             </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.size")}
-                            </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.error", "Error")}
-                            </span>
-                          </th>
-                          <th className="text-right py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              {t("uploader.table.failedAt", "Failed At")}
-                            </span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(!failedJobs || failedJobs.length === 0) && (
-                          <tr>
-                            <td
-                              className="py-6 px-4 text-center text-theme-text-secondary"
-                              colSpan={6}
+                          )}
+                          {job.error_message && (
+                            <span
+                              className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-rose-500/15 text-rose-400 border-rose-500/30 max-w-[260px] truncate cursor-help"
+                              title={job.error_message}
                             >
-                              {failedLoading
-                                ? t("common.loading")
-                                : t(
-                                    "uploader.empty.failed",
-                                    "No failed uploads",
-                                  )}
-                            </td>
-                          </tr>
+                              {job.error_message}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-mono text-theme-text truncate pl-6">
+                          {job.file_name}
+                        </p>
+                        {normalizedDir && (
+                          <p className="text-xs font-mono text-theme-text-muted truncate pl-6">
+                            {normalizedDir}
+                          </p>
                         )}
-                        {failedJobs?.map((job, index) => {
-                          const normalizedDir =
-                            job.file_directory &&
-                            job.drive &&
-                            job.file_directory.startsWith(`${job.drive}/`)
-                              ? job.file_directory.slice(job.drive.length + 1)
-                              : job.file_directory || "";
-                          return (
-                            <tr
-                              key={`${job.file_name}-${index}`}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                            >
-                              <td className="py-3 px-4 font-medium truncate max-w-[220px]">
-                                {job.file_name}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {job.drive || "-"}
-                              </td>
-                              <td className="py-3 px-4 truncate max-w-[220px]">
-                                {normalizedDir || "-"}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
-                                {job.file_size || "-"}
-                              </td>
-                              <td
-                                className="py-3 px-4 truncate max-w-[200px] text-red-400 cursor-help"
-                                title={job.error_message || ""}
-                              >
-                                {job.error_message || "-"}
-                              </td>
-                              <td className="py-3 px-4 whitespace-nowrap text-right">
-                                {job.time_end_clean || job.time_end || "-"}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </Section>
@@ -1225,4 +1153,3 @@ export default function Uploader() {
 function Section({ children }) {
   return <section className="space-y-3">{children}</section>;
 }
-

@@ -551,7 +551,7 @@ export default function VODPortal() {
                     value={formData.username}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+                    className="w-full px-4 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
                     placeholder={
                       t("vodPortal.usernamePlaceholder") || "Enter username"
                     }
@@ -578,7 +578,7 @@ export default function VODPortal() {
                     value={formData.password}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+                    className="w-full px-4 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
                     placeholder={
                       t("vodPortal.passwordPlaceholder") || "Enter password"
                     }
@@ -607,7 +607,7 @@ export default function VODPortal() {
                   name="email_domain"
                   value={formData.email_domain}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-theme-card border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
+                  className="w-full px-4 py-2 bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-theme-text text-sm placeholder-theme-text-muted transition-all focus:outline-none focus:border-theme-primary"
                   placeholder={
                     t("vodPortal.emailDomainPlaceholder") || "example.com"
                   }

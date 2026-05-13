@@ -864,7 +864,7 @@ function MiniStatCard({
           : value
       : "—";
   return (
-    <div className="group flex items-center gap-3 p-3 rounded-lg bg-theme-bg/40 border border-theme hover:border-theme-primary hover:bg-theme-primary/5 hover:shadow-md transition-all">
+    <div className="group flex items-center gap-3 p-3 rounded-lg bg-theme-hover border border-theme hover:border-theme-primary hover:shadow-md transition-all">
       <div
         className={`p-2 rounded-lg ${a.bg} ${a.text} border ${a.border} shrink-0`}
       >
@@ -883,4 +883,3 @@ function MiniStatCard({
     </div>
   );
 }
-
