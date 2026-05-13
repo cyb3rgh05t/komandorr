@@ -1167,142 +1167,69 @@ export default function ArrActivity() {
                             <p>No history records</p>
                           </div>
                         ) : (
-                          <div className="overflow-hidden">
-                            <div className="overflow-x-auto">
-                              <table className="w-full min-w-[900px] text-sm">
-                                <thead>
-                                  <tr className="border-b border-theme-primary">
-                                    <th className="text-left py-3 px-2">
-                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                        {isSonarr ? "Series" : "Movie"}
+                          <div className="p-4 space-y-2">
+                            {filteredRecords.map((record, idx) => {
+                              const evt = getEventIcon(record.eventType);
+                              const EvtIcon = evt.icon;
+                              const seriesTitle = isSonarr
+                                ? record.series?.title ||
+                                  record.sourceTitle ||
+                                  "Unknown"
+                                : record.movie?.title ||
+                                  record.sourceTitle ||
+                                  "Unknown";
+                              const episodeCode = record.episode
+                                ? `S${String(record.episode.seasonNumber || 0).padStart(2, "0")}E${String(record.episode.episodeNumber || 0).padStart(2, "0")}`
+                                : null;
+                              const episodeTitle = record.episode?.title || "";
+                              const qualityName =
+                                record.quality?.quality?.name || "";
+                              return (
+                                <div
+                                  key={record.id || idx}
+                                  className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                                >
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <div
+                                      className={`inline-flex items-center justify-center w-5 h-5 rounded ${evt.bg} ${evt.color} border ${evt.border} shrink-0`}
+                                      title={evt.label}
+                                    >
+                                      <EvtIcon size={11} />
+                                    </div>
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                                      <Clock className="w-3 h-3" />
+                                      {formatDate(record.date)}
+                                    </span>
+                                    {episodeCode && (
+                                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text">
+                                        {episodeCode}
                                       </span>
-                                    </th>
-                                    {isSonarr && (
-                                      <th className="text-left py-3 px-2">
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                          Episode
-                                        </span>
-                                      </th>
                                     )}
-                                    {isSonarr && (
-                                      <th className="text-left py-3 px-2">
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                          Episode Title
-                                        </span>
-                                      </th>
+                                    {qualityName && (
+                                      <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                                        {qualityName}
+                                      </span>
                                     )}
-                                    <th className="text-left py-3 px-2">
-                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                        Quality
-                                      </span>
-                                    </th>
-                                    <th className="text-left py-3 px-2">
-                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                        Formats
-                                      </span>
-                                    </th>
-                                    <th className="text-right py-3 px-2">
-                                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                        Date
-                                      </span>
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {filteredRecords.map((record, idx) => {
-                                    const evt = getEventIcon(record.eventType);
-                                    const seriesTitle = isSonarr
-                                      ? record.series?.title ||
-                                        record.sourceTitle ||
-                                        "Unknown"
-                                      : record.movie?.title ||
-                                        record.sourceTitle ||
-                                        "Unknown";
-                                    const episodeCode = record.episode
-                                      ? `S${String(record.episode.seasonNumber || 0).padStart(2, "0")}E${String(record.episode.episodeNumber || 0).padStart(2, "0")}`
-                                      : "—";
-                                    const episodeTitle =
-                                      record.episode?.title || "—";
-                                    const customFormats =
-                                      record.customFormats
-                                        ?.map((f) => f.name)
-                                        .join(", ") || "—";
-
-                                    return (
-                                      <tr
-                                        key={record.id || idx}
-                                        className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
+                                    {record.customFormats?.map((f, i) => (
+                                      <span
+                                        key={i}
+                                        className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-purple-500/15 text-purple-400 border-purple-500/30"
                                       >
-                                        <td className="py-3 px-4">
-                                          <div className="flex items-center gap-2 min-w-0">
-                                            <div
-                                              className={`flex-shrink-0 inline-flex items-center justify-center w-5 h-5 rounded ${evt.bg} ${evt.color} border ${evt.border}`}
-                                              title={evt.label}
-                                            >
-                                              {(() => {
-                                                const EvtIcon = evt.icon;
-                                                return <EvtIcon size={11} />;
-                                              })()}
-                                            </div>
-                                            <span className="font-medium text-theme-text truncate max-w-[250px] group-hover:text-theme-primary transition-colors">
-                                              {seriesTitle}
-                                            </span>
-                                          </div>
-                                        </td>
-                                        {isSonarr && (
-                                          <td className="py-3 px-4">
-                                            <span className="text-sm text-theme-text font-mono">
-                                              {episodeCode}
-                                            </span>
-                                          </td>
-                                        )}
-                                        {isSonarr && (
-                                          <td className="py-3 px-4">
-                                            <span className="text-sm text-theme-text truncate max-w-[200px] block">
-                                              {episodeTitle}
-                                            </span>
-                                          </td>
-                                        )}
-                                        <td className="py-3 px-4">
-                                          <span className="text-sm text-theme-text">
-                                            {record.quality?.quality?.name ||
-                                              "—"}
-                                          </span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                          {customFormats !== "—" ? (
-                                            <div className="flex flex-wrap gap-1">
-                                              {record.customFormats.map(
-                                                (f, i) => (
-                                                  <span
-                                                    key={i}
-                                                    className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                                                  >
-                                                    {f.name}
-                                                  </span>
-                                                ),
-                                              )}
-                                            </div>
-                                          ) : (
-                                            <span className="text-xs text-theme-text-muted">
-                                              —
-                                            </span>
-                                          )}
-                                        </td>
-                                        <td className="py-3 px-4 text-right">
-                                          <div className="flex items-center gap-1 justify-end">
-                                            <Clock className="w-3 h-3 text-theme-text-muted" />
-                                            <span className="text-sm text-theme-text whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                                              {formatDate(record.date)}
-                                            </span>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
+                                        {f.name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <p className="text-sm font-medium text-theme-text truncate pl-7">
+                                    {seriesTitle}
+                                  </p>
+                                  {isSonarr && episodeTitle && (
+                                    <p className="text-xs text-theme-text-muted truncate pl-7">
+                                      {episodeTitle}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

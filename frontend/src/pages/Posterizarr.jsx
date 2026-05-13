@@ -315,7 +315,7 @@ export default function Posterizarr() {
               className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all ${
                 status.running
                   ? "hover:border-green-500/50 hover:bg-green-500/10"
-                  : "hover:border-theme-primary/50 hover:bg-theme-primary/10"
+                  : "hover:border-cyan-500/50 hover:bg-cyan-500/10"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -324,13 +324,13 @@ export default function Posterizarr() {
                     {status.running ? (
                       <Play className="w-3 h-3 text-green-500" />
                     ) : (
-                      <Pause className="w-3 h-3 text-theme-text-muted" />
+                      <Pause className="w-3 h-3 text-cyan-500" />
                     )}
                     Status
                   </p>
                   <p
                     className={`text-2xl font-bold truncate ${
-                      status.running ? "text-green-500" : "text-theme-text"
+                      status.running ? "text-green-500" : "text-cyan-500"
                     }`}
                   >
                     {status.running ? "Running" : "Idle"}
@@ -339,7 +339,7 @@ export default function Posterizarr() {
                 {status.running ? (
                   <Play className="w-8 h-8 text-green-500 shrink-0" />
                 ) : (
-                  <Pause className="w-8 h-8 text-theme-text-muted shrink-0" />
+                  <Pause className="w-8 h-8 text-cyan-500 shrink-0" />
                 )}
               </div>
             </div>
@@ -386,20 +386,20 @@ export default function Posterizarr() {
             </div>
 
             {/* Next Run */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary/50 hover:bg-theme-primary/10">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-indigo-500/50 hover:bg-indigo-500/10">
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
                   <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-theme-primary" />
+                    <Calendar className="w-3 h-3 text-indigo-500" />
                     Next Run
                   </p>
-                  <p className="text-2xl font-bold text-theme-primary truncate">
+                  <p className="text-2xl font-bold text-indigo-500 truncate">
                     {formatTimestamp(
                       schedulerStatus.next_run || scheduler?.next_run,
                     )}
                   </p>
                 </div>
-                <Calendar className="w-8 h-8 text-theme-primary shrink-0" />
+                <Calendar className="w-8 h-8 text-indigo-500 shrink-0" />
               </div>
             </div>
 
