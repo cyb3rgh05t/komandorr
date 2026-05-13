@@ -437,12 +437,12 @@ export default function Posterizarr() {
 
           {/* ── Overview Tab ── */}
           {subTab === "overview" && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            <div className="grid grid-cols-1 gap-4 items-start">
               {/* ── Scheduler ── */}
               <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-                <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+                <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-theme-primary" />
-                  <h3 className="text-lg font-semibold text-theme-text">
+                  <h3 className="text-base font-semibold text-theme-text">
                     Scheduler
                   </h3>
                   <span
@@ -466,7 +466,7 @@ export default function Posterizarr() {
                 </div>
 
                 {/* Info grid */}
-                <div className="p-4 grid grid-cols-2 gap-3 border-b border-theme">
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-b border-theme">
                   <MiniStatCard
                     icon={Globe}
                     accent="blue"
@@ -499,79 +499,48 @@ export default function Posterizarr() {
                   />
                 </div>
 
-                {/* Schedules & Jobs as table */}
+                {/* Schedules & Jobs as list */}
                 {(schedules.length > 0 || activeJobs.length > 0) && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-theme-primary">
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              Type
-                            </span>
-                          </th>
-                          <th className="text-left py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              Name
-                            </span>
-                          </th>
-                          <th className="text-right py-3 px-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                              Time
-                            </span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {schedules.map((s, i) => (
-                          <tr
-                            key={`s-${i}`}
-                            className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                          >
-                            <td className="px-3 py-2.5">
-                              <span className="px-2 py-0.5 bg-theme-hover/50 border border-theme rounded-md text-[10px] font-medium text-theme-text-muted">
-                                Schedule
-                              </span>
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
-                                {s.description || "Scheduled Run"}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2.5 text-right">
-                              <span className="text-xs font-bold text-theme-primary font-mono group-hover:text-theme-primary transition-colors">
-                                {s.time}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                        {activeJobs.map((job, i) => (
-                          <tr
-                            key={`j-${i}`}
-                            className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                          >
-                            <td className="px-3 py-2.5">
-                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border border-green-500/30 shadow-sm shadow-green-500/20">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                <span className="text-[11px] font-semibold">
-                                  Active Job
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
-                                {job.name}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2.5 text-right">
-                              <span className="text-xs font-bold text-theme-text font-mono whitespace-nowrap group-hover:text-theme-primary transition-colors">
-                                {formatTimestamp(job.next_run)}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="p-4 space-y-2">
+                    {schedules.map((s, i) => (
+                      <div
+                        key={`s-${i}`}
+                        className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Clock className="w-4 h-4 text-theme-text-muted shrink-0" />
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                            {s.time}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border bg-blue-500/15 text-blue-400 border-blue-500/30 lowercase">
+                            Schedule
+                          </span>
+                        </div>
+                        <p className="text-sm text-theme-text truncate pl-6">
+                          {s.description || "Scheduled Run"}
+                        </p>
+                      </div>
+                    ))}
+                    {activeJobs.map((job, i) => (
+                      <div
+                        key={`j-${i}`}
+                        className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Play className="w-4 h-4 text-green-400 shrink-0" />
+                          <span className="inline-flex items-center px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                            {formatTimestamp(job.next_run)}
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Active Job
+                          </span>
+                        </div>
+                        <p className="text-sm text-theme-text truncate pl-6">
+                          {job.name}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -579,13 +548,13 @@ export default function Posterizarr() {
               {/* ── Plex Export ── */}
               {plexExport?.success && (
                 <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-                  <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+                  <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
                     <Film className="w-5 h-5 text-theme-primary" />
-                    <h3 className="text-lg font-semibold text-theme-text">
+                    <h3 className="text-base font-semibold text-theme-text">
                       Plex Export
                     </h3>
                   </div>
-                  <div className="p-4 grid grid-cols-2 gap-3">
+                  <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <MiniStatCard
                       icon={RefreshCw}
                       accent="green"
@@ -665,67 +634,35 @@ export default function Posterizarr() {
                       isText
                     />
                   </div>
-                  {/* Folders table */}
+                  {/* Folders list */}
                   {assetFolders.length > 0 && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-theme-primary">
-                            <th className="text-left py-3 px-2">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                Library
-                              </span>
-                            </th>
-                            <th className="text-right py-3 px-2">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                Posters
-                              </span>
-                            </th>
-                            <th className="text-right py-3 px-2">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                Files
-                              </span>
-                            </th>
-                            <th className="text-right py-3 px-2">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
-                                Size
-                              </span>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {assetFolders.map((folder, i) => (
-                            <tr
-                              key={i}
-                              className="group border-b border-theme last:border-b-0 hover:bg-theme-primary-10 transition-colors"
-                            >
-                              <td className="px-3 py-2.5">
-                                <div className="flex items-center gap-2.5">
-                                  <FolderOpen className="w-4 h-4 text-theme-primary flex-shrink-0" />
-                                  <span className="text-sm font-bold text-theme-text group-hover:text-theme-primary transition-colors">
-                                    {folder.name}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-3 py-2.5 text-right">
-                                <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                                  {folder.poster_count ?? "—"}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2.5 text-right">
-                                <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                                  {folder.files?.toLocaleString() ?? "—"}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2.5 text-right">
-                                <span className="text-xs font-bold text-theme-text font-mono group-hover:text-theme-primary transition-colors">
-                                  {formatBytes(folder.size)}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="p-4 space-y-2">
+                      {assetFolders.map((folder, i) => (
+                        <div
+                          key={i}
+                          className="bg-theme-hover/40 border border-theme rounded-lg px-4 py-3"
+                        >
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <FolderOpen className="w-4 h-4 text-theme-primary shrink-0" />
+                            <span className="text-sm font-medium text-theme-text truncate">
+                              {folder.name}
+                            </span>
+                            <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono rounded-md border border-theme bg-theme-card text-theme-text-muted">
+                              {formatBytes(folder.size)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 flex-wrap pl-6 text-xs text-theme-text-muted font-mono">
+                            <span>
+                              <Image className="inline w-3 h-3 mr-1 -mt-0.5" />
+                              {folder.poster_count ?? "—"} posters
+                            </span>
+                            <span>
+                              <Layers className="inline w-3 h-3 mr-1 -mt-0.5" />
+                              {folder.files?.toLocaleString() ?? "—"} files
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
