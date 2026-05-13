@@ -416,9 +416,7 @@ export default function Monitor() {
                     {stats.total}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-theme-primary/10 text-theme-primary">
-                  <LayoutDashboard className="w-5 h-5" />
-                </div>
+                <LayoutDashboard className="w-8 h-8 text-theme-primary shrink-0" />
               </div>
             </button>
 
@@ -440,9 +438,7 @@ export default function Monitor() {
                     {stats.online}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
+                <CheckCircle2 className="w-8 h-8 text-green-500 shrink-0" />
               </div>
             </button>
 
@@ -464,9 +460,7 @@ export default function Monitor() {
                     {stats.offline}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
-                  <Power className="w-5 h-5" />
-                </div>
+                <Power className="w-8 h-8 text-red-500 shrink-0" />
               </div>
             </button>
 
@@ -491,9 +485,7 @@ export default function Monitor() {
                     {stats.problem}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
+                <AlertTriangle className="w-8 h-8 text-amber-500 shrink-0" />
               </div>
             </button>
 
@@ -511,9 +503,10 @@ export default function Monitor() {
                     </span>
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                  <Zap className="w-5 h-5" strokeWidth={1.5} />
-                </div>
+                <Zap
+                  className="w-8 h-8 text-blue-500 shrink-0"
+                  strokeWidth={1.5}
+                />
               </div>
             </div>
           </div>

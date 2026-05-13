@@ -23,19 +23,49 @@ import {
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
 
+const STAT_COLORS = {
+  "theme-primary": {
+    text: "text-theme-primary",
+    bg: "bg-theme-primary/10",
+    hover: "hover:border-theme-primary/50 hover:bg-theme-primary/10",
+  },
+  "emerald-500": {
+    text: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    hover: "hover:border-emerald-500/50 hover:bg-emerald-500/10",
+  },
+  "blue-500": {
+    text: "text-blue-500",
+    bg: "bg-blue-500/10",
+    hover: "hover:border-blue-500/50 hover:bg-blue-500/10",
+  },
+  "purple-500": {
+    text: "text-purple-500",
+    bg: "bg-purple-500/10",
+    hover: "hover:border-purple-500/50 hover:bg-purple-500/10",
+  },
+  "amber-500": {
+    text: "text-amber-500",
+    bg: "bg-amber-500/10",
+    hover: "hover:border-amber-500/50 hover:bg-amber-500/10",
+  },
+};
+
 function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
+  const c = STAT_COLORS[color] || STAT_COLORS["theme-primary"];
   return (
-    <div className="bg-theme-card border border-theme rounded-xl p-4 hover:border-theme-primary/50 transition-all">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg bg-${color}/10`}>
-          <Icon className={`w-5 h-5 text-${color}`} />
-        </div>
-        <div>
-          <p className="text-xs text-theme-muted uppercase tracking-wider">
-            {label}
+    <div
+      className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all ${c.hover}`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+            <Icon className={`w-3 h-3 ${c.text}`} />
+            <span className="truncate">{label}</span>
           </p>
-          <p className="text-lg font-bold text-theme-text">{value}</p>
+          <p className={`text-2xl font-bold ${c.text} truncate`}>{value}</p>
         </div>
+        <Icon className={`w-8 h-8 ${c.text} shrink-0`} />
       </div>
     </div>
   );
@@ -122,7 +152,7 @@ function ManagerSection({ manager, tabsSlot }) {
   return (
     <div className="space-y-4">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           label="Instance"
           value={manager.name || manager.id || "—"}
@@ -133,25 +163,25 @@ function ManagerSection({ manager, tabsSlot }) {
           label="NFS Mounts"
           value={`${mountedCount}/${mounts.length}`}
           icon={Download}
-          color="emerald-400"
+          color="emerald-500"
         />
         <StatCard
           label="NFS Exports"
           value={`${activeExports}/${exports.length}`}
           icon={Upload}
-          color="blue-400"
+          color="blue-500"
         />
         <StatCard
           label="MergerFS"
           value={`${mergerMounted}/${mergerfsConfigs.length}`}
           icon={GitMerge}
-          color="purple-400"
+          color="purple-500"
         />
         <StatCard
           label="VPN Tunnels"
           value={`${vpnConnected}/${vpnConfigs.length}`}
           icon={Shield}
-          color="amber-400"
+          color="amber-500"
         />
       </div>
 

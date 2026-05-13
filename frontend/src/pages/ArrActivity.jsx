@@ -1061,8 +1061,91 @@ export default function ArrActivity() {
                       })
                     : records;
 
+                  // Aggregate event-type counts (use filtered records so the
+                  // cards reflect what is visible in the table)
+                  const eventCounts = filteredRecords.reduce(
+                    (acc, r) => {
+                      const et = (r.eventType || "").toLowerCase();
+                      if (et.includes("grab")) acc.grabbed += 1;
+                      else if (et.includes("import") || et.includes("download"))
+                        acc.imported += 1;
+                      else if (et.includes("fail")) acc.failed += 1;
+                      else acc.other += 1;
+                      return acc;
+                    },
+                    { grabbed: 0, imported: 0, failed: 0, other: 0 },
+                  );
+
                   return (
-                    <div>
+                    <div className="space-y-4">
+                      {/* History Summary Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-theme-primary/10 hover:border-theme-primary/50">
+                          <div className="flex items-center justify-between">
+                            <div className="text-left">
+                              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                                <History className="w-3 h-3 text-theme-primary" />
+                                {t("arrActivity.history.total", "Total")}
+                              </p>
+                              <p className="text-2xl font-bold text-theme-primary mt-1">
+                                {filteredRecords.length}
+                              </p>
+                              {filteredRecords.length !== totalRecords && (
+                                <p className="text-[10px] text-theme-text-muted/70">
+                                  of {totalRecords}
+                                </p>
+                              )}
+                            </div>
+                            <History className="w-8 h-8 text-theme-primary shrink-0" />
+                          </div>
+                        </div>
+
+                        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50">
+                          <div className="flex items-center justify-between">
+                            <div className="text-left">
+                              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                                <FileDown className="w-3 h-3 text-blue-500" />
+                                {t("arrActivity.history.grabbed", "Grabbed")}
+                              </p>
+                              <p className="text-2xl font-bold text-blue-500 mt-1">
+                                {eventCounts.grabbed}
+                              </p>
+                            </div>
+                            <FileDown className="w-8 h-8 text-blue-500 shrink-0" />
+                          </div>
+                        </div>
+
+                        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50">
+                          <div className="flex items-center justify-between">
+                            <div className="text-left">
+                              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                                <FolderUp className="w-3 h-3 text-green-500" />
+                                {t("arrActivity.history.imported", "Imported")}
+                              </p>
+                              <p className="text-2xl font-bold text-green-500 mt-1">
+                                {eventCounts.imported}
+                              </p>
+                            </div>
+                            <FolderUp className="w-8 h-8 text-green-500 shrink-0" />
+                          </div>
+                        </div>
+
+                        <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 hover:border-red-500/50">
+                          <div className="flex items-center justify-between">
+                            <div className="text-left">
+                              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                                <XCircle className="w-3 h-3 text-red-500" />
+                                {t("arrActivity.history.failed", "Failed")}
+                              </p>
+                              <p className="text-2xl font-bold text-red-500 mt-1">
+                                {eventCounts.failed}
+                              </p>
+                            </div>
+                            <XCircle className="w-8 h-8 text-red-500 shrink-0" />
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                         {activeInst.error ? (
                           <div className="p-6">

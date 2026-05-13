@@ -319,15 +319,11 @@ export default function Posterizarr() {
                     {status.running ? "Running" : "Idle"}
                   </p>
                 </div>
-                <div
-                  className={`p-2 rounded-lg ${status.running ? "bg-green-500/10" : "bg-theme-text-muted/10"}`}
-                >
-                  {status.running ? (
-                    <Play className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <Pause className="w-5 h-5 text-theme-text-muted" />
-                  )}
-                </div>
+                {status.running ? (
+                  <Play className="w-8 h-8 text-green-400 shrink-0" />
+                ) : (
+                  <Pause className="w-8 h-8 text-theme-text-muted shrink-0" />
+                )}
               </div>
             </div>
 
@@ -342,15 +338,11 @@ export default function Posterizarr() {
                     {version.local || "—"}
                   </p>
                 </div>
-                <div
-                  className={`p-2 rounded-lg ${version.is_update_available ? "bg-yellow-500/10" : "bg-green-500/10"}`}
-                >
-                  {version.is_update_available ? (
-                    <ArrowUpCircle className="w-5 h-5 text-yellow-400" />
-                  ) : (
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                  )}
-                </div>
+                {version.is_update_available ? (
+                  <ArrowUpCircle className="w-8 h-8 text-yellow-400 shrink-0" />
+                ) : (
+                  <CheckCircle className="w-8 h-8 text-green-400 shrink-0" />
+                )}
               </div>
               {version.is_update_available && (
                 <p className="text-xs text-yellow-400 mt-1">
@@ -372,9 +364,7 @@ export default function Posterizarr() {
                     )}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-theme-primary/10">
-                  <Calendar className="w-5 h-5 text-theme-primary" />
-                </div>
+                <Calendar className="w-8 h-8 text-theme-primary shrink-0" />
               </div>
             </div>
 
@@ -391,9 +381,7 @@ export default function Posterizarr() {
                       : formatTimestamp(scheduler?.last_run)}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-theme-text-muted/10">
-                  <Timer className="w-5 h-5 text-theme-text-muted" />
-                </div>
+                <Timer className="w-8 h-8 text-theme-text-muted shrink-0" />
               </div>
               {historyItems.length > 0 &&
                 historyItems[0]?.runtime_formatted && (

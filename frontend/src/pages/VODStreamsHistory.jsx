@@ -168,22 +168,19 @@ function StatsCards({ data, allTimePeak, t }) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`bg-theme-card border border-theme rounded-lg p-3 sm:p-4 hover:shadow-md transition-all ${card.borderColor} ${card.bgColor}`}
+          className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all ${card.borderColor} ${card.bgColor}`}
         >
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs font-medium text-theme-text-muted uppercase tracking-wider truncate">
-                {card.label}
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1 min-w-0">
+              <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                <card.icon className={`w-3 h-3 ${card.color}`} />
+                <span className="truncate">{card.label}</span>
               </p>
-              <p
-                className={`text-xl sm:text-2xl font-bold ${card.color} mt-0.5`}
-              >
+              <p className={`text-2xl font-bold ${card.color} truncate`}>
                 {card.value}
               </p>
             </div>
-            <card.icon
-              className={`w-6 h-6 sm:w-7 sm:h-7 ${card.color} opacity-60 shrink-0`}
-            />
+            <card.icon className={`w-8 h-8 ${card.color} shrink-0`} />
           </div>
           {card.showTrend && trendPercent !== null && (
             <div className="mt-1.5 flex items-center gap-1">

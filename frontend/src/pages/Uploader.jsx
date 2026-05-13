@@ -468,11 +468,9 @@ export default function Uploader() {
                     {statusLabel}
                   </p>
                 </div>
-                <div className={`p-2 rounded-lg ${statusTone.bg}`}>
-                  {React.createElement(statusIcon, {
-                    className: `w-5 h-5 ${statusTone.color}`,
-                  })}
-                </div>
+                {React.createElement(statusIcon, {
+                  className: `w-8 h-8 ${statusTone.color} shrink-0`,
+                })}
               </div>
             </div>
 
@@ -488,9 +486,7 @@ export default function Uploader() {
                       t("uploader.unknown", "Unknown")}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
-                  <Clock className="w-5 h-5" />
-                </div>
+                <Clock className="w-8 h-8 text-indigo-500 shrink-0" />
               </div>
             </div>
 
@@ -506,9 +502,7 @@ export default function Uploader() {
                       t("uploader.unknown", "Unknown")}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
-                  <HardDrive className="w-5 h-5" />
-                </div>
+                <HardDrive className="w-8 h-8 text-orange-500 shrink-0" />
               </div>
             </div>
 
@@ -524,9 +518,7 @@ export default function Uploader() {
                     <span className="text-sm text-cyan-400 ml-1">MB/s</span>
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-500">
-                  <Gauge className="w-5 h-5" />
-                </div>
+                <Gauge className="w-8 h-8 text-cyan-500 shrink-0" />
               </div>
             </div>
 
@@ -541,9 +533,7 @@ export default function Uploader() {
                     {inProgressJobs.length}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                  <Upload className="w-5 h-5" />
-                </div>
+                <Upload className="w-8 h-8 text-blue-500 shrink-0" />
               </div>
             </div>
 
@@ -561,9 +551,7 @@ export default function Uploader() {
                     {formatSize(queueTotalSize)}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
-                  <Activity className="w-5 h-5" />
-                </div>
+                <Activity className="w-8 h-8 text-purple-500 shrink-0" />
               </div>
             </div>
 
@@ -582,9 +570,7 @@ export default function Uploader() {
                     {completedToday?.count || 0}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
-                  <CheckCircle className="w-5 h-5" />
-                </div>
+                <CheckCircle className="w-8 h-8 text-green-500 shrink-0" />
               </div>
             </div>
           </div>
