@@ -29,20 +29,39 @@ try {
     exit 1
 }
 
-# Create virtual environment if it doesn't exist
+# Create virtual environment if it doesn't exist (or if it is broken)
+$venvPython = ".\venv\Scripts\python.exe"
+$venvValid = $false
+if (Test-Path "venv") {
+    if (Test-Path $venvPython) {
+        # Verify the venv's python actually works (interpreter may have been uninstalled)
+        & $venvPython --version *> $null
+        if ($LASTEXITCODE -eq 0) {
+            $venvValid = $true
+        }
+    }
+    if (-not $venvValid) {
+        Write-Host "Existing virtual environment is broken (interpreter missing). Recreating..." -ForegroundColor Yellow
+        Remove-Item -Recurse -Force "venv"
+    }
+}
+
 if (-not (Test-Path "venv")) {
     Write-Host "Creating Python virtual environment..." -ForegroundColor Cyan
     python -m venv venv
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error creating virtual environment" -ForegroundColor Red
+        exit 1
+    }
     Write-Host "Virtual environment created!" -ForegroundColor Green
 } else {
     Write-Host "Virtual environment already exists." -ForegroundColor Green
 }
 
-# Activate virtual environment and install dependencies
+# Install dependencies using the venv's python directly (more robust than activation)
 Write-Host "Installing Python dependencies..." -ForegroundColor Cyan
-.\venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+& $venvPython -m pip install --upgrade pip
+& $venvPython -m pip install -r requirements.txt
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Backend dependencies installed successfully!" -ForegroundColor Green
