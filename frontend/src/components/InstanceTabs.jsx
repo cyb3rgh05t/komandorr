@@ -33,13 +33,6 @@ export default function InstanceTabs({
           >
             {Icon && <Icon className="w-4 h-4" />}
             {inst.name || inst.id}
-            {typeof inst.connected === "boolean" && (
-              <span
-                className={`inline-block w-2 h-2 rounded-full ml-1 ${
-                  inst.connected ? "bg-emerald-400" : "bg-red-400"
-                }`}
-              />
-            )}
           </button>
         );
       })}

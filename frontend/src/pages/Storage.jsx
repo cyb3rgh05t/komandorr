@@ -790,7 +790,7 @@ const Storage = () => {
                   {t("storage.storageRaidz", "Storage Raidz")}
                 </p>
                 <p className="text-2xl font-bold text-cyan-500 mt-1">
-                  {raidStats.total + zfsStats.total}
+                  {zfsStats.total}
                 </p>
               </div>
               <Disc3 className="w-8 h-8 text-cyan-500/50" />
@@ -1032,50 +1032,6 @@ const Storage = () => {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Storage Type Tabs */}
-          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
-            <button
-              onClick={() => setStorageTab("unionfs")}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                storageTab === "unionfs"
-                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-              }`}
-            >
-              <HardDrive className="w-4 h-4" />
-              {t("storage.unionfsServers", "UnionFS Storage")}
-              <span
-                className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
-                  storageTab === "unionfs"
-                    ? "text-black/70"
-                    : "text-theme-text-muted"
-                }`}
-              >
-                {unionfsServices.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setStorageTab("raidzfs")}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                storageTab === "raidzfs"
-                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-              }`}
-            >
-              <Disc3 className="w-4 h-4" />
-              {t("storage.raidZfsServers", "RAID & ZFS Arrays")}
-              <span
-                className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
-                  storageTab === "raidzfs"
-                    ? "text-black/70"
-                    : "text-theme-text-muted"
-                }`}
-              >
-                {raidZfsServices.length}
-              </span>
-            </button>
-          </div>
-
           {/* UnionFS Storage Section */}
           {storageTab === "unionfs" &&
             (unionfsServices.length > 0 ? (
