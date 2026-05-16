@@ -366,6 +366,31 @@ export default function VpnProxyMonitor() {
   if (configured === false) {
     return (
       <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-6">
+        {/* Komandorr-level VPN Proxy Manager instance picker */}
+        {vpnInstancesList.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {vpnInstancesList.map((inst) => {
+              const active = effectiveVpnId === inst.id;
+              return (
+                <button
+                  key={inst.id}
+                  onClick={() => {
+                    setActiveVpnId(inst.id);
+                    setActiveInstanceId(null);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                    active
+                      ? "bg-theme-primary/15 border-theme-primary text-theme-primary"
+                      : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary"
+                  }`}
+                >
+                  <Activity className="w-4 h-4" />
+                  {inst.name || inst.id}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <Link
           to="/settings?tab=vpn_proxy"
           className="block p-4 rounded-xl border shadow-lg bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20 transition-all cursor-pointer"
