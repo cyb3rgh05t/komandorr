@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
+import InstanceTabs from "../components/InstanceTabs";
 
 const STAT_COLORS = {
   "theme-primary": {
@@ -925,31 +926,12 @@ export default function NfsMount() {
 
       {/* Manager Tabs (shown here only when active manager is disconnected) */}
       {managers.length > 1 && activeManager && !activeManager.connected && (
-        <div>
-          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
-            {managers.map((mgr) => {
-              const isActive = effectiveTab === mgr.id;
-              return (
-                <button
-                  key={mgr.id}
-                  onClick={() => setActiveTab(mgr.id)}
-                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    isActive
-                      ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                      : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                  }`}
-                >
-                  {mgr.name}
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full ml-2 ${
-                      mgr.connected ? "bg-emerald-400" : "bg-red-400"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <InstanceTabs
+          instances={managers}
+          activeTab={effectiveTab}
+          setActiveTab={setActiveTab}
+          icon={HardDrive}
+        />
       )}
 
       {/* Live/Offline Indicator & Refresh */}
@@ -1007,31 +989,12 @@ export default function NfsMount() {
               manager={activeManager}
               tabsSlot={
                 managers.length > 1 ? (
-                  <div>
-                    <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
-                      {managers.map((mgr) => {
-                        const isActive = effectiveTab === mgr.id;
-                        return (
-                          <button
-                            key={mgr.id}
-                            onClick={() => setActiveTab(mgr.id)}
-                            className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                              isActive
-                                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                            }`}
-                          >
-                            {mgr.name}
-                            <span
-                              className={`inline-block w-2 h-2 rounded-full ml-2 ${
-                                mgr.connected ? "bg-emerald-400" : "bg-red-400"
-                              }`}
-                            />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <InstanceTabs
+                    instances={managers}
+                    activeTab={effectiveTab}
+                    setActiveTab={setActiveTab}
+                    icon={HardDrive}
+                  />
                 ) : null
               }
             />

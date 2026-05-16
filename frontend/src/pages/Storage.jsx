@@ -790,7 +790,7 @@ const Storage = () => {
                   {t("storage.storageRaidz", "Storage Raidz")}
                 </p>
                 <p className="text-2xl font-bold text-cyan-500 mt-1">
-                  {summary.total_raid_arrays || 0}
+                  {raidStats.total + zfsStats.total}
                 </p>
               </div>
               <Disc3 className="w-8 h-8 text-cyan-500/50" />

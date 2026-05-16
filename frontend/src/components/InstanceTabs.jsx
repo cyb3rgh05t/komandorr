@@ -13,27 +13,29 @@ export default function InstanceTabs({
   instances = [],
   activeTab,
   setActiveTab,
+  icon: Icon = null,
 }) {
   if (!instances || instances.length <= 1) return null;
 
   return (
-    <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
+    <div className="flex flex-wrap gap-2">
       {instances.map((inst) => {
         const isActive = activeTab === inst.id;
         return (
           <button
             key={inst.id}
             onClick={() => setActiveTab(inst.id)}
-            className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all whitespace-nowrap ${
               isActive
-                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                ? "bg-theme-primary/15 border-theme-primary text-theme-primary"
+                : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary"
             }`}
           >
-            {inst.name}
+            {Icon && <Icon className="w-4 h-4" />}
+            {inst.name || inst.id}
             {typeof inst.connected === "boolean" && (
               <span
-                className={`inline-block w-2 h-2 rounded-full ml-2 ${
+                className={`inline-block w-2 h-2 rounded-full ml-1 ${
                   inst.connected ? "bg-emerald-400" : "bg-red-400"
                 }`}
               />
