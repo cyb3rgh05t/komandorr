@@ -516,6 +516,13 @@ const InvitesManager = () => {
         }
       />
 
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Stats Cards */}
       {stats && (
         <div className="space-y-3">
@@ -720,15 +727,6 @@ const InvitesManager = () => {
           </div>
         </div>
       )}
-
-      {/* Instance Tabs */}
-      <div>
-        <InstanceTabs
-          instances={instances}
-          activeTab={effectiveTab}
-          setActiveTab={setActiveTab}
-        />
-      </div>
 
       {/* Filter Tabs */}
       <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">

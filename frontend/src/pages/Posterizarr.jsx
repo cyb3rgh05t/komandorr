@@ -259,6 +259,13 @@ export default function Posterizarr() {
         }
       />
 
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Loading */}
       {dashLoading && !dashboard && (
         <div className="space-y-4">
@@ -427,13 +434,6 @@ export default function Posterizarr() {
               </div>
             </div>
           </div>
-
-          {/* Instance Tabs */}
-          <InstanceTabs
-            instances={instances}
-            activeTab={effectiveTab}
-            setActiveTab={setActiveTab}
-          />
 
           {/* ── Overview Tab ── */}
           {subTab === "overview" && (

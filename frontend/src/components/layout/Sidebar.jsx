@@ -33,6 +33,7 @@ import {
   Palette,
   History,
   AppWindow,
+  Disc3,
 } from "lucide-react";
 import VersionBadge from "../VersionBadge";
 
@@ -48,6 +49,7 @@ export default function Sidebar() {
     vodplexsync: false,
     autoscan: false,
     posterizarr: false,
+    storage: false,
   });
 
   // Toggle tab expansion
@@ -523,7 +525,24 @@ export default function Sidebar() {
       icon: HardDrive,
       path: "/nfs-mount",
     },
-    { path: "/storage", label: t("nav.storage", "Storage"), icon: HardDrive },
+    {
+      label: t("nav.storage", "Storage"),
+      icon: HardDrive,
+      isTab: true,
+      tabName: "storage",
+      items: [
+        {
+          path: "/storage?tab=unionfs",
+          label: t("storage.unionfsServers", "UnionFS Storage"),
+          icon: HardDrive,
+        },
+        {
+          path: "/storage?tab=raidzfs",
+          label: t("storage.raidZfsServers", "RAID & ZFS Arrays"),
+          icon: Disc3,
+        },
+      ],
+    },
     {
       label: t("nav.plex"),
       icon: Tv2Icon,
@@ -774,6 +793,10 @@ export default function Sidebar() {
                   const hasVodPlexSyncBadge =
                     item.tabName === "vodplexsync" && vodStreamsCount > 0;
 
+                  // Check if Storage tab has any health issues
+                  const hasStorageTabBadge =
+                    item.tabName === "storage" && storageIssuesCount > 0;
+
                   return (
                     <div key={item.label}>
                       <button
@@ -818,6 +841,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {vpnErrorCount}
+                          </span>
+                        )}{" "}
+                        {hasStorageTabBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {storageIssuesCount}
                           </span>
                         )}{" "}
                         {hasVodPlexSyncBadge && (

@@ -151,6 +151,9 @@ function ManagerSection({ manager, tabsSlot }) {
 
   return (
     <div className="space-y-4">
+      {/* Manager Tabs (injected from parent) */}
+      {tabsSlot}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
@@ -184,9 +187,6 @@ function ManagerSection({ manager, tabsSlot }) {
           color="amber-500"
         />
       </div>
-
-      {/* Manager Tabs (injected from parent) */}
-      {tabsSlot}
 
       {/* System Resources */}
       {(systemStats.cpu_percent !== undefined ||

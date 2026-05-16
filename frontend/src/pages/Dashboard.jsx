@@ -956,7 +956,7 @@ export default function Dashboard() {
                 }`}
               >
                 <Server className="w-4 h-4" />
-                {t("dashboard.services", "Services")}
+                {t("dashboard.services", "Servers")}
                 <span
                   className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
                     dashboardMainTab === "services"

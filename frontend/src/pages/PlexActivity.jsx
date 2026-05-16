@@ -484,6 +484,13 @@ const PlexActivity = () => {
         }
       />
 
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
         <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
@@ -546,13 +553,6 @@ const PlexActivity = () => {
           </div>
         </div>
       </div>
-
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
 
       {/* Error State */}
       {hasError && (

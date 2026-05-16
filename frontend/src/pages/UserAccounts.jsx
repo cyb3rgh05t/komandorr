@@ -604,6 +604,13 @@ const UserAccounts = () => {
         }
       />
 
+      {/* Instance Tabs */}
+      <InstanceTabs
+        instances={instances}
+        activeTab={effectiveTab}
+        setActiveTab={setActiveTab}
+      />
+
       {/* Stats Cards */}
       {/* Row 1: 6 columns - Plex Server, Plex Users, Total Users, Redeemed Invites */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
@@ -851,13 +858,6 @@ const UserAccounts = () => {
           </div>
         </div>
       </div>
-
-      {/* Instance Tabs */}
-      <InstanceTabs
-        instances={instances}
-        activeTab={effectiveTab}
-        setActiveTab={setActiveTab}
-      />
 
       {/* Users List */}
       <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">

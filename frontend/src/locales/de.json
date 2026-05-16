@@ -6,7 +6,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "plex": "Plex",
-    "services": "Dienste",
+    "services": "Server",
     "monitor": "Ping Antwort",
     "traffic": "Traffic",
     "vodStreams": "VoD Plex-Sync",
@@ -22,13 +22,13 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "allServices": "Alle Dienste",
+    "allServices": "Alle Server",
     "online": "Online",
     "offline": "Offline",
     "problem": "Problem",
-    "noServices": "Noch keine Dienste konfiguriert",
-    "addService": "Dienst hinzufügen",
-    "searchPlaceholder": "Dienste und Gruppen durchsuchen...",
+    "noServices": "Noch keine Server konfiguriert",
+    "addService": "Server hinzufügen",
+    "searchPlaceholder": "Server und Gruppen durchsuchen...",
     "trafficChart": "Traffic-Übersicht",
     "customize": "Anpassen",
     "dashboardVisibility": "Dashboard-Sichtbarkeit",
@@ -114,8 +114,8 @@
     "checkNowButton": "Jetzt prüfen"
   },
   "form": {
-    "addService": "Dienst hinzufügen",
-    "editService": "Dienst bearbeiten",
+    "addService": "Server hinzufügen",
+    "editService": "Server bearbeiten",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "create": "Erstellen",

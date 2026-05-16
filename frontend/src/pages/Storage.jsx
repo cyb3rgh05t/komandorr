@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
 import {
@@ -560,7 +561,14 @@ const Storage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [storageTab, setStorageTab] = useState("unionfs");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const storageTab = urlTab === "raidzfs" ? "raidzfs" : "unionfs";
+  const setStorageTab = (tab) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
+  };
 
   // Fetch services with storage data
   const {
@@ -773,19 +781,19 @@ const Storage = () => {
       {/* Summary Cards - Status Overview */}
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-          {/* Storage Items count */}
+          {/* Storage Raidz count (RAID + ZFS arrays) */}
           <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-cyan-500/50 hover:bg-cyan-500/10">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Server className="w-3 h-3 text-cyan-500" />
-                  {t("storage.storageItems", "Storage Items")}
+                  <Disc3 className="w-3 h-3 text-cyan-500" />
+                  {t("storage.storageRaidz", "Storage Raidz")}
                 </p>
                 <p className="text-2xl font-bold text-cyan-500 mt-1">
-                  {servicesWithStorage.length}
+                  {summary.total_raid_arrays || 0}
                 </p>
               </div>
-              <Server className="w-8 h-8 text-cyan-500/50" />
+              <Disc3 className="w-8 h-8 text-cyan-500/50" />
             </div>
           </div>
 
@@ -1122,6 +1130,3 @@ const Storage = () => {
 };
 
 export default Storage;
-
-
-

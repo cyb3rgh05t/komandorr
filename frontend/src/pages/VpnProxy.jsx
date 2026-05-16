@@ -993,7 +993,7 @@ export default function VpnProxy() {
       )}
 
       {/* Stats Cards (clickable filters) */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <button
           onClick={() => setStatusFilter(null)}
           className="bg-theme-card border border-theme rounded-lg px-4 py-3 transition-all text-left cursor-pointer hover:shadow-md hover:bg-yellow-500/10 hover:border-yellow-500/50"

@@ -279,7 +279,7 @@ export default function Services() {
         <>
           <PageHeader
             icon={Server}
-            title={t("nav.services", "Services")}
+            title={t("nav.services", "Servers")}
             actions={
               <>
                 <button
