@@ -100,6 +100,7 @@ def load_plex_config(instance_id: Optional[str] = None) -> Optional[dict]:
             # When no instance_id is provided, prefer the one configured for
             # VOD Sync so background services and shared endpoints don't drift
             # whenever the user reorders Plex instances in settings.
+            requested_explicitly = bool(instance_id)
             if not instance_id:
                 instance_id = get_sync_instance_id()
             if instance_id:
@@ -112,8 +113,15 @@ def load_plex_config(instance_id: Optional[str] = None) -> Optional[dict]:
                                 "server_name", inst.get("name", "Plex Server")
                             ),
                         }
-                logger.warning(f"Plex instance '{instance_id}' not found")
-                return None
+                # Explicit request for a missing instance → None.
+                # Implicit (sync) lookup that didn't resolve → fall back to first.
+                if requested_explicitly:
+                    logger.warning(f"Plex instance '{instance_id}' not found")
+                    return None
+                logger.debug(
+                    f"plex_sync.instance_id '{instance_id}' not found, "
+                    "falling back to first Plex instance"
+                )
             # Return first instance
             first = instances[0]
             return {
