@@ -77,25 +77,68 @@ export default function Sidebar() {
     placeholderData: (previousData) => previousData,
   });
 
-  // Fetch Plex sessions for active session count
-  const { data: sessionsData } = useQuery({
-    queryKey: ["plex-sessions"],
+  // Fetch list of configured Plex instances so we can aggregate sessions
+  // across all of them (the Plex sidebar tab is not tied to a single
+  // instance, unlike VOD Plex-Sync which uses plex_sync.instance_id).
+  const { data: plexInstancesData } = useQuery({
+    queryKey: ["plex-instances"],
     queryFn: async () => {
       try {
-        const response = await api.get("/plex/sessions");
-        return response;
+        return await api.get("/plex/instances");
       } catch {
-        return { sessions: [] };
+        return { instances: [] };
       }
     },
+    staleTime: 60000,
+    refetchInterval: 60000,
+    placeholderData: (previousData) => previousData,
+  });
+  const plexInstances = plexInstancesData?.instances || [];
+
+  // Fetch Plex sessions for active session count (aggregated across all instances)
+  const { data: sessionsAgg } = useQuery({
+    queryKey: ["plex-sessions-all", plexInstances.map((i) => i.id).join(",")],
+    queryFn: async () => {
+      if (plexInstances.length === 0) {
+        try {
+          const response = await api.get("/plex/sessions");
+          return {
+            sessions: response?.sessions || [],
+            message: response?.message,
+          };
+        } catch {
+          return { sessions: [], message: undefined };
+        }
+      }
+      const results = await Promise.all(
+        plexInstances.map(async (inst) => {
+          try {
+            return await api.get(
+              `/plex/sessions?instance_id=${encodeURIComponent(inst.id)}`,
+            );
+          } catch {
+            return { sessions: [] };
+          }
+        }),
+      );
+      const allSessions = results.flatMap((r) => r?.sessions || []);
+      const anyConfigured = results.some(
+        (r) => !r?.message?.toLowerCase?.().includes("not configured"),
+      );
+      return {
+        sessions: allSessions,
+        message: anyConfigured ? undefined : "not configured",
+      };
+    },
+    enabled: true,
     refetchInterval: 3000,
     staleTime: 2000,
     refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 
-  const activeSessions = sessionsData?.sessions || [];
-  const plexConfigured = !sessionsData?.message
+  const activeSessions = sessionsAgg?.sessions || [];
+  const plexConfigured = !sessionsAgg?.message
     ?.toLowerCase()
     .includes("not configured");
 
