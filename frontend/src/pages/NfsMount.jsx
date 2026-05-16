@@ -52,7 +52,13 @@ const STAT_COLORS = {
   },
 };
 
-function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  color = "theme-primary",
+  valueClass,
+}) {
   const c = STAT_COLORS[color] || STAT_COLORS["theme-primary"];
   return (
     <div
@@ -64,7 +70,9 @@ function StatCard({ label, value, icon: Icon, color = "theme-primary" }) {
             <Icon className={`w-3 h-3 ${c.text}`} />
             <span className="truncate">{label}</span>
           </p>
-          <p className={`text-2xl font-bold ${c.text} truncate`}>{value}</p>
+          <p className={`text-2xl font-bold ${valueClass || c.text} truncate`}>
+            {value}
+          </p>
         </div>
         <Icon className={`w-8 h-8 ${c.text} shrink-0`} />
       </div>
@@ -162,6 +170,7 @@ function ManagerSection({ manager, tabsSlot }) {
           value={manager.name || manager.id || "—"}
           icon={Tag}
           color="theme-primary"
+          valueClass="text-theme-text"
         />
         <StatCard
           label="NFS Mounts"
@@ -426,7 +435,13 @@ function ManagerSection({ manager, tabsSlot }) {
             {mergerfsConfigs.map((c) => {
               const st = mergerfsStatuses[c.id];
               const mounted = st?.mounted || false;
-              const sources = Array.isArray(c.sources) ? c.sources : [];
+              const rawSources =
+                c.sources ?? c.branches ?? c.paths ?? c.source_paths ?? [];
+              const sources = Array.isArray(rawSources)
+                ? rawSources
+                : typeof rawSources === "string"
+                  ? rawSources.split(/[:,\n]+/).filter(Boolean)
+                  : [];
               return (
                 <div
                   key={c.id}
@@ -469,14 +484,18 @@ function ManagerSection({ manager, tabsSlot }) {
                         Sources
                       </p>
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {sources.map((src, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center text-xs bg-blue-500/10 border border-blue-500/25 rounded-full px-2 py-0.5 font-mono text-blue-300 truncate max-w-[140px]"
-                          >
-                            {src}
-                          </span>
-                        ))}
+                        {sources.length > 0 ? (
+                          sources.map((src, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center text-xs bg-blue-500/10 border border-blue-500/25 rounded-full px-2 py-0.5 font-mono text-blue-300 truncate max-w-[140px]"
+                            >
+                              {src}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-theme-muted">—</span>
+                        )}
                       </div>
                     </div>
                     <div className="bg-theme-hover border border-theme rounded-lg px-4 py-3">

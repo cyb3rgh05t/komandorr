@@ -21,6 +21,7 @@ _logged_not_configured = False
 _activity_cache: Dict[str, Any] = {
     "data": None,
     "last_fetched": None,
+    "instance_id": None,
     "ttl_seconds": 5,
     "hits": 0,
     "misses": 0,
@@ -735,10 +736,11 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
         redis_copy["cached"] = True
         return redis_copy
 
-    # Fallback to in-process cache
+    # Fallback to in-process cache (only when serving the SAME instance)
     if (
         _activity_cache["data"] is not None
         and _activity_cache["last_fetched"] is not None
+        and _activity_cache.get("instance_id") == instance_id
     ):
 
         elapsed = (now - _activity_cache["last_fetched"]).total_seconds()
@@ -915,6 +917,7 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
             # Update caches
             _activity_cache["data"] = response
             _activity_cache["last_fetched"] = now
+            _activity_cache["instance_id"] = instance_id
             cache_set(
                 f"plex:activities{cache_suffix}",
                 response,
@@ -925,8 +928,11 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
 
     except Exception as e:
         logger.error(f"Error fetching Plex activities: {e}", exc_info=True)
-        # Return cached data if available, even if stale
-        if _activity_cache["data"]:
+        # Return cached data if available, even if stale (only for matching instance)
+        if (
+            _activity_cache["data"]
+            and _activity_cache.get("instance_id") == instance_id
+        ):
             logger.warning("Returning stale cache due to fetch error")
             stale_response = _activity_cache["data"].copy()
             stale_response["cached"] = True
