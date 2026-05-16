@@ -132,6 +132,26 @@ export default function VpnProxy() {
     searchParams.get("status") || null,
   );
   const [copiedUrl, setCopiedUrl] = useState(null);
+  const [activeVpnId, setActiveVpnId] = useState(
+    searchParams.get("vpn_id") || null,
+  );
+
+  // Fetch configured VPN Proxy Manager instances
+  const { data: vpnInstancesList = [] } = useQuery({
+    queryKey: ["vpn-proxy-instances"],
+    queryFn: () => api.get("/vpn-proxy/instances"),
+    staleTime: 60000,
+  });
+
+  // Resolve effective VPN id (selected, or first available)
+  const effectiveVpnId = useMemo(() => {
+    if (activeVpnId && vpnInstancesList.some((i) => i.id === activeVpnId)) {
+      return activeVpnId;
+    }
+    return vpnInstancesList[0]?.id || null;
+  }, [activeVpnId, vpnInstancesList]);
+
+  const vpnQs = effectiveVpnId ? `?vpn_id=${effectiveVpnId}` : "";
 
   const copyToClipboard = (url) => {
     try {
@@ -157,7 +177,7 @@ export default function VpnProxy() {
   const handleDepAction = async (containerId, depName, action) => {
     try {
       await api.post(
-        `/vpn-proxy/containers/${containerId}/dependents/${depName}/${action}`,
+        `/vpn-proxy/containers/${containerId}/dependents/${depName}/${action}${vpnQs}`,
       );
     } catch {
       /* ignore */
@@ -171,8 +191,8 @@ export default function VpnProxy() {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["vpn-proxy-containers"],
-    queryFn: () => api.get("/vpn-proxy/containers"),
+    queryKey: ["vpn-proxy-containers", effectiveVpnId],
+    queryFn: () => api.get(`/vpn-proxy/containers${vpnQs}`),
     staleTime: 5000,
     refetchInterval: 10000,
     placeholderData: (prev) => prev,
@@ -180,8 +200,8 @@ export default function VpnProxy() {
 
   // Fetch VPN info batch
   const { data: vpnInfoMap = {} } = useQuery({
-    queryKey: ["vpn-proxy-vpn-info"],
-    queryFn: () => api.get("/vpn-proxy/containers/vpn-info-batch"),
+    queryKey: ["vpn-proxy-vpn-info", effectiveVpnId],
+    queryFn: () => api.get(`/vpn-proxy/containers/vpn-info-batch${vpnQs}`),
     staleTime: 5000,
     refetchInterval: 10000,
     placeholderData: (prev) => prev,
@@ -189,8 +209,8 @@ export default function VpnProxy() {
 
   // Fetch dependents per container (batch)
   const { data: depsMap = {} } = useQuery({
-    queryKey: ["vpn-proxy-dependents-batch"],
-    queryFn: () => api.get("/vpn-proxy/containers/dependents-batch"),
+    queryKey: ["vpn-proxy-dependents-batch", effectiveVpnId],
+    queryFn: () => api.get(`/vpn-proxy/containers/dependents-batch${vpnQs}`),
     staleTime: 10000,
     refetchInterval: 15000,
     placeholderData: (prev) => prev,
@@ -198,8 +218,8 @@ export default function VpnProxy() {
 
   // Fetch connection status
   const { data: connectionStatus } = useQuery({
-    queryKey: ["vpn-proxy-status"],
-    queryFn: () => api.get("/vpn-proxy/status"),
+    queryKey: ["vpn-proxy-status", effectiveVpnId],
+    queryFn: () => api.get(`/vpn-proxy/status${vpnQs}`),
     staleTime: 30000,
     refetchInterval: 30000,
   });
@@ -949,6 +969,29 @@ export default function VpnProxy() {
         }
       />
 
+      {/* VPN Proxy instance tabs (only when more than one instance is configured) */}
+      {vpnInstancesList.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {vpnInstancesList.map((inst) => {
+            const active = effectiveVpnId === inst.id;
+            return (
+              <button
+                key={inst.id}
+                onClick={() => setActiveVpnId(inst.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                  active
+                    ? "bg-theme-primary/15 border-theme-primary text-theme-primary"
+                    : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                {inst.name || inst.id}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Stats Cards (clickable filters) */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <button
@@ -1291,4 +1334,3 @@ export default function VpnProxy() {
     </div>
   );
 }
-

@@ -54,9 +54,10 @@ class Settings(BaseSettings):
     # Uploader Configuration
     UPLOADER_BASE_URL: str = ""
 
-    # VPN Proxy Manager Configuration
+    # VPN Proxy Manager Configuration (multi-instance)
     VPN_PROXY_URL: str = ""
     VPN_PROXY_API_KEY: str = ""
+    VPN_PROXY_INSTANCES: list = []
 
     # Posterizarr Configuration
     POSTERIZARR_URL: str = ""
@@ -147,10 +148,28 @@ class Settings(BaseSettings):
             )
         if "vpn_proxy" in config_data:
             vpn_proxy_config = config_data["vpn_proxy"]
-            self.VPN_PROXY_URL = vpn_proxy_config.get("url", self.VPN_PROXY_URL)
-            self.VPN_PROXY_API_KEY = vpn_proxy_config.get(
-                "api_key", self.VPN_PROXY_API_KEY
-            )
+            # New multi-instance format
+            if "instances" in vpn_proxy_config:
+                self.VPN_PROXY_INSTANCES = vpn_proxy_config["instances"]
+                if self.VPN_PROXY_INSTANCES:
+                    first = self.VPN_PROXY_INSTANCES[0]
+                    self.VPN_PROXY_URL = first.get("url", "")
+                    self.VPN_PROXY_API_KEY = first.get("api_key", "")
+            else:
+                # Backward compat: old single-instance format
+                self.VPN_PROXY_URL = vpn_proxy_config.get("url", self.VPN_PROXY_URL)
+                self.VPN_PROXY_API_KEY = vpn_proxy_config.get(
+                    "api_key", self.VPN_PROXY_API_KEY
+                )
+                if self.VPN_PROXY_URL or self.VPN_PROXY_API_KEY:
+                    self.VPN_PROXY_INSTANCES = [
+                        {
+                            "id": "vpn-default",
+                            "name": "VPN Proxy Manager",
+                            "url": self.VPN_PROXY_URL,
+                            "api_key": self.VPN_PROXY_API_KEY,
+                        }
+                    ]
         if "posterizarr" in config_data:
             posterizarr_config = config_data["posterizarr"]
             # New multi-instance format

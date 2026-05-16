@@ -85,11 +85,14 @@ export default function Settings() {
   const [uploaderUrl, setUploaderUrl] = useState("");
   const [uploaderTestStatus, setUploaderTestStatus] = useState(null);
 
-  // VPN Proxy Manager settings state
-  const [vpnProxyUrl, setVpnProxyUrl] = useState("");
-  const [vpnProxyApiKey, setVpnProxyApiKey] = useState("");
-  const [vpnProxyTestStatus, setVpnProxyTestStatus] = useState(null);
-  const [showVpnProxyKey, setShowVpnProxyKey] = useState(false);
+  // VPN Proxy Manager settings state (multi-instance)
+  const [vpnInstances, setVpnInstances] = useState([]);
+  const [showAddVpn, setShowAddVpn] = useState(false);
+  const [newVpnName, setNewVpnName] = useState("");
+  const [newVpnUrl, setNewVpnUrl] = useState("");
+  const [newVpnApiKey, setNewVpnApiKey] = useState("");
+  const [showVpnKeys, setShowVpnKeys] = useState({});
+  const [vpnTestStatus, setVpnTestStatus] = useState({});
 
   // Posterizarr settings state (multi-instance)
   const [posterizarrInstances, setPosterizarrInstances] = useState([]);
@@ -145,6 +148,7 @@ export default function Settings() {
   const addArrRef = useRef(null);
   const addPlexRef = useRef(null);
   const addPosterizarrRef = useRef(null);
+  const addVpnRef = useRef(null);
 
   // Refs to always access the latest multi-instance state in async save handler
   const plexInstancesRef = useRef(plexInstances);
@@ -159,8 +163,23 @@ export default function Settings() {
   autoscanInstancesRef.current = autoscanInstances;
   const arrInstancesRef = useRef(arrInstances);
   arrInstancesRef.current = arrInstances;
+  const vpnInstancesRef = useRef(vpnInstances);
+  vpnInstancesRef.current = vpnInstances;
   const externalAppsRef = useRef(externalApps);
   externalAppsRef.current = externalApps;
+
+  // Helper: reorder an instance within its array (used by up/down arrow buttons).
+  const moveInstance = (setter, idx, dir) => {
+    setter((prev) => {
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(idx, 1);
+      next.splice(target, 0, moved);
+      return next;
+    });
+    setPendingChanges(true);
+  };
 
   const handleAppIconUpload = async (
     file,
@@ -336,10 +355,7 @@ export default function Settings() {
       if (data.uploader) {
         setUploaderUrl(data.uploader.base_url || "");
       }
-      if (data.vpn_proxy) {
-        setVpnProxyUrl(data.vpn_proxy.url || "");
-        setVpnProxyApiKey(data.vpn_proxy.api_key || "");
-      }
+      setVpnInstances(data.vpn_proxy?.instances || []);
       setPosterizarrInstances(data.posterizarr?.instances || []);
       setNfsMountInstances(data.nfs_mount?.instances || []);
       setAutoscanInstances(data.autoscan?.instances || []);
@@ -357,8 +373,8 @@ export default function Settings() {
       if (data.uploader?.base_url) {
         validateUploaderOnLoad();
       }
-      if (data.vpn_proxy?.url && data.vpn_proxy?.api_key) {
-        validateVpnProxyOnLoad();
+      if (data.vpn_proxy?.instances?.length > 0) {
+        validateVpnInstancesOnLoad(data.vpn_proxy.instances);
       }
       if (data.posterizarr?.instances?.length > 0) {
         validatePosterizarrOnLoad(data.posterizarr.instances);
@@ -432,12 +448,18 @@ export default function Settings() {
     }
   };
 
-  const validateVpnProxyOnLoad = async () => {
-    try {
-      const result = await api.get("/vpn-proxy/status");
-      setVpnProxyTestStatus(result.connected ? "ok" : "fail");
-    } catch (error) {
-      setVpnProxyTestStatus("fail");
+  const validateVpnInstancesOnLoad = async (instances) => {
+    for (const inst of instances) {
+      if (!inst.url || !inst.api_key) continue;
+      try {
+        const result = await api.get(`/vpn-proxy/status?vpn_id=${inst.id}`);
+        setVpnTestStatus((prev) => ({
+          ...prev,
+          [inst.id]: result.connected ? "ok" : "fail",
+        }));
+      } catch {
+        setVpnTestStatus((prev) => ({ ...prev, [inst.id]: "fail" }));
+      }
     }
   };
 
@@ -739,6 +761,24 @@ export default function Settings() {
         ];
       }
 
+      // Prepare VPN Proxy instances payload, including pending new instance (if filled)
+      let vpnPayload = vpnInstancesRef.current;
+      const hasPendingVpn = newVpnName && newVpnUrl && newVpnApiKey;
+      if (hasPendingVpn) {
+        const pendingId = `vpn-${newVpnName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        vpnPayload = [
+          ...vpnInstancesRef.current,
+          {
+            id: pendingId,
+            name: newVpnName,
+            url: newVpnUrl,
+            api_key: newVpnApiKey,
+          },
+        ];
+      }
+
       // Prepare Posterizarr instances payload, including pending new instance (if filled)
       let posterizarrPayload = posterizarrInstancesRef.current;
       const hasPendingPosterizarr =
@@ -843,8 +883,7 @@ export default function Settings() {
           base_url: uploaderUrl || "",
         },
         vpn_proxy: {
-          url: vpnProxyUrl || "",
-          api_key: vpnProxyApiKey || "",
+          instances: vpnPayload || [],
         },
         posterizarr: {
           instances: posterizarrPayload || [],
@@ -900,6 +939,13 @@ export default function Settings() {
         setNewPosterizarrUrl("");
         setNewPosterizarrApiKey("");
         setShowAddPosterizarr(false);
+      }
+      // If we auto-included a pending new VPN Proxy instance, clear the add form
+      if (hasPendingVpn) {
+        setNewVpnName("");
+        setNewVpnUrl("");
+        setNewVpnApiKey("");
+        setShowAddVpn(false);
       }
       // If we auto-included a pending new instance, clear the add form
       if (hasPendingNew) {
@@ -1540,18 +1586,42 @@ export default function Settings() {
                               {inst.name || inst.server_name || inst.id}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPlexInstances((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              );
-                              setPendingChanges(true);
-                            }}
-                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setPlexInstances, idx, -1)
+                              }
+                              disabled={idx === 0}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setPlexInstances, idx, 1)
+                              }
+                              disabled={idx === plexInstances.length - 1}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPlexInstances((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                );
+                                setPendingChanges(true);
+                              }}
+                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
@@ -2242,166 +2312,391 @@ export default function Settings() {
             </div>
           )}
 
-          {/* VPN-Proxy Manager Settings */}
+          {/* VPN-Proxy Manager Settings (multi-instance) */}
           {activeTab === "vpn_proxy" && (
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-theme-text">
-                    VPN-Proxy Manager
-                  </h3>
-                  <p className="text-sm text-theme-muted">
-                    Connect to your VPN Proxy Manager instance to view VPN
-                    container status
-                  </p>
-                </div>
-              </div>
-              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
-
-                <div className="relative space-y-4">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                    <Shield className="w-5 h-5" />
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      VPN Proxy Manager URL
-                    </label>
-                    <input
-                      type="url"
-                      value={vpnProxyUrl}
-                      onChange={(e) => {
-                        setVpnProxyUrl(e.target.value);
-                        setVpnProxyTestStatus(null);
-                        setPendingChanges(true);
-                      }}
-                      className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-                      placeholder="http://vpn-proxy:5000"
-                    />
-                    <p className="mt-2 text-xs text-theme-muted">
-                      The URL of your VPN Proxy Manager instance (e.g.
-                      http://vpn-proxy:5000 or http://192.168.1.100:5000)
+                    <h3 className="text-lg font-semibold text-theme-text">
+                      VPN-Proxy Manager Instances
+                    </h3>
+                    <p className="text-sm text-theme-muted">
+                      Connect to one or more VPN Proxy Manager instances to
+                      monitor VPN container status
                     </p>
                   </div>
+                </div>
+                {!showAddVpn && vpnInstances.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddVpn(true);
+                      setTimeout(
+                        () =>
+                          addVpnRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          }),
+                        100,
+                      );
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 border border-theme hover:border-theme-primary rounded-lg text-sm font-medium text-theme-muted transition-all whitespace-nowrap"
+                  >
+                    <Plus size={16} className="text-theme-primary" />
+                    Add Instance
+                  </button>
+                )}
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-theme-text mb-2">
-                      API Key
-                    </label>
-                    <div className="relative">
+              {vpnInstances.length > 0 && (
+                <div className="space-y-3 mb-4">
+                  {vpnInstances.map((inst, idx) => (
+                    <div
+                      key={inst.id}
+                      className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                      <div className="relative space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-theme-primary" />
+                            <span className="font-semibold text-theme-text">
+                              {inst.name || inst.id}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setVpnInstances, idx, -1)
+                              }
+                              disabled={idx === 0}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setVpnInstances, idx, 1)
+                              }
+                              disabled={idx === vpnInstances.length - 1}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVpnInstances((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                );
+                                setPendingChanges(true);
+                              }}
+                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              Name
+                            </label>
+                            <input
+                              type="text"
+                              value={inst.name}
+                              onChange={(e) => {
+                                setVpnInstances((prev) => {
+                                  const next = [...prev];
+                                  next[idx] = {
+                                    ...next[idx],
+                                    name: e.target.value,
+                                  };
+                                  return next;
+                                });
+                                setPendingChanges(true);
+                              }}
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="My VPN Proxy"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              URL
+                            </label>
+                            <input
+                              type="url"
+                              value={inst.url}
+                              onChange={(e) => {
+                                setVpnInstances((prev) => {
+                                  const next = [...prev];
+                                  next[idx] = {
+                                    ...next[idx],
+                                    url: e.target.value,
+                                  };
+                                  return next;
+                                });
+                                setVpnTestStatus((prev) => ({
+                                  ...prev,
+                                  [inst.id]: null,
+                                }));
+                                setPendingChanges(true);
+                              }}
+                              className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="http://vpn-proxy:5000"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            API Key
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showVpnKeys[inst.id] ? "text" : "password"}
+                              value={inst.api_key}
+                              onChange={(e) => {
+                                setVpnInstances((prev) => {
+                                  const next = [...prev];
+                                  next[idx] = {
+                                    ...next[idx],
+                                    api_key: e.target.value,
+                                  };
+                                  return next;
+                                });
+                                setVpnTestStatus((prev) => ({
+                                  ...prev,
+                                  [inst.id]: null,
+                                }));
+                                setPendingChanges(true);
+                              }}
+                              className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                              placeholder="Paste your VPN Proxy Manager API key"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowVpnKeys((prev) => ({
+                                  ...prev,
+                                  [inst.id]: !prev[inst.id],
+                                }))
+                              }
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                            >
+                              {showVpnKeys[inst.id] ? (
+                                <EyeOff size={14} />
+                              ) : (
+                                <Eye size={14} />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!inst.url || !inst.api_key) {
+                              toast.error("Please enter URL and API Key");
+                              return;
+                            }
+                            setVpnTestStatus((prev) => ({
+                              ...prev,
+                              [inst.id]: "loading",
+                            }));
+                            try {
+                              const result = await api.get(
+                                `/vpn-proxy/status?vpn_id=${inst.id}`,
+                              );
+                              if (result?.connected) {
+                                setVpnTestStatus((prev) => ({
+                                  ...prev,
+                                  [inst.id]: "ok",
+                                }));
+                                toast.success(`${inst.name} connected`);
+                              } else {
+                                setVpnTestStatus((prev) => ({
+                                  ...prev,
+                                  [inst.id]: "fail",
+                                }));
+                                toast.error(
+                                  result?.error || "Connection failed",
+                                );
+                              }
+                            } catch (e) {
+                              setVpnTestStatus((prev) => ({
+                                ...prev,
+                                [inst.id]: "fail",
+                              }));
+                              toast.error(
+                                e.message ||
+                                  "Cannot connect to VPN Proxy Manager",
+                              );
+                            }
+                          }}
+                          disabled={
+                            vpnTestStatus[inst.id] === "loading" ||
+                            !inst.url ||
+                            !inst.api_key
+                          }
+                          className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                            vpnTestStatus[inst.id] === "ok"
+                              ? "!bg-emerald-500/15 hover:!bg-emerald-500/25 !text-emerald-400 !border-emerald-500/30"
+                              : vpnTestStatus[inst.id] === "fail"
+                                ? "!bg-red-500/15 hover:!bg-red-500/25 !text-red-400 !border-red-500/30"
+                                : ""
+                          }`}
+                        >
+                          {vpnTestStatus[inst.id] === "loading" ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <svg
+                                className="animate-spin h-4 w-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Testing...
+                            </span>
+                          ) : vpnTestStatus[inst.id] === "ok" ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <CheckCircle size={16} />
+                              Connected
+                            </span>
+                          ) : (
+                            "Test Connection"
+                          )}
+                        </button>
+
+                        {vpnTestStatus[inst.id] === "fail" && (
+                          <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <p>
+                              Cannot connect to {inst.name}. Check the URL and
+                              API Key are correct.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showAddVpn || vpnInstances.length === 0 ? (
+                <div
+                  ref={addVpnRef}
+                  className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden mb-4"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+                  <div className="relative space-y-3">
+                    <h4 className="text-sm font-semibold text-theme-text">
+                      Add VPN Proxy Instance
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          value={newVpnName}
+                          onChange={(e) => setNewVpnName(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="My VPN Proxy"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-theme-text mb-2">
+                          URL
+                        </label>
+                        <input
+                          type="url"
+                          value={newVpnUrl}
+                          onChange={(e) => setNewVpnUrl(e.target.value)}
+                          className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="http://vpn-proxy:5000"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        API Key
+                      </label>
                       <input
-                        type={showVpnProxyKey ? "text" : "password"}
-                        value={vpnProxyApiKey}
-                        onChange={(e) => {
-                          setVpnProxyApiKey(e.target.value);
-                          setVpnProxyTestStatus(null);
-                          setPendingChanges(true);
-                        }}
-                        className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm"
-                        placeholder="Paste your API key from VPN Proxy Manager Settings"
+                        type="password"
+                        value={newVpnApiKey}
+                        onChange={(e) => setNewVpnApiKey(e.target.value)}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text font-mono text-sm focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="Paste your VPN Proxy Manager API key"
                       />
+                    </div>
+                    <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => setShowVpnProxyKey(!showVpnProxyKey)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-theme-muted hover:text-theme-text transition-colors"
+                        onClick={() => {
+                          if (!newVpnName || !newVpnUrl || !newVpnApiKey)
+                            return;
+                          const id = `vpn-${newVpnName
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+                          setVpnInstances((prev) => [
+                            ...prev,
+                            {
+                              id,
+                              name: newVpnName,
+                              url: newVpnUrl,
+                              api_key: newVpnApiKey,
+                            },
+                          ]);
+                          setNewVpnName("");
+                          setNewVpnUrl("");
+                          setNewVpnApiKey("");
+                          setShowAddVpn(false);
+                          setPendingChanges(true);
+                        }}
+                        disabled={!newVpnName || !newVpnUrl || !newVpnApiKey}
+                        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {showVpnProxyKey ? (
-                          <EyeOff size={16} />
-                        ) : (
-                          <Eye size={16} />
-                        )}
+                        <Plus className="w-4 h-4 text-theme-primary" />
+                        Add Instance
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddVpn(false);
+                          setNewVpnName("");
+                          setNewVpnUrl("");
+                          setNewVpnApiKey("");
+                        }}
+                        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+                      >
+                        Cancel
                       </button>
                     </div>
-                    <p className="mt-2 text-xs text-theme-muted">
-                      Generate an API key in VPN Proxy Manager → Settings → API
-                      Keys
-                    </p>
                   </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!vpnProxyUrl || !vpnProxyApiKey) {
-                          toast.error("Please enter URL and API Key");
-                          return;
-                        }
-                        setVpnProxyTestStatus("loading");
-                        try {
-                          const result = await api.get("/vpn-proxy/status");
-                          if (result.connected) {
-                            setVpnProxyTestStatus("ok");
-                            toast.success("VPN Proxy Manager connected");
-                          } else {
-                            setVpnProxyTestStatus("fail");
-                            toast.error(result.error || "Connection failed");
-                          }
-                        } catch (e) {
-                          setVpnProxyTestStatus("fail");
-                          toast.error(
-                            e.message || "Cannot connect to VPN Proxy Manager",
-                          );
-                        }
-                      }}
-                      disabled={
-                        vpnProxyTestStatus === "loading" ||
-                        !vpnProxyUrl ||
-                        !vpnProxyApiKey
-                      }
-                      className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-                        vpnProxyTestStatus === "ok"
-                          ? "!bg-emerald-500/15 hover:!bg-emerald-500/25 !text-emerald-400 !border-emerald-500/30"
-                          : vpnProxyTestStatus === "fail"
-                            ? "!bg-red-500/15 hover:!bg-red-500/25 !text-red-400 !border-red-500/30"
-                            : ""
-                      }`}
-                    >
-                      {vpnProxyTestStatus === "loading" ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg
-                            className="animate-spin h-4 w-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          Testing...
-                        </span>
-                      ) : vpnProxyTestStatus === "ok" ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <CheckCircle size={16} />
-                          Connected
-                        </span>
-                      ) : (
-                        "Test Connection"
-                      )}
-                    </button>
-                  </div>
-
-                  {vpnProxyTestStatus === "fail" && (
-                    <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <p>
-                        Cannot connect to VPN Proxy Manager. Check the URL and
-                        API Key are correct and the service is running.
-                      </p>
-                    </div>
-                  )}
                 </div>
-              </div>
+              ) : null}
             </div>
           )}
 
@@ -2462,18 +2757,42 @@ export default function Settings() {
                               {inst.name || inst.id}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPosterizarrInstances((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              );
-                              setPendingChanges(true);
-                            }}
-                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setPosterizarrInstances, idx, -1)
+                              }
+                              disabled={idx === 0}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setPosterizarrInstances, idx, 1)
+                              }
+                              disabled={idx === posterizarrInstances.length - 1}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPosterizarrInstances((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                );
+                                setPendingChanges(true);
+                              }}
+                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
@@ -2848,18 +3167,42 @@ export default function Settings() {
                               {inst.name || inst.id}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNfsMountInstances((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              );
-                              setPendingChanges(true);
-                            }}
-                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setNfsMountInstances, idx, -1)
+                              }
+                              disabled={idx === 0}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setNfsMountInstances, idx, 1)
+                              }
+                              disabled={idx === nfsMountInstances.length - 1}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNfsMountInstances((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                );
+                                setPendingChanges(true);
+                              }}
+                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
@@ -3230,18 +3573,42 @@ export default function Settings() {
                               {inst.name || inst.id}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAutoscanInstances((prev) =>
-                                prev.filter((_, i) => i !== idx),
-                              );
-                              setPendingChanges(true);
-                            }}
-                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setAutoscanInstances, idx, -1)
+                              }
+                              disabled={idx === 0}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                moveInstance(setAutoscanInstances, idx, 1)
+                              }
+                              disabled={idx === autoscanInstances.length - 1}
+                              className="p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAutoscanInstances((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                );
+                                setPendingChanges(true);
+                              }}
+                              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
@@ -4714,16 +5081,40 @@ export default function Settings() {
                                 {inst.name}
                               </span>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => removeArrInstance(idx)}
-                              className="text-red-400 hover:text-red-300 transition-colors"
-                              title={t("arr.remove", {
-                                defaultValue: "Remove",
-                              })}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  moveInstance(setArrInstances, idx, -1)
+                                }
+                                disabled={idx === 0}
+                                className="p-1 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Move up"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  moveInstance(setArrInstances, idx, 1)
+                                }
+                                disabled={idx === arrInstances.length - 1}
+                                className="p-1 text-theme-muted hover:text-theme-primary hover:bg-theme-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Move down"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeArrInstance(idx)}
+                                className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                title={t("arr.remove", {
+                                  defaultValue: "Remove",
+                                })}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -5062,4 +5453,3 @@ export default function Settings() {
     </div>
   );
 }
-

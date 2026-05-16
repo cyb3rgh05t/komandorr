@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
 import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
@@ -10,21 +11,52 @@ router = APIRouter(prefix="/api/vpn-proxy", tags=["vpn-proxy"])
 _logged_not_configured = False
 
 
-def get_vpn_proxy_config() -> tuple[str, str]:
-    """Return (base_url, api_key) from runtime settings."""
+def get_vpn_proxy_instances() -> list[dict]:
+    """Return the configured komandorr-level VPN Proxy Manager instances."""
+    instances = getattr(settings, "VPN_PROXY_INSTANCES", None) or []
+    if instances:
+        return list(instances)
+    # Backward compat: fall back to single legacy env-style settings
     url = getattr(settings, "VPN_PROXY_URL", "")
     api_key = getattr(settings, "VPN_PROXY_API_KEY", "")
-    return url, api_key
+    if url or api_key:
+        return [
+            {
+                "id": "vpn-default",
+                "name": "VPN Proxy Manager",
+                "url": url,
+                "api_key": api_key,
+            }
+        ]
+    return []
 
 
-def _is_configured() -> bool:
-    url, api_key = get_vpn_proxy_config()
+def get_vpn_proxy_config(vpn_id: Optional[str] = None) -> tuple[str, str]:
+    """Return (base_url, api_key) for the requested komandorr instance.
+
+    If vpn_id is provided and matches a configured instance, that one is used.
+    Otherwise the first configured instance is used (backward compat).
+    """
+    instances = get_vpn_proxy_instances()
+    if not instances:
+        return "", ""
+    if vpn_id:
+        for inst in instances:
+            if inst.get("id") == vpn_id:
+                return inst.get("url", ""), inst.get("api_key", "")
+        logger.warning(f"VPN Proxy instance '{vpn_id}' not found; using first")
+    first = instances[0]
+    return first.get("url", ""), first.get("api_key", "")
+
+
+def _is_configured(vpn_id: Optional[str] = None) -> bool:
+    url, api_key = get_vpn_proxy_config(vpn_id)
     return bool(url and api_key)
 
 
-async def proxy_get(path: str):
-    """Forward a GET request to the VPN Proxy Manager API."""
-    base_url, api_key = get_vpn_proxy_config()
+async def proxy_get(path: str, vpn_id: Optional[str] = None):
+    """Forward a GET request to the selected VPN Proxy Manager API."""
+    base_url, api_key = get_vpn_proxy_config(vpn_id)
     if not base_url or not api_key:
         global _logged_not_configured
         if not _logged_not_configured:
@@ -48,9 +80,9 @@ async def proxy_get(path: str):
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
 
 
-async def proxy_post(path: str):
-    """Forward a POST request to the VPN Proxy Manager API."""
-    base_url, api_key = get_vpn_proxy_config()
+async def proxy_post(path: str, vpn_id: Optional[str] = None):
+    """Forward a POST request to the selected VPN Proxy Manager API."""
+    base_url, api_key = get_vpn_proxy_config(vpn_id)
     if not base_url or not api_key:
         raise HTTPException(status_code=400, detail="VPN Proxy Manager not configured")
 
@@ -70,10 +102,22 @@ async def proxy_post(path: str):
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
 
 
+@router.get("/instances")
+async def list_instances(username: str = Depends(require_auth)):
+    """List configured komandorr-level VPN Proxy Manager instances (id + name + url only)."""
+    return [
+        {"id": inst.get("id"), "name": inst.get("name"), "url": inst.get("url", "")}
+        for inst in get_vpn_proxy_instances()
+    ]
+
+
 @router.get("/status")
-async def vpn_proxy_status(username: str = Depends(require_auth)):
-    """Check if VPN Proxy Manager is reachable."""
-    base_url, api_key = get_vpn_proxy_config()
+async def vpn_proxy_status(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Check if the selected VPN Proxy Manager is reachable."""
+    base_url, api_key = get_vpn_proxy_config(vpn_id)
     if not base_url or not api_key:
         return {"connected": False, "error": "Not configured"}
     try:
@@ -89,42 +133,52 @@ async def vpn_proxy_status(username: str = Depends(require_auth)):
 
 
 @router.get("/containers")
-async def get_containers(username: str = Depends(require_auth)):
-    """Get all VPN containers."""
-    if not _is_configured():
+async def get_containers(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get all VPN containers for the selected instance."""
+    if not _is_configured(vpn_id):
         return []
-    return await proxy_get("/containers") or []
+    return await proxy_get("/containers", vpn_id) or []
 
 
 @router.get("/containers/vpn-info-batch")
-async def get_vpn_info_batch(username: str = Depends(require_auth)):
-    """Get VPN info for all running containers."""
-    if not _is_configured():
+async def get_vpn_info_batch(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get VPN info for all running containers on the selected instance."""
+    if not _is_configured(vpn_id):
         return {}
-    data = await proxy_get("/containers/vpn-info-batch") or {}
-
-    return data
+    return await proxy_get("/containers/vpn-info-batch", vpn_id) or {}
 
 
 @router.get("/containers/dependents")
-async def get_dependents(username: str = Depends(require_auth)):
-    """Get all dependent containers."""
-    if not _is_configured():
+async def get_dependents(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get all dependent containers on the selected instance."""
+    if not _is_configured(vpn_id):
         return []
-    return await proxy_get("/containers/dependents") or []
+    return await proxy_get("/containers/dependents", vpn_id) or []
 
 
 @router.get("/containers/dependents-batch")
-async def get_dependents_batch(username: str = Depends(require_auth)):
+async def get_dependents_batch(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
     """Get dependents for every VPN container, keyed by container DB id."""
-    if not _is_configured():
+    if not _is_configured(vpn_id):
         return {}
-    containers = await proxy_get("/containers") or []
+    containers = await proxy_get("/containers", vpn_id) or []
     import asyncio
 
     async def _fetch(cid: int):
         try:
-            deps = await proxy_get(f"/containers/{cid}/dependents")
+            deps = await proxy_get(f"/containers/{cid}/dependents", vpn_id)
             return cid, deps or []
         except Exception:
             return cid, []
@@ -135,96 +189,122 @@ async def get_dependents_batch(username: str = Depends(require_auth)):
 
 
 @router.get("/containers/{container_id}")
-async def get_container(container_id: int, username: str = Depends(require_auth)):
-    """Get a single container."""
-    if not _is_configured():
+async def get_container(
+    container_id: int,
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get a single container from the selected instance."""
+    if not _is_configured(vpn_id):
         return {"error": "Not configured"}
-    return await proxy_get(f"/containers/{container_id}")
+    return await proxy_get(f"/containers/{container_id}", vpn_id)
 
 
 @router.get("/containers/{container_id}/vpn-info")
 async def get_container_vpn_info(
-    container_id: int, username: str = Depends(require_auth)
+    container_id: int,
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
 ):
-    """Get VPN info for a single container."""
-    if not _is_configured():
+    """Get VPN info for a single container on the selected instance."""
+    if not _is_configured(vpn_id):
         return {"error": "Not configured"}
-    return await proxy_get(f"/containers/{container_id}/vpn-info")
+    return await proxy_get(f"/containers/{container_id}/vpn-info", vpn_id)
 
 
 @router.get("/system/docker-status")
-async def get_docker_status(username: str = Depends(require_auth)):
-    """Get Docker system status from VPN Proxy Manager."""
-    if not _is_configured():
+async def get_docker_status(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get Docker system status from the selected VPN Proxy Manager."""
+    if not _is_configured(vpn_id):
         return {"error": "Not configured"}
-    return await proxy_get("/system/docker-status")
+    return await proxy_get("/system/docker-status", vpn_id)
 
 
 # --- Monitoring endpoints (proxy to VPN-Proxy Manager's monitoring API) ---
 
 
 @router.get("/monitoring/status")
-async def get_monitoring_status(username: str = Depends(require_auth)):
-    """Check if O11 monitoring is configured."""
-    if not _is_configured():
+async def get_monitoring_status(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Check if O11 monitoring is configured on the selected instance."""
+    if not _is_configured(vpn_id):
         return {"configured": False}
     try:
-        return await proxy_get("/monitoring/status")
+        return await proxy_get("/monitoring/status", vpn_id)
     except Exception:
         return {"configured": False}
 
 
 @router.get("/monitoring/instances")
-async def get_monitoring_instances(username: str = Depends(require_auth)):
-    """Get configured O11 monitoring instances from VPN Proxy Manager."""
-    if not _is_configured():
+async def get_monitoring_instances(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get configured O11 monitoring instances from the selected VPN Proxy Manager."""
+    if not _is_configured(vpn_id):
         return []
     try:
-        return await proxy_get("/settings/o11/instances") or []
+        return await proxy_get("/settings/o11/instances", vpn_id) or []
     except Exception:
         return []
 
 
 @router.get("/monitoring")
-async def get_monitoring(username: str = Depends(require_auth)):
-    """Get monitoring data (readers, system stats)."""
-    if not _is_configured():
+async def get_monitoring(
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
+):
+    """Get monitoring data (readers, system stats) from the selected instance."""
+    if not _is_configured(vpn_id):
         return {}
-    return await proxy_get("/monitoring") or {}
+    return await proxy_get("/monitoring", vpn_id) or {}
 
 
 @router.get("/monitoring/instance/{instance_id}")
 async def get_instance_monitoring(
-    instance_id: str, username: str = Depends(require_auth)
+    instance_id: str,
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
 ):
     """Get monitoring data for a specific O11 instance."""
-    if not _is_configured():
+    if not _is_configured(vpn_id):
         return {}
-    return await proxy_get(f"/monitoring/instance/{instance_id}") or {}
+    return await proxy_get(f"/monitoring/instance/{instance_id}", vpn_id) or {}
 
 
 @router.get("/monitoring/network-usage")
 async def get_network_usage(
-    provider: str = "demagentatv", username: str = Depends(require_auth)
+    provider: str = "demagentatv",
+    vpn_id: Optional[str] = Query(None),
+    username: str = Depends(require_auth),
 ):
-    """Get network usage data for a provider."""
-    if not _is_configured():
+    """Get network usage data for a provider on the selected instance."""
+    if not _is_configured(vpn_id):
         return {}
-    return await proxy_get(f"/monitoring/network-usage?provider={provider}") or {}
+    return (
+        await proxy_get(f"/monitoring/network-usage?provider={provider}", vpn_id) or {}
+    )
 
 
 @router.get("/monitoring/instance/{instance_id}/network-usage")
 async def get_instance_network_usage(
     instance_id: str,
     provider: str = "demagentatv",
+    vpn_id: Optional[str] = Query(None),
     username: str = Depends(require_auth),
 ):
     """Get network usage data for a provider on a specific O11 instance."""
-    if not _is_configured():
+    if not _is_configured(vpn_id):
         return {}
     return (
         await proxy_get(
-            f"/monitoring/instance/{instance_id}/network-usage?provider={provider}"
+            f"/monitoring/instance/{instance_id}/network-usage?provider={provider}",
+            vpn_id,
         )
         or {}
     )
@@ -235,13 +315,14 @@ async def control_dependent(
     container_id: int,
     docker_name: str,
     action: str,
+    vpn_id: Optional[str] = Query(None),
     username: str = Depends(require_auth),
 ):
-    """Control a dependent container (start/stop/restart)."""
+    """Control a dependent container (start/stop/restart) on the selected instance."""
     if action not in ("start", "stop", "restart"):
         raise HTTPException(status_code=400, detail="Invalid action")
-    if not _is_configured():
+    if not _is_configured(vpn_id):
         raise HTTPException(status_code=400, detail="VPN Proxy Manager not configured")
     return await proxy_post(
-        f"/containers/{container_id}/dependents/{docker_name}/{action}"
+        f"/containers/{container_id}/dependents/{docker_name}/{action}", vpn_id
     )

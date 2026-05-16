@@ -198,10 +198,31 @@ export default function VpnProxyMonitor() {
   const [activeInstanceId, setActiveInstanceId] = useState(null);
   const [tab, setTab] = useState("network");
   const [networkTab, setNetworkTab] = useState("all");
+  const [activeVpnId, setActiveVpnId] = useState(null);
+
+  // Fetch configured komandorr-level VPN Proxy Manager instances
+  const { data: vpnInstancesList = [] } = useQuery({
+    queryKey: ["vpn-proxy-instances"],
+    queryFn: () => api.get("/vpn-proxy/instances"),
+    staleTime: 60000,
+  });
+
+  const effectiveVpnId = useMemo(() => {
+    if (activeVpnId && vpnInstancesList.some((i) => i.id === activeVpnId)) {
+      return activeVpnId;
+    }
+    return vpnInstancesList[0]?.id || null;
+  }, [activeVpnId, vpnInstancesList]);
+
+  const vpnQs = effectiveVpnId ? `vpn_id=${effectiveVpnId}` : "";
+  const withVpn = (url) => {
+    if (!vpnQs) return url;
+    return url.includes("?") ? `${url}&${vpnQs}` : `${url}?${vpnQs}`;
+  };
 
   const { data: statusData, isLoading: statusLoading } = useQuery({
-    queryKey: ["vpn-monitor-status"],
-    queryFn: () => api.get("/vpn-proxy/monitoring/status"),
+    queryKey: ["vpn-monitor-status", effectiveVpnId],
+    queryFn: () => api.get(withVpn("/vpn-proxy/monitoring/status")),
     staleTime: 30000,
     refetchInterval: 30000,
   });
@@ -209,8 +230,8 @@ export default function VpnProxyMonitor() {
   const configured = statusData?.configured ?? null;
 
   const { data: instances = [] } = useQuery({
-    queryKey: ["vpn-monitor-instances"],
-    queryFn: () => api.get("/vpn-proxy/monitoring/instances"),
+    queryKey: ["vpn-monitor-instances", effectiveVpnId],
+    queryFn: () => api.get(withVpn("/vpn-proxy/monitoring/instances")),
     enabled: configured === true,
     staleTime: 30000,
     refetchInterval: 30000,
@@ -240,11 +261,11 @@ export default function VpnProxyMonitor() {
   const providerId = activeInstance?.provider_id || "";
 
   const { data: monitorData, isFetching: monitorFetching } = useQuery({
-    queryKey: ["vpn-monitor-data", activeInstanceId],
+    queryKey: ["vpn-monitor-data", effectiveVpnId, activeInstanceId],
     queryFn: () =>
       activeInstanceId
-        ? api.get(`/vpn-proxy/monitoring/instance/${activeInstanceId}`)
-        : api.get("/vpn-proxy/monitoring"),
+        ? api.get(withVpn(`/vpn-proxy/monitoring/instance/${activeInstanceId}`))
+        : api.get(withVpn("/vpn-proxy/monitoring")),
     enabled: configured === true,
     staleTime: 3000,
     refetchInterval: 5000,
@@ -252,13 +273,24 @@ export default function VpnProxyMonitor() {
   });
 
   const { data: networkData, isFetching: networkFetching } = useQuery({
-    queryKey: ["vpn-monitor-network", activeInstanceId, providerId],
+    queryKey: [
+      "vpn-monitor-network",
+      effectiveVpnId,
+      activeInstanceId,
+      providerId,
+    ],
     queryFn: () =>
       activeInstanceId
         ? api.get(
-            `/vpn-proxy/monitoring/instance/${activeInstanceId}/network-usage?provider=${providerId}`,
+            withVpn(
+              `/vpn-proxy/monitoring/instance/${activeInstanceId}/network-usage?provider=${providerId}`,
+            ),
           )
-        : api.get(`/vpn-proxy/monitoring/network-usage?provider=${providerId}`),
+        : api.get(
+            withVpn(
+              `/vpn-proxy/monitoring/network-usage?provider=${providerId}`,
+            ),
+          ),
     enabled: configured === true && providerId.length > 0,
     staleTime: 3000,
     refetchInterval: 5000,
@@ -402,6 +434,32 @@ export default function VpnProxyMonitor() {
           </>
         }
       />
+
+      {/* Komandorr-level VPN Proxy Manager instance picker */}
+      {vpnInstancesList.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {vpnInstancesList.map((inst) => {
+            const active = effectiveVpnId === inst.id;
+            return (
+              <button
+                key={inst.id}
+                onClick={() => {
+                  setActiveVpnId(inst.id);
+                  setActiveInstanceId(null);
+                }}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                  active
+                    ? "bg-theme-primary/15 border-theme-primary text-theme-primary"
+                    : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary"
+                }`}
+              >
+                <Activity className="w-4 h-4" />
+                {inst.name || inst.id}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* System Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

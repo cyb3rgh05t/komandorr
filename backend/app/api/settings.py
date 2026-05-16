@@ -52,9 +52,15 @@ class UploaderSettings(BaseModel):
     base_url: str
 
 
-class VpnProxySettings(BaseModel):
+class VpnProxyInstance(BaseModel):
+    id: str
+    name: str
     url: str
     api_key: str
+
+
+class VpnProxySettings(BaseModel):
+    instances: list[VpnProxyInstance] = []
 
 
 class PosterizarrInstance(BaseModel):
@@ -249,14 +255,37 @@ async def get_settings(username: str = Depends(require_auth)):
         )
     )
 
-    # Get VPN Proxy Manager settings from config or defaults
+    # Get VPN Proxy Manager settings from config or defaults (multi-instance with backward compat)
     vpn_proxy_config = config_data.get("vpn_proxy", {})
-    vpn_proxy_settings = VpnProxySettings(
-        url=vpn_proxy_config.get("url", getattr(settings, "VPN_PROXY_URL", "")),
-        api_key=vpn_proxy_config.get(
-            "api_key", getattr(settings, "VPN_PROXY_API_KEY", "")
-        ),
-    )
+    vpn_proxy_instances = []
+    if "instances" in vpn_proxy_config:
+        vpn_proxy_instances = [
+            VpnProxyInstance(**inst) for inst in vpn_proxy_config["instances"]
+        ]
+    elif vpn_proxy_config.get("url") or vpn_proxy_config.get("api_key"):
+        # Backward compat: old single-instance format
+        vpn_proxy_instances = [
+            VpnProxyInstance(
+                id="vpn-default",
+                name="VPN Proxy Manager",
+                url=vpn_proxy_config.get("url", getattr(settings, "VPN_PROXY_URL", "")),
+                api_key=vpn_proxy_config.get(
+                    "api_key", getattr(settings, "VPN_PROXY_API_KEY", "")
+                ),
+            )
+        ]
+    elif getattr(settings, "VPN_PROXY_URL", "") or getattr(
+        settings, "VPN_PROXY_API_KEY", ""
+    ):
+        vpn_proxy_instances = [
+            VpnProxyInstance(
+                id="vpn-default",
+                name="VPN Proxy Manager",
+                url=getattr(settings, "VPN_PROXY_URL", ""),
+                api_key=getattr(settings, "VPN_PROXY_API_KEY", ""),
+            )
+        ]
+    vpn_proxy_settings = VpnProxySettings(instances=vpn_proxy_instances)
 
     # Get Posterizarr settings from config or defaults (multi-instance with backward compat)
     posterizarr_config = config_data.get("posterizarr", {})
@@ -497,16 +526,40 @@ async def update_settings(
         settings.UPLOADER_BASE_URL = updates.uploader.base_url
         logger.debug(f"Updated Uploader base_url to: {updates.uploader.base_url}")
 
-    # Update VPN Proxy Manager settings
+    # Update VPN Proxy Manager settings (multi-instance)
     if updates.vpn_proxy is not None:
         config_data["vpn_proxy"] = {
-            "url": updates.vpn_proxy.url,
-            "api_key": updates.vpn_proxy.api_key,
+            "instances": [
+                {
+                    "id": inst.id,
+                    "name": inst.name,
+                    "url": inst.url,
+                    "api_key": inst.api_key,
+                }
+                for inst in updates.vpn_proxy.instances
+            ]
         }
-        # Update runtime settings
-        settings.VPN_PROXY_URL = updates.vpn_proxy.url
-        settings.VPN_PROXY_API_KEY = updates.vpn_proxy.api_key
-        logger.debug(f"Updated VPN Proxy URL to: {updates.vpn_proxy.url}")
+        # Update runtime settings from first instance (backward compat for callers
+        # that still use VPN_PROXY_URL / VPN_PROXY_API_KEY directly).
+        if updates.vpn_proxy.instances:
+            first = updates.vpn_proxy.instances[0]
+            settings.VPN_PROXY_URL = first.url
+            settings.VPN_PROXY_API_KEY = first.api_key
+        else:
+            settings.VPN_PROXY_URL = ""
+            settings.VPN_PROXY_API_KEY = ""
+        settings.VPN_PROXY_INSTANCES = [
+            {
+                "id": inst.id,
+                "name": inst.name,
+                "url": inst.url,
+                "api_key": inst.api_key,
+            }
+            for inst in updates.vpn_proxy.instances
+        ]
+        logger.debug(
+            f"Updated VPN Proxy instances: {len(updates.vpn_proxy.instances)} instances"
+        )
 
     # Update Posterizarr settings (multi-instance)
     if updates.posterizarr is not None:
