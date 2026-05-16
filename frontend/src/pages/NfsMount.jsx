@@ -437,11 +437,25 @@ function ManagerSection({ manager, tabsSlot }) {
               const mounted = st?.mounted || false;
               const rawSources =
                 c.sources ?? c.branches ?? c.paths ?? c.source_paths ?? [];
-              const sources = Array.isArray(rawSources)
-                ? rawSources
-                : typeof rawSources === "string"
-                  ? rawSources.split(/[:,\n]+/).filter(Boolean)
-                  : [];
+              let sources = [];
+              if (Array.isArray(rawSources)) {
+                sources = rawSources;
+              } else if (typeof rawSources === "string") {
+                const trimmed = rawSources.trim();
+                if (trimmed.startsWith("[")) {
+                  try {
+                    const parsed = JSON.parse(trimmed);
+                    if (Array.isArray(parsed)) sources = parsed;
+                  } catch {
+                    sources = trimmed.split(/[:,\n]+/);
+                  }
+                } else {
+                  sources = trimmed.split(/[:,\n]+/);
+                }
+              }
+              sources = sources
+                .map((s) => String(s).replace(/^["'\s[]+|["'\s\]]+$/g, ""))
+                .filter(Boolean);
               return (
                 <div
                   key={c.id}

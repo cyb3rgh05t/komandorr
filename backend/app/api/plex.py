@@ -75,6 +75,21 @@ def get_plex_instances() -> List[dict]:
     return list(settings.PLEX_INSTANCES) if settings.PLEX_INSTANCES else []
 
 
+def get_sync_instance_id() -> Optional[str]:
+    """Return the Plex instance_id configured for VOD Sync, if any."""
+    try:
+        config_path = Path(__file__).parent.parent.parent / "data" / "config.json"
+        if not config_path.exists():
+            return None
+        with open(config_path, "r") as f:
+            data = json.load(f)
+        sync_id = (data.get("plex_sync") or {}).get("instance_id") or ""
+        return sync_id or None
+    except Exception as e:
+        logger.debug(f"Could not read plex_sync.instance_id: {e}")
+        return None
+
+
 def load_plex_config(instance_id: Optional[str] = None) -> Optional[dict]:
     """Load Plex configuration for a specific instance, or first instance if none specified."""
     try:
@@ -82,6 +97,11 @@ def load_plex_config(instance_id: Optional[str] = None) -> Optional[dict]:
 
         instances = settings.PLEX_INSTANCES
         if instances:
+            # When no instance_id is provided, prefer the one configured for
+            # VOD Sync so background services and shared endpoints don't drift
+            # whenever the user reorders Plex instances in settings.
+            if not instance_id:
+                instance_id = get_sync_instance_id()
             if instance_id:
                 for inst in instances:
                     if inst.get("id") == instance_id:
