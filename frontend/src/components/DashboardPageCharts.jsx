@@ -772,14 +772,38 @@ function NfsCard() {
 
   let mountsUp = 0;
   let mountsDown = 0;
+  let exportsActive = 0;
+  let exportsTotal = 0;
+  let mergerUp = 0;
+  let mergerTotal = 0;
+  let tunnelsUp = 0;
+  let tunnelsTotal = 0;
   managers.forEach((mgr) => {
     const mounts = mgr?.nfs_mounts || [];
-    const statuses = mgr?.nfs_mount_statuses || {};
+    const mountStatuses = mgr?.nfs_mount_statuses || {};
     mounts.forEach((m) => {
       const id = m?.id;
-      const ok = id != null ? !!statuses[id]?.mounted : !!m?.mounted;
+      const ok = id != null ? !!mountStatuses[id]?.mounted : !!m?.mounted;
       if (ok) mountsUp += 1;
       else mountsDown += 1;
+    });
+    const exports = mgr?.nfs_exports || [];
+    const exportStatuses = mgr?.nfs_export_statuses || {};
+    exports.forEach((e) => {
+      exportsTotal += 1;
+      if (exportStatuses[e.id]?.is_active || e.is_active) exportsActive += 1;
+    });
+    const mergerCfgs = mgr?.mergerfs_configs || [];
+    const mergerStatuses = mgr?.mergerfs_statuses || {};
+    mergerCfgs.forEach((c) => {
+      mergerTotal += 1;
+      if (mergerStatuses[c.id]?.mounted) mergerUp += 1;
+    });
+    const tunnels = mgr?.vpn_configs || [];
+    const tunnelStatuses = mgr?.vpn_statuses || {};
+    tunnels.forEach((v) => {
+      tunnelsTotal += 1;
+      if (tunnelStatuses[v.id]?.connected) tunnelsUp += 1;
     });
   });
   const total = mountsUp + mountsDown;
@@ -857,11 +881,43 @@ function NfsCard() {
           },
         ]}
       />
+      <div className="grid grid-cols-3 gap-2 w-full">
+        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={exportsTotal ? (exportsActive / exportsTotal) * 100 : 0}
+            color="#3b82f6"
+            centerLabel={`${exportsActive}/${exportsTotal}`}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.exports", "Exports")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={mergerTotal ? (mergerUp / mergerTotal) * 100 : 0}
+            color="#a78bfa"
+            centerLabel={`${mergerUp}/${mergerTotal}`}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.mergerfs", "MergerFS")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={tunnelsTotal ? (tunnelsUp / tunnelsTotal) * 100 : 0}
+            color="#f59e0b"
+            centerLabel={`${tunnelsUp}/${tunnelsTotal}`}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.tunnels", "Tunnels")}
+          </span>
+        </div>
+      </div>
       <StatGrid
         tiles={[
           {
             label: t("dashboard.charts.mounts", "Mounts"),
-            value: total,
+            value: `${mountsUp}/${total}`,
             color: "var(--theme-primary)",
           },
           {
@@ -870,14 +926,14 @@ function NfsCard() {
             color: "#22d3ee",
           },
           {
-            label: t("dashboard.charts.up", "Up"),
-            value: mountsUp,
-            color: "#22c55e",
+            label: t("dashboard.charts.exports", "Exports"),
+            value: `${exportsActive}/${exportsTotal}`,
+            color: "#3b82f6",
           },
           {
-            label: t("dashboard.charts.down", "Down"),
-            value: mountsDown,
-            color: "#ef4444",
+            label: t("dashboard.charts.mergerfs", "MergerFS"),
+            value: `${mergerUp}/${mergerTotal}`,
+            color: "#a78bfa",
           },
           {
             label: t("dashboard.charts.cpu", "CPU"),
@@ -1641,6 +1697,58 @@ function VodSyncCard() {
     staleTime: 30000,
   });
 
+  // Reuse PlexCard's sessions cache to avoid duplicate fetches
+  const { data: instancesData } = useQuery({
+    queryKey: ["plex-instances"],
+    queryFn: async () => {
+      try {
+        return await api.get("/plex/instances");
+      } catch {
+        return { instances: [] };
+      }
+    },
+    staleTime: 60000,
+    refetchInterval: 60000,
+  });
+  const plexInstances = instancesData?.instances || [];
+
+  const { data: sessionsAgg } = useQuery({
+    queryKey: ["dash-plex-sessions", plexInstances.map((i) => i.id).join(",")],
+    queryFn: async () => {
+      if (plexInstances.length === 0) {
+        try {
+          const res = await api.get("/plex/sessions");
+          return { byInstance: { _default: res?.sessions || [] } };
+        } catch {
+          return { byInstance: {} };
+        }
+      }
+      const results = await Promise.all(
+        plexInstances.map(async (inst) => {
+          try {
+            const res = await api.get(
+              `/plex/sessions?instance_id=${encodeURIComponent(inst.id)}`,
+            );
+            return [inst.id, res?.sessions || []];
+          } catch {
+            return [inst.id, []];
+          }
+        }),
+      );
+      return { byInstance: Object.fromEntries(results) };
+    },
+    refetchInterval: 5000,
+    staleTime: 3000,
+  });
+
+  const allSessions = Object.values(sessionsAgg?.byInstance || {}).flat();
+  const activeStreams = allSessions.length;
+  const activeUsers = new Set(
+    allSessions
+      .map((s) => s?.user || s?.user_title || s?.username)
+      .filter(Boolean),
+  ).size;
+
   const movies = Number(stats?.total_movies ?? 0) || 0;
   const shows = Number(stats?.total_tv_shows ?? 0) || 0;
   const users = Number(stats?.total_users ?? 0) || 0;
@@ -1698,32 +1806,112 @@ function VodSyncCard() {
           },
         ]}
       />
+
+      {/* Active activity row */}
+      <div className="grid grid-cols-2 gap-2 w-full">
+        <div className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={
+              allTimePeak > 0
+                ? Math.min(100, (activeStreams / allTimePeak) * 100)
+                : activeStreams > 0
+                  ? 100
+                  : 0
+            }
+            color="#22c55e"
+            centerLabel={activeStreams}
+          />
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
+              {t("dashboard.charts.activeStreams", "Active Streams")}
+            </p>
+            <p className="text-[10px] text-theme-text-muted">
+              {t("dashboard.charts.now", "now")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={users > 0 ? (activeUsers / users) * 100 : 0}
+            color="#22d3ee"
+            centerLabel={activeUsers}
+          />
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
+              {t("dashboard.charts.activeUsers", "Active Users")}
+            </p>
+            <p className="text-[10px] text-theme-text-muted">
+              {users} {t("dashboard.charts.total", "total")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 7-day peak trend mini bar chart */}
+      {peakRows.length > 0 && (
+        <div className="w-full">
+          <div className="flex items-end justify-between gap-1 h-16 px-1">
+            {peakRows.slice(-7).map((p, i) => {
+              const v = Number(p?.peak) || 0;
+              const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
+              const isToday = (p?.date || "").startsWith(todayIso);
+              const d = p?.date ? new Date(p.date) : null;
+              const label = d
+                ? d
+                    .toLocaleDateString(undefined, { weekday: "short" })
+                    .slice(0, 2)
+                : "";
+              return (
+                <div
+                  key={i}
+                  className="flex-1 flex flex-col items-center gap-1 min-w-0"
+                  title={`${p?.date || ""}: ${v}`}
+                >
+                  <div className="w-full flex items-end h-12">
+                    <div
+                      className="w-full rounded-t transition-all"
+                      style={{
+                        height: `${Math.max(2, h)}%`,
+                        backgroundColor: isToday ? "#22c55e" : "#a78bfa",
+                      }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-theme-text-muted leading-none">
+                    {label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <StatGrid
         tiles={[
           {
-            label: t("dashboard.charts.movies", "Movies"),
-            value: movies,
-            color: "#a78bfa",
+            label: t("dashboard.charts.activeStreams", "Active Streams"),
+            value: activeStreams,
+            color: "#22c55e",
           },
           {
-            label: t("dashboard.charts.shows", "Shows"),
-            value: shows,
-            color: "#f472b6",
+            label: t("dashboard.charts.activeUsers", "Active Users"),
+            value: activeUsers,
+            color: "#22d3ee",
           },
           {
             label: t("dashboard.charts.users", "Users"),
             value: users,
-            color: "#22d3ee",
+            color: "var(--theme-primary)",
           },
           {
             label: t("dashboard.charts.allTimePeak", "All-Time Peak"),
             value: allTimePeak,
-            color: "var(--theme-primary)",
+            color: "#a78bfa",
           },
           {
             label: t("dashboard.charts.todayPeak", "Today"),
             value: todayPeak,
-            color: "#22c55e",
+            color: "#f472b6",
           },
           {
             label: t("dashboard.charts.weekPeak", "7-Day Peak"),
