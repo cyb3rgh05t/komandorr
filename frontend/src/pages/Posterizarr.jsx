@@ -23,6 +23,10 @@ import {
   HardDrive,
   Database,
   Tv,
+  AlertTriangle,
+  Scissors,
+  Type,
+  BarChart3,
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
@@ -544,6 +548,217 @@ export default function Posterizarr() {
                   </div>
                 )}
               </div>
+
+              {/* ── Runtime Statistics ── */}
+              {(() => {
+                const latest = historyItems[0];
+                if (!latest) return null;
+                const yesNo = (v) =>
+                  v === true || v === "true" || v === 1 ? "YES" : "NO";
+                const yesNoAccent = (v) =>
+                  v === true || v === "true" || v === 1 ? "green" : "rose";
+                return (
+                  <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
+                    <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-theme-primary" />
+                      <h3 className="text-base font-semibold text-theme-text">
+                        Runtime Statistics
+                      </h3>
+                      <button
+                        onClick={() => refetchHistory()}
+                        className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary transition-all"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Refresh
+                      </button>
+                    </div>
+
+                    {/* Mode + Last Run banner */}
+                    <div className="px-4 py-2.5 border-b border-theme bg-theme-hover/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-theme-text-muted">Mode:</span>
+                        <span className="font-semibold text-theme-text capitalize">
+                          {latest.mode || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-theme-text-muted">Last Run:</span>
+                        <span className="font-semibold text-theme-text">
+                          {formatTimestamp(
+                            latest.end_time ||
+                              latest.start_time ||
+                              latest.timestamp,
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Execution Time hero */}
+                    <div className="p-4 border-b border-theme">
+                      <div className="flex items-center justify-between gap-3 p-4 rounded-lg bg-theme-hover border border-theme">
+                        <div className="min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-theme-text-muted">
+                            Execution Time
+                          </p>
+                          <p className="text-2xl sm:text-3xl font-bold text-theme-text">
+                            {latest.runtime_formatted || "—"}
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/30 shrink-0">
+                          <Clock className="w-6 h-6" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Core counts */}
+                    <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 border-b border-theme">
+                      <MiniStatCard
+                        icon={Image}
+                        accent="blue"
+                        label="Total Images"
+                        value={latest.total_images || 0}
+                      />
+                      <MiniStatCard
+                        icon={Film}
+                        accent="green"
+                        label="Posters"
+                        value={latest.posters || 0}
+                      />
+                      <MiniStatCard
+                        icon={Tv}
+                        accent="amber"
+                        label="Seasons"
+                        value={latest.seasons || 0}
+                      />
+                      <MiniStatCard
+                        icon={Image}
+                        accent="purple"
+                        label="Backgrounds"
+                        value={latest.backgrounds || 0}
+                      />
+                      <MiniStatCard
+                        icon={Tv}
+                        accent="primary"
+                        label="Title Cards"
+                        value={latest.titlecards || 0}
+                      />
+                      <MiniStatCard
+                        icon={AlertTriangle}
+                        accent="amber"
+                        label="Fallbacks"
+                        value={latest.fallbacks || 0}
+                      />
+                      <MiniStatCard
+                        icon={Image}
+                        accent="purple"
+                        label="Textless"
+                        value={latest.textless || 0}
+                      />
+                      <MiniStatCard
+                        icon={Scissors}
+                        accent="rose"
+                        label="Truncated"
+                        value={latest.truncated || 0}
+                      />
+                      <MiniStatCard
+                        icon={Type}
+                        accent="primary"
+                        label="Text"
+                        value={latest.text || 0}
+                      />
+                      <MiniStatCard
+                        icon={Database}
+                        accent="blue"
+                        label="TBA Skipped"
+                        value={latest.tba_skipped || 0}
+                      />
+                      <MiniStatCard
+                        icon={Globe}
+                        accent="blue"
+                        label="JP/CN Skipped"
+                        value={
+                          latest.jap_chines_skipped || latest.jp_cn_skipped || 0
+                        }
+                      />
+                      <MiniStatCard
+                        icon={XCircle}
+                        accent={(latest.errors || 0) > 0 ? "rose" : "green"}
+                        label="Script Errors"
+                        value={latest.errors || 0}
+                      />
+                    </div>
+
+                    {/* Additional Information */}
+                    <div className="px-4 pt-4 pb-3 border-b border-theme">
+                      <p className="text-[11px] uppercase tracking-wider text-theme-text-muted font-semibold mb-3">
+                        Additional Information
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        <MiniStatCard
+                          icon={CheckCircle}
+                          accent={yesNoAccent(latest.notification_sent)}
+                          label="Notification Sent"
+                          value={yesNo(latest.notification_sent)}
+                          isText
+                        />
+                        <MiniStatCard
+                          icon={Activity}
+                          accent={yesNoAccent(latest.uptime_kuma)}
+                          label="Uptime Kuma"
+                          value={yesNo(latest.uptime_kuma)}
+                          isText
+                        />
+                        <MiniStatCard
+                          icon={FolderOpen}
+                          accent="amber"
+                          label="Images Cleared"
+                          value={latest.images_cleared || 0}
+                        />
+                        <MiniStatCard
+                          icon={FolderOpen}
+                          accent="amber"
+                          label="Folders Cleared"
+                          value={latest.folders_cleared || 0}
+                        />
+                        <MiniStatCard
+                          icon={HardDrive}
+                          accent="green"
+                          label="Space Saved"
+                          value={latest.space_saved || "0"}
+                          isText
+                        />
+                      </div>
+                    </div>
+
+                    {/* Version Information */}
+                    <div className="px-4 pt-4 pb-4">
+                      <p className="text-[11px] uppercase tracking-wider text-theme-text-muted font-semibold mb-3">
+                        Version Information
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <MiniStatCard
+                          icon={BarChart3}
+                          accent="primary"
+                          label="Script Version"
+                          value={latest.script_version || "—"}
+                          isText
+                        />
+                        <MiniStatCard
+                          icon={Server}
+                          accent="blue"
+                          label="ImageMagick Version"
+                          value={
+                            latest.im_version ||
+                            latest.imagemagick_version ||
+                            "—"
+                          }
+                          isText
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ── Plex Export ── */}
               {plexExport?.success && (
