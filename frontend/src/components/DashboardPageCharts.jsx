@@ -1769,10 +1769,6 @@ function VodSyncCard() {
     ? sessionsData.activities
     : [];
   const activeStreams = vodActivities.length;
-  const downloadingCount = vodActivities.filter((a) => {
-    const t = (a?.type || "").toLowerCase();
-    return t === "download" || t.includes("download");
-  }).length;
 
   const movies = Number(stats?.total_movies ?? 0) || 0;
   const shows = Number(stats?.total_tv_shows ?? 0) || 0;
@@ -1814,8 +1810,8 @@ function VodSyncCard() {
       }
     >
       {/* Live streams on the VOD-Sync Plex instance */}
-      <div className="grid grid-cols-2 gap-2 w-full">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-8 w-full">
+        <div className="flex items-center gap-3">
           <MiniRing
             percent={
               allTimePeak > 0
@@ -1825,35 +1821,33 @@ function VodSyncCard() {
                   : 0
             }
             color="#22c55e"
+            size={96}
+            thickness={10}
             centerLabel={activeStreams}
           />
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
+            <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
               {t("dashboard.charts.liveStreams", "Live Streams")}
             </p>
-            <p className="text-[10px] text-theme-text-muted">
+            <p className="text-xs text-theme-text-muted">
               {t("dashboard.charts.now", "now")}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <MiniRing
-            percent={
-              activeStreams > 0
-                ? Math.min(100, (downloadingCount / activeStreams) * 100)
-                : downloadingCount > 0
-                  ? 100
-                  : 0
-            }
-            color="#22d3ee"
-            centerLabel={downloadingCount}
+            percent={allTimePeak > 0 ? 100 : 0}
+            color="#a78bfa"
+            size={96}
+            thickness={10}
+            centerLabel={allTimePeak}
           />
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
-              {t("dashboard.charts.downloading", "Downloading")}
+            <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
+              {t("dashboard.charts.highestPeak", "Highest Peak")}
             </p>
-            <p className="text-[10px] text-theme-text-muted">
-              {t("dashboard.charts.active", "active")}
+            <p className="text-xs text-theme-text-muted">
+              {t("dashboard.charts.allTime", "all-time")}
             </p>
           </div>
         </div>

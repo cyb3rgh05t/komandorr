@@ -11,11 +11,19 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         assetFileNames: "assets/[name]-[hash][extname]",
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          "query-vendor": ["@tanstack/react-query"],
+          "i18n-vendor": ["i18next", "react-i18next"],
+          "icons-vendor": ["lucide-react"],
+          "map-vendor": ["react-simple-maps"],
+        },
       },
     },
   },
