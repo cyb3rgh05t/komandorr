@@ -530,14 +530,16 @@ export function VpnCard({
       try {
         return await api.get("/vpn-proxy/instances");
       } catch {
-        return { instances: [] };
+        return [];
       }
     },
     staleTime: 60000,
     refetchInterval: 60000,
     enabled: !hasProps,
   });
-  const fetchedInstances = instData?.instances || [];
+  const fetchedInstances = Array.isArray(instData)
+    ? instData
+    : instData?.instances || [];
 
   const { data: agg } = useQuery({
     queryKey: [
