@@ -857,48 +857,6 @@ function NfsCard() {
   const total = mountsUp + mountsDown;
   const instanceCount = allManagers.length;
 
-  // Average CPU/RAM/Disk across managers (when available)
-  const avg = (vals) => {
-    const arr = vals.filter((v) => Number.isFinite(v));
-    if (arr.length === 0) return 0;
-    return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
-  };
-  const cpu = avg(
-    managers.map((m) =>
-      Number(
-        m?.system_stats?.cpu_percent ??
-          m?.system_stats?.cpu_usage ??
-          m?.system_stats?.cpu ??
-          m?.system_status?.cpu_percent ??
-          m?.system_status?.cpu_usage ??
-          NaN,
-      ),
-    ),
-  );
-  const ram = avg(
-    managers.map((m) =>
-      Number(
-        m?.system_stats?.memory_percent ??
-          m?.system_stats?.mem_percent ??
-          m?.system_stats?.ram_percent ??
-          m?.system_stats?.memory_usage ??
-          m?.system_status?.memory_percent ??
-          m?.system_status?.memory_usage ??
-          NaN,
-      ),
-    ),
-  );
-  const disk = avg(
-    managers.map((m) =>
-      Number(
-        m?.system_stats?.disk_percent ??
-          m?.system_stats?.disk_usage ??
-          m?.system_status?.disk_percent ??
-          NaN,
-      ),
-    ),
-  );
-
   return (
     <ChartCard
       icon={HardDrive}
@@ -994,14 +952,14 @@ function NfsCard() {
             color: "#a78bfa",
           },
           {
-            label: t("dashboard.charts.cpu", "CPU"),
-            value: `${cpu}%`,
-            color: cpu >= 80 ? "#ef4444" : cpu >= 60 ? "#f59e0b" : "#22c55e",
+            label: t("dashboard.charts.tunnels", "Tunnels"),
+            value: `${tunnelsUp}/${tunnelsTotal}`,
+            color: "#f59e0b",
           },
           {
-            label: t("dashboard.charts.ram", "RAM"),
-            value: `${ram}%`,
-            color: ram >= 80 ? "#ef4444" : ram >= 60 ? "#f59e0b" : "#22c55e",
+            label: t("dashboard.charts.down", "Down"),
+            value: mountsDown,
+            color: mountsDown > 0 ? "#ef4444" : "#22c55e",
           },
         ]}
       />
