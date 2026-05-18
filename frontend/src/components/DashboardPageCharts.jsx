@@ -884,7 +884,7 @@ function NfsCard() {
         ]}
       />
       <div className="grid grid-cols-3 gap-2 w-full">
-        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex flex-col items-center gap-1">
           <MiniRing
             percent={exportsTotal ? (exportsActive / exportsTotal) * 100 : 0}
             color="#3b82f6"
@@ -894,7 +894,7 @@ function NfsCard() {
             {t("dashboard.charts.exports", "Exports")}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex flex-col items-center gap-1">
           <MiniRing
             percent={mergerTotal ? (mergerUp / mergerTotal) * 100 : 0}
             color="#a78bfa"
@@ -904,7 +904,7 @@ function NfsCard() {
             {t("dashboard.charts.mergerfs", "MergerFS")}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex flex-col items-center gap-1">
           <MiniRing
             percent={tunnelsTotal ? (tunnelsUp / tunnelsTotal) * 100 : 0}
             color="#f59e0b"
@@ -1030,10 +1030,7 @@ function StorageCard() {
             const col =
               p.pct >= 90 ? "#ef4444" : p.pct >= 75 ? "#f59e0b" : "#22d3ee";
             return (
-              <div
-                key={p.name}
-                className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30 min-w-0"
-              >
+              <div key={p.name} className="flex items-center gap-2 min-w-0">
                 <MiniRing
                   percent={p.pct}
                   color={col}
@@ -1198,10 +1195,7 @@ function DownloadsCard() {
           {visibleRows.map((r) => {
             const idle = Math.max(0, r.total - r.active - r.queued - r.stuck);
             return (
-              <div
-                key={r.id}
-                className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30 min-w-0"
-              >
+              <div key={r.id} className="flex items-center gap-2 min-w-0">
                 <MiniMulti
                   segments={[
                     { value: r.active, color: "#22c55e" },
@@ -1596,7 +1590,7 @@ function AutoscanCard() {
         allLabel={t("dashboard.charts.all", "All")}
       />
       <div className="grid grid-cols-3 gap-2 w-full">
-        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex flex-col items-center gap-1">
           <MiniRing
             percent={(queue / max) * 100}
             color="#a78bfa"
@@ -1606,7 +1600,7 @@ function AutoscanCard() {
             {t("dashboard.charts.queue", "Queue")}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex flex-col items-center gap-1">
           <MiniRing
             percent={(processed / max) * 100}
             color="#22c55e"
@@ -1616,7 +1610,7 @@ function AutoscanCard() {
             {t("dashboard.charts.processed", "Processed")}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex flex-col items-center gap-1">
           <MiniRing
             percent={(failed / max) * 100}
             color="#ef4444"
@@ -1811,7 +1805,7 @@ function VodSyncCard() {
 
       {/* Active activity row */}
       <div className="grid grid-cols-2 gap-2 w-full">
-        <div className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex items-center gap-2">
           <MiniRing
             percent={
               allTimePeak > 0
@@ -1832,7 +1826,7 @@ function VodSyncCard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30">
+        <div className="flex items-center gap-2">
           <MiniRing
             percent={users > 0 ? (activeUsers / users) * 100 : 0}
             color="#22d3ee"
