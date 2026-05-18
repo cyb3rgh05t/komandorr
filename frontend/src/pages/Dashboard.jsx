@@ -33,10 +33,9 @@ import { api } from "@/services/api";
 import { fetchPlexActivities } from "@/services/plexService";
 import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
-import DashboardServiceTable from "@/components/DashboardServiceTable";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
-import DashboardVpnProviders from "@/components/DashboardVpnProviders";
 import DashboardVpnMap from "@/components/DashboardVpnMap";
+import DashboardPageCharts from "@/components/DashboardPageCharts";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -162,7 +161,6 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null); // null = all, 'online', 'offline', 'problem'
   const [showCustomizeMenu, setShowCustomizeMenu] = useState(false);
-  const [dashboardMainTab, setDashboardMainTab] = useState("services");
   const [manualRefreshing, setManualRefreshing] = useState(false);
 
   // Confirm dialog state
@@ -175,15 +173,17 @@ export default function Dashboard() {
   const [dashboardVisibility, setDashboardVisibility] = useState(() => {
     // Load from localStorage or use defaults
     const saved = localStorage.getItem("dashboardVisibility");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          stats: true,
-          trafficChart: true,
-          services: true,
-          vpnList: true,
-          vpnMap: true,
-        };
+    const parsed = saved ? JSON.parse(saved) : {};
+    return {
+      stats: true,
+      trafficChart: true,
+      vpnMap: true,
+      pageCharts: true,
+      ...parsed,
+      // Drop deprecated keys so old localStorage doesn't keep them around.
+      services: undefined,
+      vpnList: undefined,
+    };
   });
   const [version, setVersion] = useState({
     local: null,
@@ -605,67 +605,34 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Service Cards Toggle */}
+              {/* Page Charts Toggle */}
               <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
                 <div className="flex items-center gap-3">
-                  {dashboardVisibility.services ? (
+                  {dashboardVisibility.pageCharts ? (
                     <Eye size={18} className="text-green-500" />
                   ) : (
                     <EyeOff size={18} className="text-gray-500" />
                   )}
                   <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.showServiceCards")}
+                    {t("dashboard.showPageCharts", "Page Charts")}
                   </span>
                 </div>
                 <button
                   onClick={() =>
                     setDashboardVisibility({
                       ...dashboardVisibility,
-                      services: !dashboardVisibility.services,
+                      pageCharts: !dashboardVisibility.pageCharts,
                     })
                   }
                   className={`relative w-12 h-6 rounded-full transition-colors ${
-                    dashboardVisibility.services
+                    dashboardVisibility.pageCharts
                       ? "bg-theme-primary"
                       : "bg-gray-600"
                   }`}
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      dashboardVisibility.services ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* VPN List Toggle */}
-              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
-                <div className="flex items-center gap-3">
-                  {dashboardVisibility.vpnList ? (
-                    <Eye size={18} className="text-green-500" />
-                  ) : (
-                    <EyeOff size={18} className="text-gray-500" />
-                  )}
-                  <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.showVpnList", "VPN Proxy List")}
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    setDashboardVisibility({
-                      ...dashboardVisibility,
-                      vpnList: !dashboardVisibility.vpnList,
-                    })
-                  }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    dashboardVisibility.vpnList
-                      ? "bg-theme-primary"
-                      : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      dashboardVisibility.vpnList ? "translate-x-6" : ""
+                      dashboardVisibility.pageCharts ? "translate-x-6" : ""
                     }`}
                   />
                 </button>
@@ -940,326 +907,10 @@ export default function Dashboard() {
         <DashboardVpnMap containers={vpnContainers} vpnInfoMap={vpnInfoMap} />
       )}
 
-      {/* Tabbed View: Services / VPN Proxy */}
-      {(dashboardVisibility.services ||
-        (vpnConnectionStatus?.connected && dashboardVisibility.vpnList)) && (
-        <div className="space-y-6">
-          {/* Tab Header */}
-          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5">
-            {dashboardVisibility.services && (
-              <button
-                onClick={() => setDashboardMainTab("services")}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  dashboardMainTab === "services"
-                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                }`}
-              >
-                <Server className="w-4 h-4" />
-                {t("dashboard.services", "Servers")}
-                <span
-                  className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
-                    dashboardMainTab === "services"
-                      ? "text-black/70"
-                      : "text-theme-text-muted"
-                  }`}
-                >
-                  {services.length}
-                </span>
-              </button>
-            )}
-            {vpnConnectionStatus?.connected && dashboardVisibility.vpnList && (
-              <button
-                onClick={() => setDashboardMainTab("vpn")}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  dashboardMainTab === "vpn"
-                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                VPN Proxy
-                <span
-                  className={`px-1.5 py-0.5 rounded-md text-xs font-bold ${
-                    dashboardMainTab === "vpn"
-                      ? "text-black/70"
-                      : "text-theme-text-muted"
-                  }`}
-                >
-                  {vpnContainers.length}
-                </span>
-              </button>
-            )}
-          </div>
+      {/* Per-page chart cards */}
+      {dashboardVisibility.pageCharts && <DashboardPageCharts />}
 
-          {/* Tab Content */}
-          {dashboardMainTab === "services" && dashboardVisibility.services && (
-            <>
-              {loading ? (
-                <div className="space-y-6">
-                  {/* Service Table Loading */}
-                  <LoadingTableSkeleton />
-                </div>
-              ) : services.length === 0 ? (
-                <div className="bg-theme-card border border-theme rounded-lg p-6 md:p-8 text-center shadow-sm">
-                  <Server
-                    size={48}
-                    className="mx-auto mb-4 text-theme-text-muted"
-                  />
-                  <h3 className="text-base md:text-lg font-semibold text-theme-text mb-2">
-                    {t("dashboard.noServices")}
-                  </h3>
-                  <p className="text-sm md:text-base text-theme-text-muted mb-6">
-                    Get started by adding your first service to monitor
-                  </p>
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-                  >
-                    <Plus size={20} className="text-theme-primary" />
-                    <span className="text-sm">{t("dashboard.addService")}</span>
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Group services by group field */}
-                  {(() => {
-                    // Filter services based on search term and status filter
-                    const filteredServices = services.filter((service) => {
-                      const searchLower = searchTerm.toLowerCase();
-                      const matchesSearch =
-                        service.name.toLowerCase().includes(searchLower) ||
-                        service.url.toLowerCase().includes(searchLower) ||
-                        service.type.toLowerCase().includes(searchLower) ||
-                        (service.group &&
-                          service.group.toLowerCase().includes(searchLower));
-
-                      const matchesStatus =
-                        statusFilter === null ||
-                        service.status === statusFilter;
-
-                      return matchesSearch && matchesStatus;
-                    });
-
-                    // Show empty state if no services match the filter
-                    if (
-                      filteredServices.length === 0 &&
-                      statusFilter !== null
-                    ) {
-                      const emptyStates = {
-                        online: {
-                          icon: CheckCircle,
-                          iconColor: "text-green-500",
-                          bgColor: "bg-green-500/10",
-                          title: t("dashboard.emptyStates.noOnline.title"),
-                          message: t("dashboard.emptyStates.noOnline.message"),
-                          buttonText: "View All Services",
-                        },
-                        offline: {
-                          icon: AlertCircle,
-                          iconColor: "text-red-500",
-                          bgColor: "bg-red-500/10",
-                          title: t("dashboard.emptyStates.noOffline.title"),
-                          message: t("dashboard.emptyStates.noOffline.message"),
-                          buttonText: "View All Services",
-                        },
-                        problem: {
-                          icon: AlertCircle,
-                          iconColor: "text-yellow-500",
-                          bgColor: "bg-yellow-500/10",
-                          title: t("dashboard.emptyStates.noProblems.title"),
-                          message: t(
-                            "dashboard.emptyStates.noProblems.message",
-                          ),
-                          buttonText: "View All Services",
-                        },
-                      };
-
-                      const state = emptyStates[statusFilter];
-                      const IconComponent = state.icon;
-
-                      return (
-                        <div className="bg-theme-card border border-theme rounded-xl p-8 text-center shadow-lg">
-                          <div className="max-w-md mx-auto">
-                            <div
-                              className={`w-16 h-16 ${state.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
-                            >
-                              <IconComponent
-                                size={32}
-                                className={state.iconColor}
-                              />
-                            </div>
-                            <h3 className="text-xl font-bold text-theme-text mb-2">
-                              {state.title}
-                            </h3>
-                            <p className="text-theme-muted mb-6">
-                              {state.message}
-                            </p>
-                            <button
-                              onClick={() => setStatusFilter(null)}
-                              className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-                            >
-                              <Server
-                                size={20}
-                                className="text-theme-primary"
-                              />
-                              <span>{state.buttonText}</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    const grouped = filteredServices.reduce((acc, service) => {
-                      const groupName =
-                        service.group || t("dashboard.groupUngrouped");
-                      if (!acc[groupName]) acc[groupName] = [];
-                      acc[groupName].push(service);
-                      return acc;
-                    }, {});
-
-                    const groupNames = Object.keys(grouped);
-                    const hasMultipleGroups = groupNames.length > 1;
-
-                    // Filter traffic data by active group
-                    const filteredTrafficData = trafficData
-                      ? {
-                          ...trafficData,
-                          services:
-                            trafficData.services?.filter((service) => {
-                              // If activeTab is "ALL", show all services
-                              if (!activeTab || activeTab === "ALL")
-                                return true;
-
-                              // Find the service in the filtered services list to get its group
-                              const matchingService = filteredServices.find(
-                                (s) => s.id === service.id,
-                              );
-                              if (!matchingService) return false;
-                              const serviceGroup =
-                                matchingService.group ||
-                                t("dashboard.groupUngrouped");
-                              return serviceGroup === activeTab;
-                            }) || [],
-                        }
-                      : null;
-
-                    // If only one group or no groups, show simple list
-                    if (!hasMultipleGroups) {
-                      return (
-                        <div className="space-y-6">
-                          {Object.entries(grouped).map(
-                            ([groupName, groupServices]) => (
-                              <div key={groupName} className="space-y-4">
-                                {groupName !==
-                                  t("dashboard.groupUngrouped") && (
-                                  <div className="bg-theme-card border border-theme rounded-lg p-4">
-                                    <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
-                                      <span>{groupName}</span>
-                                      <span className="text-sm text-theme-text-muted font-normal">
-                                        ({groupServices.length})
-                                      </span>
-                                    </h2>
-                                  </div>
-                                )}
-                                <DashboardServiceTable
-                                  services={groupServices}
-                                  trafficData={trafficData}
-                                  onCheck={handleCheckService}
-                                  onEdit={handleEditService}
-                                  onDelete={handleDeleteService}
-                                />
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      );
-                    }
-
-                    // Multiple groups - show tabs
-                    return (
-                      <div className="space-y-6">
-                        {/* Tabs */}
-                        <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
-                          <button
-                            onClick={() => setActiveTab("ALL")}
-                            className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                              activeTab === "ALL"
-                                ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                                : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                            }`}
-                          >
-                            {t("dashboard.all")}
-                            <span
-                              className={`ml-2 text-xs ${
-                                activeTab === "ALL"
-                                  ? "text-black/70"
-                                  : "text-theme-text-muted"
-                              }`}
-                            >
-                              ({filteredServices.length})
-                            </span>
-                          </button>
-                          {groupNames.map((groupName) => (
-                            <button
-                              key={groupName}
-                              onClick={() => setActiveTab(groupName)}
-                              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                                activeTab === groupName
-                                  ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                                  : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                              }`}
-                            >
-                              {groupName}
-                              <span
-                                className={`ml-2 text-xs ${
-                                  activeTab === groupName
-                                    ? "text-black/70"
-                                    : "text-theme-text-muted"
-                                }`}
-                              >
-                                ({grouped[groupName].length})
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Active Tab Content */}
-                        {activeTab &&
-                          (activeTab === "ALL"
-                            ? filteredServices
-                            : grouped[activeTab]) && (
-                            <DashboardServiceTable
-                              services={
-                                activeTab === "ALL"
-                                  ? filteredServices
-                                  : grouped[activeTab]
-                              }
-                              trafficData={trafficData}
-                              onCheck={handleCheckService}
-                              onEdit={handleEditService}
-                              onDelete={handleDeleteService}
-                            />
-                          )}
-                      </div>
-                    );
-                  })()}
-                </>
-              )}
-            </>
-          )}
-
-          {dashboardMainTab === "vpn" &&
-            vpnConnectionStatus?.connected &&
-            dashboardVisibility.vpnList && (
-              <DashboardVpnProviders
-                containers={vpnContainers}
-                vpnInfoMap={vpnInfoMap}
-                depsMap={vpnDepsMap}
-              />
-            )}
-        </div>
-      )}
+      {/* Legacy services/VPN list view removed in favour of DashboardPageCharts */}
 
       {/* Modal */}
       {showModal && (
