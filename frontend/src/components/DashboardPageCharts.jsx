@@ -112,11 +112,12 @@ function ChartCard({
   onClick,
   footer,
   children,
+  tabs,
   iconColor = "text-theme-primary",
 }) {
   return (
     <div
-      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 h-full transition-all ${
+      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 h-full transition-all ${
         onClick
           ? "cursor-pointer hover:border-theme-primary/60 hover:shadow-md"
           : ""
@@ -134,7 +135,8 @@ function ChartCard({
           <ChevronRight className="w-4 h-4 text-theme-text-muted group-hover:text-theme-primary transition-colors shrink-0" />
         )}
       </div>
-      <div className="flex-1 min-h-[150px] flex flex-col items-center justify-center gap-4">
+      {tabs}
+      <div className="flex-1 min-h-[150px] flex flex-col items-center justify-start gap-4 pt-3">
         {children}
       </div>
       {footer && (
@@ -199,14 +201,14 @@ function StatGrid({ tiles }) {
 function InstanceToggle({ instances, value, onChange, allLabel = "All" }) {
   if (!Array.isArray(instances) || instances.length < 2) return null;
   const btn = (active) =>
-    `text-[10px] px-2 py-0.5 rounded-full border transition-colors truncate max-w-[110px] ${
+    `px-2.5 py-1 rounded-lg text-xs font-medium border transition-all truncate max-w-[140px] ${
       active
-        ? "bg-theme-primary/15 border-theme-primary/60 text-theme-primary"
-        : "bg-theme-hover/40 border-theme text-theme-text-muted hover:text-theme-text"
+        ? "bg-theme-primary/15 border-theme-primary text-theme-primary"
+        : "bg-theme-card border-theme text-theme-text-muted hover:text-theme-text hover:border-theme-primary"
     }`;
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-1 w-full"
+      className="flex flex-wrap items-center justify-center gap-2 w-full"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -234,8 +236,8 @@ function InstanceToggle({ instances, value, onChange, allLabel = "All" }) {
 function MiniRing({
   percent,
   color = "#22d3ee",
-  size = 56,
-  thickness = 7,
+  size = 76,
+  thickness = 9,
   centerLabel,
 }) {
   const radius = (size - thickness) / 2;
@@ -280,7 +282,7 @@ function MiniRing({
   );
 }
 
-function MiniMulti({ segments, size = 56, thickness = 7, centerLabel }) {
+function MiniMulti({ segments, size = 76, thickness = 9, centerLabel }) {
   const radius = (size - thickness) / 2;
   const c = 2 * Math.PI * radius;
   const total = segments.reduce((a, s) => a + (Number(s.value) || 0), 0);
@@ -458,17 +460,19 @@ function PlexCard() {
       icon={Activity}
       title={t("dashboard.charts.plex", "Plex Activity")}
       onClick={() => navigate("/plex-activity")}
+      tabs={
+        <InstanceToggle
+          instances={instances}
+          value={selectedId}
+          onChange={setSelectedId}
+          allLabel={t("dashboard.charts.all", "All")}
+        />
+      }
       footer={`${instances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <InstanceToggle
-        instances={instances}
-        value={selectedId}
-        onChange={setSelectedId}
-        allLabel={t("dashboard.charts.all", "All")}
-      />
       <DonutChart
         segments={[
           { value: direct, color: "#22c55e" },
@@ -691,7 +695,7 @@ export function VpnCard({
 
   return (
     <div
-      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full"
+      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full overflow-hidden"
       onClick={() => navigate("/vpn-proxy")}
     >
       <div className="flex items-center justify-between">
@@ -892,17 +896,19 @@ function NfsCard() {
       icon={HardDrive}
       title={t("dashboard.charts.nfs", "NFS Manager")}
       onClick={() => navigate("/nfs-mount")}
+      tabs={
+        <InstanceToggle
+          instances={instances}
+          value={selectedId}
+          onChange={setSelectedId}
+          allLabel={t("dashboard.charts.all", "All")}
+        />
+      }
       footer={`${instanceCount} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <InstanceToggle
-        instances={instances}
-        value={selectedId}
-        onChange={setSelectedId}
-        allLabel={t("dashboard.charts.all", "All")}
-      />
       <DonutChart
         segments={[
           { value: mountsUp, color: "#22c55e" },
@@ -1067,18 +1073,21 @@ function StorageCard() {
       {topPools.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="grid grid-cols-2 gap-2 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 w-full justify-items-center">
           {topPools.map((p) => {
             const col =
               p.pct >= 90 ? "#ef4444" : p.pct >= 75 ? "#f59e0b" : "#22d3ee";
             return (
-              <div key={p.name} className="flex items-center gap-2 min-w-0">
+              <div
+                key={p.name}
+                className="flex flex-col items-center gap-1 min-w-0 max-w-full"
+              >
                 <MiniRing
                   percent={p.pct}
                   color={col}
                   centerLabel={`${p.pct.toFixed(0)}%`}
                 />
-                <span className="text-[10px] text-theme-text truncate min-w-0">
+                <span className="text-[10px] text-theme-text truncate w-full text-center">
                   {p.name}
                 </span>
               </div>
@@ -1219,25 +1228,30 @@ function DownloadsCard() {
       icon={Download}
       title={t("dashboard.charts.downloads", "Downloads")}
       onClick={() => navigate("/arr-activity")}
+      tabs={
+        <InstanceToggle
+          instances={instances}
+          value={selectedId}
+          onChange={setSelectedId}
+          allLabel={t("dashboard.charts.all", "All")}
+        />
+      }
       footer={`${totalActive} ${t(
         "dashboard.charts.active",
         "active",
       )} • ${totalStuck} ${t("dashboard.charts.stuck", "stuck")}`}
     >
-      <InstanceToggle
-        instances={instances}
-        value={selectedId}
-        onChange={setSelectedId}
-        allLabel={t("dashboard.charts.all", "All")}
-      />
       {visibleRows.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="grid grid-cols-2 gap-2 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 w-full justify-items-center">
           {visibleRows.map((r) => {
             const idle = Math.max(0, r.total - r.active - r.queued - r.stuck);
             return (
-              <div key={r.id} className="flex items-center gap-2 min-w-0">
+              <div
+                key={r.id}
+                className="flex flex-col items-center gap-1 min-w-0 max-w-full"
+              >
                 <MiniMulti
                   segments={[
                     { value: r.active, color: "#22c55e" },
@@ -1247,7 +1261,7 @@ function DownloadsCard() {
                   ]}
                   centerLabel={r.total}
                 />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 w-full text-center">
                   <p className="text-[10px] text-theme-text truncate">
                     {r.name}
                   </p>
@@ -1482,17 +1496,19 @@ function PosterizarrCard() {
       icon={ImageIcon}
       title={t("dashboard.charts.posterizarr", "Posterizarr")}
       onClick={() => navigate("/posterizarr")}
+      tabs={
+        <InstanceToggle
+          instances={instances}
+          value={selectedId}
+          onChange={setSelectedId}
+          allLabel={t("dashboard.charts.all", "All")}
+        />
+      }
       footer={`${instances.length || 1} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <InstanceToggle
-        instances={instances}
-        value={selectedId}
-        onChange={setSelectedId}
-        allLabel={t("dashboard.charts.all", "All")}
-      />
       <DonutChart
         segments={[
           { value: running, color: "#22d3ee" },
@@ -1620,17 +1636,19 @@ function AutoscanCard() {
       icon={Scan}
       title={t("dashboard.charts.autoscan", "Autoscan")}
       onClick={() => navigate("/autoscan")}
+      tabs={
+        <InstanceToggle
+          instances={instanceList}
+          value={selectedId}
+          onChange={setSelectedId}
+          allLabel={t("dashboard.charts.all", "All")}
+        />
+      }
       footer={`${allInstances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <InstanceToggle
-        instances={instanceList}
-        value={selectedId}
-        onChange={setSelectedId}
-        allLabel={t("dashboard.charts.all", "All")}
-      />
       <div className="grid grid-cols-3 gap-2 w-full">
         <div className="flex flex-col items-center gap-1">
           <MiniRing
@@ -1821,8 +1839,8 @@ function VodSyncCard() {
                   : 0
             }
             color="#22c55e"
-            size={96}
-            thickness={10}
+            size={120}
+            thickness={12}
             centerLabel={activeStreams}
           />
           <div className="min-w-0">
@@ -1838,8 +1856,8 @@ function VodSyncCard() {
           <MiniRing
             percent={allTimePeak > 0 ? 100 : 0}
             color="#a78bfa"
-            size={96}
-            thickness={10}
+            size={120}
+            thickness={12}
             centerLabel={allTimePeak}
           />
           <div className="min-w-0">
