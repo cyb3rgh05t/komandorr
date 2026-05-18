@@ -24,10 +24,6 @@ if (-not (Test-Path 'venv')) {
     exit 1
 }
 
-# Activate virtual environment
-Write-Host 'Activating virtual environment...' -ForegroundColor Cyan
-.\venv\Scripts\Activate.ps1
-
 # Check if .env exists
 if (-not (Test-Path '.env')) {
     Write-Host 'Warning: .env file not found, using defaults' -ForegroundColor Yellow
@@ -37,8 +33,8 @@ Write-Host 'Backend: http://localhost:8000' -ForegroundColor Green
 Write-Host 'API Docs: http://localhost:8000/docs' -ForegroundColor Green
 Write-Host ''
 
-# Start the server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Start the server using venv python directly (avoids ExecutionPolicy issues with Activate.ps1)
+& '.\venv\Scripts\python.exe' -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 "@
 
 # Frontend startup script
@@ -61,8 +57,8 @@ Write-Host 'Starting Vite development server...' -ForegroundColor Green
 Write-Host 'Frontend: http://localhost:3000' -ForegroundColor Green
 Write-Host ''
 
-# Start the development server
-npm run dev
+# Start the development server (use npm.cmd to bypass PowerShell ExecutionPolicy on npm.ps1)
+& npm.cmd run dev
 "@
 
 # Start Backend in new window

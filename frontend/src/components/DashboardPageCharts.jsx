@@ -1693,54 +1693,43 @@ function VodSyncCard() {
     staleTime: 30000,
   });
 
-  // Reuse PlexCard's sessions cache to avoid duplicate fetches
-  const { data: instancesData } = useQuery({
-    queryKey: ["plex-instances"],
+  // VOD Sync only tracks ONE Plex instance — read it from /settings
+  const { data: settingsData } = useQuery({
+    queryKey: ["dash-vodsync-settings"],
     queryFn: async () => {
       try {
-        return await api.get("/plex/instances");
+        return await api.get("/settings");
       } catch {
-        return { instances: [] };
+        return null;
       }
     },
     staleTime: 60000,
     refetchInterval: 60000,
   });
-  const plexInstances = instancesData?.instances || [];
+  const syncInstanceId = settingsData?.plex_sync?.instance_id || null;
 
-  const { data: sessionsAgg } = useQuery({
-    queryKey: ["dash-plex-sessions", plexInstances.map((i) => i.id).join(",")],
+  const { data: sessionsData } = useQuery({
+    queryKey: ["dash-vodsync-sessions", syncInstanceId || "default"],
     queryFn: async () => {
-      if (plexInstances.length === 0) {
-        try {
-          const res = await api.get("/plex/sessions");
-          return { byInstance: { _default: res?.sessions || [] } };
-        } catch {
-          return { byInstance: {} };
-        }
+      try {
+        const qs = syncInstanceId
+          ? `?instance_id=${encodeURIComponent(syncInstanceId)}`
+          : "";
+        return await api.get(`/plex/sessions${qs}`);
+      } catch {
+        return { sessions: [] };
       }
-      const results = await Promise.all(
-        plexInstances.map(async (inst) => {
-          try {
-            const res = await api.get(
-              `/plex/sessions?instance_id=${encodeURIComponent(inst.id)}`,
-            );
-            return [inst.id, res?.sessions || []];
-          } catch {
-            return [inst.id, []];
-          }
-        }),
-      );
-      return { byInstance: Object.fromEntries(results) };
     },
     refetchInterval: 5000,
     staleTime: 3000,
   });
 
-  const allSessions = Object.values(sessionsAgg?.byInstance || {}).flat();
-  const activeStreams = allSessions.length;
+  const vodSessions = Array.isArray(sessionsData?.sessions)
+    ? sessionsData.sessions
+    : [];
+  const activeStreams = vodSessions.length;
   const activeUsers = new Set(
-    allSessions
+    vodSessions
       .map((s) => s?.user || s?.user_title || s?.username)
       .filter(Boolean),
   ).size;
