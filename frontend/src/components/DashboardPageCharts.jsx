@@ -1751,29 +1751,28 @@ function VodSyncCard() {
   const syncInstanceId = settingsData?.plex_sync?.instance_id || null;
 
   const { data: sessionsData } = useQuery({
-    queryKey: ["dash-vodsync-sessions", syncInstanceId || "default"],
+    queryKey: ["dash-vodsync-activities", syncInstanceId || "default"],
     queryFn: async () => {
       try {
         const qs = syncInstanceId
           ? `?instance_id=${encodeURIComponent(syncInstanceId)}`
           : "";
-        return await api.get(`/plex/sessions${qs}`);
+        return await api.get(`/downloads${qs}`);
       } catch {
-        return { sessions: [] };
+        return { activities: [] };
       }
     },
     refetchInterval: 5000,
     staleTime: 3000,
   });
-  const vodSessions = Array.isArray(sessionsData?.sessions)
-    ? sessionsData.sessions
+  const vodActivities = Array.isArray(sessionsData?.activities)
+    ? sessionsData.activities
     : [];
-  const activeStreams = vodSessions.length;
-  const activeUsers = new Set(
-    vodSessions
-      .map((s) => s?.user || s?.user_title || s?.username)
-      .filter(Boolean),
-  ).size;
+  const activeStreams = vodActivities.length;
+  const downloadingCount = vodActivities.filter((a) => {
+    const t = (a?.type || "").toLowerCase();
+    return t === "download" || t.includes("download");
+  }).length;
 
   const movies = Number(stats?.total_movies ?? 0) || 0;
   const shows = Number(stats?.total_tv_shows ?? 0) || 0;
@@ -1840,21 +1839,21 @@ function VodSyncCard() {
         <div className="flex items-center gap-2">
           <MiniRing
             percent={
-              allTimePeak > 0
-                ? Math.min(100, (activeUsers / allTimePeak) * 100)
-                : activeUsers > 0
+              activeStreams > 0
+                ? Math.min(100, (downloadingCount / activeStreams) * 100)
+                : downloadingCount > 0
                   ? 100
                   : 0
             }
             color="#22d3ee"
-            centerLabel={activeUsers}
+            centerLabel={downloadingCount}
           />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
-              {t("dashboard.charts.liveUsers", "Live Users")}
+              {t("dashboard.charts.downloading", "Downloading")}
             </p>
             <p className="text-[10px] text-theme-text-muted">
-              {t("dashboard.charts.streaming", "streaming")}
+              {t("dashboard.charts.active", "active")}
             </p>
           </div>
         </div>
