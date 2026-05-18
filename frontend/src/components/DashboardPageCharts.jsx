@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Scan,
   Server,
+  RefreshCcw,
   ChevronRight,
 } from "lucide-react";
 import { api } from "@/services/api";
@@ -115,7 +116,7 @@ function ChartCard({
 }) {
   return (
     <div
-      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 transition-all ${
+      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 h-full transition-all ${
         onClick
           ? "cursor-pointer hover:border-theme-primary/60 hover:shadow-md"
           : ""
@@ -133,7 +134,7 @@ function ChartCard({
           <ChevronRight className="w-4 h-4 text-theme-text-muted group-hover:text-theme-primary transition-colors shrink-0" />
         )}
       </div>
-      <div className="flex-1 min-h-[150px] flex flex-col items-center justify-center">
+      <div className="flex-1 min-h-[150px] flex flex-col items-center justify-center gap-4">
         {children}
       </div>
       {footer && (
@@ -195,6 +196,41 @@ function StatGrid({ tiles }) {
   );
 }
 
+function InstanceToggle({ instances, value, onChange, allLabel = "All" }) {
+  if (!Array.isArray(instances) || instances.length < 2) return null;
+  const btn = (active) =>
+    `text-[10px] px-2 py-0.5 rounded-full border transition-colors truncate max-w-[110px] ${
+      active
+        ? "bg-theme-primary/15 border-theme-primary/60 text-theme-primary"
+        : "bg-theme-hover/40 border-theme text-theme-text-muted hover:text-theme-text"
+    }`;
+  return (
+    <div
+      className="flex flex-wrap items-center justify-center gap-1 w-full"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className={btn(value === null || value === undefined)}
+        onClick={() => onChange(null)}
+      >
+        {allLabel}
+      </button>
+      {instances.map((inst) => (
+        <button
+          key={inst.id ?? inst.name}
+          type="button"
+          className={btn(value === (inst.id ?? inst.name))}
+          onClick={() => onChange(inst.id ?? inst.name)}
+          title={inst.name || inst.id}
+        >
+          {inst.name || inst.id}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Per-page chart cards                                                      */
 /* -------------------------------------------------------------------------- */
@@ -202,6 +238,7 @@ function StatGrid({ tiles }) {
 function PlexCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [selectedId, setSelectedId] = useState(null);
 
   const { data: instancesData } = useQuery({
     queryKey: ["plex-instances"],
@@ -223,29 +260,34 @@ function PlexCard() {
       if (instances.length === 0) {
         try {
           const res = await api.get("/plex/sessions");
-          return { sessions: res?.sessions || [], message: res?.message };
+          return { byInstance: { _default: res?.sessions || [] } };
         } catch {
-          return { sessions: [], message: "not configured" };
+          return { byInstance: {} };
         }
       }
       const results = await Promise.all(
         instances.map(async (inst) => {
           try {
-            return await api.get(
+            const res = await api.get(
               `/plex/sessions?instance_id=${encodeURIComponent(inst.id)}`,
             );
+            return [inst.id, res?.sessions || []];
           } catch {
-            return { sessions: [] };
+            return [inst.id, []];
           }
         }),
       );
-      return { sessions: results.flatMap((r) => r?.sessions || []) };
+      return { byInstance: Object.fromEntries(results) };
     },
     refetchInterval: 5000,
     staleTime: 3000,
   });
 
-  const sessions = sessionsAgg?.sessions || [];
+  const byInstance = sessionsAgg?.byInstance || {};
+  const sessions =
+    selectedId == null
+      ? Object.values(byInstance).flat()
+      : byInstance[selectedId] || [];
   const transcoding = sessions.filter(
     (s) =>
       s?.transcoding ||
@@ -262,12 +304,12 @@ function PlexCard() {
     (s) => (s?.type || s?.media_type || "").toLowerCase() === "movie",
   ).length;
   const episodes = sessions.filter((s) => {
-    const t = (s?.type || s?.media_type || "").toLowerCase();
-    return t === "episode" || t === "show";
+    const tt = (s?.type || s?.media_type || "").toLowerCase();
+    return tt === "episode" || tt === "show";
   }).length;
   const audio = sessions.filter((s) => {
-    const t = (s?.type || s?.media_type || "").toLowerCase();
-    return t === "track" || t === "music";
+    const tt = (s?.type || s?.media_type || "").toLowerCase();
+    return tt === "track" || tt === "music";
   }).length;
 
   return (
@@ -280,6 +322,12 @@ function PlexCard() {
         "instance(s)",
       )}`}
     >
+      <InstanceToggle
+        instances={instances}
+        value={selectedId}
+        onChange={setSelectedId}
+        allLabel={t("dashboard.charts.all", "All")}
+      />
       <DonutChart
         segments={[
           { value: direct, color: "#22c55e" },
@@ -565,6 +613,7 @@ export function VpnCard({
 function NfsCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [selectedId, setSelectedId] = useState(null);
 
   const { data } = useQuery({
     queryKey: ["dash-nfs"],
@@ -580,7 +629,18 @@ function NfsCard() {
   });
 
   // Backend returns { managers: [{ nfs_mounts, nfs_mount_statuses: {id: {mounted}}, system_stats }] }
-  const managers = Array.isArray(data?.managers) ? data.managers : [];
+  const allManagers = Array.isArray(data?.managers) ? data.managers : [];
+  const instances = allManagers.map((m, i) => ({
+    id: m?.id ?? m?.instance_id ?? m?.name ?? `mgr-${i}`,
+    name: m?.name || m?.id || `Manager ${i + 1}`,
+  }));
+  const managers =
+    selectedId == null
+      ? allManagers
+      : allManagers.filter((m, i) => {
+          const id = m?.id ?? m?.instance_id ?? m?.name ?? `mgr-${i}`;
+          return id === selectedId;
+        });
 
   let mountsUp = 0;
   let mountsDown = 0;
@@ -595,7 +655,7 @@ function NfsCard() {
     });
   });
   const total = mountsUp + mountsDown;
-  const instances = managers;
+  const instanceCount = allManagers.length;
 
   // Average CPU/RAM/Disk across managers (when available)
   const avg = (vals) => {
@@ -636,11 +696,17 @@ function NfsCard() {
       icon={HardDrive}
       title={t("dashboard.charts.nfs", "NFS Manager")}
       onClick={() => navigate("/nfs-mount")}
-      footer={`${instances.length} ${t(
+      footer={`${instanceCount} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
+      <InstanceToggle
+        instances={instances}
+        value={selectedId}
+        onChange={setSelectedId}
+        allLabel={t("dashboard.charts.all", "All")}
+      />
       <DonutChart
         segments={[
           { value: mountsUp, color: "#22c55e" },
@@ -672,7 +738,7 @@ function NfsCard() {
           },
           {
             label: t("dashboard.charts.managers", "Managers"),
-            value: instances.length,
+            value: instanceCount,
             color: "#22d3ee",
           },
           {
@@ -834,6 +900,7 @@ function StorageCard() {
 function DownloadsCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [selectedId, setSelectedId] = useState(null);
 
   const { data } = useQuery({
     queryKey: ["dash-arr-queue"],
@@ -843,12 +910,12 @@ function DownloadsCard() {
   });
 
   // /api/arr-activity/queue returns { [instanceId]: { name, type, records, totalRecords, error } }
-  const rows = useMemo(() => {
+  const allRows = useMemo(() => {
     if (!data || typeof data !== "object") return [];
-    return Object.values(data)
-      .filter((s) => s && Array.isArray(s.records))
-      .map((s) => {
-        const items = s.records || [];
+    return Object.entries(data)
+      .filter(([, s]) => s && typeof s === "object")
+      .map(([id, s]) => {
+        const items = Array.isArray(s.records) ? s.records : [];
         const active = items.filter((i) => {
           const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
           const st = (
@@ -888,28 +955,32 @@ function DownloadsCard() {
           );
         }).length;
         return {
-          name: s.name || s.type || "queue",
+          id,
+          name: s.name || s.type || id,
           active,
           queued,
           completed,
           stuck,
           total: items.length,
         };
-      })
-      .filter((r) => r.total > 0);
+      });
   }, [data]);
 
-  const topRows = useMemo(
-    () => [...rows].sort((a, b) => b.total - a.total).slice(0, 4),
+  const instances = allRows.map((r) => ({ id: r.id, name: r.name }));
+  const rows =
+    selectedId == null ? allRows : allRows.filter((r) => r.id === selectedId);
+  const sortedRows = useMemo(
+    () => [...rows].sort((a, b) => b.total - a.total),
     [rows],
   );
+  const visibleRows = selectedId == null ? sortedRows.slice(0, 6) : sortedRows;
 
   const totalItems = rows.reduce((a, r) => a + r.total, 0);
   const totalActive = rows.reduce((a, r) => a + r.active, 0);
   const totalQueued = rows.reduce((a, r) => a + r.queued, 0);
   const totalCompleted = rows.reduce((a, r) => a + r.completed, 0);
   const totalStuck = rows.reduce((a, r) => a + r.stuck, 0);
-  const instances = rows.length;
+  const instanceCount = rows.length;
 
   return (
     <ChartCard
@@ -921,14 +992,20 @@ function DownloadsCard() {
         "active",
       )} • ${totalStuck} ${t("dashboard.charts.stuck", "stuck")}`}
     >
-      {topRows.length === 0 ? (
+      <InstanceToggle
+        instances={instances}
+        value={selectedId}
+        onChange={setSelectedId}
+        allLabel={t("dashboard.charts.all", "All")}
+      />
+      {visibleRows.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
         <div className="w-full space-y-3">
-          {topRows.map((r) => {
+          {visibleRows.map((r) => {
             const max = Math.max(1, r.total);
             return (
-              <div key={r.name} className="space-y-1">
+              <div key={r.id} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-theme-text truncate">{r.name}</span>
                   <span className="text-theme-text-muted shrink-0 ml-2">
@@ -936,20 +1013,29 @@ function DownloadsCard() {
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-theme-hover overflow-hidden flex">
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${(r.active / max) * 100}%`,
-                      backgroundColor: "#22c55e",
-                    }}
-                  />
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${(r.stuck / max) * 100}%`,
-                      backgroundColor: "#ef4444",
-                    }}
-                  />
+                  {r.total === 0 ? (
+                    <div
+                      className="h-full w-full"
+                      style={{ backgroundColor: "transparent" }}
+                    />
+                  ) : (
+                    <>
+                      <div
+                        className="h-full"
+                        style={{
+                          width: `${(r.active / max) * 100}%`,
+                          backgroundColor: "#22c55e",
+                        }}
+                      />
+                      <div
+                        className="h-full"
+                        style={{
+                          width: `${(r.stuck / max) * 100}%`,
+                          backgroundColor: "#ef4444",
+                        }}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -965,7 +1051,7 @@ function DownloadsCard() {
           },
           {
             label: t("dashboard.charts.instances", "Instances"),
-            value: instances,
+            value: instanceCount,
             color: "#22d3ee",
           },
           {
@@ -1104,6 +1190,7 @@ function UploadsCard() {
 function PosterizarrCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [selectedId, setSelectedId] = useState(null);
 
   const { data: instData } = useQuery({
     queryKey: ["posterizarr-instances"],
@@ -1129,20 +1216,27 @@ function PosterizarrCard() {
             const url = id
               ? `/posterizarr/dashboard?instance_id=${encodeURIComponent(id)}`
               : "/posterizarr/dashboard";
-            return await api.get(url);
+            const res = await api.get(url);
+            return [id ?? "_default", res];
           } catch {
-            return null;
+            return [id ?? "_default", null];
           }
         }),
       );
-      return { items: results.filter(Boolean) };
+      return { byInstance: Object.fromEntries(results) };
     },
     refetchInterval: 30000,
     staleTime: 15000,
   });
 
   // /posterizarr/dashboard returns { status: { running, manual_running, scheduler_running }, ... }
-  const items = agg?.items || [];
+  const byInstance = agg?.byInstance || {};
+  const items =
+    selectedId == null
+      ? Object.values(byInstance).filter(Boolean)
+      : byInstance[selectedId]
+        ? [byInstance[selectedId]]
+        : [];
   let running = 0;
   let idle = 0;
   let error = 0;
@@ -1175,6 +1269,12 @@ function PosterizarrCard() {
         "instance(s)",
       )}`}
     >
+      <InstanceToggle
+        instances={instances}
+        value={selectedId}
+        onChange={setSelectedId}
+        allLabel={t("dashboard.charts.all", "All")}
+      />
       <DonutChart
         segments={[
           { value: running, color: "#22d3ee" },
@@ -1244,6 +1344,7 @@ function PosterizarrCard() {
 function AutoscanCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [selectedId, setSelectedId] = useState(null);
 
   const { data } = useQuery({
     queryKey: ["dash-autoscan"],
@@ -1258,11 +1359,22 @@ function AutoscanCard() {
     staleTime: 10000,
   });
 
-  const instances = Array.isArray(data?.instances)
+  const allInstances = Array.isArray(data?.instances)
     ? data.instances
     : data
       ? [data]
       : [];
+  const instanceList = allInstances.map((inst, i) => ({
+    id: inst?.id ?? inst?.instance_id ?? inst?.name ?? `as-${i}`,
+    name: inst?.name || inst?.id || `Instance ${i + 1}`,
+  }));
+  const instances =
+    selectedId == null
+      ? allInstances
+      : allInstances.filter((inst, i) => {
+          const id = inst?.id ?? inst?.instance_id ?? inst?.name ?? `as-${i}`;
+          return id === selectedId;
+        });
 
   let queue = 0;
   let processed = 0;
@@ -1290,11 +1402,17 @@ function AutoscanCard() {
       icon={Scan}
       title={t("dashboard.charts.autoscan", "Autoscan")}
       onClick={() => navigate("/autoscan")}
-      footer={`${instances.length} ${t(
+      footer={`${allInstances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
+      <InstanceToggle
+        instances={instanceList}
+        value={selectedId}
+        onChange={setSelectedId}
+        allLabel={t("dashboard.charts.all", "All")}
+      />
       <div className="w-full space-y-3">
         <ProgressBar
           value={queue}
@@ -1322,7 +1440,7 @@ function AutoscanCard() {
         tiles={[
           {
             label: t("dashboard.charts.instances", "Instances"),
-            value: instances.length,
+            value: allInstances.length,
             color: "var(--theme-primary)",
           },
           {
@@ -1359,6 +1477,131 @@ function AutoscanCard() {
 /* -------------------------------------------------------------------------- */
 /*  Grid wrapper                                                              */
 /* -------------------------------------------------------------------------- */
+
+function VodSyncCard() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const { data: stats } = useQuery({
+    queryKey: ["dash-vodsync-stats"],
+    queryFn: async () => {
+      try {
+        return await api.get("/plex/stats");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
+  const { data: peaks } = useQuery({
+    queryKey: ["dash-vodsync-peaks"],
+    queryFn: async () => {
+      try {
+        return await api.get("/plex/stats/daily-peaks?days=7");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 60000,
+    staleTime: 30000,
+  });
+
+  const movies = Number(stats?.total_movies ?? 0) || 0;
+  const shows = Number(stats?.total_tv_shows ?? 0) || 0;
+  const users = Number(stats?.total_users ?? 0) || 0;
+  const allTimePeak = Number(stats?.peak_concurrent ?? 0) || 0;
+  const configured = !!stats?.token_configured;
+
+  const peakRows = Array.isArray(peaks?.daily_peaks)
+    ? peaks.daily_peaks
+    : Array.isArray(peaks)
+      ? peaks
+      : [];
+  const todayIso = new Date().toISOString().split("T")[0];
+  const todayPeak = Number(
+    peakRows.find((p) => (p?.date || "").startsWith(todayIso))?.peak ?? 0,
+  );
+  const weekPeak = peakRows.length
+    ? Math.max(...peakRows.map((p) => Number(p?.peak) || 0))
+    : 0;
+  const lastSync = stats?.last_updated
+    ? new Date(stats.last_updated).toLocaleString()
+    : "—";
+
+  const total = movies + shows;
+
+  return (
+    <ChartCard
+      icon={RefreshCcw}
+      title={t("dashboard.charts.vodSync", "VOD Sync")}
+      onClick={() => navigate("/vod-streams-history")}
+      footer={
+        configured
+          ? `${t("dashboard.charts.lastSync", "Last sync")}: ${lastSync}`
+          : t("dashboard.charts.notConfigured", "Not configured")
+      }
+    >
+      <DonutChart
+        segments={[
+          { value: movies, color: "#a78bfa" },
+          { value: shows, color: "#f472b6" },
+        ]}
+        centerLabel={total}
+        centerSub={t("dashboard.charts.library", "library")}
+      />
+      <Legend
+        items={[
+          {
+            label: t("dashboard.charts.movies", "Movies"),
+            value: movies,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.shows", "Shows"),
+            value: shows,
+            color: "#f472b6",
+          },
+        ]}
+      />
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.movies", "Movies"),
+            value: movies,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.shows", "Shows"),
+            value: shows,
+            color: "#f472b6",
+          },
+          {
+            label: t("dashboard.charts.users", "Users"),
+            value: users,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.allTimePeak", "All-Time Peak"),
+            value: allTimePeak,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.todayPeak", "Today"),
+            value: todayPeak,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.weekPeak", "7-Day Peak"),
+            value: weekPeak,
+            color: "#f59e0b",
+          },
+        ]}
+      />
+    </ChartCard>
+  );
+}
 
 function ServersCard() {
   const navigate = useNavigate();
@@ -1471,6 +1714,7 @@ export default function DashboardPageCharts() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <ServersCard />
       <PlexCard />
+      <VodSyncCard />
       <NfsCard />
       <StorageCard />
       <DownloadsCard />

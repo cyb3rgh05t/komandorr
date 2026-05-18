@@ -825,14 +825,14 @@ export default function Dashboard() {
 
       {/* VPN World Map + Stats */}
       {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+          <div className="lg:col-span-2 h-full">
             <DashboardVpnMap
               containers={vpnContainers}
               vpnInfoMap={vpnInfoMap}
             />
           </div>
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 h-full">
             <VpnCard
               containers={vpnContainers}
               vpnInfoMap={vpnInfoMap}
