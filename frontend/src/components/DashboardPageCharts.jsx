@@ -404,17 +404,54 @@ function PlexCard() {
       .map((s) => s?.user || s?.user_title || s?.username)
       .filter(Boolean),
   ).size;
-  const movies = sessions.filter(
-    (s) => (s?.type || s?.media_type || "").toLowerCase() === "movie",
-  ).length;
-  const episodes = sessions.filter((s) => {
-    const tt = (s?.type || s?.media_type || "").toLowerCase();
-    return tt === "episode" || tt === "show";
-  }).length;
-  const audio = sessions.filter((s) => {
-    const tt = (s?.type || s?.media_type || "").toLowerCase();
-    return tt === "track" || tt === "music";
-  }).length;
+
+  // Per-instance library stats (movies / shows / episodes)
+  const { data: libraryAgg } = useQuery({
+    queryKey: ["dash-plex-library", instances.map((i) => i.id).join(",")],
+    queryFn: async () => {
+      if (instances.length === 0) {
+        try {
+          const res = await api.get("/plex/stats/live");
+          return { byInstance: { _default: res || {} } };
+        } catch {
+          return { byInstance: {} };
+        }
+      }
+      const results = await Promise.all(
+        instances.map(async (inst) => {
+          try {
+            const res = await api.get(
+              `/plex/stats/live?instance_id=${encodeURIComponent(inst.id)}`,
+            );
+            return [inst.id, res || {}];
+          } catch {
+            return [inst.id, {}];
+          }
+        }),
+      );
+      return { byInstance: Object.fromEntries(results) };
+    },
+    refetchInterval: 60000,
+    staleTime: 30000,
+  });
+
+  const libByInst = libraryAgg?.byInstance || {};
+  const libraryEntries =
+    selectedId == null
+      ? Object.values(libByInst)
+      : [libByInst[selectedId] || {}];
+  const movies = libraryEntries.reduce(
+    (a, l) => a + (Number(l?.total_movies) || 0),
+    0,
+  );
+  const shows = libraryEntries.reduce(
+    (a, l) => a + (Number(l?.total_tv_shows) || 0),
+    0,
+  );
+  const episodes = libraryEntries.reduce(
+    (a, l) => a + (Number(l?.total_episodes) || 0),
+    0,
+  );
 
   return (
     <ChartCard
@@ -482,9 +519,14 @@ function PlexCard() {
             color: "#a78bfa",
           },
           {
-            label: t("dashboard.charts.episodes", "Episodes"),
-            value: episodes + audio,
+            label: t("dashboard.charts.shows", "Shows"),
+            value: shows,
             color: "#f472b6",
+          },
+          {
+            label: t("dashboard.charts.episodes", "Episodes"),
+            value: episodes,
+            color: "#22d3ee",
           },
         ]}
       />
@@ -1693,7 +1735,7 @@ function VodSyncCard() {
     staleTime: 30000,
   });
 
-  // VOD Sync only tracks ONE Plex instance — read it from /settings
+  // Live sessions filtered to the VOD-Sync Plex instance (plex_sync.instance_id)
   const { data: settingsData } = useQuery({
     queryKey: ["dash-vodsync-settings"],
     queryFn: async () => {
@@ -1723,7 +1765,6 @@ function VodSyncCard() {
     refetchInterval: 5000,
     staleTime: 3000,
   });
-
   const vodSessions = Array.isArray(sessionsData?.sessions)
     ? sessionsData.sessions
     : [];
@@ -1736,7 +1777,6 @@ function VodSyncCard() {
 
   const movies = Number(stats?.total_movies ?? 0) || 0;
   const shows = Number(stats?.total_tv_shows ?? 0) || 0;
-  const users = Number(stats?.total_users ?? 0) || 0;
   const allTimePeak = Number(stats?.peak_concurrent ?? 0) || 0;
   const configured = !!stats?.token_configured;
 
@@ -1749,9 +1789,14 @@ function VodSyncCard() {
   const todayPeak = Number(
     peakRows.find((p) => (p?.date || "").startsWith(todayIso))?.peak ?? 0,
   );
-  const weekPeak = peakRows.length
-    ? Math.max(...peakRows.map((p) => Number(p?.peak) || 0))
+  const last7 = peakRows.slice(-7);
+  const last7Values = last7.map((p) => Number(p?.peak) || 0);
+  const weekPeak = last7Values.length ? Math.max(...last7Values) : 0;
+  const weekMin = last7Values.length ? Math.min(...last7Values) : 0;
+  const weekAvg = last7Values.length
+    ? Math.round(last7Values.reduce((a, b) => a + b, 0) / last7Values.length)
     : 0;
+  const daysTracked = peakRows.length;
   const lastSync = stats?.last_updated
     ? new Date(stats.last_updated).toLocaleString()
     : "—";
@@ -1769,30 +1814,7 @@ function VodSyncCard() {
           : t("dashboard.charts.notConfigured", "Not configured")
       }
     >
-      <DonutChart
-        segments={[
-          { value: movies, color: "#a78bfa" },
-          { value: shows, color: "#f472b6" },
-        ]}
-        centerLabel={total}
-        centerSub={t("dashboard.charts.library", "library")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.movies", "Movies"),
-            value: movies,
-            color: "#a78bfa",
-          },
-          {
-            label: t("dashboard.charts.shows", "Shows"),
-            value: shows,
-            color: "#f472b6",
-          },
-        ]}
-      />
-
-      {/* Active activity row */}
+      {/* Live streams on the VOD-Sync Plex instance */}
       <div className="grid grid-cols-2 gap-2 w-full">
         <div className="flex items-center gap-2">
           <MiniRing
@@ -1808,7 +1830,7 @@ function VodSyncCard() {
           />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
-              {t("dashboard.charts.activeStreams", "Active Streams")}
+              {t("dashboard.charts.liveStreams", "Live Streams")}
             </p>
             <p className="text-[10px] text-theme-text-muted">
               {t("dashboard.charts.now", "now")}
@@ -1817,16 +1839,22 @@ function VodSyncCard() {
         </div>
         <div className="flex items-center gap-2">
           <MiniRing
-            percent={users > 0 ? (activeUsers / users) * 100 : 0}
+            percent={
+              allTimePeak > 0
+                ? Math.min(100, (activeUsers / allTimePeak) * 100)
+                : activeUsers > 0
+                  ? 100
+                  : 0
+            }
             color="#22d3ee"
             centerLabel={activeUsers}
           />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wide text-theme-text-muted leading-tight">
-              {t("dashboard.charts.activeUsers", "Active Users")}
+              {t("dashboard.charts.liveUsers", "Live Users")}
             </p>
             <p className="text-[10px] text-theme-text-muted">
-              {users} {t("dashboard.charts.total", "total")}
+              {t("dashboard.charts.streaming", "streaming")}
             </p>
           </div>
         </div>
@@ -1874,18 +1902,8 @@ function VodSyncCard() {
       <StatGrid
         tiles={[
           {
-            label: t("dashboard.charts.activeStreams", "Active Streams"),
-            value: activeStreams,
-            color: "#22c55e",
-          },
-          {
-            label: t("dashboard.charts.activeUsers", "Active Users"),
-            value: activeUsers,
-            color: "#22d3ee",
-          },
-          {
-            label: t("dashboard.charts.users", "Users"),
-            value: users,
+            label: t("dashboard.charts.library", "Library"),
+            value: total,
             color: "var(--theme-primary)",
           },
           {
@@ -1894,14 +1912,24 @@ function VodSyncCard() {
             color: "#a78bfa",
           },
           {
+            label: t("dashboard.charts.weekPeak", "7-Day Peak"),
+            value: weekPeak,
+            color: "#f59e0b",
+          },
+          {
+            label: t("dashboard.charts.weekAvg", "7-Day Avg"),
+            value: weekAvg,
+            color: "#22d3ee",
+          },
+          {
             label: t("dashboard.charts.todayPeak", "Today"),
             value: todayPeak,
             color: "#f472b6",
           },
           {
-            label: t("dashboard.charts.weekPeak", "7-Day Peak"),
-            value: weekPeak,
-            color: "#f59e0b",
+            label: t("dashboard.charts.daysTracked", "Days Tracked"),
+            value: daysTracked,
+            color: "#22c55e",
           },
         ]}
       />
