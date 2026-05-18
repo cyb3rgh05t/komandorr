@@ -897,38 +897,6 @@ function NfsCard() {
           },
         ]}
       />
-      <div className="grid grid-cols-3 gap-2 w-full">
-        <div className="flex flex-col items-center gap-1">
-          <MiniRing
-            percent={exportsTotal ? (exportsActive / exportsTotal) * 100 : 0}
-            color="#3b82f6"
-            centerLabel={`${exportsActive}/${exportsTotal}`}
-          />
-          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
-            {t("dashboard.charts.exports", "Exports")}
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <MiniRing
-            percent={mergerTotal ? (mergerUp / mergerTotal) * 100 : 0}
-            color="#a78bfa"
-            centerLabel={`${mergerUp}/${mergerTotal}`}
-          />
-          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
-            {t("dashboard.charts.mergerfs", "MergerFS")}
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <MiniRing
-            percent={tunnelsTotal ? (tunnelsUp / tunnelsTotal) * 100 : 0}
-            color="#f59e0b"
-            centerLabel={`${tunnelsUp}/${tunnelsTotal}`}
-          />
-          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
-            {t("dashboard.charts.tunnels", "Tunnels")}
-          </span>
-        </div>
-      </div>
       <StatGrid
         tiles={[
           {
