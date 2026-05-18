@@ -262,10 +262,53 @@ function PlexCard() {
   );
 }
 
-function VpnCard() {
+const isVpnRunning = (s) => {
+  const lower = (typeof s === "string" ? s : String(s || "")).toLowerCase();
+  return lower === "running" || lower === "healthy" || lower === "starting";
+};
+const isVpnStopped = (s) => {
+  const lower = (typeof s === "string" ? s : String(s || "")).toLowerCase();
+  return ["stopped", "exited", "dead", "removed"].includes(lower);
+};
+const isVpnInfoConnected = (info) => {
+  const st = (
+    typeof info?.vpn_status === "string"
+      ? info.vpn_status
+      : String(info?.vpn_status || "")
+  ).toLowerCase();
+  return (
+    ["running", "healthy", "connected"].includes(st) && Boolean(info?.public_ip)
+  );
+};
+
+function StatTile({ label, value, color }) {
+  return (
+    <div className="bg-theme-hover/40 border border-theme rounded-lg px-3 py-2 flex flex-col items-start">
+      <span
+        className="text-xl font-bold leading-none"
+        style={{ color: color || "var(--theme-text)" }}
+      >
+        {value}
+      </span>
+      <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-1">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+export function VpnCard({
+  containers: containersProp,
+  vpnInfoMap: vpnInfoMapProp,
+  depsMap: depsMapProp,
+  instances: instancesProp,
+}) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const hasProps = Array.isArray(containersProp);
+
+  // Self-fetch fallback (used when card is rendered inside the chart grid)
   const { data: instData } = useQuery({
     queryKey: ["vpn-proxy-instances"],
     queryFn: async () => {
@@ -277,13 +320,20 @@ function VpnCard() {
     },
     staleTime: 60000,
     refetchInterval: 60000,
+    enabled: !hasProps,
   });
-  const instances = instData?.instances || [];
+  const fetchedInstances = instData?.instances || [];
 
   const { data: agg } = useQuery({
-    queryKey: ["dash-vpn-containers", instances.map((i) => i.id).join(",")],
+    queryKey: [
+      "dash-vpn-containers",
+      fetchedInstances.map((i) => i.id).join(","),
+    ],
     queryFn: async () => {
-      const ids = instances.length > 0 ? instances.map((i) => i.id) : [null];
+      const ids =
+        fetchedInstances.length > 0
+          ? fetchedInstances.map((i) => i.id)
+          : [null];
       const results = await Promise.all(
         ids.map(async (id) => {
           try {
@@ -291,59 +341,162 @@ function VpnCard() {
               ? `/vpn-proxy/containers?vpn_id=${encodeURIComponent(id)}`
               : "/vpn-proxy/containers";
             const res = await api.get(url);
-            return Array.isArray(res) ? res : res?.containers || [];
+            const list = Array.isArray(res) ? res : res?.containers || [];
+            const infoUrl = id
+              ? `/vpn-proxy/containers/vpn-info-batch?vpn_id=${encodeURIComponent(id)}`
+              : "/vpn-proxy/containers/vpn-info-batch";
+            const depsUrl = id
+              ? `/vpn-proxy/containers/dependents?vpn_id=${encodeURIComponent(id)}`
+              : "/vpn-proxy/containers/dependents";
+            const [info, deps] = await Promise.all([
+              api.get(infoUrl).catch(() => ({})),
+              api.get(depsUrl).catch(() => []),
+            ]);
+            return {
+              list,
+              info: info || {},
+              deps: Array.isArray(deps) ? deps : [],
+            };
           } catch {
-            return [];
+            return { list: [], info: {}, deps: [] };
           }
         }),
       );
-      return { containers: results.flat() };
+      const containers = results.flatMap((r) => r.list);
+      const infoMap = results.reduce(
+        (acc, r) => Object.assign(acc, r.info || {}),
+        {},
+      );
+      const depsMap = {};
+      results.forEach((r) => {
+        r.deps.forEach((dep) => {
+          const vpnParent = dep.vpn_container_name || dep.vpn_parent;
+          if (!vpnParent) return;
+          const parent = r.list.find(
+            (c) =>
+              c.name === vpnParent ||
+              c.docker_name === vpnParent ||
+              vpnParent === `gluetun-${c.name}`,
+          );
+          if (parent) {
+            if (!depsMap[parent.id]) depsMap[parent.id] = [];
+            depsMap[parent.id].push(dep);
+          }
+        });
+      });
+      return { containers, infoMap, depsMap };
     },
     refetchInterval: 15000,
     staleTime: 8000,
+    enabled: !hasProps,
   });
 
-  const containers = (agg?.containers || []).filter(Boolean);
-  const running = containers.filter((c) => {
-    const raw = c?.docker_status ?? c?.state ?? c?.status ?? "";
-    const s = (typeof raw === "string" ? raw : String(raw || "")).toLowerCase();
-    return s === "running" || s === "healthy" || s === "up";
-  }).length;
-  const stopped = containers.length - running;
+  const containers = hasProps ? containersProp : agg?.containers || [];
+  const vpnInfoMap = hasProps ? vpnInfoMapProp || {} : agg?.infoMap || {};
+  const depsMap = hasProps ? depsMapProp || {} : agg?.depsMap || {};
+  const instances = hasProps ? instancesProp || [] : fetchedInstances;
+
+  const total = containers.length;
+  const running = containers.filter((c) =>
+    isVpnRunning(c?.docker_status ?? c?.state ?? c?.status),
+  ).length;
+  const stopped = containers.filter((c) =>
+    isVpnStopped(c?.docker_status ?? c?.state ?? c?.status),
+  ).length;
+  const connected = containers.filter((c) =>
+    isVpnInfoConnected(vpnInfoMap?.[c.id] || {}),
+  ).length;
+  const providers = new Set(
+    containers.map((c) => c?.vpn_provider).filter(Boolean),
+  ).size;
+  const clients = Object.values(depsMap || {}).reduce(
+    (acc, deps) => acc + (Array.isArray(deps) ? deps.length : 0),
+    0,
+  );
 
   return (
-    <ChartCard
-      icon={Shield}
-      title={t("dashboard.charts.vpn", "VPN Proxy")}
+    <div
+      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full"
       onClick={() => navigate("/vpn-proxy")}
-      footer={`${instances.length || 1} ${t(
-        "dashboard.charts.instances",
-        "instance(s)",
-      )}`}
     >
-      <DonutChart
-        segments={[
-          { value: running, color: "#22c55e" },
-          { value: stopped, color: "#ef4444" },
-        ]}
-        centerLabel={containers.length}
-        centerSub={t("dashboard.charts.containers", "containers")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.running", "Running"),
-            value: running,
-            color: "#22c55e",
-          },
-          {
-            label: t("dashboard.charts.stopped", "Stopped"),
-            value: stopped,
-            color: "#ef4444",
-          },
-        ]}
-      />
-    </ChartCard>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <Shield className="w-5 h-5 text-theme-primary shrink-0" />
+          <h3 className="text-sm font-semibold text-theme-text truncate">
+            {t("dashboard.charts.vpn", "VPN Proxy")}
+          </h3>
+        </div>
+        <ChevronRight className="w-4 h-4 text-theme-text-muted group-hover:text-theme-primary transition-colors shrink-0" />
+      </div>
+
+      <div className="flex flex-col items-center gap-3">
+        <DonutChart
+          size={160}
+          thickness={18}
+          segments={[
+            { value: running, color: "#22c55e" },
+            { value: stopped, color: "#ef4444" },
+            {
+              value: Math.max(0, total - running - stopped),
+              color: "#f59e0b",
+            },
+          ]}
+          centerLabel={total}
+          centerSub={t("dashboard.charts.containers", "containers")}
+        />
+        <Legend
+          items={[
+            {
+              label: t("dashboard.charts.running", "Running"),
+              value: running,
+              color: "#22c55e",
+            },
+            {
+              label: t("dashboard.charts.stopped", "Stopped"),
+              value: stopped,
+              color: "#ef4444",
+            },
+          ]}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <StatTile
+          label={t("dashboard.charts.total", "Total")}
+          value={total}
+          color="var(--theme-primary)"
+        />
+        <StatTile
+          label={t("dashboard.charts.running", "Running")}
+          value={running}
+          color="#22c55e"
+        />
+        <StatTile
+          label={t("dashboard.charts.connected", "Connected")}
+          value={connected}
+          color="#22d3ee"
+        />
+        <StatTile
+          label={t("dashboard.charts.stopped", "Stopped")}
+          value={stopped}
+          color="#ef4444"
+        />
+        <StatTile
+          label={t("dashboard.charts.providers", "Providers")}
+          value={providers}
+          color="#a78bfa"
+        />
+        <StatTile
+          label={t("dashboard.charts.clients", "Clients")}
+          value={clients}
+          color="#f59e0b"
+        />
+      </div>
+
+      <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2">
+        {instances.length || 1} {t("dashboard.charts.instances", "instance(s)")}
+      </div>
+    </div>
   );
 }
 
@@ -854,7 +1007,6 @@ export default function DashboardPageCharts() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <PlexCard />
-      <VpnCard />
       <NfsCard />
       <StorageCard />
       <DownloadsCard />

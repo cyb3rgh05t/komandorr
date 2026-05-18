@@ -35,7 +35,7 @@ import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import DashboardVpnMap from "@/components/DashboardVpnMap";
-import DashboardPageCharts from "@/components/DashboardPageCharts";
+import DashboardPageCharts, { VpnCard } from "@/components/DashboardPageCharts";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -764,85 +764,6 @@ export default function Dashboard() {
             </div>
           </button>
 
-          {/* Avg Response Time */}
-          <div
-            onClick={() => navigate("/vpn-proxy")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Shield className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                VPN Total
-              </p>
-              <p className="text-lg font-bold text-blue-500 leading-tight">
-                {vpnContainers.length}
-              </p>
-            </div>
-          </div>
-
-          {/* VPN Running */}
-          <div
-            onClick={() => navigate("/vpn-proxy")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Activity className="w-5 h-5 text-purple-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                VPN Running
-              </p>
-              <p className="text-lg font-bold text-purple-500 leading-tight">
-                {
-                  vpnContainers.filter((c) => {
-                    const s = (c.docker_status || c.status || "").toLowerCase();
-                    return s === "running" || s === "healthy";
-                  }).length
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* VPN Countries */}
-          <div
-            onClick={() => navigate("/vpn-proxy")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Globe className="w-5 h-5 text-orange-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                Countries
-              </p>
-              <p className="text-lg font-bold text-orange-500 leading-tight">
-                {
-                  new Set(
-                    vpnContainers
-                      .map((c) => vpnInfoMap?.[c.id]?.country)
-                      .filter(Boolean),
-                  ).size
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* VPN Providers */}
-          <div
-            onClick={() => navigate("/vpn-proxy")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Network className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                Providers
-              </p>
-              <p className="text-lg font-bold text-cyan-500 leading-tight">
-                {
-                  new Set(
-                    vpnContainers.map((c) => c.vpn_provider).filter(Boolean),
-                  ).size
-                }
-              </p>
-            </div>
-          </div>
-
           {/* Active Streams */}
           <div
             onClick={() => navigate("/vod-streams")}
@@ -902,9 +823,23 @@ export default function Dashboard() {
         />
       )}
 
-      {/* VPN World Map */}
+      {/* VPN World Map + Stats */}
       {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
-        <DashboardVpnMap containers={vpnContainers} vpnInfoMap={vpnInfoMap} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <DashboardVpnMap
+              containers={vpnContainers}
+              vpnInfoMap={vpnInfoMap}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <VpnCard
+              containers={vpnContainers}
+              vpnInfoMap={vpnInfoMap}
+              depsMap={vpnDepsMap}
+            />
+          </div>
+        </div>
       )}
 
       {/* Per-page chart cards */}
