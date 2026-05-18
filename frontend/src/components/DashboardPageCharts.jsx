@@ -695,10 +695,10 @@ export function VpnCard({
 
   return (
     <div
-      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-4 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full overflow-hidden"
+      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full min-h-0 overflow-auto"
       onClick={() => navigate("/vpn-proxy")}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <Shield className="w-5 h-5 text-theme-primary shrink-0" />
           <h3 className="text-sm font-semibold text-theme-text truncate">
@@ -715,10 +715,10 @@ export function VpnCard({
         allLabel={t("dashboard.charts.all", "All")}
       />
 
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-2 shrink-0">
         <DonutChart
-          size={160}
-          thickness={18}
+          size={110}
+          thickness={12}
           segments={[
             { value: running, color: "#22c55e" },
             { value: stopped, color: "#ef4444" },
@@ -746,7 +746,7 @@ export function VpnCard({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2 shrink-0">
         <StatTile
           label={t("dashboard.charts.total", "Total")}
           value={total}
@@ -779,7 +779,7 @@ export function VpnCard({
         />
       </div>
 
-      <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2">
+      <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2 mt-auto shrink-0">
         {instances.length || 1} {t("dashboard.charts.instances", "instance(s)")}
       </div>
     </div>
@@ -1891,14 +1891,18 @@ function VodSyncCard() {
                   className="flex-1 flex flex-col items-center gap-1 min-w-0"
                   title={`${p?.date || ""}: ${v}`}
                 >
-                  <div className="w-full flex items-end h-12">
+                  <div className="w-full flex items-end justify-center h-12 relative">
                     <div
-                      className="w-full rounded-t transition-all"
+                      className="w-full rounded-t transition-all relative flex items-start justify-center"
                       style={{
                         height: `${Math.max(2, h)}%`,
                         backgroundColor: isToday ? "#22c55e" : "#a78bfa",
                       }}
-                    />
+                    >
+                      <span className="text-[10px] font-bold text-white leading-none mt-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
+                        {v}
+                      </span>
+                    </div>
                   </div>
                   <span className="text-[9px] text-theme-text-muted leading-none">
                     {label}
