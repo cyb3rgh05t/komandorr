@@ -11,6 +11,7 @@ import {
   Upload,
   Image as ImageIcon,
   Scan,
+  Server,
   ChevronRight,
 } from "lucide-react";
 import { api } from "@/services/api";
@@ -167,6 +168,33 @@ function EmptyHint({ text }) {
   );
 }
 
+function StatTile({ label, value, color }) {
+  return (
+    <div className="bg-theme-hover/40 border border-theme rounded-lg px-3 py-2 flex flex-col items-start">
+      <span
+        className="text-xl font-bold leading-none"
+        style={{ color: color || "var(--theme-text)" }}
+      >
+        {value}
+      </span>
+      <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-1">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function StatGrid({ tiles }) {
+  if (!tiles || tiles.length === 0) return null;
+  return (
+    <div className="grid grid-cols-2 gap-2 w-full">
+      {tiles.map((tile) => (
+        <StatTile key={tile.label} {...tile} />
+      ))}
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Per-page chart cards                                                      */
 /* -------------------------------------------------------------------------- */
@@ -225,6 +253,22 @@ function PlexCard() {
       s?.TranscodeSession,
   ).length;
   const direct = sessions.length - transcoding;
+  const users = new Set(
+    sessions
+      .map((s) => s?.user || s?.user_title || s?.username)
+      .filter(Boolean),
+  ).size;
+  const movies = sessions.filter(
+    (s) => (s?.type || s?.media_type || "").toLowerCase() === "movie",
+  ).length;
+  const episodes = sessions.filter((s) => {
+    const t = (s?.type || s?.media_type || "").toLowerCase();
+    return t === "episode" || t === "show";
+  }).length;
+  const audio = sessions.filter((s) => {
+    const t = (s?.type || s?.media_type || "").toLowerCase();
+    return t === "track" || t === "music";
+  }).length;
 
   return (
     <ChartCard
@@ -258,6 +302,40 @@ function PlexCard() {
           },
         ]}
       />
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.sessions", "Sessions"),
+            value: sessions.length,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.users", "Users"),
+            value: users,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.direct", "Direct"),
+            value: direct,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.transcode", "Transcode"),
+            value: transcoding,
+            color: "#f59e0b",
+          },
+          {
+            label: t("dashboard.charts.movies", "Movies"),
+            value: movies,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.episodes", "Episodes"),
+            value: episodes + audio,
+            color: "#f472b6",
+          },
+        ]}
+      />
     </ChartCard>
   );
 }
@@ -280,22 +358,6 @@ const isVpnInfoConnected = (info) => {
     ["running", "healthy", "connected"].includes(st) && Boolean(info?.public_ip)
   );
 };
-
-function StatTile({ label, value, color }) {
-  return (
-    <div className="bg-theme-hover/40 border border-theme rounded-lg px-3 py-2 flex flex-col items-start">
-      <span
-        className="text-xl font-bold leading-none"
-        style={{ color: color || "var(--theme-text)" }}
-      >
-        {value}
-      </span>
-      <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-1">
-        {label}
-      </span>
-    </div>
-  );
-}
 
 export function VpnCard({
   containers: containersProp,
@@ -517,7 +579,7 @@ function NfsCard() {
     staleTime: 15000,
   });
 
-  // Backend returns { managers: [{ nfs_mounts, nfs_mount_statuses: {id: {mounted}} }] }
+  // Backend returns { managers: [{ nfs_mounts, nfs_mount_statuses: {id: {mounted}}, system_stats }] }
   const managers = Array.isArray(data?.managers) ? data.managers : [];
 
   let mountsUp = 0;
@@ -534,6 +596,40 @@ function NfsCard() {
   });
   const total = mountsUp + mountsDown;
   const instances = managers;
+
+  // Average CPU/RAM/Disk across managers (when available)
+  const avg = (vals) => {
+    const arr = vals.filter((v) => Number.isFinite(v));
+    if (arr.length === 0) return 0;
+    return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  };
+  const cpu = avg(
+    managers.map((m) =>
+      Number(
+        m?.system_stats?.cpu_percent ??
+          m?.system_stats?.cpu ??
+          m?.system_status?.cpu_percent ??
+          NaN,
+      ),
+    ),
+  );
+  const ram = avg(
+    managers.map((m) =>
+      Number(
+        m?.system_stats?.memory_percent ??
+          m?.system_stats?.ram_percent ??
+          m?.system_status?.memory_percent ??
+          NaN,
+      ),
+    ),
+  );
+  const disk = avg(
+    managers.map((m) =>
+      Number(
+        m?.system_stats?.disk_percent ?? m?.system_status?.disk_percent ?? NaN,
+      ),
+    ),
+  );
 
   return (
     <ChartCard
@@ -564,6 +660,40 @@ function NfsCard() {
             label: t("dashboard.charts.down", "Down"),
             value: mountsDown,
             color: "#ef4444",
+          },
+        ]}
+      />
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.mounts", "Mounts"),
+            value: total,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.managers", "Managers"),
+            value: instances.length,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.up", "Up"),
+            value: mountsUp,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.down", "Down"),
+            value: mountsDown,
+            color: "#ef4444",
+          },
+          {
+            label: t("dashboard.charts.cpu", "CPU"),
+            value: `${cpu}%`,
+            color: cpu >= 80 ? "#ef4444" : cpu >= 60 ? "#f59e0b" : "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.ram", "RAM"),
+            value: `${ram}%`,
+            color: ram >= 80 ? "#ef4444" : ram >= 60 ? "#f59e0b" : "#22c55e",
           },
         ]}
       />
@@ -616,23 +746,35 @@ function StorageCard() {
         });
       });
     });
-    return list.sort((a, b) => b.pct - a.pct).slice(0, 4);
+    return list;
   }, [services]);
 
+  const topPools = useMemo(
+    () => [...pools].sort((a, b) => b.pct - a.pct).slice(0, 4),
+    [pools],
+  );
+
+  const totalPaths = pools.length;
   const avgUsage = Number(summary?.average_usage_percent ?? 0);
+  const critical = pools.filter((p) => p.pct >= 90).length;
+  const warning = pools.filter((p) => p.pct >= 75 && p.pct < 90).length;
+  const healthy = pools.filter((p) => p.pct < 75).length;
+  const servicesWithStorage = (services || []).filter(
+    (svc) => (svc?.storage?.storage_paths || []).length > 0,
+  ).length;
 
   return (
     <ChartCard
       icon={Database}
       title={t("dashboard.charts.storage", "Storage")}
       onClick={() => navigate("/storage")}
-      footer={`${pools.length} ${t("dashboard.charts.paths", "path(s)")} • ${avgUsage.toFixed(0)}% ${t("dashboard.charts.avg", "avg")}`}
+      footer={`${totalPaths} ${t("dashboard.charts.paths", "path(s)")} • ${avgUsage.toFixed(0)}% ${t("dashboard.charts.avg", "avg")}`}
     >
-      {pools.length === 0 ? (
+      {topPools.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
         <div className="w-full space-y-3">
-          {pools.map((p) => (
+          {topPools.map((p) => (
             <ProgressBar
               key={p.name}
               value={p.pct}
@@ -646,6 +788,45 @@ function StorageCard() {
           ))}
         </div>
       )}
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.paths", "Paths"),
+            value: totalPaths,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.services", "Services"),
+            value: servicesWithStorage,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.avg", "Avg"),
+            value: `${avgUsage.toFixed(0)}%`,
+            color:
+              avgUsage >= 90
+                ? "#ef4444"
+                : avgUsage >= 75
+                  ? "#f59e0b"
+                  : "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.healthy", "Healthy"),
+            value: healthy,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.warning", "Warning"),
+            value: warning,
+            color: "#f59e0b",
+          },
+          {
+            label: t("dashboard.charts.critical", "Critical"),
+            value: critical,
+            color: "#ef4444",
+          },
+        ]}
+      />
     </ChartCard>
   );
 }
@@ -680,6 +861,20 @@ function DownloadsCard() {
             st.includes("import")
           );
         }).length;
+        const queued = items.filter((i) => {
+          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
+          const st = (
+            typeof raw === "string" ? raw : String(raw || "")
+          ).toLowerCase();
+          return st === "queued" || st === "delay" || st === "paused";
+        }).length;
+        const completed = items.filter((i) => {
+          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
+          const st = (
+            typeof raw === "string" ? raw : String(raw || "")
+          ).toLowerCase();
+          return st === "completed" || st.includes("complete");
+        }).length;
         const stuck = items.filter((i) => {
           const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
           const st = (
@@ -695,16 +890,26 @@ function DownloadsCard() {
         return {
           name: s.name || s.type || "queue",
           active,
+          queued,
+          completed,
           stuck,
           total: items.length,
         };
       })
-      .filter((r) => r.total > 0)
-      .slice(0, 4);
+      .filter((r) => r.total > 0);
   }, [data]);
 
+  const topRows = useMemo(
+    () => [...rows].sort((a, b) => b.total - a.total).slice(0, 4),
+    [rows],
+  );
+
+  const totalItems = rows.reduce((a, r) => a + r.total, 0);
   const totalActive = rows.reduce((a, r) => a + r.active, 0);
+  const totalQueued = rows.reduce((a, r) => a + r.queued, 0);
+  const totalCompleted = rows.reduce((a, r) => a + r.completed, 0);
   const totalStuck = rows.reduce((a, r) => a + r.stuck, 0);
+  const instances = rows.length;
 
   return (
     <ChartCard
@@ -716,11 +921,11 @@ function DownloadsCard() {
         "active",
       )} • ${totalStuck} ${t("dashboard.charts.stuck", "stuck")}`}
     >
-      {rows.length === 0 ? (
+      {topRows.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
         <div className="w-full space-y-3">
-          {rows.map((r) => {
+          {topRows.map((r) => {
             const max = Math.max(1, r.total);
             return (
               <div key={r.name} className="space-y-1">
@@ -751,6 +956,40 @@ function DownloadsCard() {
           })}
         </div>
       )}
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.total", "Total"),
+            value: totalItems,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.instances", "Instances"),
+            value: instances,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.active", "Active"),
+            value: totalActive,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.queued", "Queued"),
+            value: totalQueued,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.completed", "Completed"),
+            value: totalCompleted,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.stuck", "Stuck"),
+            value: totalStuck,
+            color: "#ef4444",
+          },
+        ]}
+      />
     </ChartCard>
   );
 }
@@ -785,6 +1024,7 @@ function UploadsCard() {
   const failed = Number(failedCount?.count ?? 0);
   const queued = Number(queue?.files?.length ?? 0);
   const total = active + failed + queued;
+  const idle = total === 0;
 
   return (
     <ChartCard
@@ -818,6 +1058,42 @@ function UploadsCard() {
             label: t("dashboard.charts.failed", "Failed"),
             value: failed,
             color: "#ef4444",
+          },
+        ]}
+      />
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.total", "Total"),
+            value: total,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.active", "Active"),
+            value: active,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.queued", "Queued"),
+            value: queued,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.failed", "Failed"),
+            value: failed,
+            color: "#ef4444",
+          },
+          {
+            label: t("dashboard.charts.status", "Status"),
+            value: idle
+              ? t("dashboard.charts.idle", "Idle")
+              : t("dashboard.charts.busy", "Busy"),
+            color: idle ? "#94a3b8" : "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.failureRate", "Failure %"),
+            value: total > 0 ? `${Math.round((failed / total) * 100)}%` : "0%",
+            color: total > 0 && failed / total >= 0.2 ? "#ef4444" : "#22c55e",
           },
         ]}
       />
@@ -870,12 +1146,16 @@ function PosterizarrCard() {
   let running = 0;
   let idle = 0;
   let error = 0;
+  let manual = 0;
+  let scheduler = 0;
   items.forEach((d) => {
     if (d?.success === false || d?.error) {
       error += 1;
       return;
     }
     const status = d?.status || {};
+    if (status.manual_running === true) manual += 1;
+    if (status.scheduler_running === true) scheduler += 1;
     const isRunning =
       status.running === true ||
       status.manual_running === true ||
@@ -883,6 +1163,7 @@ function PosterizarrCard() {
     if (isRunning) running += 1;
     else idle += 1;
   });
+  const totalInst = running + idle + error;
 
   return (
     <ChartCard
@@ -900,7 +1181,7 @@ function PosterizarrCard() {
           { value: idle, color: "#94a3b8" },
           { value: error, color: "#ef4444" },
         ]}
-        centerLabel={running + idle + error}
+        centerLabel={totalInst}
         centerSub={t("dashboard.charts.total", "total")}
       />
       <Legend
@@ -919,6 +1200,40 @@ function PosterizarrCard() {
             label: t("dashboard.charts.error", "Error"),
             value: error,
             color: "#ef4444",
+          },
+        ]}
+      />
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.instances", "Instances"),
+            value: totalInst,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.running", "Running"),
+            value: running,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.idle", "Idle"),
+            value: idle,
+            color: "#94a3b8",
+          },
+          {
+            label: t("dashboard.charts.error", "Error"),
+            value: error,
+            color: "#ef4444",
+          },
+          {
+            label: t("dashboard.charts.manual", "Manual"),
+            value: manual,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.scheduler", "Scheduler"),
+            value: scheduler,
+            color: "#22c55e",
           },
         ]}
       />
@@ -952,12 +1267,20 @@ function AutoscanCard() {
   let queue = 0;
   let processed = 0;
   let failed = 0;
+  let targets = 0;
+  let triggers = 0;
   instances.forEach((inst) => {
     const stats = inst?.stats || {};
     const qLen = Array.isArray(inst?.queue) ? inst.queue.length : 0;
     queue += Number(stats.scans_remaining ?? qLen ?? 0) || 0;
     processed += Number(stats.scans_processed ?? 0) || 0;
     failed += Number(stats.scans_failed ?? stats.errors ?? 0) || 0;
+    targets += Array.isArray(inst?.scan_targets)
+      ? inst.scan_targets.length
+      : Number(stats.targets ?? 0) || 0;
+    triggers += Array.isArray(inst?.triggers)
+      ? inst.triggers.length
+      : Number(stats.triggers ?? 0) || 0;
   });
 
   const max = Math.max(1, queue, processed, failed);
@@ -995,6 +1318,40 @@ function AutoscanCard() {
           right={failed}
         />
       </div>
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.instances", "Instances"),
+            value: instances.length,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.targets", "Targets"),
+            value: targets,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.queue", "Queue"),
+            value: queue,
+            color: "#a78bfa",
+          },
+          {
+            label: t("dashboard.charts.processed", "Processed"),
+            value: processed,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.triggers", "Triggers"),
+            value: triggers,
+            color: "#f59e0b",
+          },
+          {
+            label: t("dashboard.charts.failed", "Failed"),
+            value: failed,
+            color: "#ef4444",
+          },
+        ]}
+      />
     </ChartCard>
   );
 }
@@ -1003,9 +1360,116 @@ function AutoscanCard() {
 /*  Grid wrapper                                                              */
 /* -------------------------------------------------------------------------- */
 
+function ServersCard() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const { data: services = [] } = useQuery({
+    queryKey: ["dash-services"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/services/");
+        return Array.isArray(res) ? res : [];
+      } catch {
+        return [];
+      }
+    },
+    refetchInterval: 15000,
+    staleTime: 8000,
+  });
+
+  const total = services.length;
+  const online = services.filter((s) => s?.status === "online").length;
+  const offline = services.filter((s) => s?.status === "offline").length;
+  const problem = services.filter((s) => s?.status === "problem").length;
+  const categories = new Set(services.map((s) => s?.category).filter(Boolean))
+    .size;
+  const avgRt =
+    total > 0
+      ? Math.round(
+          services.reduce((a, s) => a + (Number(s?.response_time) || 0), 0) /
+            total,
+        )
+      : 0;
+
+  return (
+    <ChartCard
+      icon={Server}
+      title={t("dashboard.charts.servers", "Servers")}
+      onClick={() => navigate("/services")}
+      footer={`${total} ${t("dashboard.charts.services", "service(s)")}`}
+    >
+      <DonutChart
+        segments={[
+          { value: online, color: "#22c55e" },
+          { value: problem, color: "#f59e0b" },
+          { value: offline, color: "#ef4444" },
+        ]}
+        centerLabel={total}
+        centerSub={t("dashboard.charts.servers", "servers")}
+      />
+      <Legend
+        items={[
+          {
+            label: t("dashboard.charts.online", "Online"),
+            value: online,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.problem", "Problem"),
+            value: problem,
+            color: "#f59e0b",
+          },
+          {
+            label: t("dashboard.charts.offline", "Offline"),
+            value: offline,
+            color: "#ef4444",
+          },
+        ]}
+      />
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.total", "Total"),
+            value: total,
+            color: "var(--theme-primary)",
+          },
+          {
+            label: t("dashboard.charts.categories", "Categories"),
+            value: categories,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.online", "Online"),
+            value: online,
+            color: "#22c55e",
+          },
+          {
+            label: t("dashboard.charts.problem", "Problem"),
+            value: problem,
+            color: "#f59e0b",
+          },
+          {
+            label: t("dashboard.charts.offline", "Offline"),
+            value: offline,
+            color: "#ef4444",
+          },
+          {
+            label: t("dashboard.charts.avgRt", "Avg RT"),
+            value: `${avgRt}ms`,
+            color:
+              avgRt >= 1000 ? "#ef4444" : avgRt >= 500 ? "#f59e0b" : "#22c55e",
+          },
+        ]}
+      />
+    </ChartCard>
+  );
+}
+
 export default function DashboardPageCharts() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <ServersCard />
       <PlexCard />
       <NfsCard />
       <StorageCard />
