@@ -867,8 +867,10 @@ function NfsCard() {
     managers.map((m) =>
       Number(
         m?.system_stats?.cpu_percent ??
+          m?.system_stats?.cpu_usage ??
           m?.system_stats?.cpu ??
           m?.system_status?.cpu_percent ??
+          m?.system_status?.cpu_usage ??
           NaN,
       ),
     ),
@@ -877,8 +879,11 @@ function NfsCard() {
     managers.map((m) =>
       Number(
         m?.system_stats?.memory_percent ??
+          m?.system_stats?.mem_percent ??
           m?.system_stats?.ram_percent ??
+          m?.system_stats?.memory_usage ??
           m?.system_status?.memory_percent ??
+          m?.system_status?.memory_usage ??
           NaN,
       ),
     ),
@@ -886,7 +891,10 @@ function NfsCard() {
   const disk = avg(
     managers.map((m) =>
       Number(
-        m?.system_stats?.disk_percent ?? m?.system_status?.disk_percent ?? NaN,
+        m?.system_stats?.disk_percent ??
+          m?.system_stats?.disk_usage ??
+          m?.system_status?.disk_percent ??
+          NaN,
       ),
     ),
   );
@@ -966,13 +974,13 @@ function NfsCard() {
       <StatGrid
         tiles={[
           {
-            label: t("dashboard.charts.mounts", "Mounts"),
-            value: `${mountsUp}/${total}`,
+            label: t("dashboard.charts.managers", "Managers"),
+            value: instanceCount,
             color: "var(--theme-primary)",
           },
           {
-            label: t("dashboard.charts.managers", "Managers"),
-            value: instanceCount,
+            label: t("dashboard.charts.mounts", "Mounts"),
+            value: `${mountsUp}/${total}`,
             color: "#22d3ee",
           },
           {
