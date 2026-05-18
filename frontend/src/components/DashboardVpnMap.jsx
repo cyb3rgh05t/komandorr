@@ -234,7 +234,7 @@ export default function DashboardVpnMap({ containers = [], vpnInfoMap = {} }) {
   }
 
   return (
-    <div className="bg-theme-card border border-theme rounded-xl overflow-hidden h-full flex flex-col">
+    <div className="bg-theme-card border border-theme rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-theme">
         <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export default function DashboardVpnMap({ containers = [], vpnInfoMap = {} }) {
       </div>
 
       {/* Map */}
-      <div className="relative flex-1 flex flex-col">
+      <div className="relative">
         <div className="absolute inset-0 pointer-events-none z-10">
           <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-theme-card/80 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-theme-card/80 to-transparent" />
@@ -276,8 +276,8 @@ export default function DashboardVpnMap({ containers = [], vpnInfoMap = {} }) {
         </div>
 
         <div
-          className="bg-[#050505] flex-1"
-          style={{ minHeight: "350px", overflow: "hidden" }}
+          className="bg-[#050505]"
+          style={{ height: "400px", overflow: "hidden" }}
         >
           <ComposableMap
             projection="geoNaturalEarth1"

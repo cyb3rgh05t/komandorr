@@ -685,134 +685,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats Cards - Compact Layout */}
-      {dashboardVisibility.stats && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2">
-          {/* Total Services */}
-          <button
-            onClick={() => setStatusFilter(null)}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 transition-all hover:shadow-md hover:border-theme-primary hover:bg-theme-primary/10 flex items-center gap-2"
-          >
-            <Server className="w-5 h-5 text-theme-primary flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.totalServices")}
-              </p>
-              <p className="text-lg font-bold text-theme-primary leading-tight">
-                {stats.total}
-              </p>
-            </div>
-          </button>
-
-          {/* Online */}
-          <button
-            onClick={() => setStatusFilter("online")}
-            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-green-500/10 flex items-center gap-2 ${
-              statusFilter === "online"
-                ? "border-green-500 ring-1 ring-green-500/20"
-                : "border-theme hover:border-green-500/50"
-            }`}
-          >
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.online")}
-              </p>
-              <p className="text-lg font-bold text-green-500 leading-tight">
-                {stats.online}
-              </p>
-            </div>
-          </button>
-
-          {/* Offline */}
-          <button
-            onClick={() => setStatusFilter("offline")}
-            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-red-500/10 flex items-center gap-2 ${
-              statusFilter === "offline"
-                ? "border-red-500 ring-1 ring-red-500/20"
-                : "border-theme hover:border-red-500/50"
-            }`}
-          >
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.offline")}
-              </p>
-              <p className="text-lg font-bold text-red-500 leading-tight">
-                {stats.offline}
-              </p>
-            </div>
-          </button>
-
-          {/* Problem */}
-          <button
-            onClick={() => setStatusFilter("problem")}
-            className={`bg-theme-card border rounded-lg px-3 py-2 transition-all hover:shadow-md hover:bg-yellow-500/10 flex items-center gap-2 ${
-              statusFilter === "problem"
-                ? "border-yellow-500 ring-1 ring-yellow-500/20"
-                : "border-theme hover:border-yellow-500/50"
-            }`}
-          >
-            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.problems")}
-              </p>
-              <p className="text-lg font-bold text-yellow-500 leading-tight">
-                {stats.problem}
-              </p>
-            </div>
-          </button>
-
-          {/* Active Streams */}
-          <div
-            onClick={() => navigate("/vod-streams")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-pink-500/10 hover:border-pink-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Video className="w-5 h-5 text-pink-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.vodStreams")}
-              </p>
-              <p className="text-lg font-bold text-pink-500 leading-tight">
-                {stats.activeStreams}
-              </p>
-            </div>
-          </div>
-
-          {/* Active Uploads */}
-          <div
-            onClick={() => navigate("/uploader")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Upload className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.activeUploads", "Uploading")}
-              </p>
-              <p className="text-lg font-bold text-emerald-500 leading-tight">
-                {stats.activeUploads}
-              </p>
-            </div>
-          </div>
-
-          {/* Active Downloads */}
-          <div
-            onClick={() => navigate("/arr-activity")}
-            className="bg-theme-card border border-theme rounded-lg px-3 py-2 hover:shadow-md hover:bg-teal-500/10 hover:border-teal-500/50 transition-all cursor-pointer flex items-center gap-2"
-          >
-            <Download className="w-5 h-5 text-teal-500 flex-shrink-0" />
-            <div className="text-left min-w-0">
-              <p className="text-[10px] text-theme-text-muted uppercase tracking-wide truncate">
-                {t("dashboard.stats.activeDownloads", "Downloads")}
-              </p>
-              <p className="text-lg font-bold text-teal-500 leading-tight">
-                {stats.activeDownloads}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Stats Cards removed - replaced by per-page chart cards below */}
 
       {/* Traffic Chart */}
       {dashboardVisibility.trafficChart && trafficData && (
@@ -825,19 +698,15 @@ export default function Dashboard() {
 
       {/* VPN World Map + Stats */}
       {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
-          <div className="lg:col-span-2 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
             <DashboardVpnMap
               containers={vpnContainers}
               vpnInfoMap={vpnInfoMap}
             />
           </div>
-          <div className="lg:col-span-1 h-full">
-            <VpnCard
-              containers={vpnContainers}
-              vpnInfoMap={vpnInfoMap}
-              depsMap={vpnDepsMap}
-            />
+          <div className="lg:col-span-1">
+            <VpnCard />
           </div>
         </div>
       )}

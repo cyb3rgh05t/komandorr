@@ -231,6 +231,110 @@ function InstanceToggle({ instances, value, onChange, allLabel = "All" }) {
   );
 }
 
+function MiniRing({
+  percent,
+  color = "#22d3ee",
+  size = 56,
+  thickness = 7,
+  centerLabel,
+}) {
+  const radius = (size - thickness) / 2;
+  const c = 2 * Math.PI * radius;
+  const pct = Math.max(0, Math.min(100, Number(percent) || 0));
+  const len = (pct / 100) * c;
+  return (
+    <div
+      className="relative inline-flex items-center justify-center shrink-0"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size} height={size}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.1"
+          strokeWidth={thickness}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={thickness}
+          strokeDasharray={`${len} ${c - len}`}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      {centerLabel != null && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-[11px] font-bold text-theme-text leading-none">
+            {centerLabel}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniMulti({ segments, size = 56, thickness = 7, centerLabel }) {
+  const radius = (size - thickness) / 2;
+  const c = 2 * Math.PI * radius;
+  const total = segments.reduce((a, s) => a + (Number(s.value) || 0), 0);
+  let offset = 0;
+  return (
+    <div
+      className="relative inline-flex items-center justify-center shrink-0"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size} height={size}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.1"
+          strokeWidth={thickness}
+        />
+        {total > 0 &&
+          segments.map((s, i) => {
+            const v = Number(s.value) || 0;
+            if (v <= 0) return null;
+            const len = (v / total) * c;
+            const el = (
+              <circle
+                key={i}
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={thickness}
+                strokeDasharray={`${len} ${c - len}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="butt"
+                transform={`rotate(-90 ${size / 2} ${size / 2})`}
+              />
+            );
+            offset += len;
+            return el;
+          })}
+      </svg>
+      {centerLabel != null && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-[11px] font-bold text-theme-text leading-none">
+            {centerLabel}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Per-page chart cards                                                      */
 /* -------------------------------------------------------------------------- */
@@ -415,6 +519,7 @@ export function VpnCard({
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [selectedId, setSelectedId] = useState(null);
 
   const hasProps = Array.isArray(containersProp);
 
@@ -452,6 +557,7 @@ export function VpnCard({
               : "/vpn-proxy/containers";
             const res = await api.get(url);
             const list = Array.isArray(res) ? res : res?.containers || [];
+            const taggedList = list.map((c) => ({ ...c, _instance_id: id }));
             const infoUrl = id
               ? `/vpn-proxy/containers/vpn-info-batch?vpn_id=${encodeURIComponent(id)}`
               : "/vpn-proxy/containers/vpn-info-batch";
@@ -463,12 +569,13 @@ export function VpnCard({
               api.get(depsUrl).catch(() => []),
             ]);
             return {
-              list,
+              id,
+              list: taggedList,
               info: info || {},
               deps: Array.isArray(deps) ? deps : [],
             };
           } catch {
-            return { list: [], info: {}, deps: [] };
+            return { id, list: [], info: {}, deps: [] };
           }
         }),
       );
@@ -501,10 +608,24 @@ export function VpnCard({
     enabled: !hasProps,
   });
 
-  const containers = hasProps ? containersProp : agg?.containers || [];
+  const allContainers = hasProps ? containersProp : agg?.containers || [];
   const vpnInfoMap = hasProps ? vpnInfoMapProp || {} : agg?.infoMap || {};
-  const depsMap = hasProps ? depsMapProp || {} : agg?.depsMap || {};
+  const allDepsMap = hasProps ? depsMapProp || {} : agg?.depsMap || {};
   const instances = hasProps ? instancesProp || [] : fetchedInstances;
+
+  const containers =
+    selectedId == null
+      ? allContainers
+      : allContainers.filter((c) => c._instance_id === selectedId);
+
+  // Filter depsMap: only keep entries whose parent container is in filtered list
+  const containerIds = new Set(containers.map((c) => c.id));
+  const depsMap =
+    selectedId == null
+      ? allDepsMap
+      : Object.fromEntries(
+          Object.entries(allDepsMap).filter(([k]) => containerIds.has(k)),
+        );
 
   const total = containers.length;
   const running = containers.filter((c) =>
@@ -538,6 +659,13 @@ export function VpnCard({
         </div>
         <ChevronRight className="w-4 h-4 text-theme-text-muted group-hover:text-theme-primary transition-colors shrink-0" />
       </div>
+
+      <InstanceToggle
+        instances={instances}
+        value={selectedId}
+        onChange={setSelectedId}
+        allLabel={t("dashboard.charts.all", "All")}
+      />
 
       <div className="flex flex-col items-center gap-3">
         <DonutChart
@@ -839,19 +967,26 @@ function StorageCard() {
       {topPools.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="w-full space-y-3">
-          {topPools.map((p) => (
-            <ProgressBar
-              key={p.name}
-              value={p.pct}
-              max={100}
-              color={
-                p.pct >= 90 ? "#ef4444" : p.pct >= 75 ? "#f59e0b" : "#22d3ee"
-              }
-              label={p.name}
-              right={`${p.pct.toFixed(0)}%`}
-            />
-          ))}
+        <div className="grid grid-cols-2 gap-2 w-full">
+          {topPools.map((p) => {
+            const col =
+              p.pct >= 90 ? "#ef4444" : p.pct >= 75 ? "#f59e0b" : "#22d3ee";
+            return (
+              <div
+                key={p.name}
+                className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30 min-w-0"
+              >
+                <MiniRing
+                  percent={p.pct}
+                  color={col}
+                  centerLabel={`${p.pct.toFixed(0)}%`}
+                />
+                <span className="text-[10px] text-theme-text truncate min-w-0">
+                  {p.name}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
       <StatGrid
@@ -1001,41 +1136,30 @@ function DownloadsCard() {
       {visibleRows.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="w-full space-y-3">
+        <div className="grid grid-cols-2 gap-2 w-full">
           {visibleRows.map((r) => {
-            const max = Math.max(1, r.total);
+            const idle = Math.max(0, r.total - r.active - r.queued - r.stuck);
             return (
-              <div key={r.id} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-theme-text truncate">{r.name}</span>
-                  <span className="text-theme-text-muted shrink-0 ml-2">
+              <div
+                key={r.id}
+                className="flex items-center gap-2 p-2 border border-theme rounded-lg bg-theme-hover/30 min-w-0"
+              >
+                <MiniMulti
+                  segments={[
+                    { value: r.active, color: "#22c55e" },
+                    { value: r.queued, color: "#a78bfa" },
+                    { value: r.stuck, color: "#ef4444" },
+                    { value: idle, color: "#94a3b8" },
+                  ]}
+                  centerLabel={r.total}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-theme-text truncate">
+                    {r.name}
+                  </p>
+                  <p className="text-[10px] text-theme-text-muted">
                     {r.active} / {r.total}
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-theme-hover overflow-hidden flex">
-                  {r.total === 0 ? (
-                    <div
-                      className="h-full w-full"
-                      style={{ backgroundColor: "transparent" }}
-                    />
-                  ) : (
-                    <>
-                      <div
-                        className="h-full"
-                        style={{
-                          width: `${(r.active / max) * 100}%`,
-                          backgroundColor: "#22c55e",
-                        }}
-                      />
-                      <div
-                        className="h-full"
-                        style={{
-                          width: `${(r.stuck / max) * 100}%`,
-                          backgroundColor: "#ef4444",
-                        }}
-                      />
-                    </>
-                  )}
+                  </p>
                 </div>
               </div>
             );
@@ -1413,28 +1537,37 @@ function AutoscanCard() {
         onChange={setSelectedId}
         allLabel={t("dashboard.charts.all", "All")}
       />
-      <div className="w-full space-y-3">
-        <ProgressBar
-          value={queue}
-          max={max}
-          color="#a78bfa"
-          label={t("dashboard.charts.queue", "Queue")}
-          right={queue}
-        />
-        <ProgressBar
-          value={processed}
-          max={max}
-          color="#22c55e"
-          label={t("dashboard.charts.processed", "Processed")}
-          right={processed}
-        />
-        <ProgressBar
-          value={failed}
-          max={max}
-          color="#ef4444"
-          label={t("dashboard.charts.failed", "Failed")}
-          right={failed}
-        />
+      <div className="grid grid-cols-3 gap-2 w-full">
+        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={(queue / max) * 100}
+            color="#a78bfa"
+            centerLabel={queue}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.queue", "Queue")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={(processed / max) * 100}
+            color="#22c55e"
+            centerLabel={processed}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.processed", "Processed")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-1 p-2 border border-theme rounded-lg bg-theme-hover/30">
+          <MiniRing
+            percent={(failed / max) * 100}
+            color="#ef4444"
+            centerLabel={failed}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.failed", "Failed")}
+          </span>
+        </div>
       </div>
       <StatGrid
         tiles={[
