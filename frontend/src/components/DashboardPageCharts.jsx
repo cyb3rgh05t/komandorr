@@ -1614,19 +1614,51 @@ function AutoscanCard() {
   let processed = 0;
   let failed = 0;
   let targets = 0;
-  let triggers = 0;
+  let targetsUp = 0;
   instances.forEach((inst) => {
     const stats = inst?.stats || {};
+    const config = inst?.config || {};
     const qLen = Array.isArray(inst?.queue) ? inst.queue.length : 0;
     queue += Number(stats.scans_remaining ?? qLen ?? 0) || 0;
     processed += Number(stats.scans_processed ?? 0) || 0;
     failed += Number(stats.scans_failed ?? stats.errors ?? 0) || 0;
-    targets += Array.isArray(inst?.scan_targets)
-      ? inst.scan_targets.length
-      : Number(stats.targets ?? 0) || 0;
-    triggers += Array.isArray(inst?.triggers)
-      ? inst.triggers.length
-      : Number(stats.triggers ?? 0) || 0;
+
+    // Flatten config.targets (object keyed by type → array or object of configs)
+    const targetsAvailable = stats.targets_available || {};
+    const resolveAvailable = (displayName, type, url) => {
+      if (!targetsAvailable || typeof targetsAvailable !== "object")
+        return true;
+      const candidates = [
+        displayName,
+        type,
+        url,
+        typeof displayName === "string" ? displayName.toLowerCase() : null,
+        typeof type === "string" ? type.toLowerCase() : null,
+      ].filter(Boolean);
+      for (const key of candidates) {
+        if (key in targetsAvailable) return targetsAvailable[key] !== false;
+      }
+      return true;
+    };
+    const configTargets = config.targets || {};
+    Object.entries(configTargets).forEach(([type, items]) => {
+      if (!items) return;
+      const list = Array.isArray(items)
+        ? items
+        : typeof items === "object"
+          ? Object.entries(items).map(([name, cfg]) => ({
+              ...(cfg || {}),
+              _name: name,
+            }))
+          : [];
+      list.forEach((cfg, idx) => {
+        const c = cfg || {};
+        const displayName =
+          c.name || c._name || (list.length > 1 ? `${type} ${idx + 1}` : type);
+        targets += 1;
+        if (resolveAvailable(displayName, type, c.url)) targetsUp += 1;
+      });
+    });
   });
 
   const max = Math.max(1, queue, processed, failed);
@@ -1704,8 +1736,8 @@ function AutoscanCard() {
             color: "#22c55e",
           },
           {
-            label: t("dashboard.charts.triggers", "Triggers"),
-            value: triggers,
+            label: t("dashboard.charts.targetsUp", "Targets Up"),
+            value: targetsUp,
             color: "#f59e0b",
           },
           {
