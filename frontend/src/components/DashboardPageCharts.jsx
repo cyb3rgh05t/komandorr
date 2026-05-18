@@ -290,15 +290,14 @@ function VpnCard() {
             const url = id
               ? `/vpn-proxy/containers?vpn_id=${encodeURIComponent(id)}`
               : "/vpn-proxy/containers";
-            return await api.get(url);
+            const res = await api.get(url);
+            return Array.isArray(res) ? res : res?.containers || [];
           } catch {
-            return { containers: [] };
+            return [];
           }
         }),
       );
-      return {
-        containers: results.flatMap((r) => r?.containers || r || []),
-      };
+      return { containers: results.flat() };
     },
     refetchInterval: 15000,
     staleTime: 8000,
@@ -306,9 +305,9 @@ function VpnCard() {
 
   const containers = (agg?.containers || []).filter(Boolean);
   const running = containers.filter((c) => {
-    const raw = c?.state ?? c?.status ?? "";
+    const raw = c?.docker_status ?? c?.state ?? c?.status ?? "";
     const s = (typeof raw === "string" ? raw : String(raw || "")).toLowerCase();
-    return s === "running";
+    return s === "running" || s === "healthy" || s === "up";
   }).length;
   const stopped = containers.length - running;
 
@@ -365,29 +364,23 @@ function NfsCard() {
     staleTime: 15000,
   });
 
-  // Backend may return a single object or {instances:[...]} — handle both.
-  const instances = Array.isArray(data?.instances)
-    ? data.instances
-    : data
-      ? [data]
-      : [];
+  // Backend returns { managers: [{ nfs_mounts, nfs_mount_statuses: {id: {mounted}} }] }
+  const managers = Array.isArray(data?.managers) ? data.managers : [];
 
   let mountsUp = 0;
   let mountsDown = 0;
-  instances.forEach((inst) => {
-    const mounts = inst?.mounts || inst?.nfs_mounts || [];
+  managers.forEach((mgr) => {
+    const mounts = mgr?.nfs_mounts || [];
+    const statuses = mgr?.nfs_mount_statuses || {};
     mounts.forEach((m) => {
-      const raw = m?.status ?? "";
-      const s = (
-        typeof raw === "string" ? raw : String(raw || "")
-      ).toLowerCase();
-      const ok =
-        m?.mounted === true || s === "mounted" || s === "up" || s === "active";
+      const id = m?.id;
+      const ok = id != null ? !!statuses[id]?.mounted : !!m?.mounted;
       if (ok) mountsUp += 1;
       else mountsDown += 1;
     });
   });
   const total = mountsUp + mountsDown;
+  const instances = managers;
 
   return (
     <ChartCard
@@ -429,8 +422,9 @@ function StorageCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { data } = useQuery({
-    queryKey: ["dash-storage"],
+  // Summary for aggregate KPIs
+  const { data: summary } = useQuery({
+    queryKey: ["dash-storage-summary"],
     queryFn: async () => {
       try {
         return await api.get("/storage/summary");
@@ -442,42 +436,44 @@ function StorageCard() {
     staleTime: 15000,
   });
 
+  // Per-service storage_paths for top pools list
+  const { data: services } = useQuery({
+    queryKey: ["dash-storage-services"],
+    queryFn: async () => {
+      try {
+        const res = await api.get("/services/");
+        return Array.isArray(res) ? res : [];
+      } catch {
+        return [];
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
   const pools = useMemo(() => {
-    if (!data) return [];
-    const arr = Array.isArray(data?.pools)
-      ? data.pools
-      : Array.isArray(data?.services)
-        ? data.services
-        : Array.isArray(data)
-          ? data
-          : [];
-    return arr
-      .map((p) => {
-        const used = Number(p?.used ?? p?.used_bytes ?? p?.used_gb ?? 0);
-        const total = Number(
-          p?.total ?? p?.total_bytes ?? p?.total_gb ?? p?.size ?? 0,
-        );
-        const pct =
-          p?.usage_percent != null
-            ? Number(p.usage_percent)
-            : total > 0
-              ? (used / total) * 100
-              : 0;
-        return {
-          name: p?.name || p?.service_name || p?.id || "pool",
+    const list = [];
+    (services || []).forEach((svc) => {
+      const paths = svc?.storage?.storage_paths || [];
+      paths.forEach((p) => {
+        const pct = Number(p?.percent ?? 0);
+        list.push({
+          name: `${svc?.name || "service"} • ${p?.path?.split("/").pop() || p?.path}`,
           pct: isFinite(pct) ? pct : 0,
-        };
-      })
-      .sort((a, b) => b.pct - a.pct)
-      .slice(0, 4);
-  }, [data]);
+        });
+      });
+    });
+    return list.sort((a, b) => b.pct - a.pct).slice(0, 4);
+  }, [services]);
+
+  const avgUsage = Number(summary?.average_usage_percent ?? 0);
 
   return (
     <ChartCard
       icon={Database}
       title={t("dashboard.charts.storage", "Storage")}
       onClick={() => navigate("/storage")}
-      footer={`${pools.length} ${t("dashboard.charts.pools", "pool(s)")}`}
+      footer={`${pools.length} ${t("dashboard.charts.paths", "path(s)")} • ${avgUsage.toFixed(0)}% ${t("dashboard.charts.avg", "avg")}`}
     >
       {pools.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
@@ -512,55 +508,47 @@ function DownloadsCard() {
     staleTime: 5000,
   });
 
-  // Try to derive per-service counts.
-  const services = useMemo(() => {
-    if (!data) return [];
-    if (Array.isArray(data?.services)) return data.services;
-    if (Array.isArray(data)) return data;
-    // queue might be flat with `service` field
-    if (Array.isArray(data?.items)) {
-      const grouped = {};
-      data.items.forEach((it) => {
-        const k =
-          it?.service || it?.serviceName || it?.type || it?.instance || "queue";
-        grouped[k] = grouped[k] || { name: k, items: [] };
-        grouped[k].items.push(it);
-      });
-      return Object.values(grouped);
-    }
-    return [];
+  // /api/arr-activity/queue returns { [instanceId]: { name, type, records, totalRecords, error } }
+  const rows = useMemo(() => {
+    if (!data || typeof data !== "object") return [];
+    return Object.values(data)
+      .filter((s) => s && Array.isArray(s.records))
+      .map((s) => {
+        const items = s.records || [];
+        const active = items.filter((i) => {
+          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
+          const st = (
+            typeof raw === "string" ? raw : String(raw || "")
+          ).toLowerCase();
+          return (
+            st.includes("download") ||
+            st === "queued" ||
+            st === "active" ||
+            st.includes("import")
+          );
+        }).length;
+        const stuck = items.filter((i) => {
+          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
+          const st = (
+            typeof raw === "string" ? raw : String(raw || "")
+          ).toLowerCase();
+          return (
+            st === "stalled" ||
+            st.includes("warn") ||
+            st.includes("error") ||
+            st.includes("fail")
+          );
+        }).length;
+        return {
+          name: s.name || s.type || "queue",
+          active,
+          stuck,
+          total: items.length,
+        };
+      })
+      .filter((r) => r.total > 0)
+      .slice(0, 4);
   }, [data]);
-
-  const rows = services
-    .map((s) => {
-      const items = s?.items || s?.queue || [];
-      const active = items.filter((i) => {
-        const raw = i?.status ?? i?.state ?? "";
-        const st = (
-          typeof raw === "string" ? raw : String(raw || "")
-        ).toLowerCase();
-        return st === "downloading" || st === "active" || st === "queued";
-      }).length;
-      const stuck = items.filter((i) => {
-        const raw = i?.status ?? i?.state ?? "";
-        const st = (
-          typeof raw === "string" ? raw : String(raw || "")
-        ).toLowerCase();
-        return (
-          st === "stalled" ||
-          st === "warning" ||
-          st === "error" ||
-          st === "failed"
-        );
-      }).length;
-      return {
-        name: s?.name || s?.service || s?.type || "queue",
-        active,
-        stuck,
-        total: items.length,
-      };
-    })
-    .slice(0, 4);
 
   const totalActive = rows.reduce((a, r) => a + r.active, 0);
   const totalStuck = rows.reduce((a, r) => a + r.stuck, 0);
@@ -630,20 +618,19 @@ function UploadsCard() {
     refetchInterval: 15000,
     staleTime: 10000,
   });
-  const { data: queueStats } = useQuery({
+  const { data: queue } = useQuery({
     queryKey: ["dash-uploader-queue"],
-    queryFn: () => uploaderApi.getQueueStats().catch(() => null),
+    queryFn: () => uploaderApi.getQueue().catch(() => null),
     refetchInterval: 15000,
     staleTime: 10000,
   });
 
-  const active = Array.isArray(inProgress)
-    ? inProgress.length
-    : Number(inProgress?.count || inProgress?.length || 0);
-  const failed = Number(failedCount?.count ?? failedCount ?? 0);
-  const queued = Number(
-    queueStats?.queue_count ?? queueStats?.queued ?? queueStats?.count ?? 0,
+  const active = Number(
+    inProgress?.jobs?.length ??
+      (Array.isArray(inProgress) ? inProgress.length : 0),
   );
+  const failed = Number(failedCount?.count ?? 0);
+  const queued = Number(queue?.files?.length ?? 0);
   const total = active + failed + queued;
 
   return (
@@ -725,17 +712,22 @@ function PosterizarrCard() {
     staleTime: 15000,
   });
 
+  // /posterizarr/dashboard returns { status: { running, manual_running, scheduler_running }, ... }
   const items = agg?.items || [];
   let running = 0;
   let idle = 0;
   let error = 0;
   items.forEach((d) => {
-    const raw = d?.execution_status ?? d?.status ?? d?.state ?? "";
-    const st = (
-      typeof raw === "string" ? raw : String(raw || "")
-    ).toLowerCase();
-    if (st.includes("run") || st.includes("active")) running += 1;
-    else if (st.includes("err") || st.includes("fail")) error += 1;
+    if (d?.success === false || d?.error) {
+      error += 1;
+      return;
+    }
+    const status = d?.status || {};
+    const isRunning =
+      status.running === true ||
+      status.manual_running === true ||
+      status.scheduler_running === true;
+    if (isRunning) running += 1;
     else idle += 1;
   });
 
@@ -808,14 +800,11 @@ function AutoscanCard() {
   let processed = 0;
   let failed = 0;
   instances.forEach((inst) => {
-    const stats = inst?.stats || inst;
-    queue +=
-      Number(stats?.queue_size ?? stats?.queue ?? stats?.pending ?? 0) || 0;
-    processed +=
-      Number(
-        stats?.processed ?? stats?.completed ?? stats?.scans_processed ?? 0,
-      ) || 0;
-    failed += Number(stats?.failed ?? stats?.errors ?? 0) || 0;
+    const stats = inst?.stats || {};
+    const qLen = Array.isArray(inst?.queue) ? inst.queue.length : 0;
+    queue += Number(stats.scans_remaining ?? qLen ?? 0) || 0;
+    processed += Number(stats.scans_processed ?? 0) || 0;
+    failed += Number(stats.scans_failed ?? stats.errors ?? 0) || 0;
   });
 
   const max = Math.max(1, queue, processed, failed);
