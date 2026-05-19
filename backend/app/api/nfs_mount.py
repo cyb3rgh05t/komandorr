@@ -23,16 +23,21 @@ def _find_instance(instance_id: str) -> dict | None:
     return None
 
 
+def _clean_base_url(base_url: str) -> str:
+    """Strip trailing slashes and any accidental /api/... suffix users paste in."""
+    clean = (base_url or "").strip().rstrip("/")
+    if "/api/" in clean or clean.endswith("/api"):
+        clean = clean.split("/api", 1)[0].rstrip("/")
+    return clean
+
+
 async def _proxy_get(base_url: str, api_key: str, path: str):
     """Forward a GET request to a specific NFS Mount Manager API.
 
     Raises httpx.HTTPStatusError on 401/403 so callers can fail fast.
     Returns None on network errors or other HTTP errors.
     """
-    # Sanitise base_url: strip any accidental /api/... suffix the user pasted in.
-    clean_base = base_url.rstrip("/")
-    if "/api/" in clean_base or clean_base.endswith("/api"):
-        clean_base = clean_base.split("/api", 1)[0].rstrip("/")
+    clean_base = _clean_base_url(base_url)
     url = f"{clean_base}/api{path}"
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -71,7 +76,7 @@ async def test_nfs_connection(
     body: NfsMountTestRequest, username: str = Depends(require_auth)
 ):
     """Test connection to an NFS Mount Manager with the provided URL and API key."""
-    base_url = body.url.rstrip("/")
+    base_url = _clean_base_url(body.url)
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
@@ -101,7 +106,7 @@ async def nfs_mount_status(username: str = Depends(require_auth)):
 
     results = []
     for inst in instances:
-        base_url = inst.get("url", "")
+        base_url = _clean_base_url(inst.get("url", ""))
         api_key = inst.get("api_key", "")
         inst_id = inst.get("id", "")
         inst_name = inst.get("name", inst_id)
@@ -118,7 +123,7 @@ async def nfs_mount_status(username: str = Depends(require_auth)):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 resp = await client.get(
-                    f"{base_url.rstrip('/')}/api/system/health",
+                    f"{base_url}/api/system/health",
                     headers={"X-API-Key": api_key},
                 )
                 resp.raise_for_status()
