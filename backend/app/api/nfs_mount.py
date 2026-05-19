@@ -260,10 +260,20 @@ async def get_dashboard(username: str = Depends(require_auth)):
         try:
 
             # Build status maps
-            mount_status_map = {s["id"]: s for s in mount_statuses if isinstance(s, dict) and "id" in s}
-            mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses if isinstance(s, dict) and "id" in s}
-            vpn_status_map = {s["id"]: s for s in vpn_statuses if isinstance(s, dict) and "id" in s}
-            export_status_map = {s["id"]: s for s in export_statuses if isinstance(s, dict) and "id" in s}
+            mount_status_map = {
+                s["id"]: s for s in mount_statuses if isinstance(s, dict) and "id" in s
+            }
+            mergerfs_status_map = {
+                s["id"]: s
+                for s in mergerfs_statuses
+                if isinstance(s, dict) and "id" in s
+            }
+            vpn_status_map = {
+                s["id"]: s for s in vpn_statuses if isinstance(s, dict) and "id" in s
+            }
+            export_status_map = {
+                s["id"]: s for s in export_statuses if isinstance(s, dict) and "id" in s
+            }
 
             managers.append(
                 {
