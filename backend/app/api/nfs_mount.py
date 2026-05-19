@@ -34,7 +34,16 @@ async def _proxy_get(base_url: str, api_key: str, path: str):
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.get(url, headers={"X-API-Key": api_key})
             resp.raise_for_status()
-            return resp.json()
+            try:
+                return resp.json()
+            except ValueError as e:
+                # Empty body or non-JSON response (e.g. proxy timeout, gateway page)
+                body_preview = (resp.text or "")[:120].replace("\n", " ")
+                logger.warning(
+                    f"NFS Mount Manager returned non-JSON for {path} ({base_url}): "
+                    f"{e} — body: {body_preview!r}"
+                )
+                return None
     except httpx.RequestError as e:
         logger.error(f"NFS Mount Manager unreachable ({base_url}): {e}")
         return None
@@ -251,10 +260,10 @@ async def get_dashboard(username: str = Depends(require_auth)):
         try:
 
             # Build status maps
-            mount_status_map = {s["id"]: s for s in mount_statuses}
-            mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses}
-            vpn_status_map = {s["id"]: s for s in vpn_statuses}
-            export_status_map = {s["id"]: s for s in export_statuses}
+            mount_status_map = {s["id"]: s for s in mount_statuses if isinstance(s, dict) and "id" in s}
+            mergerfs_status_map = {s["id"]: s for s in mergerfs_statuses if isinstance(s, dict) and "id" in s}
+            vpn_status_map = {s["id"]: s for s in vpn_statuses if isinstance(s, dict) and "id" in s}
+            export_status_map = {s["id"]: s for s in export_statuses if isinstance(s, dict) and "id" in s}
 
             managers.append(
                 {
