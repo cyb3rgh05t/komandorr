@@ -29,7 +29,11 @@ async def _proxy_get(base_url: str, api_key: str, path: str):
     Raises httpx.HTTPStatusError on 401/403 so callers can fail fast.
     Returns None on network errors or other HTTP errors.
     """
-    url = f"{base_url.rstrip('/')}/api{path}"
+    # Sanitise base_url: strip any accidental /api/... suffix the user pasted in.
+    clean_base = base_url.rstrip("/")
+    if "/api/" in clean_base or clean_base.endswith("/api"):
+        clean_base = clean_base.split("/api", 1)[0].rstrip("/")
+    url = f"{clean_base}/api{path}"
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.get(url, headers={"X-API-Key": api_key})
