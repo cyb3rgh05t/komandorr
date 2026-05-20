@@ -412,7 +412,7 @@ export default function VpnProxy() {
         className="group bg-theme-card border border-theme rounded-xl overflow-hidden hover:border-theme-primary transition-all"
       >
         {/* Card Header */}
-        <div className="px-4 py-3 bg-theme-hover border-b border-theme flex items-center justify-between gap-2">
+        <div className="px-4 py-3 bg-theme-hover flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-bold text-theme-primary truncate">

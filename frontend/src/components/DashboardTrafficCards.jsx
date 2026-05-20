@@ -176,7 +176,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
   ) {
     return (
       <div className="w-full bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-theme">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-theme-primary" />
             <span className="text-sm font-semibold text-theme-text">
@@ -319,7 +319,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
   return topServices.length > 0 ? (
     <div className="w-full bg-theme-card border border-theme rounded-xl shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-theme">
+      <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-theme-primary" />
           <span className="text-sm font-semibold text-theme-text">

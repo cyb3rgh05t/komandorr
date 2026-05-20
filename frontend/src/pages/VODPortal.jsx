@@ -520,7 +520,7 @@ export default function VODPortal() {
       {/* Create User Form */}
       <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+        <div className="bg-theme-primary/10 px-4 py-3">
           <div className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text">
@@ -648,7 +648,7 @@ export default function VODPortal() {
       {/* Users List */}
       <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+        <div className="bg-theme-primary/10 px-4 py-3">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-theme-primary" />
             <h3 className="text-lg font-semibold text-theme-text">

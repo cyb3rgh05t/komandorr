@@ -827,7 +827,7 @@ const InvitesManager = () => {
       {/* Invites Table */}
       <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
         {/* Header for Invites */}
-        <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+        <div className="bg-theme-primary/10 px-4 py-3">
           <div className="flex items-center gap-2">
             <Mail className="w-5 h-5 text-theme-primary" />
             <h3 className="text-base font-semibold text-theme-text">

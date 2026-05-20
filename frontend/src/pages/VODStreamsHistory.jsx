@@ -315,7 +315,7 @@ function MonthComparisonCard({ data, t }) {
   return (
     <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-theme">
+      <div className="flex items-center justify-between px-5 sm:px-8 py-5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-theme-primary/15">
             <Calendar className="w-5 h-5 text-theme-primary" />
@@ -545,7 +545,7 @@ function MonthlyTrendCard({ data, t }) {
   return (
     <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
       {/* Card Header */}
-      <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-theme">
+      <div className="flex items-center justify-between px-5 sm:px-8 py-5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-theme-primary/15">
             <BarChart3 className="w-5 h-5 text-theme-primary" />
@@ -891,7 +891,7 @@ function PeakChart({ data, allTimePeak, showTrendLine, t }) {
   return (
     <div className="bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden">
       {/* Chart Header */}
-      <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-theme">
+      <div className="flex items-center justify-between px-5 sm:px-8 py-5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-theme-primary/15">
             <Activity className="w-5 h-5 text-theme-primary" />

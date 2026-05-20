@@ -444,7 +444,7 @@ export default function Posterizarr() {
             <div className="grid grid-cols-1 gap-4 items-start">
               {/* ── Scheduler ── */}
               <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-                <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                <div className="px-4 py-3 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-theme-primary" />
                   <h3 className="text-base font-semibold text-theme-text">
                     Scheduler
@@ -470,7 +470,7 @@ export default function Posterizarr() {
                 </div>
 
                 {/* Info grid */}
-                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-b border-theme">
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <MiniStatCard
                     icon={Globe}
                     accent="blue"
@@ -559,7 +559,7 @@ export default function Posterizarr() {
                   v === true || v === "true" || v === 1 ? "green" : "rose";
                 return (
                   <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-                    <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                    <div className="px-4 py-3 flex items-center gap-2">
                       <Clock className="w-5 h-5 text-theme-primary" />
                       <h3 className="text-base font-semibold text-theme-text">
                         Runtime Statistics
@@ -574,7 +574,7 @@ export default function Posterizarr() {
                     </div>
 
                     {/* Mode + Last Run banner */}
-                    <div className="px-4 py-2.5 border-b border-theme bg-theme-hover/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="px-4 py-2.5 bg-theme-hover/40 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2">
                         <span className="text-theme-text-muted">Mode:</span>
                         <span className="font-semibold text-theme-text capitalize">
@@ -594,7 +594,7 @@ export default function Posterizarr() {
                     </div>
 
                     {/* Execution Time hero */}
-                    <div className="p-4 border-b border-theme">
+                    <div className="p-4">
                       <div className="flex items-center justify-between gap-3 p-4 rounded-lg bg-theme-hover border border-theme">
                         <div className="min-w-0">
                           <p className="text-[10px] uppercase tracking-wider text-theme-text-muted">
@@ -611,7 +611,7 @@ export default function Posterizarr() {
                     </div>
 
                     {/* Core counts */}
-                    <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 border-b border-theme">
+                    <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                       <MiniStatCard
                         icon={Image}
                         accent="blue"
@@ -689,7 +689,7 @@ export default function Posterizarr() {
                     </div>
 
                     {/* Additional Information */}
-                    <div className="px-4 pt-4 pb-3 border-b border-theme">
+                    <div className="px-4 pt-4 pb-3">
                       <p className="text-[11px] uppercase tracking-wider text-theme-text-muted font-semibold mb-3">
                         Additional Information
                       </p>
@@ -763,7 +763,7 @@ export default function Posterizarr() {
               {/* ── Plex Export ── */}
               {plexExport?.success && (
                 <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-                  <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+                  <div className="px-4 py-3 flex items-center gap-2">
                     <Film className="w-5 h-5 text-theme-primary" />
                     <h3 className="text-base font-semibold text-theme-text">
                       Plex Export
@@ -802,7 +802,7 @@ export default function Posterizarr() {
               {/* ── Assets Stats ── */}
               {assetsStats?.success && (
                 <div className="bg-theme-card border border-theme rounded-xl overflow-hidden shadow-lg">
-                  <div className="bg-theme-primary/10 border-b border-theme px-4 py-3 flex items-center gap-2">
+                  <div className="bg-theme-primary/10 px-4 py-3 flex items-center gap-2">
                     <Layers className="w-5 h-5 text-theme-primary" />
                     <h3 className="text-lg font-semibold text-theme-text">
                       Asset Statistics
@@ -816,7 +816,7 @@ export default function Posterizarr() {
                     </span>
                   </div>
                   {/* Summary counters */}
-                  <div className="p-4 grid grid-cols-2 gap-3 border-b border-theme">
+                  <div className="p-4 grid grid-cols-2 gap-3">
                     <MiniStatCard
                       icon={Image}
                       accent="green"
@@ -888,7 +888,7 @@ export default function Posterizarr() {
           {/* ── Runtime History (History tab) ── */}
           {subTab === "history" && historyItems.length > 0 && (
             <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+              <div className="px-4 py-3 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-theme-primary" />
                 <h3 className="text-base font-semibold text-theme-text">
                   Runtime History

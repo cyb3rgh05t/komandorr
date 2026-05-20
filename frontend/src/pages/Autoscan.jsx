@@ -180,7 +180,7 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
         <>
           {targetEntries.length > 0 && (
             <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-theme">
+              <div className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Server className="w-5 h-5 text-theme-primary" />
                   <h3 className="text-base font-semibold text-theme-text">
@@ -226,7 +226,7 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
           )}
 
           <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-theme flex items-center gap-3">
+            <div className="px-4 py-3 flex items-center gap-3">
               <ListOrdered className="w-5 h-5 text-theme-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-semibold text-theme-text">
@@ -276,7 +276,7 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
       {subTab === "history" &&
         (history.length > 0 ? (
           <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+            <div className="px-4 py-3 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
                 Scan History
@@ -370,7 +370,7 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
         <>
           {logs.length > 0 && (
             <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+              <div className="px-4 py-3 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-theme-primary" />
                 <h3 className="text-base font-semibold text-theme-text">
                   Recent Logs

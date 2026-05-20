@@ -204,7 +204,7 @@ function ManagerSection({ manager, tabsSlot }) {
         systemStats.disk_percent !== undefined ||
         systemStatus.uptime_seconds) && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="bg-theme-primary/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <Cpu className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
@@ -232,7 +232,7 @@ function ManagerSection({ manager, tabsSlot }) {
       {/* NFS Client Mounts */}
       {mounts.length > 0 && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="bg-theme-primary/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <Download className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
@@ -333,7 +333,7 @@ function ManagerSection({ manager, tabsSlot }) {
       {/* NFS Server Exports */}
       {exports.length > 0 && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="bg-theme-primary/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
@@ -420,7 +420,7 @@ function ManagerSection({ manager, tabsSlot }) {
       {/* MergerFS */}
       {mergerfsConfigs.length > 0 && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="bg-theme-primary/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <GitMerge className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
@@ -576,7 +576,7 @@ function ManagerSection({ manager, tabsSlot }) {
       {/* VPN Tunnels */}
       {vpnConfigs.length > 0 && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="bg-theme-primary/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
@@ -670,7 +670,7 @@ function ManagerSection({ manager, tabsSlot }) {
         firewallStatus.protected_exports !== undefined ||
         firewallStatus.rules !== undefined) && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+          <div className="bg-theme-primary/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-theme-primary" />
               <h3 className="text-base font-semibold text-theme-text">
@@ -725,7 +725,7 @@ function ManagerSection({ manager, tabsSlot }) {
           ? monitorMetrics.length > 0
           : Object.keys(monitorMetrics).length > 0) && (
           <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-            <div className="bg-theme-primary/10 border-b border-theme px-4 py-3">
+            <div className="bg-theme-primary/10 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Server className="w-5 h-5 text-theme-primary" />
                 <h3 className="text-base font-semibold text-theme-text">
@@ -775,7 +775,7 @@ function ManagerSection({ manager, tabsSlot }) {
       {/* System Logs */}
       {logLines.length > 0 && (
         <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-theme flex items-center gap-2">
+          <div className="px-4 py-3 flex items-center gap-2">
             <FileText className="w-5 h-5 text-theme-primary" />
             <h3 className="text-base font-semibold text-theme-text">
               Recent Logs
