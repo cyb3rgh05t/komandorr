@@ -120,7 +120,7 @@ function NetworkUsageGrid({ usage, category }) {
         return (
           <div
             key={key}
-            className={`relative bg-theme-card border border-theme rounded-xl overflow-hidden transition-all hover:border-theme-primary/40 ${isActive ? `shadow-lg ${colors.glow}` : ""}`}
+            className="relative bg-theme-card border border-theme rounded-xl overflow-hidden transition-all hover:border-theme-primary/40"
           >
             {/* Left accent stripe */}
             <div
@@ -129,7 +129,7 @@ function NetworkUsageGrid({ usage, category }) {
             />
 
             {/* Header strip */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-theme-hover/40 border-b border-theme">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-theme-hover/40">
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${colors.text} ${colors.bg} ${colors.border}`}

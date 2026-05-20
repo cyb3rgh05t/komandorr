@@ -438,7 +438,7 @@ export default function VpnProxy() {
         {/* Card Body */}
         <div className="p-3 space-y-2.5">
           {/* VPN Connection Section */}
-          <div className="bg-theme-hover/50 rounded-lg p-3 space-y-2">
+          <div className="bg-theme-hover/50 border border-theme rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-theme-text-muted min-w-0">
                 <Shield className="w-3.5 h-3.5 text-theme-primary flex-shrink-0" />

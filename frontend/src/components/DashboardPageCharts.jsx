@@ -346,7 +346,11 @@ function MiniMulti({ segments, size = 76, thickness = 9, centerLabel }) {
       </svg>
       {centerLabel != null && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-[11px] font-bold text-theme-text leading-none">
+          <span
+            className={`font-bold text-theme-text leading-none ${
+              size >= 110 ? "text-2xl" : size >= 80 ? "text-sm" : "text-[11px]"
+            }`}
+          >
             {centerLabel}
           </span>
         </div>
@@ -1286,6 +1290,8 @@ function DownloadsCard() {
                     { value: r.stuck, color: "#ef4444" },
                     { value: idle, color: "#94a3b8" },
                   ]}
+                  size={110}
+                  thickness={12}
                   centerLabel={r.total}
                 />
                 <div className="min-w-0 w-full text-center">
@@ -1708,7 +1714,7 @@ function AutoscanCard() {
         "instance(s)",
       )}`}
     >
-      <div className="flex items-center justify-center gap-6 w-full flex-wrap">
+      <div className="flex items-center justify-around w-full px-2 sm:px-4">
         <div className="flex flex-col items-center gap-2">
           <MiniRing
             percent={(queue / max) * 100}

@@ -781,16 +781,16 @@ function ManagerSection({ manager, tabsSlot }) {
               Recent Logs
             </h3>
             <span className="text-xs text-theme-text-muted font-mono">
-              Last {Math.min(logLines.length, 50)} entries
+              Last {Math.min(logLines.length, 200)} entries
             </span>
           </div>
           <div
-            className="max-h-[28rem] overflow-auto bg-theme-bg/40"
+            className="max-h-[28rem] overflow-auto bg-[#0b0f17]"
             ref={(el) => {
               if (el) el.scrollTop = el.scrollHeight;
             }}
           >
-            {logLines.slice(-50).map((entry, i) => {
+            {logLines.slice(-200).map((entry, i) => {
               // Logs may be plain string OR object {timestamp,level,message,...}
               let ts = "";
               let level = "";
