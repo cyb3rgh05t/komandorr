@@ -493,12 +493,16 @@ function PlexCard() {
         s?.TranscodeSession,
     ).length;
     const dir = sess.length - trans;
+    const usrs = new Set(
+      sess.map((s) => s?.user || s?.user_title || s?.username).filter(Boolean),
+    ).size;
     return {
       id: inst.id,
       name: inst.name || inst.id,
       total: sess.length,
       direct: dir,
       transcoding: trans,
+      users: usrs,
     };
   });
 
@@ -513,25 +517,62 @@ function PlexCard() {
       )}`}
     >
       <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
-        {perInstance.map((inst) => (
-          <div
-            key={inst.id}
-            className="flex flex-col items-center gap-2 min-w-0"
-          >
-            <MiniMulti
-              segments={[
-                { value: inst.direct, color: "#22c55e" },
-                { value: inst.transcoding, color: "#f59e0b" },
-              ]}
-              size={110}
-              thickness={14}
-              centerLabel={inst.total}
-            />
-            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[110px] text-center">
-              {inst.name}
-            </span>
-          </div>
-        ))}
+        {perInstance.map((inst) => {
+          const isActive = selectedId === inst.id;
+          return (
+            <button
+              key={inst.id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedId(isActive ? null : inst.id);
+              }}
+              className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
+                isActive
+                  ? "ring-2 ring-theme-primary bg-theme-primary/5"
+                  : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+              }`}
+            >
+              <MiniMulti
+                segments={[
+                  { value: inst.direct, color: "#22c55e" },
+                  { value: inst.transcoding, color: "#f59e0b" },
+                ]}
+                size={110}
+                thickness={14}
+                centerLabel={
+                  <span className="flex flex-col items-center leading-tight">
+                    <span className="text-2xl font-bold text-theme-text">
+                      {inst.total}
+                    </span>
+                    <span className="text-[10px] font-medium text-theme-text-muted">
+                      {inst.users}{" "}
+                      {t("dashboard.charts.users", "Users").toLowerCase()}
+                    </span>
+                  </span>
+                }
+              />
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[140px] text-center">
+                {inst.name}
+              </span>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium">
+                <span
+                  style={{ color: "#22c55e" }}
+                  title={t("dashboard.charts.direct", "Direct")}
+                >
+                  {inst.direct}
+                </span>
+                <span className="text-theme-text-muted">·</span>
+                <span
+                  style={{ color: "#f59e0b" }}
+                  title={t("dashboard.charts.transcode", "Transcode")}
+                >
+                  {inst.transcoding}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
       <StatGrid
         tiles={[
@@ -923,7 +964,24 @@ function NfsCard() {
       if (ok) up += 1;
       else down += 1;
     });
-    return { id, name, up, down, total: up + down };
+    const mergerCfgs = mgr?.mergerfs_configs || [];
+    const mergerStatusMap = mgr?.mergerfs_statuses || {};
+    let mUp = 0;
+    let mDown = 0;
+    mergerCfgs.forEach((c) => {
+      if (mergerStatusMap[c.id]?.mounted) mUp += 1;
+      else mDown += 1;
+    });
+    return {
+      id,
+      name,
+      up,
+      down,
+      total: up + down,
+      mUp,
+      mDown,
+      mTotal: mUp + mDown,
+    };
   });
 
   return (
@@ -950,36 +1008,72 @@ function NfsCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
-              <MiniMulti
-                segments={[
-                  { value: inst.up, color: "#22c55e" },
-                  { value: inst.down, color: "#ef4444" },
-                ]}
-                size={110}
-                thickness={14}
-                centerLabel={inst.total}
-              />
-              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[110px] text-center">
+              <div className="flex items-end gap-3">
+                <div className="flex flex-col items-center gap-1">
+                  <MiniMulti
+                    segments={[
+                      { value: inst.up, color: "#22c55e" },
+                      { value: inst.down, color: "#ef4444" },
+                    ]}
+                    size={96}
+                    thickness={12}
+                    centerLabel={inst.total}
+                  />
+                  <span className="text-[9px] uppercase tracking-wide text-theme-text-muted">
+                    {t("dashboard.charts.mounts", "Mounts")}
+                  </span>
+                  <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium">
+                    <span
+                      style={{ color: "#22c55e" }}
+                      title={t("dashboard.charts.up", "Up")}
+                    >
+                      {inst.up}
+                    </span>
+                    <span className="text-theme-text-muted">·</span>
+                    <span
+                      style={{ color: "#ef4444" }}
+                      title={t("dashboard.charts.down", "Down")}
+                    >
+                      {inst.down}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <MiniMulti
+                    segments={[
+                      { value: inst.mUp, color: "#a78bfa" },
+                      { value: inst.mDown, color: "#ef4444" },
+                    ]}
+                    size={96}
+                    thickness={12}
+                    centerLabel={inst.mTotal}
+                  />
+                  <span className="text-[9px] uppercase tracking-wide text-theme-text-muted">
+                    {t("dashboard.charts.mergerfs", "MergerFS")}
+                  </span>
+                  <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium">
+                    <span
+                      style={{ color: "#a78bfa" }}
+                      title={t("dashboard.charts.up", "Up")}
+                    >
+                      {inst.mUp}
+                    </span>
+                    <span className="text-theme-text-muted">·</span>
+                    <span
+                      style={{ color: "#ef4444" }}
+                      title={t("dashboard.charts.down", "Down")}
+                    >
+                      {inst.mDown}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[220px] text-center">
                 {inst.name}
               </span>
-              <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium">
-                <span
-                  style={{ color: "#22c55e" }}
-                  title={t("dashboard.charts.up", "Up")}
-                >
-                  {inst.up}
-                </span>
-                <span className="text-theme-text-muted">·</span>
-                <span
-                  style={{ color: "#ef4444" }}
-                  title={t("dashboard.charts.down", "Down")}
-                >
-                  {inst.down}
-                </span>
-              </div>
             </button>
           );
         })}
@@ -1670,7 +1764,7 @@ function PosterizarrCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
               <MiniRing
