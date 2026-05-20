@@ -273,17 +273,19 @@ function MiniRing({
           strokeOpacity="0.1"
           strokeWidth={thickness}
         />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={thickness}
-          strokeDasharray={`${len} ${c - len}`}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
+        {pct > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={thickness}
+            strokeDasharray={`${len} ${c - len}`}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        )}
       </svg>
       {centerLabel != null && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -477,46 +479,60 @@ function PlexCard() {
     0,
   );
 
+  // Per-instance breakdown for donuts
+  const instanceList =
+    instances.length > 0
+      ? instances
+      : [{ id: "_default", name: t("dashboard.charts.plex", "Plex") }];
+  const perInstance = instanceList.map((inst) => {
+    const sess = byInstance[inst.id] || [];
+    const trans = sess.filter(
+      (s) =>
+        s?.transcoding ||
+        s?.transcodeDecision === "transcode" ||
+        s?.TranscodeSession,
+    ).length;
+    const dir = sess.length - trans;
+    return {
+      id: inst.id,
+      name: inst.name || inst.id,
+      total: sess.length,
+      direct: dir,
+      transcoding: trans,
+    };
+  });
+
   return (
     <ChartCard
       icon={Activity}
       title={t("dashboard.charts.plex", "Plex Activity")}
       onClick={() => navigate("/plex-activity")}
-      tabs={
-        <InstanceToggle
-          instances={instances}
-          value={selectedId}
-          onChange={setSelectedId}
-          allLabel={t("dashboard.charts.all", "All")}
-        />
-      }
       footer={`${instances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <DonutChart
-        segments={[
-          { value: direct, color: "#22c55e" },
-          { value: transcoding, color: "#f59e0b" },
-        ]}
-        centerLabel={sessions.length}
-        centerSub={t("dashboard.charts.sessions", "sessions")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.direct", "Direct"),
-            value: direct,
-            color: "#22c55e",
-          },
-          {
-            label: t("dashboard.charts.transcode", "Transcode"),
-            value: transcoding,
-            color: "#f59e0b",
-          },
-        ]}
-      />
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
+        {perInstance.map((inst) => (
+          <div
+            key={inst.id}
+            className="flex flex-col items-center gap-2 min-w-0"
+          >
+            <MiniMulti
+              segments={[
+                { value: inst.direct, color: "#22c55e" },
+                { value: inst.transcoding, color: "#f59e0b" },
+              ]}
+              size={110}
+              thickness={14}
+              centerLabel={inst.total}
+            />
+            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[110px] text-center">
+              {inst.name}
+            </span>
+          </div>
+        ))}
+      </div>
       <StatGrid
         tiles={[
           {
@@ -737,35 +753,43 @@ export function VpnCard({
         allLabel={t("dashboard.charts.all", "All")}
       />
 
-      <div className="flex flex-col items-center gap-2 shrink-0">
-        <DonutChart
-          size={110}
-          thickness={12}
-          segments={[
-            { value: running, color: "#22c55e" },
-            { value: stopped, color: "#ef4444" },
-            {
-              value: Math.max(0, total - running - stopped),
-              color: "#f59e0b",
-            },
-          ]}
-          centerLabel={total}
-          centerSub={t("dashboard.charts.containers", "containers")}
-        />
-        <Legend
-          items={[
-            {
-              label: t("dashboard.charts.running", "Running"),
-              value: running,
-              color: "#22c55e",
-            },
-            {
-              label: t("dashboard.charts.stopped", "Stopped"),
-              value: stopped,
-              color: "#ef4444",
-            },
-          ]}
-        />
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 shrink-0">
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (running / total) * 100 : 0}
+            color="#22c55e"
+            size={110}
+            thickness={14}
+            centerLabel={running}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.running", "Running")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (connected / total) * 100 : 0}
+            color="#22d3ee"
+            size={110}
+            thickness={14}
+            centerLabel={connected}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.connected", "Connected")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (stopped / total) * 100 : 0}
+            color="#ef4444"
+            size={110}
+            thickness={14}
+            centerLabel={stopped}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.stopped", "Stopped")}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 shrink-0">
@@ -1169,7 +1193,6 @@ function StorageCard() {
 function DownloadsCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState(null);
 
   const { data } = useQuery({
     queryKey: ["dash-arr-queue"],
@@ -1238,14 +1261,12 @@ function DownloadsCard() {
       });
   }, [data]);
 
-  const instances = allRows.map((r) => ({ id: r.id, name: r.name }));
-  const rows =
-    selectedId == null ? allRows : allRows.filter((r) => r.id === selectedId);
+  const rows = allRows;
   const sortedRows = useMemo(
     () => [...rows].sort((a, b) => b.total - a.total),
     [rows],
   );
-  const visibleRows = selectedId == null ? sortedRows.slice(0, 6) : sortedRows;
+  const visibleRows = sortedRows.slice(0, 6);
 
   const totalItems = rows.reduce((a, r) => a + r.total, 0);
   const totalActive = rows.reduce((a, r) => a + r.active, 0);
@@ -1259,14 +1280,6 @@ function DownloadsCard() {
       icon={Download}
       title={t("dashboard.charts.downloads", "Downloads")}
       onClick={() => navigate("/arr-activity")}
-      tabs={
-        <InstanceToggle
-          instances={instances}
-          value={selectedId}
-          onChange={setSelectedId}
-          allLabel={t("dashboard.charts.all", "All")}
-        />
-      }
       footer={`${totalActive} ${t(
         "dashboard.charts.active",
         "active",
@@ -1384,34 +1397,44 @@ function UploadsCard() {
       onClick={() => navigate("/uploader")}
       footer={`${total} ${t("dashboard.charts.items", "items")}`}
     >
-      <DonutChart
-        segments={[
-          { value: active, color: "#22d3ee" },
-          { value: queued, color: "#a78bfa" },
-          { value: failed, color: "#ef4444" },
-        ]}
-        centerLabel={total}
-        centerSub={t("dashboard.charts.items", "items")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.active", "Active"),
-            value: active,
-            color: "#22d3ee",
-          },
-          {
-            label: t("dashboard.charts.queued", "Queued"),
-            value: queued,
-            color: "#a78bfa",
-          },
-          {
-            label: t("dashboard.charts.failed", "Failed"),
-            value: failed,
-            color: "#ef4444",
-          },
-        ]}
-      />
+      <div className="flex items-center justify-around w-full px-2 sm:px-4">
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (active / total) * 100 : 0}
+            color="#22d3ee"
+            size={130}
+            thickness={16}
+            centerLabel={active}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.active", "Active")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (queued / total) * 100 : 0}
+            color="#a78bfa"
+            size={130}
+            thickness={16}
+            centerLabel={queued}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.queued", "Queued")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (failed / total) * 100 : 0}
+            color="#ef4444"
+            size={130}
+            thickness={16}
+            centerLabel={failed}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.failed", "Failed")}
+          </span>
+        </div>
+      </div>
       <StatGrid
         tiles={[
           {
@@ -2062,34 +2085,44 @@ function ServersCard() {
       onClick={() => navigate("/services")}
       footer={`${total} ${t("dashboard.charts.services", "service(s)")}`}
     >
-      <DonutChart
-        segments={[
-          { value: online, color: "#22c55e" },
-          { value: problem, color: "#f59e0b" },
-          { value: offline, color: "#ef4444" },
-        ]}
-        centerLabel={total}
-        centerSub={t("dashboard.charts.servers", "servers")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.online", "Online"),
-            value: online,
-            color: "#22c55e",
-          },
-          {
-            label: t("dashboard.charts.problem", "Problem"),
-            value: problem,
-            color: "#f59e0b",
-          },
-          {
-            label: t("dashboard.charts.offline", "Offline"),
-            value: offline,
-            color: "#ef4444",
-          },
-        ]}
-      />
+      <div className="flex items-center justify-around w-full px-2 sm:px-4">
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (online / total) * 100 : 0}
+            color="#22c55e"
+            size={130}
+            thickness={16}
+            centerLabel={online}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.online", "Online")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (problem / total) * 100 : 0}
+            color="#f59e0b"
+            size={130}
+            thickness={16}
+            centerLabel={problem}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.problem", "Problem")}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <MiniRing
+            percent={total > 0 ? (offline / total) * 100 : 0}
+            color="#ef4444"
+            size={130}
+            thickness={16}
+            centerLabel={offline}
+          />
+          <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+            {t("dashboard.charts.offline", "Offline")}
+          </span>
+        </div>
+      </div>
       <StatGrid
         tiles={[
           {
