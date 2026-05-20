@@ -843,47 +843,47 @@ const InvitesManager = () => {
             <thead>
               <tr className="border-b border-theme-primary">
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.code") || "Code"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.status") || "Status"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.usage") || "Usage"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.expires") || "Expires"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.libraries") || "Libraries"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.server") || "Server"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.permissions") || "Permissions"}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.redeemedBy") || "Redeemed By"}
                   </span>
                 </th>
                 <th className="text-right py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("invites.fields.actions") || "Actions"}
                   </span>
                 </th>

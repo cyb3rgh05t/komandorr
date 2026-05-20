@@ -1053,22 +1053,22 @@ export default function VODStreams() {
               <thead>
                 <tr className="border-b border-theme-primary">
                   <th className="text-left py-3 px-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                       {t("vodStreams.libraryScans.library", "Library")}
                     </span>
                   </th>
                   <th className="text-left py-3 px-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                       {t("vodStreams.libraryScans.details", "Details")}
                     </span>
                   </th>
                   <th className="text-left py-3 px-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                       {t("vodStreams.table.status", "Status")}
                     </span>
                   </th>
                   <th className="text-right py-3 px-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                    <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                       {t("vodStreams.table.progress", "Progress")}
                     </span>
                   </th>
@@ -1151,22 +1151,22 @@ export default function VODStreams() {
             <thead>
               <tr className="border-b border-theme-primary">
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("vodStreams.table.media", "Media")}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("vodStreams.table.title", "Title")}
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("vodStreams.table.status", "Status")}
                   </span>
                 </th>
                 <th className="text-right py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     {t("vodStreams.table.progress", "Progress")}
                   </span>
                 </th>

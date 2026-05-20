@@ -65,9 +65,27 @@ function NetworkUsageGrid({ usage, category }) {
   };
 
   const catColors = {
-    Script: "text-blue-400 bg-blue-400/10 border-blue-400/30",
-    Manifest: "text-purple-400 bg-purple-400/10 border-purple-400/30",
-    Media: "text-amber-400 bg-amber-400/10 border-amber-400/30",
+    Script: {
+      text: "text-blue-400",
+      bg: "bg-blue-400/10",
+      border: "border-blue-400/30",
+      stripe: "bg-blue-400",
+      glow: "shadow-blue-400/20",
+    },
+    Manifest: {
+      text: "text-purple-400",
+      bg: "bg-purple-400/10",
+      border: "border-purple-400/30",
+      stripe: "bg-purple-400",
+      glow: "shadow-purple-400/20",
+    },
+    Media: {
+      text: "text-amber-400",
+      bg: "bg-amber-400/10",
+      border: "border-amber-400/30",
+      stripe: "bg-amber-400",
+      glow: "shadow-amber-400/20",
+    },
   };
 
   if (rows.length === 0) {
@@ -85,37 +103,68 @@ function NetworkUsageGrid({ usage, category }) {
         const key = `${row.category}-${row.url}`;
         const streamCount = row.streams.length;
         const isActive = row.mbps > 0;
+        const utilization =
+          row.maxStreams > 0
+            ? Math.min(100, (streamCount / row.maxStreams) * 100)
+            : 0;
+        const utilColor =
+          utilization > 80
+            ? "bg-red-500"
+            : utilization > 50
+              ? "bg-yellow-500"
+              : "bg-theme-primary";
+        const colors = catColors[row.category] || catColors.Script;
+        const mbpsText = row.mbpsFormatted
+          ? row.mbpsFormatted.replace("Mbps", "").trim()
+          : "0.0";
         return (
           <div
             key={key}
-            className="bg-theme-card border border-theme rounded-xl overflow-hidden transition-all hover:border-theme-primary/30"
+            className={`relative bg-theme-card border border-theme rounded-xl overflow-hidden transition-all hover:border-theme-primary/40 ${isActive ? `shadow-lg ${colors.glow}` : ""}`}
           >
-            {/* Card Header */}
-            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            {/* Left accent stripe */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-1 ${colors.stripe}`}
+              aria-hidden="true"
+            />
+
+            {/* Header strip */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-theme-hover/40 border-b border-theme">
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${catColors[row.category]}`}
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${colors.text} ${colors.bg} ${colors.border}`}
                 >
                   {row.category}
                 </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`inline-flex items-center gap-1.5 text-sm font-bold ${isActive ? "text-green-400" : "text-theme-text-muted"}`}
-                >
-                  <Gauge className="w-3.5 h-3.5" />
-                  {row.mbpsFormatted
-                    ? row.mbpsFormatted.replace("Mbps", " Mbps")
-                    : "0.0 Mbps"}
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-theme-text-muted">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-400 animate-pulse" : "bg-theme-text-muted/40"}`}
+                  />
+                  {isActive ? "Live" : "Idle"}
                 </span>
               </div>
+              <div className="flex items-center gap-1.5 text-theme-text-muted">
+                <Gauge className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            {/* Hero: Mbps */}
+            <div className="px-4 py-3 flex items-baseline gap-2">
+              <span
+                className={`text-3xl font-bold tabular-nums leading-none ${isActive ? colors.text : "text-theme-text-muted"}`}
+              >
+                {mbpsText}
+              </span>
+              <span className="text-xs font-medium text-theme-text-muted uppercase tracking-wider">
+                Mbps
+              </span>
             </div>
 
             {/* Proxy URL */}
             <div className="px-4 pb-3">
               <button
                 onClick={() => copyUrl(row.url)}
-                className="group flex items-center gap-2 w-full bg-theme-bg-card border border-theme rounded-lg px-3 py-2 hover:border-theme-primary/50 transition-colors"
+                className="group flex items-center gap-2 w-full bg-theme-bg border border-theme rounded-lg px-3 py-2 hover:border-theme-primary/50 transition-colors"
                 title="Click to copy"
               >
                 <span className="text-theme-primary font-mono text-xs truncate flex-1 text-left">
@@ -124,60 +173,49 @@ function NetworkUsageGrid({ usage, category }) {
                 {copiedUrl === row.url ? (
                   <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5 text-theme-text group-hover:text-theme-primary shrink-0 transition-colors" />
+                  <Copy className="w-3.5 h-3.5 text-theme-text-muted group-hover:text-theme-primary shrink-0 transition-colors" />
                 )}
               </button>
             </div>
 
-            {/* Stats Row */}
-            <div className="px-4 pb-3 flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-card rounded-lg border border-theme">
-                <MonitorPlay className="w-3.5 h-3.5 text-theme-text-muted" />
-                <span className="text-xs text-theme-text-muted">Streams</span>
-                <span
-                  className={`text-sm font-bold ${streamCount > 0 ? "text-theme-primary" : "text-white"}`}
-                >
-                  {streamCount}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-theme-bg-card rounded-lg border border-theme">
-                <Zap className="w-3.5 h-3.5 text-theme-text-muted" />
-                <span className="text-xs text-theme-text-muted">Max</span>
-                <span className="text-sm font-bold text-white">
-                  {row.maxStreams}
-                </span>
-              </div>
-              {streamCount > 0 && row.maxStreams > 0 && (
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-theme-bg-card rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        streamCount / row.maxStreams > 0.8
-                          ? "bg-red-500"
-                          : streamCount / row.maxStreams > 0.5
-                            ? "bg-yellow-500"
-                            : "bg-theme-primary"
-                      }`}
-                      style={{
-                        width: `${Math.min(100, (streamCount / row.maxStreams) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-theme-text-muted">
-                    {Math.round((streamCount / row.maxStreams) * 100)}%
+            {/* Streams / Max bar */}
+            <div className="px-4 pb-3 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5 text-theme-text-muted">
+                  <MonitorPlay className="w-3 h-3" />
+                  <span className="uppercase tracking-wider font-semibold">
+                    Streams
                   </span>
+                </div>
+                <div className="flex items-baseline gap-1 tabular-nums">
+                  <span
+                    className={`text-base font-bold ${streamCount > 0 ? "text-theme-primary" : "text-theme-text-muted"}`}
+                  >
+                    {streamCount}
+                  </span>
+                  <span className="text-xs text-theme-text-muted">
+                    / {row.maxStreams || "∞"}
+                  </span>
+                </div>
+              </div>
+              {row.maxStreams > 0 && (
+                <div className="h-1 bg-theme-bg rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${utilColor}`}
+                    style={{ width: `${utilization}%` }}
+                  />
                 </div>
               )}
             </div>
 
-            {/* Streams List */}
+            {/* Streams chips */}
             {streamCount > 0 && (
               <div className="px-4 pb-4 pt-2 border-t border-theme">
                 <div className="flex flex-wrap gap-1.5">
                   {row.streams.map((s, i) => (
                     <span
                       key={i}
-                      className="text-xs text-theme-text bg-theme-bg-card px-2 py-1 rounded border border-theme"
+                      className="text-[11px] text-theme-text bg-theme-hover/50 hover:bg-theme-hover px-2 py-0.5 rounded-md border border-theme transition-colors"
                     >
                       {s}
                     </span>
@@ -695,37 +733,37 @@ export default function VpnProxyMonitor() {
                     <thead>
                       <tr className="border-b border-theme-primary">
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             Stream
                           </span>
                         </th>
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             Provider
                           </span>
                         </th>
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             Quality
                           </span>
                         </th>
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             ↓ Down
                           </span>
                         </th>
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             ↑ Up
                           </span>
                         </th>
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             Uptime
                           </span>
                         </th>
                         <th className="text-left py-3 px-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                             Errors
                           </span>
                         </th>

@@ -289,32 +289,32 @@ export default function DashboardVpnTable({
             <thead>
               <tr className="border-b border-theme-primary">
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     Container
                   </span>
                 </th>
                 <th className="text-left py-3 px-2 hidden sm:table-cell">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     Provider
                   </span>
                 </th>
                 <th className="text-left py-3 px-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     Status
                   </span>
                 </th>
                 <th className="text-left py-3 px-2 hidden md:table-cell">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     IP
                   </span>
                 </th>
                 <th className="text-left py-3 px-2 hidden lg:table-cell">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     Location
                   </span>
                 </th>
                 <th className="text-left py-3 px-2 hidden xl:table-cell">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                  <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                     Proxy / Clients
                   </span>
                 </th>

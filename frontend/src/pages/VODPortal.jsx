@@ -679,47 +679,47 @@ export default function VODPortal() {
                 <thead>
                   <tr className="border-b border-theme-primary">
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.username") || "Username"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.email") || "Email"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.displayName") || "Display Name"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.userRole") || "User Role"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.userType") || "User Type"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.plexId") || "Plex ID"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.createdAt") || "Created"}
                       </span>
                     </th>
                     <th className="text-left py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.requests") || "Requests"}
                       </span>
                     </th>
                     <th className="text-right py-3 px-2">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-theme-primary bg-theme-hover border border-theme">
+                      <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
                         {t("vodPortal.actions") || "Actions"}
                       </span>
                     </th>
