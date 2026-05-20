@@ -1615,7 +1615,7 @@ function UploadsCard() {
             label: t("dashboard.charts.status", "Status"),
             value: idle
               ? t("dashboard.charts.idle", "Idle")
-              : t("dashboard.charts.busy", "Busy"),
+              : t("dashboard.charts.running", "Running"),
             color: idle ? "#94a3b8" : "#22c55e",
           },
           {
@@ -1713,30 +1713,28 @@ function PosterizarrCard() {
         ];
   const perInstance = instanceList.map((inst) => {
     const d = byInstance[inst.id];
+    const status = d?.status || {};
+    const hasError = !!d && (d?.success === false || d?.error);
+    const manualOn = status.manual_running === true;
+    const schedulerOn = status.scheduler_running === true;
+    const runningOn = status.running === true && !manualOn && !schedulerOn;
+    const isIdle = !hasError && !manualOn && !schedulerOn && !runningOn;
     let state = "idle";
-    let color = "#94a3b8";
-    if (!d) {
-      state = "idle";
-      color = "#94a3b8";
-    } else if (d?.success === false || d?.error) {
-      state = "error";
-      color = "#ef4444";
-    } else {
-      const status = d?.status || {};
-      const isRunning =
-        status.running === true ||
-        status.manual_running === true ||
-        status.scheduler_running === true;
-      if (isRunning) {
-        state = "running";
-        color = "#22d3ee";
-      }
-    }
+    if (hasError) state = "error";
+    else if (manualOn) state = "manual";
+    else if (schedulerOn) state = "scheduler";
+    else if (runningOn) state = "running";
     return {
       id: inst.id,
       name: inst.name || inst.id,
       state,
-      color,
+      isIdle,
+      segments: [
+        { value: runningOn ? 1 : 0, color: "#22d3ee" },
+        { value: manualOn ? 1 : 0, color: "#a78bfa" },
+        { value: schedulerOn ? 1 : 0, color: "#f59e0b" },
+        { value: hasError ? 1 : 0, color: "#ef4444" },
+      ],
     };
   });
 
@@ -1767,17 +1765,20 @@ function PosterizarrCard() {
                   : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
-              <MiniRing
-                percent={100}
-                color={inst.color}
+              <MiniMulti
+                segments={inst.segments}
                 size={110}
                 thickness={14}
                 centerLabel={
-                  inst.state === "running"
-                    ? t("dashboard.charts.running", "Running")
+                  inst.isIdle
+                    ? "-"
                     : inst.state === "error"
                       ? t("dashboard.charts.error", "Error")
-                      : t("dashboard.charts.idle", "Idle")
+                      : inst.state === "manual"
+                        ? t("dashboard.charts.manual", "Manual")
+                        : inst.state === "scheduler"
+                          ? t("dashboard.charts.scheduler", "Scheduler")
+                          : t("dashboard.charts.running", "Running")
                 }
               />
               <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[110px] text-center">
