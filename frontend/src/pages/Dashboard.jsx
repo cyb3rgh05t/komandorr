@@ -35,7 +35,11 @@ import { uploaderApi } from "@/services/uploaderApi";
 import { arrActivityApi } from "@/services/arrActivityApi";
 import DashboardTrafficCards from "@/components/DashboardTrafficCards";
 import DashboardVpnMap from "@/components/DashboardVpnMap";
-import DashboardPageCharts, { VpnCard } from "@/components/DashboardPageCharts";
+import DashboardPageCharts, {
+  VpnCard,
+  DashboardLayoutProvider,
+  DashboardLayoutToolbar,
+} from "@/components/DashboardPageCharts";
 import { useTrafficWebSocket } from "@/utils/useTrafficWebSocket";
 import ServiceModal from "@/components/ServiceModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -438,317 +442,324 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 min-w-0 overflow-hidden">
-      <PageHeader
-        icon={LayoutDashboard}
-        title={t("nav.dashboard", "Dashboard")}
-        actions={
-          <>
-            <button
-              onClick={() => setShowCustomizeMenu(!showCustomizeMenu)}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
-              title={t("dashboard.customize")}
-            >
-              <Settings size={16} sm:size={18} className="text-theme-primary" />
-              <span className="text-xs sm:text-sm hidden sm:inline">
-                {t("dashboard.customize")}
-              </span>
-            </button>
-            <button
-              onClick={async () => {
-                setManualRefreshing(true);
-                try {
-                  await handleRefreshAll();
-                } finally {
-                  setManualRefreshing(false);
-                }
-              }}
-              disabled={manualRefreshing}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw
-                size={16}
-                className={`text-theme-primary transition-transform duration-500 ${
-                  manualRefreshing ? "animate-spin" : ""
-                }`}
-              />
-              <span className="text-xs sm:text-sm">
-                {manualRefreshing
-                  ? t("common.refreshing", "Refreshing")
-                  : t("service.checkNow")}
-              </span>
-            </button>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
-            >
-              <Plus size={16} className="text-theme-primary" />
-              <span className="text-xs sm:text-sm">
-                {t("dashboard.addService")}
-              </span>
-            </button>
-            <div className="relative w-full sm:w-64">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder={
-                  t("dashboard.searchPlaceholder") ||
-                  "Search services and groups..."
-                }
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
-              />
-            </div>
-          </>
-        }
-      />
-
-      {/* Customize Modal */}
-      {showCustomizeMenu && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-theme-card border border-theme rounded-xl shadow-2xl max-w-md w-full">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-theme">
-              <h3 className="text-xl font-bold text-theme-text flex items-center gap-2">
-                <Settings size={20} className="text-theme-primary" />
-                {t("dashboard.dashboardVisibility")}
-              </h3>
+    <DashboardLayoutProvider>
+      <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 min-w-0 overflow-hidden">
+        <PageHeader
+          icon={LayoutDashboard}
+          title={t("nav.dashboard", "Dashboard")}
+          actions={
+            <>
               <button
-                onClick={() => setShowCustomizeMenu(false)}
-                className="text-theme-text-muted hover:text-theme-text transition-colors p-1 hover:bg-theme-hover rounded"
+                onClick={() => setShowCustomizeMenu(!showCustomizeMenu)}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+                title={t("dashboard.customize")}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <Settings
+                  size={16}
+                  sm:size={18}
+                  className="text-theme-primary"
+                />
+                <span className="text-xs sm:text-sm hidden sm:inline">
+                  {t("dashboard.customize")}
+                </span>
               </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              {/* Stats Card Toggle */}
-              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
-                <div className="flex items-center gap-3">
-                  {dashboardVisibility.stats ? (
-                    <Eye size={18} className="text-green-500" />
-                  ) : (
-                    <EyeOff size={18} className="text-gray-500" />
-                  )}
-                  <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.showStatsCard")}
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    setDashboardVisibility({
-                      ...dashboardVisibility,
-                      stats: !dashboardVisibility.stats,
-                    })
-                  }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    dashboardVisibility.stats
-                      ? "bg-theme-primary"
-                      : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      dashboardVisibility.stats ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Traffic Chart Toggle */}
-              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
-                <div className="flex items-center gap-3">
-                  {dashboardVisibility.trafficChart ? (
-                    <Eye size={18} className="text-green-500" />
-                  ) : (
-                    <EyeOff size={18} className="text-gray-500" />
-                  )}
-                  <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.showTrafficChart")}
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    setDashboardVisibility({
-                      ...dashboardVisibility,
-                      trafficChart: !dashboardVisibility.trafficChart,
-                    })
-                  }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    dashboardVisibility.trafficChart
-                      ? "bg-theme-primary"
-                      : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      dashboardVisibility.trafficChart ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Page Charts Toggle */}
-              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
-                <div className="flex items-center gap-3">
-                  {dashboardVisibility.pageCharts ? (
-                    <Eye size={18} className="text-green-500" />
-                  ) : (
-                    <EyeOff size={18} className="text-gray-500" />
-                  )}
-                  <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.showPageCharts", "Page Charts")}
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    setDashboardVisibility({
-                      ...dashboardVisibility,
-                      pageCharts: !dashboardVisibility.pageCharts,
-                    })
-                  }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    dashboardVisibility.pageCharts
-                      ? "bg-theme-primary"
-                      : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      dashboardVisibility.pageCharts ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* VPN Map Toggle */}
-              <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
-                <div className="flex items-center gap-3">
-                  {dashboardVisibility.vpnMap ? (
-                    <Eye size={18} className="text-green-500" />
-                  ) : (
-                    <EyeOff size={18} className="text-gray-500" />
-                  )}
-                  <span className="text-sm font-medium text-theme-text">
-                    {t("dashboard.showVpnMap", "VPN Connection Map")}
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    setDashboardVisibility({
-                      ...dashboardVisibility,
-                      vpnMap: !dashboardVisibility.vpnMap,
-                    })
-                  }
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    dashboardVisibility.vpnMap
-                      ? "bg-theme-primary"
-                      : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      dashboardVisibility.vpnMap ? "translate-x-6" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-theme">
               <button
-                onClick={() => setShowCustomizeMenu(false)}
-                className="px-4 py-2 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all"
+                onClick={async () => {
+                  setManualRefreshing(true);
+                  try {
+                    await handleRefreshAll();
+                  } finally {
+                    setManualRefreshing(false);
+                  }
+                }}
+                disabled={manualRefreshing}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t("dashboard.close")}
+                <RefreshCw
+                  size={16}
+                  className={`text-theme-primary transition-transform duration-500 ${
+                    manualRefreshing ? "animate-spin" : ""
+                  }`}
+                />
+                <span className="text-xs sm:text-sm">
+                  {manualRefreshing
+                    ? t("common.refreshing", "Refreshing")
+                    : t("service.checkNow")}
+                </span>
               </button>
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+              >
+                <Plus size={16} className="text-theme-primary" />
+                <span className="text-xs sm:text-sm">
+                  {t("dashboard.addService")}
+                </span>
+              </button>
+              <DashboardLayoutToolbar />
+              <div className="relative w-full sm:w-64">
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-text-muted"
+                  size={18}
+                />
+                <input
+                  type="text"
+                  placeholder={
+                    t("dashboard.searchPlaceholder") ||
+                    "Search services and groups..."
+                  }
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme rounded-lg text-sm text-theme-text placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:border-theme-primary transition-all"
+                />
+              </div>
+            </>
+          }
+        />
+
+        {/* Customize Modal */}
+        {showCustomizeMenu && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-theme-card border border-theme rounded-xl shadow-2xl max-w-md w-full">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-theme">
+                <h3 className="text-xl font-bold text-theme-text flex items-center gap-2">
+                  <Settings size={20} className="text-theme-primary" />
+                  {t("dashboard.dashboardVisibility")}
+                </h3>
+                <button
+                  onClick={() => setShowCustomizeMenu(false)}
+                  className="text-theme-text-muted hover:text-theme-text transition-colors p-1 hover:bg-theme-hover rounded"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-4">
+                {/* Stats Card Toggle */}
+                <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {dashboardVisibility.stats ? (
+                      <Eye size={18} className="text-green-500" />
+                    ) : (
+                      <EyeOff size={18} className="text-gray-500" />
+                    )}
+                    <span className="text-sm font-medium text-theme-text">
+                      {t("dashboard.showStatsCard")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setDashboardVisibility({
+                        ...dashboardVisibility,
+                        stats: !dashboardVisibility.stats,
+                      })
+                    }
+                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                      dashboardVisibility.stats
+                        ? "bg-theme-primary"
+                        : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                        dashboardVisibility.stats ? "translate-x-6" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Traffic Chart Toggle */}
+                <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {dashboardVisibility.trafficChart ? (
+                      <Eye size={18} className="text-green-500" />
+                    ) : (
+                      <EyeOff size={18} className="text-gray-500" />
+                    )}
+                    <span className="text-sm font-medium text-theme-text">
+                      {t("dashboard.showTrafficChart")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setDashboardVisibility({
+                        ...dashboardVisibility,
+                        trafficChart: !dashboardVisibility.trafficChart,
+                      })
+                    }
+                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                      dashboardVisibility.trafficChart
+                        ? "bg-theme-primary"
+                        : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                        dashboardVisibility.trafficChart ? "translate-x-6" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Page Charts Toggle */}
+                <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {dashboardVisibility.pageCharts ? (
+                      <Eye size={18} className="text-green-500" />
+                    ) : (
+                      <EyeOff size={18} className="text-gray-500" />
+                    )}
+                    <span className="text-sm font-medium text-theme-text">
+                      {t("dashboard.showPageCharts", "Page Charts")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setDashboardVisibility({
+                        ...dashboardVisibility,
+                        pageCharts: !dashboardVisibility.pageCharts,
+                      })
+                    }
+                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                      dashboardVisibility.pageCharts
+                        ? "bg-theme-primary"
+                        : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                        dashboardVisibility.pageCharts ? "translate-x-6" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* VPN Map Toggle */}
+                <div className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {dashboardVisibility.vpnMap ? (
+                      <Eye size={18} className="text-green-500" />
+                    ) : (
+                      <EyeOff size={18} className="text-gray-500" />
+                    )}
+                    <span className="text-sm font-medium text-theme-text">
+                      {t("dashboard.showVpnMap", "VPN Connection Map")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setDashboardVisibility({
+                        ...dashboardVisibility,
+                        vpnMap: !dashboardVisibility.vpnMap,
+                      })
+                    }
+                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                      dashboardVisibility.vpnMap
+                        ? "bg-theme-primary"
+                        : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                        dashboardVisibility.vpnMap ? "translate-x-6" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-theme">
+                <button
+                  onClick={() => setShowCustomizeMenu(false)}
+                  className="px-4 py-2 bg-theme-hover hover:bg-theme-primary/10 border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all"
+                >
+                  {t("dashboard.close")}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Stats Cards removed - replaced by per-page chart cards below */}
+        {/* Stats Cards removed - replaced by per-page chart cards below */}
 
-      {/* Traffic Chart */}
-      {dashboardVisibility.trafficChart && trafficData && (
-        <DashboardTrafficCards
-          trafficData={trafficData}
-          onRefresh={handleRefreshTraffic}
-          refreshing={trafficFetching}
-        />
-      )}
+        {/* Traffic Chart */}
+        {dashboardVisibility.trafficChart && trafficData && (
+          <DashboardTrafficCards
+            trafficData={trafficData}
+            onRefresh={handleRefreshTraffic}
+            refreshing={trafficFetching}
+          />
+        )}
 
-      {/* VPN World Map + Stats */}
-      {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:items-stretch lg:h-[450px]">
-          <div className="lg:col-span-2 h-full min-h-0">
-            <DashboardVpnMap
-              containers={vpnContainers}
-              vpnInfoMap={vpnInfoMap}
-            />
+        {/* VPN World Map + Stats */}
+        {vpnConnectionStatus?.connected && dashboardVisibility.vpnMap && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:items-stretch lg:h-[450px]">
+            <div className="lg:col-span-2 h-full min-h-0">
+              <DashboardVpnMap
+                containers={vpnContainers}
+                vpnInfoMap={vpnInfoMap}
+              />
+            </div>
+            <div className="lg:col-span-1 h-full min-h-0">
+              <VpnCard />
+            </div>
           </div>
-          <div className="lg:col-span-1 h-full min-h-0">
-            <VpnCard />
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Per-page chart cards */}
-      {dashboardVisibility.pageCharts && <DashboardPageCharts />}
+        {/* Per-page chart cards */}
+        {dashboardVisibility.pageCharts && <DashboardPageCharts />}
 
-      {/* Legacy services/VPN list view removed in favour of DashboardPageCharts */}
+        {/* Legacy services/VPN list view removed in favour of DashboardPageCharts */}
 
-      {/* Modal */}
-      {showModal && (
-        <ServiceModal
-          isOpen={showModal}
-          service={editingService}
-          onClose={handleCloseModal}
-          onSave={editingService ? handleUpdateService : handleCreateService}
+        {/* Modal */}
+        {showModal && (
+          <ServiceModal
+            isOpen={showModal}
+            service={editingService}
+            onClose={handleCloseModal}
+            onSave={editingService ? handleUpdateService : handleCreateService}
+          />
+        )}
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={() =>
+            setConfirmDialog({
+              isOpen: false,
+              serviceId: null,
+              serviceName: null,
+            })
+          }
+          onConfirm={confirmDeleteService}
+          title={t("confirmations.deleteService")}
+          message={
+            confirmDialog.serviceName
+              ? t("confirmations.deleteServiceMessage", {
+                  name: confirmDialog.serviceName,
+                })
+              : t("confirmations.deleteServiceMessage")
+          }
+          confirmText={t("common.delete")}
+          cancelText={t("common.cancel")}
+          variant="danger"
         />
-      )}
-
-      {/* Confirm Dialog */}
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        onClose={() =>
-          setConfirmDialog({
-            isOpen: false,
-            serviceId: null,
-            serviceName: null,
-          })
-        }
-        onConfirm={confirmDeleteService}
-        title={t("confirmations.deleteService")}
-        message={
-          confirmDialog.serviceName
-            ? t("confirmations.deleteServiceMessage", {
-                name: confirmDialog.serviceName,
-              })
-            : t("confirmations.deleteServiceMessage")
-        }
-        confirmText={t("common.delete")}
-        cancelText={t("common.cancel")}
-        variant="danger"
-      />
-    </div>
+      </div>
+    </DashboardLayoutProvider>
   );
 }

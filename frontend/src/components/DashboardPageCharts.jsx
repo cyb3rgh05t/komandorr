@@ -1,4 +1,12 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  createContext,
+  useContext,
+  useCallback,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -2105,6 +2113,131 @@ function ServersCard() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Dashboard layout context (edit mode + card order, shared with toolbar)    */
+/* -------------------------------------------------------------------------- */
+
+const DEFAULT_DASHBOARD_CARD_ORDER = [
+  "servers",
+  "plex",
+  "vodSync",
+  "nfs",
+  "storage",
+  "downloads",
+  "uploads",
+  "posterizarr",
+  "autoscan",
+];
+
+const DashboardLayoutContext = createContext(null);
+
+export function DashboardLayoutProvider({ children }) {
+  const [order, setOrder] = useState(() => {
+    try {
+      const raw = localStorage.getItem("dashboardCardOrder");
+      if (!raw) return DEFAULT_DASHBOARD_CARD_ORDER;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return DEFAULT_DASHBOARD_CARD_ORDER;
+      const known = parsed.filter((id) =>
+        DEFAULT_DASHBOARD_CARD_ORDER.includes(id),
+      );
+      const missing = DEFAULT_DASHBOARD_CARD_ORDER.filter(
+        (id) => !known.includes(id),
+      );
+      return [...known, ...missing];
+    } catch {
+      return DEFAULT_DASHBOARD_CARD_ORDER;
+    }
+  });
+  const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("dashboardCardOrder", JSON.stringify(order));
+    } catch {
+      /* ignore */
+    }
+  }, [order]);
+
+  const resetOrder = useCallback(
+    () => setOrder(DEFAULT_DASHBOARD_CARD_ORDER),
+    [],
+  );
+
+  const value = useMemo(
+    () => ({ order, setOrder, editMode, setEditMode, resetOrder }),
+    [order, editMode, resetOrder],
+  );
+
+  return (
+    <DashboardLayoutContext.Provider value={value}>
+      {children}
+    </DashboardLayoutContext.Provider>
+  );
+}
+
+export function useDashboardLayout() {
+  const ctx = useContext(DashboardLayoutContext);
+  if (!ctx) {
+    throw new Error(
+      "useDashboardLayout must be used inside <DashboardLayoutProvider>",
+    );
+  }
+  return ctx;
+}
+
+export function DashboardLayoutToolbar() {
+  const { t } = useTranslation();
+  const { editMode, setEditMode, resetOrder } = useDashboardLayout();
+  return (
+    <>
+      {editMode && (
+        <button
+          type="button"
+          onClick={resetOrder}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm"
+          title={t("dashboard.layout.reset", "Reset order")}
+        >
+          <RotateCcw size={16} className="text-theme-primary" />
+          <span className="text-xs sm:text-sm">
+            {t("dashboard.layout.reset", "Reset")}
+          </span>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setEditMode((v) => !v)}
+        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 border rounded-lg text-sm font-medium transition-all shadow-sm ${
+          editMode
+            ? "bg-theme-primary/15 border-theme-primary/40 text-theme-primary"
+            : "bg-theme-card hover:bg-theme-hover border-theme hover:border-theme-primary"
+        }`}
+        title={
+          editMode
+            ? t("dashboard.layout.done", "Done")
+            : t("dashboard.layout.edit", "Edit layout")
+        }
+      >
+        {editMode ? (
+          <>
+            <Check size={16} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm">
+              {t("dashboard.layout.done", "Done")}
+            </span>
+          </>
+        ) : (
+          <>
+            <Pencil size={16} className="text-theme-primary" />
+            <span className="text-xs sm:text-sm">
+              {t("dashboard.layout.edit", "Edit layout")}
+            </span>
+          </>
+        )}
+      </button>
+    </>
+  );
+}
+
 export default function DashboardPageCharts() {
   const { t } = useTranslation();
 
@@ -2158,31 +2291,20 @@ export default function DashboardPageCharts() {
 
   const defaultOrder = useMemo(() => CARDS.map((c) => c.id), [CARDS]);
 
-  const [order, setOrder] = useState(() => {
-    try {
-      const raw = localStorage.getItem("dashboardCardOrder");
-      if (!raw) return defaultOrder;
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return defaultOrder;
-      // Merge: keep saved order for known ids, append any new ids missing in storage.
-      const known = parsed.filter((id) => defaultOrder.includes(id));
-      const missing = defaultOrder.filter((id) => !known.includes(id));
-      return [...known, ...missing];
-    } catch {
-      return defaultOrder;
-    }
-  });
-
-  const [editMode, setEditMode] = useState(false);
+  const { editMode, order, setOrder } = useDashboardLayout();
   const dragId = useRef(null);
 
+  // Keep stored order in sync with default order if registry changes
   useEffect(() => {
-    try {
-      localStorage.setItem("dashboardCardOrder", JSON.stringify(order));
-    } catch {
-      /* ignore */
-    }
-  }, [order]);
+    setOrder((prev) => {
+      const known = prev.filter((id) => defaultOrder.includes(id));
+      const missing = defaultOrder.filter((id) => !known.includes(id));
+      const next = [...known, ...missing];
+      const same =
+        next.length === prev.length && next.every((v, i) => v === prev[i]);
+      return same ? prev : next;
+    });
+  }, [defaultOrder, setOrder]);
 
   const moveCard = (id, dir) => {
     setOrder((prev) => {
@@ -2195,8 +2317,6 @@ export default function DashboardPageCharts() {
       return next;
     });
   };
-
-  const resetOrder = () => setOrder(defaultOrder);
 
   const handleDragStart = (id) => (e) => {
     dragId.current = id;
@@ -2236,49 +2356,8 @@ export default function DashboardPageCharts() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Toolbar */}
-      <div className="flex items-center justify-end gap-2">
-        {editMode && (
-          <button
-            type="button"
-            onClick={resetOrder}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-theme-text-muted hover:text-theme-text bg-theme-card hover:bg-theme-hover border border-theme-border rounded-lg transition-colors"
-            title={t("dashboard.layout.reset", "Reset order")}
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            {t("dashboard.layout.reset", "Reset")}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setEditMode((v) => !v)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-            editMode
-              ? "bg-theme-primary/15 border-theme-primary/40 text-theme-primary"
-              : "bg-theme-card hover:bg-theme-hover border-theme-border text-theme-text-muted hover:text-theme-text"
-          }`}
-          title={
-            editMode
-              ? t("dashboard.layout.done", "Done")
-              : t("dashboard.layout.edit", "Edit layout")
-          }
-        >
-          {editMode ? (
-            <>
-              <Check className="w-3.5 h-3.5" />
-              {t("dashboard.layout.done", "Done")}
-            </>
-          ) : (
-            <>
-              <Pencil className="w-3.5 h-3.5" />
-              {t("dashboard.layout.edit", "Edit layout")}
-            </>
-          )}
-        </button>
-      </div>
-
       {/* Card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
         {orderedCards.map(({ id, label, Component }, idx) => (
           <div
             key={id}
@@ -2286,7 +2365,7 @@ export default function DashboardPageCharts() {
             onDragStart={editMode ? handleDragStart(id) : undefined}
             onDragOver={handleDragOver}
             onDrop={editMode ? handleDrop(id) : undefined}
-            className={`relative ${
+            className={`relative h-full flex flex-col ${
               editMode
                 ? "ring-2 ring-theme-primary/40 ring-offset-2 ring-offset-theme-bg rounded-2xl transition-all hover:ring-theme-primary/80 cursor-move"
                 : ""
@@ -2322,7 +2401,9 @@ export default function DashboardPageCharts() {
                 </div>
               </div>
             )}
-            <div className={editMode ? "pointer-events-none opacity-90" : ""}>
+            <div
+              className={`flex-1 h-full ${editMode ? "pointer-events-none opacity-90" : ""}`}
+            >
               <Component />
             </div>
           </div>
