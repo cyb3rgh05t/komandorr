@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +14,12 @@ import {
   Server,
   RefreshCcw,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  GripVertical,
+  Pencil,
+  Check,
+  RotateCcw,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { uploaderApi } from "@/services/uploaderApi";
@@ -2100,17 +2106,228 @@ function ServersCard() {
 }
 
 export default function DashboardPageCharts() {
+  const { t } = useTranslation();
+
+  // Registry of all available cards. Order in this array = default order.
+  const CARDS = useMemo(
+    () => [
+      {
+        id: "servers",
+        label: t("dashboard.cards.servers", "Servers"),
+        Component: ServersCard,
+      },
+      {
+        id: "plex",
+        label: t("dashboard.cards.plex", "Plex"),
+        Component: PlexCard,
+      },
+      {
+        id: "vodSync",
+        label: t("dashboard.cards.vodSync", "VOD Sync"),
+        Component: VodSyncCard,
+      },
+      { id: "nfs", label: t("dashboard.cards.nfs", "NFS"), Component: NfsCard },
+      {
+        id: "storage",
+        label: t("dashboard.cards.storage", "Storage"),
+        Component: StorageCard,
+      },
+      {
+        id: "downloads",
+        label: t("dashboard.cards.downloads", "Downloads"),
+        Component: DownloadsCard,
+      },
+      {
+        id: "uploads",
+        label: t("dashboard.cards.uploads", "Uploads"),
+        Component: UploadsCard,
+      },
+      {
+        id: "posterizarr",
+        label: t("dashboard.cards.posterizarr", "Posterizarr"),
+        Component: PosterizarrCard,
+      },
+      {
+        id: "autoscan",
+        label: t("dashboard.cards.autoscan", "Autoscan"),
+        Component: AutoscanCard,
+      },
+    ],
+    [t],
+  );
+
+  const defaultOrder = useMemo(() => CARDS.map((c) => c.id), [CARDS]);
+
+  const [order, setOrder] = useState(() => {
+    try {
+      const raw = localStorage.getItem("dashboardCardOrder");
+      if (!raw) return defaultOrder;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return defaultOrder;
+      // Merge: keep saved order for known ids, append any new ids missing in storage.
+      const known = parsed.filter((id) => defaultOrder.includes(id));
+      const missing = defaultOrder.filter((id) => !known.includes(id));
+      return [...known, ...missing];
+    } catch {
+      return defaultOrder;
+    }
+  });
+
+  const [editMode, setEditMode] = useState(false);
+  const dragId = useRef(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("dashboardCardOrder", JSON.stringify(order));
+    } catch {
+      /* ignore */
+    }
+  }, [order]);
+
+  const moveCard = (id, dir) => {
+    setOrder((prev) => {
+      const idx = prev.indexOf(id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  };
+
+  const resetOrder = () => setOrder(defaultOrder);
+
+  const handleDragStart = (id) => (e) => {
+    dragId.current = id;
+    e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", id);
+    } catch {
+      /* ignore */
+    }
+  };
+  const handleDragOver = (e) => {
+    if (!editMode) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+  const handleDrop = (targetId) => (e) => {
+    if (!editMode) return;
+    e.preventDefault();
+    const sourceId = dragId.current;
+    dragId.current = null;
+    if (!sourceId || sourceId === targetId) return;
+    setOrder((prev) => {
+      const from = prev.indexOf(sourceId);
+      const to = prev.indexOf(targetId);
+      if (from < 0 || to < 0) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  const orderedCards = useMemo(
+    () => order.map((id) => CARDS.find((c) => c.id === id)).filter(Boolean),
+    [order, CARDS],
+  );
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      <ServersCard />
-      <PlexCard />
-      <VodSyncCard />
-      <NfsCard />
-      <StorageCard />
-      <DownloadsCard />
-      <UploadsCard />
-      <PosterizarrCard />
-      <AutoscanCard />
+    <div className="flex flex-col gap-3">
+      {/* Toolbar */}
+      <div className="flex items-center justify-end gap-2">
+        {editMode && (
+          <button
+            type="button"
+            onClick={resetOrder}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-theme-text-muted hover:text-theme-text bg-theme-card hover:bg-theme-hover border border-theme-border rounded-lg transition-colors"
+            title={t("dashboard.layout.reset", "Reset order")}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            {t("dashboard.layout.reset", "Reset")}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setEditMode((v) => !v)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+            editMode
+              ? "bg-theme-primary/15 border-theme-primary/40 text-theme-primary"
+              : "bg-theme-card hover:bg-theme-hover border-theme-border text-theme-text-muted hover:text-theme-text"
+          }`}
+          title={
+            editMode
+              ? t("dashboard.layout.done", "Done")
+              : t("dashboard.layout.edit", "Edit layout")
+          }
+        >
+          {editMode ? (
+            <>
+              <Check className="w-3.5 h-3.5" />
+              {t("dashboard.layout.done", "Done")}
+            </>
+          ) : (
+            <>
+              <Pencil className="w-3.5 h-3.5" />
+              {t("dashboard.layout.edit", "Edit layout")}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Card grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {orderedCards.map(({ id, label, Component }, idx) => (
+          <div
+            key={id}
+            draggable={editMode}
+            onDragStart={editMode ? handleDragStart(id) : undefined}
+            onDragOver={handleDragOver}
+            onDrop={editMode ? handleDrop(id) : undefined}
+            className={`relative ${
+              editMode
+                ? "ring-2 ring-theme-primary/40 ring-offset-2 ring-offset-theme-bg rounded-2xl transition-all hover:ring-theme-primary/80 cursor-move"
+                : ""
+            }`}
+          >
+            {editMode && (
+              <div className="absolute inset-x-0 -top-2 z-20 flex items-center justify-between gap-1 px-2 pointer-events-none">
+                <div className="pointer-events-auto inline-flex items-center gap-1 px-2 py-1 bg-theme-card border border-theme-primary/40 rounded-md shadow-md">
+                  <GripVertical className="w-3.5 h-3.5 text-theme-primary" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-theme-text">
+                    {label}
+                  </span>
+                </div>
+                <div className="pointer-events-auto inline-flex items-center gap-1 bg-theme-card border border-theme-border rounded-md shadow-md overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => moveCard(id, -1)}
+                    disabled={idx === 0}
+                    className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title={t("dashboard.layout.moveUp", "Move up")}
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveCard(id, 1)}
+                    disabled={idx === orderedCards.length - 1}
+                    className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title={t("dashboard.layout.moveDown", "Move down")}
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className={editMode ? "pointer-events-none opacity-90" : ""}>
+              <Component />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
