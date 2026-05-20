@@ -1547,52 +1547,92 @@ function PosterizarrCard() {
   });
   const totalInst = running + idle + error;
 
+  // Per-instance state for donuts
+  const instanceList =
+    instances.length > 0
+      ? instances
+      : [
+          {
+            id: "_default",
+            name: t("dashboard.charts.posterizarr", "Posterizarr"),
+          },
+        ];
+  const perInstance = instanceList.map((inst) => {
+    const d = byInstance[inst.id];
+    let state = "idle";
+    let color = "#94a3b8";
+    if (!d) {
+      state = "idle";
+      color = "#94a3b8";
+    } else if (d?.success === false || d?.error) {
+      state = "error";
+      color = "#ef4444";
+    } else {
+      const status = d?.status || {};
+      const isRunning =
+        status.running === true ||
+        status.manual_running === true ||
+        status.scheduler_running === true;
+      if (isRunning) {
+        state = "running";
+        color = "#22d3ee";
+      }
+    }
+    return {
+      id: inst.id,
+      name: inst.name || inst.id,
+      state,
+      color,
+    };
+  });
+
   return (
     <ChartCard
       icon={ImageIcon}
       title={t("dashboard.charts.posterizarr", "Posterizarr")}
       onClick={() => navigate("/posterizarr")}
-      tabs={
-        <InstanceToggle
-          instances={instances}
-          value={selectedId}
-          onChange={setSelectedId}
-          allLabel={t("dashboard.charts.all", "All")}
-        />
-      }
       footer={`${instances.length || 1} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <DonutChart
-        segments={[
-          { value: running, color: "#22d3ee" },
-          { value: idle, color: "#94a3b8" },
-          { value: error, color: "#ef4444" },
-        ]}
-        centerLabel={totalInst}
-        centerSub={t("dashboard.charts.total", "total")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.running", "Running"),
-            value: running,
-            color: "#22d3ee",
-          },
-          {
-            label: t("dashboard.charts.idle", "Idle"),
-            value: idle,
-            color: "#94a3b8",
-          },
-          {
-            label: t("dashboard.charts.error", "Error"),
-            value: error,
-            color: "#ef4444",
-          },
-        ]}
-      />
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
+        {perInstance.map((inst) => {
+          const isActive = selectedId === inst.id;
+          return (
+            <button
+              key={inst.id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedId(isActive ? null : inst.id);
+              }}
+              className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all ${
+                isActive
+                  ? "ring-2 ring-theme-primary bg-theme-primary/5"
+                  : "hover:bg-theme-hover/50"
+              }`}
+            >
+              <MiniRing
+                percent={100}
+                color={inst.color}
+                size={110}
+                thickness={14}
+                centerLabel={
+                  inst.state === "running"
+                    ? t("dashboard.charts.running", "Running")
+                    : inst.state === "error"
+                      ? t("dashboard.charts.error", "Error")
+                      : t("dashboard.charts.idle", "Idle")
+                }
+              />
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[110px] text-center">
+                {inst.name}
+              </span>
+            </button>
+          );
+        })}
+      </div>
       <StatGrid
         tiles={[
           {
