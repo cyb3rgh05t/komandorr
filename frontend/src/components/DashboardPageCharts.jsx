@@ -976,8 +976,12 @@ function StorageCard() {
         const pct = Number(p?.percent ?? 0);
         const free = Number(p?.free ?? 0);
         const total = Number(p?.total ?? 0);
+        const fullPath = p?.path || "";
+        const leaf = fullPath.split("/").filter(Boolean).pop() || fullPath;
         list.push({
-          name: `${svc?.name || "service"} • ${p?.path?.split("/").pop() || p?.path}`,
+          serviceName: svc?.name || "service",
+          pathLeaf: leaf,
+          fullLabel: `${svc?.name || "service"} • ${leaf}`,
           pct: isFinite(pct) ? pct : 0,
           free: isFinite(free) ? free : 0,
           total: isFinite(total) ? total : 0,
@@ -1019,40 +1023,78 @@ function StorageCard() {
       {topPools.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
           {topPools.map((p) => {
-            const col =
-              p.pct >= 90 ? "#ef4444" : p.pct >= 75 ? "#f59e0b" : "#22d3ee";
-            const freeCol =
-              p.pct >= 90
-                ? "text-red-400"
-                : p.pct >= 75
-                  ? "text-yellow-400"
-                  : "text-green-400";
+            const isCrit = p.pct >= 90;
+            const isWarn = p.pct >= 75 && p.pct < 90;
+            const ringCol = isCrit ? "#ef4444" : isWarn ? "#f59e0b" : "#22d3ee";
+            const freeCol = isCrit
+              ? "text-red-400"
+              : isWarn
+                ? "text-yellow-400"
+                : "text-emerald-400";
+            const barCol = isCrit
+              ? "bg-red-500"
+              : isWarn
+                ? "bg-yellow-500"
+                : "bg-emerald-500";
+            const statusBg = isCrit
+              ? "bg-red-500/10 ring-red-500/30"
+              : isWarn
+                ? "bg-yellow-500/10 ring-yellow-500/30"
+                : "bg-theme-hover ring-theme-border";
             return (
               <div
-                key={p.name}
-                className="flex items-center gap-2 bg-theme-hover border border-theme-border rounded-lg p-2 min-w-0"
-                title={p.name}
+                key={p.fullLabel}
+                className={`group relative flex flex-col gap-2 ${statusBg} ring-1 rounded-xl p-3 min-w-0 transition-all hover:ring-theme-primary/60 hover:shadow-lg cursor-default`}
+                title={p.fullLabel}
               >
-                <MiniRing
-                  percent={p.pct}
-                  color={col}
-                  centerLabel={`${p.pct.toFixed(0)}%`}
-                />
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[10px] text-theme-text truncate font-medium">
-                    {p.name}
-                  </span>
-                  <span className={`text-[11px] font-semibold ${freeCol}`}>
-                    {formatGB(p.free)}{" "}
-                    <span className="text-theme-text-muted font-normal">
-                      {t("dashboard.charts.free", "free")}
+                {/* Top row: ring + name */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <MiniRing
+                    percent={p.pct}
+                    color={ringCol}
+                    size={56}
+                    thickness={7}
+                    centerLabel={`${p.pct.toFixed(0)}%`}
+                  />
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate">
+                      {p.serviceName}
                     </span>
+                    <span className="text-xs font-semibold text-theme-text truncate">
+                      {p.pathLeaf}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Free space - prominent */}
+                <div className="flex items-baseline gap-1 min-w-0">
+                  <span className={`text-base font-bold ${freeCol} truncate`}>
+                    {formatGB(p.free)}
                   </span>
-                  <span className="text-[9px] text-theme-text-muted">
-                    {formatGB(p.total)} {t("dashboard.charts.total", "total")}
+                  <span className="text-[10px] text-theme-text-muted uppercase tracking-wide">
+                    {t("dashboard.charts.free", "free")}
                   </span>
+                </div>
+
+                {/* Progress bar + total */}
+                <div className="flex flex-col gap-1">
+                  <div className="h-1.5 w-full bg-theme-bg/60 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${barCol} transition-all rounded-full`}
+                      style={{ width: `${Math.min(100, p.pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-theme-text-muted">
+                    <span>
+                      {formatGB(p.total - p.free)}{" "}
+                      {t("dashboard.charts.used", "used")}
+                    </span>
+                    <span>
+                      {formatGB(p.total)} {t("dashboard.charts.total", "total")}
+                    </span>
+                  </div>
                 </div>
               </div>
             );
