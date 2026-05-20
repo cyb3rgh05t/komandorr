@@ -129,7 +129,7 @@ export default function Uploader() {
   } = useQuery({
     queryKey: ["uploader", "inprogress"],
     queryFn: () => uploaderApi.getInProgress(),
-    refetchInterval: 2000,
+    refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 

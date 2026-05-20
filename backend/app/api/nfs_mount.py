@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException
 import httpx
 from app.middleware.auth import require_auth
@@ -97,235 +99,214 @@ async def test_nfs_connection(
         return {"connected": False, "error": f"Cannot reach server: {e}"}
 
 
+async def _check_one_status(inst: dict) -> dict:
+    """Probe a single instance's /api/system/health endpoint."""
+    base_url = _clean_base_url(inst.get("url", ""))
+    api_key = inst.get("api_key", "")
+    inst_id = inst.get("id", "")
+    inst_name = inst.get("name", inst_id)
+    if not base_url or not api_key:
+        return {
+            "id": inst_id,
+            "name": inst_name,
+            "connected": False,
+            "error": "Not configured",
+        }
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(
+                f"{base_url}/api/system/health",
+                headers={"X-API-Key": api_key},
+            )
+            resp.raise_for_status()
+            return {
+                "id": inst_id,
+                "name": inst_name,
+                "connected": True,
+                "url": base_url,
+            }
+    except Exception as e:
+        return {
+            "id": inst_id,
+            "name": inst_name,
+            "connected": False,
+            "error": str(e),
+        }
+
+
 @router.get("/status")
 async def nfs_mount_status(username: str = Depends(require_auth)):
-    """Check status of all NFS Mount Manager instances."""
+    """Check status of all NFS Mount Manager instances in parallel."""
     instances = get_nfs_mount_instances()
     if not instances:
         return {"instances": [], "any_connected": False}
 
-    results = []
-    for inst in instances:
-        base_url = _clean_base_url(inst.get("url", ""))
-        api_key = inst.get("api_key", "")
-        inst_id = inst.get("id", "")
-        inst_name = inst.get("name", inst_id)
-        if not base_url or not api_key:
-            results.append(
-                {
-                    "id": inst_id,
-                    "name": inst_name,
-                    "connected": False,
-                    "error": "Not configured",
-                }
-            )
-            continue
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(
-                    f"{base_url}/api/system/health",
-                    headers={"X-API-Key": api_key},
-                )
-                resp.raise_for_status()
-                results.append(
-                    {
-                        "id": inst_id,
-                        "name": inst_name,
-                        "connected": True,
-                        "url": base_url,
-                    }
-                )
-        except Exception as e:
-            results.append(
-                {
-                    "id": inst_id,
-                    "name": inst_name,
-                    "connected": False,
-                    "error": str(e),
-                }
-            )
-
+    results = await asyncio.gather(
+        *(_check_one_status(inst) for inst in instances),
+        return_exceptions=False,
+    )
     any_connected = any(r["connected"] for r in results)
-    return {"instances": results, "any_connected": any_connected}
+    return {"instances": list(results), "any_connected": any_connected}
 
 
 @router.get("/dashboard")
 async def get_dashboard(username: str = Depends(require_auth)):
-    """Get combined dashboard data from all NFS Mount Manager instances."""
+    """Get combined dashboard data from all NFS Mount Manager instances in parallel."""
     instances = get_nfs_mount_instances()
     if not instances:
         return {"not_configured": True, "managers": []}
 
+    results = await asyncio.gather(
+        *(_fetch_one_dashboard(inst) for inst in instances),
+        return_exceptions=False,
+    )
+    return {"not_configured": False, "managers": list(results)}
+
+
+async def _fetch_one_dashboard(inst: dict) -> dict:
+    """Fetch dashboard data for a single NFS Mount Manager instance."""
     global _logged_not_configured
 
-    managers = []
-    for inst in instances:
-        base_url = inst.get("url", "")
-        api_key = inst.get("api_key", "")
-        inst_id = inst.get("id", "")
-        inst_name = inst.get("name", inst_id)
+    base_url = inst.get("url", "")
+    api_key = inst.get("api_key", "")
+    inst_id = inst.get("id", "")
+    inst_name = inst.get("name", inst_id)
 
-        if not base_url or not api_key:
-            if not _logged_not_configured:
-                logger.info(
-                    f"NFS Mount Manager '{inst_name}' not configured — skipping"
-                )
-                _logged_not_configured = True
-            managers.append(
-                {
-                    "id": inst_id,
-                    "name": inst_name,
-                    "connected": False,
-                    "error": "Not configured",
-                    "nfs_mounts": [],
-                    "nfs_mount_statuses": {},
-                    "nfs_exports": [],
-                    "nfs_export_statuses": {},
-                    "mergerfs_configs": [],
-                    "mergerfs_statuses": {},
-                    "vpn_configs": [],
-                    "vpn_statuses": {},
-                }
-            )
-            continue
+    if not base_url or not api_key:
+        if not _logged_not_configured:
+            logger.info(f"NFS Mount Manager '{inst_name}' not configured — skipping")
+            _logged_not_configured = True
+        return {
+            "id": inst_id,
+            "name": inst_name,
+            "connected": False,
+            "error": "Not configured",
+            "nfs_mounts": [],
+            "nfs_mount_statuses": {},
+            "nfs_exports": [],
+            "nfs_export_statuses": {},
+            "mergerfs_configs": [],
+            "mergerfs_statuses": {},
+            "vpn_configs": [],
+            "vpn_statuses": {},
+        }
 
-        try:
-            # Try aggregated endpoint first (single call)
-            summary = await _proxy_get(base_url, api_key, "/system/dashboard-summary")
-            if summary and isinstance(summary, dict):
-                mounts = summary.get("nfs_mounts") or []
-                mount_statuses = summary.get("nfs_status") or []
-                exports = summary.get("nfs_exports") or []
-                export_statuses = summary.get("nfs_exports_status") or []
-                mergerfs_configs = summary.get("mergerfs_configs") or []
-                mergerfs_statuses = summary.get("mergerfs_status") or []
-                vpn_configs = summary.get("vpn_configs") or []
-                vpn_statuses = summary.get("vpn_status") or []
-                system_status = summary.get("system_status") or {}
-                system_stats = summary.get("system_stats") or {}
-                kernel_params = summary.get("kernel_params") or {}
-                rps_xps = summary.get("rps_xps") or {}
-                firewall_status = summary.get("firewall_status") or {}
-                logs = summary.get("logs") or []
-            else:
-                # Fallback to individual endpoints
-                mounts = await _proxy_get(base_url, api_key, "/nfs/mounts") or []
-                mount_statuses = (
-                    await _proxy_get(base_url, api_key, "/nfs/status") or []
-                )
-                mergerfs_configs = (
-                    await _proxy_get(base_url, api_key, "/mergerfs/configs") or []
-                )
-                mergerfs_statuses = (
-                    await _proxy_get(base_url, api_key, "/mergerfs/status") or []
-                )
-                vpn_configs = await _proxy_get(base_url, api_key, "/vpn/configs") or []
-                vpn_statuses = await _proxy_get(base_url, api_key, "/vpn/status") or []
-                exports = await _proxy_get(base_url, api_key, "/nfs/exports") or []
-                export_statuses = (
-                    await _proxy_get(base_url, api_key, "/nfs/exports-status") or []
-                )
-                system_status = (
-                    await _proxy_get(base_url, api_key, "/system/status") or {}
-                )
-                system_stats = (
-                    await _proxy_get(base_url, api_key, "/system/stats") or {}
-                )
-                kernel_params = {}
-                rps_xps = {}
-                firewall_status = (
-                    await _proxy_get(base_url, api_key, "/firewall/status") or {}
-                )
-                logs = []
-            # Always try to fetch monitoring + notifications (separate from main summary)
-            notifications = (
-                await _proxy_get(base_url, api_key, "/notifications/configs") or []
+    try:
+        # Try aggregated endpoint first (single call)
+        summary = await _proxy_get(base_url, api_key, "/system/dashboard-summary")
+        if summary and isinstance(summary, dict):
+            mounts = summary.get("nfs_mounts") or []
+            mount_statuses = summary.get("nfs_status") or []
+            exports = summary.get("nfs_exports") or []
+            export_statuses = summary.get("nfs_exports_status") or []
+            mergerfs_configs = summary.get("mergerfs_configs") or []
+            mergerfs_statuses = summary.get("mergerfs_status") or []
+            vpn_configs = summary.get("vpn_configs") or []
+            vpn_statuses = summary.get("vpn_status") or []
+            system_status = summary.get("system_status") or {}
+            system_stats = summary.get("system_stats") or {}
+            kernel_params = summary.get("kernel_params") or {}
+            rps_xps = summary.get("rps_xps") or {}
+            firewall_status = summary.get("firewall_status") or {}
+            logs = summary.get("logs") or []
+        else:
+            # Fallback to individual endpoints
+            mounts = await _proxy_get(base_url, api_key, "/nfs/mounts") or []
+            mount_statuses = await _proxy_get(base_url, api_key, "/nfs/status") or []
+            mergerfs_configs = (
+                await _proxy_get(base_url, api_key, "/mergerfs/configs") or []
             )
-            monitor_metrics = (
-                await _proxy_get(base_url, api_key, "/monitor/metrics") or {}
+            mergerfs_statuses = (
+                await _proxy_get(base_url, api_key, "/mergerfs/status") or []
             )
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                f"NFS Mount Manager '{inst_name}' authentication failed ({base_url}): {e.response.status_code} — check API key"
+            vpn_configs = await _proxy_get(base_url, api_key, "/vpn/configs") or []
+            vpn_statuses = await _proxy_get(base_url, api_key, "/vpn/status") or []
+            exports = await _proxy_get(base_url, api_key, "/nfs/exports") or []
+            export_statuses = (
+                await _proxy_get(base_url, api_key, "/nfs/exports-status") or []
             )
-            managers.append(
-                {
-                    "id": inst_id,
-                    "name": inst_name,
-                    "connected": False,
-                    "error": f"Authentication failed ({e.response.status_code})",
-                    "nfs_mounts": [],
-                    "nfs_mount_statuses": {},
-                    "nfs_exports": [],
-                    "nfs_export_statuses": {},
-                    "mergerfs_configs": [],
-                    "mergerfs_statuses": {},
-                    "vpn_configs": [],
-                    "vpn_statuses": {},
-                }
+            system_status = await _proxy_get(base_url, api_key, "/system/status") or {}
+            system_stats = await _proxy_get(base_url, api_key, "/system/stats") or {}
+            kernel_params = {}
+            rps_xps = {}
+            firewall_status = (
+                await _proxy_get(base_url, api_key, "/firewall/status") or {}
             )
-            continue
+            logs = []
+        # Always try to fetch monitoring + notifications (separate from main summary)
+        notifications = (
+            await _proxy_get(base_url, api_key, "/notifications/configs") or []
+        )
+        monitor_metrics = await _proxy_get(base_url, api_key, "/monitor/metrics") or {}
+    except httpx.HTTPStatusError as e:
+        logger.error(
+            f"NFS Mount Manager '{inst_name}' authentication failed ({base_url}): {e.response.status_code} — check API key"
+        )
+        return {
+            "id": inst_id,
+            "name": inst_name,
+            "connected": False,
+            "error": f"Authentication failed ({e.response.status_code})",
+            "nfs_mounts": [],
+            "nfs_mount_statuses": {},
+            "nfs_exports": [],
+            "nfs_export_statuses": {},
+            "mergerfs_configs": [],
+            "mergerfs_statuses": {},
+            "vpn_configs": [],
+            "vpn_statuses": {},
+        }
 
-        try:
+    try:
 
-            # Build status maps
-            mount_status_map = {
-                s["id"]: s for s in mount_statuses if isinstance(s, dict) and "id" in s
-            }
-            mergerfs_status_map = {
-                s["id"]: s
-                for s in mergerfs_statuses
-                if isinstance(s, dict) and "id" in s
-            }
-            vpn_status_map = {
-                s["id"]: s for s in vpn_statuses if isinstance(s, dict) and "id" in s
-            }
-            export_status_map = {
-                s["id"]: s for s in export_statuses if isinstance(s, dict) and "id" in s
-            }
+        # Build status maps
+        mount_status_map = {
+            s["id"]: s for s in mount_statuses if isinstance(s, dict) and "id" in s
+        }
+        mergerfs_status_map = {
+            s["id"]: s for s in mergerfs_statuses if isinstance(s, dict) and "id" in s
+        }
+        vpn_status_map = {
+            s["id"]: s for s in vpn_statuses if isinstance(s, dict) and "id" in s
+        }
+        export_status_map = {
+            s["id"]: s for s in export_statuses if isinstance(s, dict) and "id" in s
+        }
 
-            managers.append(
-                {
-                    "id": inst_id,
-                    "name": inst_name,
-                    "connected": True,
-                    "nfs_mounts": mounts,
-                    "nfs_mount_statuses": mount_status_map,
-                    "nfs_exports": exports,
-                    "nfs_export_statuses": export_status_map,
-                    "mergerfs_configs": mergerfs_configs,
-                    "mergerfs_statuses": mergerfs_status_map,
-                    "vpn_configs": vpn_configs,
-                    "vpn_statuses": vpn_status_map,
-                    "system_status": system_status,
-                    "system_stats": system_stats,
-                    "kernel_params": kernel_params,
-                    "rps_xps": rps_xps,
-                    "firewall_status": firewall_status,
-                    "logs": logs,
-                    "notifications": notifications,
-                    "monitor_metrics": monitor_metrics,
-                }
-            )
-        except Exception as e:
-            logger.error(
-                f"Failed to fetch dashboard for NFS Manager '{inst_name}': {e}"
-            )
-            managers.append(
-                {
-                    "id": inst_id,
-                    "name": inst_name,
-                    "connected": False,
-                    "error": str(e),
-                    "nfs_mounts": [],
-                    "nfs_mount_statuses": {},
-                    "nfs_exports": [],
-                    "nfs_export_statuses": {},
-                    "mergerfs_configs": [],
-                    "mergerfs_statuses": {},
-                    "vpn_configs": [],
-                    "vpn_statuses": {},
-                }
-            )
-
-    return {"not_configured": False, "managers": managers}
+        return {
+            "id": inst_id,
+            "name": inst_name,
+            "connected": True,
+            "nfs_mounts": mounts,
+            "nfs_mount_statuses": mount_status_map,
+            "nfs_exports": exports,
+            "nfs_export_statuses": export_status_map,
+            "mergerfs_configs": mergerfs_configs,
+            "mergerfs_statuses": mergerfs_status_map,
+            "vpn_configs": vpn_configs,
+            "vpn_statuses": vpn_status_map,
+            "system_status": system_status,
+            "system_stats": system_stats,
+            "kernel_params": kernel_params,
+            "rps_xps": rps_xps,
+            "firewall_status": firewall_status,
+            "logs": logs,
+            "notifications": notifications,
+            "monitor_metrics": monitor_metrics,
+        }
+    except Exception as e:
+        logger.error(f"Failed to fetch dashboard for NFS Manager '{inst_name}': {e}")
+        return {
+            "id": inst_id,
+            "name": inst_name,
+            "connected": False,
+            "error": str(e),
+            "nfs_mounts": [],
+            "nfs_mount_statuses": {},
+            "nfs_exports": [],
+            "nfs_export_statuses": {},
+            "mergerfs_configs": [],
+            "mergerfs_statuses": {},
+            "vpn_configs": [],
+            "vpn_statuses": {},
+        }

@@ -86,8 +86,8 @@ export default function Dashboard() {
   const { data: uploaderData } = useQuery({
     queryKey: ["uploader", "inprogress"],
     queryFn: () => uploaderApi.getInProgress(),
-    staleTime: 2000,
-    refetchInterval: 2000,
+    staleTime: 5000,
+    refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
 

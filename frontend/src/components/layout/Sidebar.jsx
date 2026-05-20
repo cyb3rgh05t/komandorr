@@ -70,9 +70,8 @@ export default function Sidebar() {
         return [];
       }
     },
-    staleTime: 3000,
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
+    staleTime: 15000,
+    refetchInterval: 30000,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -131,9 +130,8 @@ export default function Sidebar() {
       };
     },
     enabled: true,
-    refetchInterval: 3000,
-    staleTime: 2000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 10000,
+    staleTime: 5000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -153,9 +151,8 @@ export default function Sidebar() {
         return [];
       }
     },
-    refetchInterval: 3000,
-    staleTime: 2000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 10000,
+    staleTime: 5000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -174,9 +171,8 @@ export default function Sidebar() {
         return {};
       }
     },
-    refetchInterval: 3000,
-    staleTime: 2000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 10000,
+    staleTime: 5000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -197,6 +193,9 @@ export default function Sidebar() {
       inst.records.forEach((record) => {
         const statusLower = (record.status || "").toLowerCase();
         const trackedState = (record.trackedDownloadState || "").toLowerCase();
+        const trackedStatus = (
+          record.trackedDownloadStatus || ""
+        ).toLowerCase();
         const isActive =
           statusLower.includes("download") || statusLower.includes("import");
         const isCompleted =
@@ -204,12 +203,25 @@ export default function Sidebar() {
             (record.sizeleft === 0 || record.sizeleft == null)) ||
           trackedState === "importpending";
 
+        // Import-Blocker: "Downloaded - Unable to Import Automatically"
+        // → trackedDownloadStatus=warning/error + state importBlocked/importPending/importFailed
+        const isImportBlocked =
+          (trackedStatus === "warning" || trackedStatus === "error") &&
+          (trackedState === "importblocked" ||
+            trackedState === "importpending" ||
+            trackedState === "importfailed" ||
+            trackedState === "failedpending");
+
         if (isActive) {
           if (isSonarr) sonarrActive++;
           else radarrActive++;
         }
 
-        if (isCompleted) {
+        if (isImportBlocked) {
+          // Immediately stuck — kein 5-Minuten-Grace, Import scheitert manuell
+          if (isSonarr) sonarrStuck++;
+          else radarrStuck++;
+        } else if (isCompleted) {
           // Check if stuck (completed for more than 5 minutes)
           const addedTime = record.added ? new Date(record.added).getTime() : 0;
           if (addedTime && addedTime < fiveMinutesAgo) {
@@ -233,9 +245,8 @@ export default function Sidebar() {
         return { jobs: [] };
       }
     },
-    refetchInterval: 3000,
-    staleTime: 2000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 10000,
+    staleTime: 5000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -251,9 +262,8 @@ export default function Sidebar() {
         return { count: 0 };
       }
     },
-    refetchInterval: 5000,
-    staleTime: 3000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 15000,
+    staleTime: 10000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -269,9 +279,8 @@ export default function Sidebar() {
         return { files: [] };
       }
     },
-    refetchInterval: 5000,
-    staleTime: 3000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 15000,
+    staleTime: 10000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -288,9 +297,8 @@ export default function Sidebar() {
         return null;
       }
     },
-    refetchInterval: 10000,
-    staleTime: 5000,
-    refetchIntervalInBackground: true,
+    refetchInterval: 30000,
+    staleTime: 15000,
     placeholderData: (previousData) => previousData,
   });
 
@@ -316,9 +324,8 @@ export default function Sidebar() {
         return [];
       }
     },
-    staleTime: 3000,
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
+    staleTime: 10000,
+    refetchInterval: 15000,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -339,9 +346,8 @@ export default function Sidebar() {
         return [];
       }
     },
-    staleTime: 5000,
-    refetchInterval: 10000,
-    refetchIntervalInBackground: true,
+    staleTime: 15000,
+    refetchInterval: 30000,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -355,9 +361,8 @@ export default function Sidebar() {
         return {};
       }
     },
-    staleTime: 5000,
-    refetchInterval: 10000,
-    refetchIntervalInBackground: true,
+    staleTime: 15000,
+    refetchInterval: 30000,
     retry: false,
     placeholderData: (previousData) => previousData,
   });
@@ -390,9 +395,8 @@ export default function Sidebar() {
         return null;
       }
     },
-    staleTime: 5000,
-    refetchInterval: 10000,
-    refetchIntervalInBackground: true,
+    staleTime: 30000,
+    refetchInterval: 60000,
     retry: false,
     placeholderData: (previousData) => previousData,
   });

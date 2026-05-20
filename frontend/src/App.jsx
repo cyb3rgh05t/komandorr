@@ -39,6 +39,7 @@ const queryClient = new QueryClient({
       gcTime: 300000, // Keep unused data in cache for 5 minutes (renamed from cacheTime)
       refetchOnWindowFocus: false, // Don't refetch on window focus
       refetchOnMount: false, // Don't refetch on mount if we have data
+      refetchIntervalInBackground: false, // Pause polling when tab is hidden
       retry: (failureCount, error) => {
         // Never retry 401 unauthorized errors
         if (error?.status === 401) return false;
