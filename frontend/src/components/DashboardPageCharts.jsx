@@ -1311,9 +1311,28 @@ function DownloadsCard() {
                   <p className="text-[10px] text-theme-text truncate">
                     {r.name}
                   </p>
-                  <p className="text-[10px] text-theme-text-muted">
-                    {r.active} / {r.total}
-                  </p>
+                  <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium">
+                    <span
+                      style={{ color: "#22c55e" }}
+                      title={t("dashboard.charts.active", "Active")}
+                    >
+                      {r.active}
+                    </span>
+                    <span className="text-theme-text-muted">·</span>
+                    <span
+                      style={{ color: "#a78bfa" }}
+                      title={t("dashboard.charts.queued", "Queued")}
+                    >
+                      {r.queued}
+                    </span>
+                    <span className="text-theme-text-muted">·</span>
+                    <span
+                      style={{ color: "#ef4444" }}
+                      title={t("dashboard.charts.stuck", "Stuck")}
+                    >
+                      {r.stuck}
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -1607,10 +1626,10 @@ function PosterizarrCard() {
                 e.stopPropagation();
                 setSelectedId(isActive ? null : inst.id);
               }}
-              className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all ${
+              className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "hover:bg-theme-hover/50"
+                  : "ring-1 ring-theme-border hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
               <MiniRing
