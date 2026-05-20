@@ -76,7 +76,7 @@ export default function Dashboard() {
   // Use React Query for Plex activities
   const { data: plexActivities = [], isFetching: plexFetching } = useQuery({
     queryKey: ["plexActivities"],
-    queryFn: fetchPlexActivities,
+    queryFn: () => fetchPlexActivities(),
     staleTime: 5000,
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,

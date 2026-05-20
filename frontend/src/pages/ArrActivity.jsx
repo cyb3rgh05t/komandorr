@@ -29,8 +29,28 @@ import {
 import { arrActivityApi } from "../services/arrActivityApi";
 import PageHeader from "../components/PageHeader";
 
-const ActivityBadge = ({ status, t }) => {
+const ActivityBadge = ({ status, item, t }) => {
   const statusLower = (status || "").toLowerCase();
+  const trackedState = (item?.trackedDownloadState || "").toLowerCase();
+  const trackedStatus = (item?.trackedDownloadStatus || "").toLowerCase();
+
+  // Import-Blocker: "Downloaded - Unable to Import Automatically"
+  const isImportBlocked =
+    (trackedStatus === "warning" || trackedStatus === "error") &&
+    (trackedState === "importblocked" ||
+      trackedState === "importpending" ||
+      trackedState === "importfailed" ||
+      trackedState === "failedpending");
+
+  // Completed-but-old (>5min) → stuck
+  const isCompletedBase =
+    (statusLower.includes("complet") &&
+      (item?.sizeleft === 0 || item?.sizeleft == null)) ||
+    trackedState === "importpending";
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  const addedTime = item?.added ? new Date(item.added).getTime() : 0;
+  const isOldCompleted =
+    isCompletedBase && addedTime && addedTime < fiveMinutesAgo;
 
   const styles = {
     downloading: {
@@ -47,6 +67,11 @@ const ActivityBadge = ({ status, t }) => {
       icon: CheckCircle,
       className: "bg-green-500/20 text-green-400 border border-green-500/30",
       label: "Completed",
+    },
+    stuck: {
+      icon: AlertCircle,
+      className: "bg-red-500/20 text-red-400 border border-red-500/30",
+      label: "Stuck",
     },
     warning: {
       icon: AlertCircle,
@@ -66,7 +91,9 @@ const ActivityBadge = ({ status, t }) => {
   };
 
   let style;
-  if (statusLower.includes("download")) {
+  if (isImportBlocked || isOldCompleted) {
+    style = styles.stuck;
+  } else if (statusLower.includes("download")) {
     style = styles.downloading;
   } else if (statusLower.includes("import")) {
     style = styles.importing;
@@ -397,7 +424,7 @@ export default function ArrActivity() {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <ActivityBadge status={item.status} t={t} />
+                      <ActivityBadge status={item.status} item={item} t={t} />
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-theme-text">
@@ -1307,4 +1334,3 @@ export default function ArrActivity() {
     </div>
   );
 }
-

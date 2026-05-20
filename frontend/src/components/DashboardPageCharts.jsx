@@ -1117,48 +1117,51 @@ function DownloadsCard() {
   // /api/arr-activity/queue returns { [instanceId]: { name, type, records, totalRecords, error } }
   const allRows = useMemo(() => {
     if (!data || typeof data !== "object") return [];
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
     return Object.entries(data)
       .filter(([, s]) => s && typeof s === "object")
       .map(([id, s]) => {
         const items = Array.isArray(s.records) ? s.records : [];
-        const active = items.filter((i) => {
-          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
-          const st = (
-            typeof raw === "string" ? raw : String(raw || "")
-          ).toLowerCase();
-          return (
-            st.includes("download") ||
-            st === "queued" ||
-            st === "active" ||
-            st.includes("import")
-          );
-        }).length;
-        const queued = items.filter((i) => {
-          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
-          const st = (
-            typeof raw === "string" ? raw : String(raw || "")
-          ).toLowerCase();
-          return st === "queued" || st === "delay" || st === "paused";
-        }).length;
-        const completed = items.filter((i) => {
-          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
-          const st = (
-            typeof raw === "string" ? raw : String(raw || "")
-          ).toLowerCase();
-          return st === "completed" || st.includes("complete");
-        }).length;
-        const stuck = items.filter((i) => {
-          const raw = i?.status ?? i?.trackedDownloadStatus ?? "";
-          const st = (
-            typeof raw === "string" ? raw : String(raw || "")
-          ).toLowerCase();
-          return (
-            st === "stalled" ||
-            st.includes("warn") ||
-            st.includes("error") ||
-            st.includes("fail")
-          );
-        }).length;
+        let active = 0;
+        let queued = 0;
+        let completed = 0;
+        let stuck = 0;
+        items.forEach((i) => {
+          const statusLower = (i?.status || "").toLowerCase();
+          const trackedState = (i?.trackedDownloadState || "").toLowerCase();
+          const trackedStatus = (i?.trackedDownloadStatus || "").toLowerCase();
+
+          const isActive =
+            statusLower.includes("download") || statusLower.includes("import");
+          const isQueued =
+            statusLower === "queued" ||
+            statusLower === "delay" ||
+            statusLower === "paused";
+          const isCompletedBase =
+            (statusLower.includes("complet") &&
+              (i?.sizeleft === 0 || i?.sizeleft == null)) ||
+            trackedState === "importpending";
+          const isImportBlocked =
+            (trackedStatus === "warning" || trackedStatus === "error") &&
+            (trackedState === "importblocked" ||
+              trackedState === "importpending" ||
+              trackedState === "importfailed" ||
+              trackedState === "failedpending");
+
+          if (isActive) active++;
+          if (isQueued) queued++;
+
+          if (isImportBlocked) {
+            stuck++;
+          } else if (isCompletedBase) {
+            const addedTime = i?.added ? new Date(i.added).getTime() : 0;
+            if (addedTime && addedTime < fiveMinutesAgo) {
+              stuck++;
+            } else {
+              completed++;
+            }
+          }
+        });
         return {
           id,
           name: s.name || s.type || id,
