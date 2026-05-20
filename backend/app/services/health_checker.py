@@ -16,13 +16,18 @@ _STATE_FILE = Path(__file__).parent.parent.parent / "data" / "health_state.json"
 class HealthChecker:
     """Periodically checks service health and sends notifications."""
 
+    # Require N consecutive failed checks before alerting (flap protection)
+    FAILURE_THRESHOLD = 2
+
     def __init__(self):
         self._running = False
         self._vpn_issue_state: dict[str, str] = {}
         self._nfs_error_state: dict[str, bool] = (
             {}
         )  # track per-instance NFS error state
+        self._nfs_failure_count: dict[str, int] = {}  # consecutive failed checks
         self._autoscan_error_state: dict[str, bool] = {}
+        self._autoscan_failure_count: dict[str, int] = {}  # consecutive failed checks
         self._autoscan_target_state: dict[str, set[str]] = {}
         self._traffic_high_count: dict[str, int] = {}  # consecutive high-traffic checks
         self._traffic_high_state: dict[str, bool] = {}  # track per-service alert state
@@ -312,15 +317,40 @@ class HealthChecker:
                     first_err = next(
                         (r for r in resps if isinstance(r, Exception)), None
                     )
-                    self._nfs_error_state[inst_name] = True
-                    try:
-                        await notification_service.notify_nfs_error(
-                            inst_name,
-                            f"Instance unreachable: {first_err}",
+                    err_text = (
+                        f"{type(first_err).__name__}: {first_err}"
+                        if first_err and str(first_err)
+                        else (
+                            type(first_err).__name__
+                            if first_err
+                            else "connection failed"
                         )
-                    except Exception:
-                        pass
+                    )
+                    self._nfs_failure_count[inst_name] = (
+                        self._nfs_failure_count.get(inst_name, 0) + 1
+                    )
+                    if self._nfs_failure_count[
+                        inst_name
+                    ] >= self.FAILURE_THRESHOLD and not self._nfs_error_state.get(
+                        inst_name
+                    ):
+                        self._nfs_error_state[inst_name] = True
+                        try:
+                            await notification_service.notify_nfs_error(
+                                inst_name,
+                                f"Instance unreachable: {err_text}",
+                            )
+                        except Exception:
+                            pass
+                    else:
+                        logger.debug(
+                            f"NFS flap protection: '{inst_name}' fail "
+                            f"{self._nfs_failure_count[inst_name]}/{self.FAILURE_THRESHOLD}"
+                        )
                     continue
+
+                # Reachable again → reset failure counter
+                self._nfs_failure_count.pop(inst_name, None)
 
                 mount_status_map = {s["id"]: s for s in mount_statuses}
                 export_status_map = {s["id"]: s for s in export_statuses}
@@ -486,7 +516,14 @@ class HealthChecker:
                     resp.raise_for_status()
             except Exception as e:
                 logger.debug(f"Health checker: Autoscan '{inst_name}' unreachable: {e}")
-                if not self._autoscan_error_state.get(inst_name):
+                self._autoscan_failure_count[inst_name] = (
+                    self._autoscan_failure_count.get(inst_name, 0) + 1
+                )
+                if self._autoscan_failure_count[
+                    inst_name
+                ] >= self.FAILURE_THRESHOLD and not self._autoscan_error_state.get(
+                    inst_name
+                ):
                     self._autoscan_error_state[inst_name] = True
                     try:
                         await notification_service.notify_autoscan_error(
@@ -494,7 +531,15 @@ class HealthChecker:
                         )
                     except Exception:
                         pass
+                else:
+                    logger.debug(
+                        f"Autoscan flap protection: '{inst_name}' fail "
+                        f"{self._autoscan_failure_count[inst_name]}/{self.FAILURE_THRESHOLD}"
+                    )
                 continue
+
+            # Reachable again → reset failure counter
+            self._autoscan_failure_count.pop(inst_name, None)
 
             # 2) per-target availability via /api/stats
             try:

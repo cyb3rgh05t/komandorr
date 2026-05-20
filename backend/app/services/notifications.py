@@ -60,8 +60,13 @@ EVENT_LABELS = {
 class NotificationService:
     """Service for sending notifications via Telegram with multi-target + topic support"""
 
+    # Require N consecutive bad observations before firing a problem/offline
+    # notification. Prevents flap-spam from transient network blips.
+    FAILURE_THRESHOLD = 2
+
     def __init__(self):
         self._last_status: Dict[str, str] = {}
+        self._pending_status: Dict[str, dict] = {}  # flap protection per service
         self._error_cooldowns: Dict[str, datetime] = {}  # dedup for error notifications
         self._config_path = Path(__file__).parent.parent.parent / "data" / "config.json"
         self._error_cooldown_seconds = (
@@ -639,28 +644,65 @@ class NotificationService:
     # ── status tracking (unchanged) ──────────────────────────────
 
     def should_notify(self, service_id: str, new_status: str) -> tuple[bool, str]:
-        """Check if we should send a notification for this status change."""
-        old_status = self._last_status.get(service_id, "unknown")
-        self._last_status[service_id] = new_status
+        """Check if we should send a notification for this status change.
 
-        if old_status == "unknown":
-            return False, old_status
-        if old_status == new_status:
-            return False, old_status
+        Flap protection: transitions to ``problem``/``offline`` require
+        :attr:`FAILURE_THRESHOLD` consecutive observations before a
+        notification is dispatched. Recovery to ``online`` fires immediately.
+        """
+        last_confirmed = self._last_status.get(service_id, "unknown")
 
-        significant_changes = [
-            (old_status == "online" and new_status in ("offline", "problem")),
-            (old_status in ("offline", "problem") and new_status == "online"),
-            (old_status == "problem" and new_status == "offline"),
-        ]
-        return any(significant_changes), old_status
+        # First observation: prime state, no notification
+        if last_confirmed == "unknown":
+            self._last_status[service_id] = new_status
+            self._pending_status.pop(service_id, None)
+            return False, last_confirmed
+
+        # No change vs. last confirmed → reset pending, no notify
+        if new_status == last_confirmed:
+            self._pending_status.pop(service_id, None)
+            return False, last_confirmed
+
+        # Recovery (back to online) → notify immediately
+        if new_status == "online":
+            self._last_status[service_id] = new_status
+            self._pending_status.pop(service_id, None)
+            return True, last_confirmed
+
+        # Going bad → require N consecutive matching observations
+        pending = self._pending_status.get(service_id) or {
+            "status": None,
+            "count": 0,
+        }
+        if pending["status"] == new_status:
+            pending["count"] += 1
+        else:
+            pending = {"status": new_status, "count": 1}
+        self._pending_status[service_id] = pending
+
+        if pending["count"] >= self.FAILURE_THRESHOLD:
+            self._last_status[service_id] = new_status
+            self._pending_status.pop(service_id, None)
+            # Only signal as a significant transition when applicable
+            significant = (
+                last_confirmed == "online" and new_status in ("offline", "problem")
+            ) or (last_confirmed == "problem" and new_status == "offline")
+            return significant, last_confirmed
+
+        logger.debug(
+            f"Flap protection: {service_id} {last_confirmed}\u2192{new_status} "
+            f"({pending['count']}/{self.FAILURE_THRESHOLD})"
+        )
+        return False, last_confirmed
 
     def clear_status_cache(self, service_id: Optional[str] = None) -> None:
         """Clear cached status for a service or all services"""
         if service_id:
             self._last_status.pop(service_id, None)
+            self._pending_status.pop(service_id, None)
         else:
             self._last_status.clear()
+            self._pending_status.clear()
 
 
 # Singleton instance
