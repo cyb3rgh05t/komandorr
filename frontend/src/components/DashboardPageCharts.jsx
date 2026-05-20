@@ -713,7 +713,13 @@ export function VpnCard({
           Object.entries(allDepsMap).filter(([k]) => containerIds.has(k)),
         );
 
-  const total = containers.length;
+  const countableContainers = containers.filter((c) => {
+    const s = (c?.docker_status ?? c?.state ?? c?.status ?? "")
+      .toString()
+      .toLowerCase();
+    return s !== "created";
+  });
+  const total = countableContainers.length;
   const running = containers.filter((c) =>
     isVpnRunning(c?.docker_status ?? c?.state ?? c?.status),
   ).length;
@@ -903,46 +909,81 @@ function NfsCard() {
   const total = mountsUp + mountsDown;
   const instanceCount = allManagers.length;
 
+  // Per-instance breakdown for donuts
+  const perInstance = allManagers.map((mgr, i) => {
+    const id = mgr?.id ?? mgr?.instance_id ?? mgr?.name ?? `mgr-${i}`;
+    const name = mgr?.name || mgr?.id || `Manager ${i + 1}`;
+    const mounts = mgr?.nfs_mounts || [];
+    const statuses = mgr?.nfs_mount_statuses || {};
+    let up = 0;
+    let down = 0;
+    mounts.forEach((m) => {
+      const mid = m?.id;
+      const ok = mid != null ? !!statuses[mid]?.mounted : !!m?.mounted;
+      if (ok) up += 1;
+      else down += 1;
+    });
+    return { id, name, up, down, total: up + down };
+  });
+
   return (
     <ChartCard
       icon={HardDrive}
       title={t("dashboard.charts.nfs", "NFS Manager")}
       onClick={() => navigate("/nfs-mount")}
-      tabs={
-        <InstanceToggle
-          instances={instances}
-          value={selectedId}
-          onChange={setSelectedId}
-          allLabel={t("dashboard.charts.all", "All")}
-        />
-      }
       footer={`${instanceCount} ${t(
         "dashboard.charts.instances",
         "instance(s)",
       )}`}
     >
-      <DonutChart
-        segments={[
-          { value: mountsUp, color: "#22c55e" },
-          { value: mountsDown, color: "#ef4444" },
-        ]}
-        centerLabel={total}
-        centerSub={t("dashboard.charts.mounts", "mounts")}
-      />
-      <Legend
-        items={[
-          {
-            label: t("dashboard.charts.up", "Up"),
-            value: mountsUp,
-            color: "#22c55e",
-          },
-          {
-            label: t("dashboard.charts.down", "Down"),
-            value: mountsDown,
-            color: "#ef4444",
-          },
-        ]}
-      />
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
+        {perInstance.map((inst) => {
+          const isActive = selectedId === inst.id;
+          return (
+            <button
+              key={inst.id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedId(isActive ? null : inst.id);
+              }}
+              className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
+                isActive
+                  ? "ring-2 ring-theme-primary bg-theme-primary/5"
+                  : "ring-1 ring-theme-border hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+              }`}
+            >
+              <MiniMulti
+                segments={[
+                  { value: inst.up, color: "#22c55e" },
+                  { value: inst.down, color: "#ef4444" },
+                ]}
+                size={110}
+                thickness={14}
+                centerLabel={inst.total}
+              />
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted truncate max-w-[110px] text-center">
+                {inst.name}
+              </span>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-medium">
+                <span
+                  style={{ color: "#22c55e" }}
+                  title={t("dashboard.charts.up", "Up")}
+                >
+                  {inst.up}
+                </span>
+                <span className="text-theme-text-muted">·</span>
+                <span
+                  style={{ color: "#ef4444" }}
+                  title={t("dashboard.charts.down", "Down")}
+                >
+                  {inst.down}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
       <StatGrid
         tiles={[
           {

@@ -368,6 +368,10 @@ export default function VpnProxy() {
   const notConnectedCount = containers.filter((c) =>
     isNotConnectedStatus(c, vpnInfoMap[c.id] || {}),
   ).length;
+  // Total excludes "created" containers (not yet started / placeholder state)
+  const totalCount = containers.filter(
+    (c) => (c.docker_status || c.status || "").toLowerCase() !== "created",
+  ).length;
 
   const vpnNotConfigured =
     connectionStatus !== undefined &&
@@ -1006,9 +1010,7 @@ export default function VpnProxy() {
                   Total
                 </span>
               </div>
-              <p className="text-2xl font-bold text-theme-text">
-                {containers.length}
-              </p>
+              <p className="text-2xl font-bold text-theme-text">{totalCount}</p>
             </div>
             <LayoutGrid className="w-6 h-6 text-yellow-400" />
           </div>
@@ -1162,7 +1164,7 @@ export default function VpnProxy() {
                 activeTab === "all" ? "text-black/70" : "text-theme-text-muted"
               }`}
             >
-              ({containers.length})
+              ({totalCount})
             </span>
           </button>
           {providers.map((provider) => {
