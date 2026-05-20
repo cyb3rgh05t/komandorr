@@ -530,7 +530,7 @@ function PlexCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
               <MiniMulti
@@ -1008,7 +1008,7 @@ function NfsCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
               <div className="flex items-end gap-3">
@@ -1762,7 +1762,7 @@ function PosterizarrCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "ring-1 ring-theme-primary/30 hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
               }`}
             >
               <MiniMulti
