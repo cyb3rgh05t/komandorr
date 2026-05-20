@@ -340,53 +340,20 @@ const StorageServiceCard = ({ service, t }) => {
               {t("storage.paths", "Storage Paths")} (
               {storage.storage_paths.length})
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {storage.storage_paths.map((path, idx) => {
-                const percent = Number(path.percent) || 0;
-                const barColor =
-                  percent > 90
-                    ? "bg-red-500"
-                    : percent > 75
-                      ? "bg-yellow-500"
-                      : "bg-purple-500";
-                const freeColor =
-                  percent > 90
-                    ? "text-red-400"
-                    : percent > 75
-                      ? "text-yellow-400"
-                      : "text-green-400";
-                return (
-                  <div
-                    key={idx}
-                    className="bg-theme-hover border border-theme-border rounded p-2"
-                    title={path.path}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-theme-text font-mono text-xs truncate">
-                        {path.path.split("/").pop() || path.path}
-                      </span>
-                      <span className="text-theme-text-muted text-[10px] shrink-0">
-                        {percent.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="relative h-1.5 bg-theme-bg rounded-full overflow-hidden mb-1.5">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                        style={{ width: `${Math.min(percent, 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className={`font-semibold ${freeColor}`}>
-                        {formatStorageSize(path.free)}{" "}
-                        {t("storage.free", "free")}
-                      </span>
-                      <span className="text-theme-text-muted">
-                        {formatStorageSize(path.total)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex flex-wrap gap-2">
+              {storage.storage_paths.map((path, idx) => (
+                <div
+                  key={idx}
+                  className="inline-flex items-center gap-2 bg-theme-hover border border-theme-border px-2.5 py-1.5 rounded text-xs"
+                >
+                  <span className="text-theme-text font-mono">
+                    {path.path.split("/").pop() || path.path}
+                  </span>
+                  <span className="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-medium">
+                    {formatStorageSize(path.total)}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}

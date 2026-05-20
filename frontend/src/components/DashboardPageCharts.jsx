@@ -974,9 +974,13 @@ function StorageCard() {
       const paths = svc?.storage?.storage_paths || [];
       paths.forEach((p) => {
         const pct = Number(p?.percent ?? 0);
+        const free = Number(p?.free ?? 0);
+        const total = Number(p?.total ?? 0);
         list.push({
           name: `${svc?.name || "service"} • ${p?.path?.split("/").pop() || p?.path}`,
           pct: isFinite(pct) ? pct : 0,
+          free: isFinite(free) ? free : 0,
+          total: isFinite(total) ? total : 0,
         });
       });
     });
@@ -984,9 +988,17 @@ function StorageCard() {
   }, [services]);
 
   const topPools = useMemo(
-    () => [...pools].sort((a, b) => b.pct - a.pct).slice(0, 4),
+    () => [...pools].sort((a, b) => b.pct - a.pct).slice(0, 8),
     [pools],
   );
+
+  // Storage values are reported in GB by the storage agent
+  const formatGB = (gb) => {
+    if (!gb || !isFinite(gb)) return "0 GB";
+    if (gb >= 1024) return `${(gb / 1024).toFixed(1)} TB`;
+    if (gb >= 1) return `${gb.toFixed(0)} GB`;
+    return `${(gb * 1024).toFixed(0)} MB`;
+  };
 
   const totalPaths = pools.length;
   const avgUsage = Number(summary?.average_usage_percent ?? 0);
@@ -1007,23 +1019,41 @@ function StorageCard() {
       {topPools.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 w-full justify-items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
           {topPools.map((p) => {
             const col =
               p.pct >= 90 ? "#ef4444" : p.pct >= 75 ? "#f59e0b" : "#22d3ee";
+            const freeCol =
+              p.pct >= 90
+                ? "text-red-400"
+                : p.pct >= 75
+                  ? "text-yellow-400"
+                  : "text-green-400";
             return (
               <div
                 key={p.name}
-                className="flex flex-col items-center gap-1 min-w-0 max-w-full"
+                className="flex items-center gap-2 bg-theme-hover border border-theme-border rounded-lg p-2 min-w-0"
+                title={p.name}
               >
                 <MiniRing
                   percent={p.pct}
                   color={col}
                   centerLabel={`${p.pct.toFixed(0)}%`}
                 />
-                <span className="text-[10px] text-theme-text truncate w-full text-center">
-                  {p.name}
-                </span>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-[10px] text-theme-text truncate font-medium">
+                    {p.name}
+                  </span>
+                  <span className={`text-[11px] font-semibold ${freeCol}`}>
+                    {formatGB(p.free)}{" "}
+                    <span className="text-theme-text-muted font-normal">
+                      {t("dashboard.charts.free", "free")}
+                    </span>
+                  </span>
+                  <span className="text-[9px] text-theme-text-muted">
+                    {formatGB(p.total)} {t("dashboard.charts.total", "total")}
+                  </span>
+                </div>
               </div>
             );
           })}
