@@ -287,7 +287,11 @@ function MiniRing({
       </svg>
       {centerLabel != null && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-[11px] font-bold text-theme-text leading-none">
+          <span
+            className={`font-bold text-theme-text leading-none ${
+              size >= 110 ? "text-2xl" : size >= 80 ? "text-sm" : "text-[11px]"
+            }`}
+          >
             {centerLabel}
           </span>
         </div>
@@ -1704,31 +1708,37 @@ function AutoscanCard() {
         "instance(s)",
       )}`}
     >
-      <div className="grid grid-cols-3 gap-2 w-full">
-        <div className="flex flex-col items-center gap-1">
+      <div className="flex items-center justify-center gap-6 w-full flex-wrap">
+        <div className="flex flex-col items-center gap-2">
           <MiniRing
             percent={(queue / max) * 100}
             color="#a78bfa"
+            size={130}
+            thickness={16}
             centerLabel={queue}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
             {t("dashboard.charts.queue", "Queue")}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-2">
           <MiniRing
             percent={(processed / max) * 100}
             color="#22c55e"
+            size={130}
+            thickness={16}
             centerLabel={processed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
             {t("dashboard.charts.processed", "Processed")}
           </span>
         </div>
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-2">
           <MiniRing
             percent={(failed / max) * 100}
             color="#ef4444"
+            size={130}
+            thickness={16}
             centerLabel={failed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
