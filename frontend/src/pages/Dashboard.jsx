@@ -104,30 +104,60 @@ export default function Dashboard() {
     placeholderData: (previousData) => previousData,
   });
 
-  // VPN Proxy data
-  const { data: vpnContainers = [] } = useQuery({
-    queryKey: ["vpn-proxy-containers"],
-    queryFn: () => api.get("/vpn-proxy/containers"),
+  // VPN Proxy data — aggregated across all configured instances
+  const { data: vpnInstancesData } = useQuery({
+    queryKey: ["vpn-proxy-instances"],
+    queryFn: () => api.get("/vpn-proxy/instances").catch(() => []),
+    staleTime: 60000,
+    refetchInterval: 60000,
+  });
+  const vpnInstances = useMemo(() => {
+    if (Array.isArray(vpnInstancesData)) return vpnInstancesData;
+    return vpnInstancesData?.instances || [];
+  }, [vpnInstancesData]);
+
+  const { data: vpnAgg } = useQuery({
+    queryKey: ["vpn-proxy-aggregate", vpnInstances.map((i) => i.id).join(",")],
+    queryFn: async () => {
+      const ids =
+        vpnInstances.length > 0 ? vpnInstances.map((i) => i.id) : [null];
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          const q = id ? `?vpn_id=${encodeURIComponent(id)}` : "";
+          const [containers, info, deps] = await Promise.all([
+            api.get(`/vpn-proxy/containers${q}`).catch(() => []),
+            api
+              .get(`/vpn-proxy/containers/vpn-info-batch${q}`)
+              .catch(() => ({})),
+            api.get(`/vpn-proxy/containers/dependents${q}`).catch(() => []),
+          ]);
+          const list = Array.isArray(containers)
+            ? containers
+            : containers?.containers || [];
+          return {
+            id,
+            list: list.map((c) => ({ ...c, _instance_id: id })),
+            info: info || {},
+            deps: Array.isArray(deps) ? deps : [],
+          };
+        }),
+      );
+      const allContainers = results.flatMap((r) => r.list);
+      const allInfo = results.reduce(
+        (acc, r) => Object.assign(acc, r.info || {}),
+        {},
+      );
+      const allDeps = results.flatMap((r) => r.deps);
+      return { containers: allContainers, info: allInfo, deps: allDeps };
+    },
     staleTime: 10000,
     refetchInterval: 15000,
     placeholderData: (prev) => prev,
   });
 
-  const { data: vpnInfoMap = {} } = useQuery({
-    queryKey: ["vpn-proxy-vpn-info"],
-    queryFn: () => api.get("/vpn-proxy/containers/vpn-info-batch"),
-    staleTime: 10000,
-    refetchInterval: 15000,
-    placeholderData: (prev) => prev,
-  });
-
-  const { data: vpnDependentsRaw = [] } = useQuery({
-    queryKey: ["vpn-proxy-dependents"],
-    queryFn: () => api.get("/vpn-proxy/containers/dependents"),
-    staleTime: 15000,
-    refetchInterval: 20000,
-    placeholderData: (prev) => prev,
-  });
+  const vpnContainers = vpnAgg?.containers || [];
+  const vpnInfoMap = vpnAgg?.info || {};
+  const vpnDependentsRaw = vpnAgg?.deps || [];
 
   const { data: vpnConnectionStatus } = useQuery({
     queryKey: ["vpn-proxy-status"],
