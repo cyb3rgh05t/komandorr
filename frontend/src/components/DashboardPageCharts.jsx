@@ -518,7 +518,7 @@ function PlexCard() {
     <ChartCard
       icon={Activity}
       title={t("dashboard.charts.plex", "Plex Activity")}
-      onClick={() => navigate("/plex-activity")}
+      onClick={() => navigate("/vod-activity")}
       footer={`${instances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
