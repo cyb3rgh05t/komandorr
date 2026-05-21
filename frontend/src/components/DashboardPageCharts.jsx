@@ -1687,8 +1687,17 @@ function PosterizarrCard() {
             const url = id
               ? `/posterizarr/dashboard?instance_id=${encodeURIComponent(id)}`
               : "/posterizarr/dashboard";
-            const res = await api.get(url);
-            return [id ?? "_default", res];
+            const histUrl = id
+              ? `/posterizarr/runtime-history?instance_id=${encodeURIComponent(id)}&limit=1`
+              : "/posterizarr/runtime-history?limit=1";
+            const [res, hist] = await Promise.all([
+              api.get(url).catch(() => null),
+              api.get(histUrl).catch(() => null),
+            ]);
+            const latest = Array.isArray(hist?.history)
+              ? hist.history[0]
+              : null;
+            return [id ?? "_default", { ...(res || {}), _latest: latest }];
           } catch {
             return [id ?? "_default", null];
           }
@@ -1729,6 +1738,37 @@ function PosterizarrCard() {
     else idle += 1;
   });
   const totalInst = running + idle + error;
+
+  // Latest run across selected instances (for Last Run / Mode banner)
+  const latestEntries = items
+    .map((d) => d?._latest)
+    .filter((e) => e && (e.end_time || e.start_time || e.timestamp));
+  const latestRun = latestEntries.length
+    ? latestEntries.reduce((a, b) => {
+        const ta = new Date(
+          a.end_time || a.start_time || a.timestamp || 0,
+        ).getTime();
+        const tb = new Date(
+          b.end_time || b.start_time || b.timestamp || 0,
+        ).getTime();
+        return tb > ta ? b : a;
+      })
+    : null;
+  const formatLastRun = (ts) => {
+    if (!ts) return "—";
+    try {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return "—";
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return `${dd}.${mm}.${yyyy} ${hh}:${mi}`;
+    } catch {
+      return "—";
+    }
+  };
 
   // Per-instance state for donuts
   const instanceList =
@@ -1817,6 +1857,30 @@ function PosterizarrCard() {
           );
         })}
       </div>
+      {latestRun && (
+        <div className="w-full px-2 py-1.5 rounded-lg bg-theme-hover/40 border border-theme flex items-center justify-between gap-2 text-[11px]">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-theme-text-muted">
+              {t("dashboard.charts.mode", "Mode")}:
+            </span>
+            <span className="font-semibold text-theme-text capitalize truncate">
+              {latestRun.mode || "—"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-theme-text-muted">
+              {t("dashboard.charts.lastRun", "Last Run")}:
+            </span>
+            <span className="font-semibold text-theme-text truncate">
+              {formatLastRun(
+                latestRun.end_time ||
+                  latestRun.start_time ||
+                  latestRun.timestamp,
+              )}
+            </span>
+          </div>
+        </div>
+      )}
       <StatGrid
         tiles={[
           {
