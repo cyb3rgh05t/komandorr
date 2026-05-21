@@ -291,7 +291,11 @@ function MiniRing({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
             className={`font-bold text-theme-text leading-none ${
-              size >= 110 ? "text-2xl" : size >= 80 ? "text-sm" : "text-[11px]"
+              size >= 100
+                ? "text-2xl"
+                : size >= 80
+                  ? "text-base"
+                  : "text-[11px]"
             }`}
           >
             {centerLabel}
@@ -350,7 +354,11 @@ function MiniMulti({ segments, size = 76, thickness = 9, centerLabel }) {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
             className={`font-bold text-theme-text leading-none ${
-              size >= 110 ? "text-2xl" : size >= 80 ? "text-sm" : "text-[11px]"
+              size >= 100
+                ? "text-2xl"
+                : size >= 80
+                  ? "text-base"
+                  : "text-[11px]"
             }`}
           >
             {centerLabel}
@@ -805,8 +813,8 @@ export function VpnCard({
           <MiniRing
             percent={total > 0 ? (running / total) * 100 : 0}
             color="#22c55e"
-            size={110}
-            thickness={14}
+            size={100}
+            thickness={13}
             centerLabel={running}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -817,8 +825,8 @@ export function VpnCard({
           <MiniRing
             percent={total > 0 ? (connected / total) * 100 : 0}
             color="#22d3ee"
-            size={110}
-            thickness={14}
+            size={100}
+            thickness={13}
             centerLabel={connected}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -829,8 +837,8 @@ export function VpnCard({
           <MiniRing
             percent={total > 0 ? (stopped / total) * 100 : 0}
             color="#ef4444"
-            size={110}
-            thickness={14}
+            size={100}
+            thickness={13}
             centerLabel={stopped}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1551,13 +1559,13 @@ function UploadsCard() {
       onClick={() => navigate("/uploader")}
       footer={`${total} ${t("dashboard.charts.items", "items")}`}
     >
-      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
+      <div className="flex items-center justify-around w-full px-2 sm:px-4">
         <div className="flex flex-col items-center gap-2">
           <MiniRing
             percent={total > 0 ? (active / total) * 100 : 0}
             color="#22d3ee"
-            size={110}
-            thickness={14}
+            size={100}
+            thickness={13}
             centerLabel={active}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1568,8 +1576,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (queued / total) * 100 : 0}
             color="#a78bfa"
-            size={110}
-            thickness={14}
+            size={100}
+            thickness={13}
             centerLabel={queued}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1580,8 +1588,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (failed / total) * 100 : 0}
             color="#ef4444"
-            size={110}
-            thickness={14}
+            size={100}
+            thickness={13}
             centerLabel={failed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1937,8 +1945,8 @@ function AutoscanCard() {
           <MiniRing
             percent={(queue / max) * 100}
             color="#a78bfa"
-            size={130}
-            thickness={16}
+            size={100}
+            thickness={13}
             centerLabel={queue}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1949,8 +1957,8 @@ function AutoscanCard() {
           <MiniRing
             percent={(processed / max) * 100}
             color="#22c55e"
-            size={130}
-            thickness={16}
+            size={100}
+            thickness={13}
             centerLabel={processed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1961,8 +1969,8 @@ function AutoscanCard() {
           <MiniRing
             percent={(failed / max) * 100}
             color="#ef4444"
-            size={130}
-            thickness={16}
+            size={100}
+            thickness={13}
             centerLabel={failed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2285,8 +2293,8 @@ function ServersCard() {
           <MiniRing
             percent={total > 0 ? (online / total) * 100 : 0}
             color="#22c55e"
-            size={130}
-            thickness={16}
+            size={100}
+            thickness={13}
             centerLabel={online}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2297,8 +2305,8 @@ function ServersCard() {
           <MiniRing
             percent={total > 0 ? (problem / total) * 100 : 0}
             color="#f59e0b"
-            size={130}
-            thickness={16}
+            size={100}
+            thickness={13}
             centerLabel={problem}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2309,8 +2317,8 @@ function ServersCard() {
           <MiniRing
             percent={total > 0 ? (offline / total) * 100 : 0}
             color="#ef4444"
-            size={130}
-            thickness={16}
+            size={100}
+            thickness={13}
             centerLabel={offline}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
