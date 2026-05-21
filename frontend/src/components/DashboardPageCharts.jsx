@@ -1516,7 +1516,7 @@ function DownloadsCard() {
       {visibleRows.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-x-2 gap-y-3 w-full justify-items-center">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-3 w-full justify-items-center">
           {visibleRows.map((r) => {
             const idle = Math.max(0, r.total - r.active - r.queued - r.stuck);
             return (
@@ -1578,7 +1578,9 @@ function DownloadsCard() {
               {t("dashboard.charts.records", "records")}
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <div
+            className={`grid gap-1.5 ${historyRows.length <= 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}
+          >
             {historyRows.slice(0, 6).map((h) => {
               const badge = h.latest ? eventBadge(h.latest.eventType) : null;
               const title =
@@ -1988,13 +1990,20 @@ function PosterizarrCard() {
         })}
       </div>
       {perInstance.some((i) => i.latest) && (
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+        <div
+          className={`w-full grid gap-1.5 ${
+            perInstance.filter((i) => selectedId == null || selectedId === i.id)
+              .length <= 1
+              ? "grid-cols-1"
+              : "grid-cols-1 sm:grid-cols-2"
+          }`}
+        >
           {perInstance
             .filter((i) => selectedId == null || selectedId === i.id)
             .map((i) => (
               <div
                 key={`pz-last-${i.id}`}
-                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover/40 border border-theme min-w-0"
+                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
               >
                 <div className="flex items-center justify-between gap-2 min-w-0">
                   <span className="text-[11px] font-semibold text-theme-text truncate">
@@ -2249,7 +2258,9 @@ function AutoscanCard() {
               {t("dashboard.charts.instances", "instance(s)")}
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <div
+            className={`grid gap-1.5 ${recentScans.length <= 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}
+          >
             {recentScans.slice(0, 6).map((r) => {
               const h = r.latest;
               const status = String(h.status || "").toLowerCase();
