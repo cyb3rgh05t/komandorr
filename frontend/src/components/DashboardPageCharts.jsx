@@ -31,6 +31,7 @@ import {
   Pencil,
   Check,
   RotateCcw,
+  Crown,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { uploaderApi } from "@/services/uploaderApi";
@@ -2403,7 +2404,7 @@ function VodSyncCard() {
     queryKey: ["dash-vodsync-peaks"],
     queryFn: async () => {
       try {
-        return await api.get("/plex/stats/daily-peaks?days=7");
+        return await api.get("/plex/stats/daily-peaks?days=30");
       } catch {
         return null;
       }
@@ -2512,13 +2513,20 @@ function VodSyncCard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <MiniRing
-            percent={allTimePeak > 0 ? 100 : 0}
-            color="#a78bfa"
-            size={120}
-            thickness={12}
-            centerLabel={allTimePeak}
-          />
+          <div className="relative">
+            <Crown
+              size={18}
+              className="absolute -top-1 left-1/2 -translate-x-1/2 z-10"
+              style={{ color: "#fbbf24", fill: "#fbbf24" }}
+            />
+            <MiniRing
+              percent={allTimePeak > 0 ? 100 : 0}
+              color="#a78bfa"
+              size={120}
+              thickness={12}
+              centerLabel={allTimePeak}
+            />
+          </div>
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
               {t("dashboard.charts.highestPeak", "Highest Peak")}
@@ -2575,11 +2583,6 @@ function VodSyncCard() {
 
       <StatGrid
         tiles={[
-          {
-            label: t("dashboard.charts.library", "Library"),
-            value: total,
-            color: "var(--theme-primary)",
-          },
           {
             label: t("dashboard.charts.allTimePeak", "All-Time Peak"),
             value: allTimePeak,
