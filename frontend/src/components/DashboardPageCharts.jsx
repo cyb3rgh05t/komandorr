@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
   Scan,
   Server,
+  Clapperboard,
   RefreshCcw,
   ChevronRight,
   ChevronUp,
@@ -2269,6 +2270,193 @@ function VodSyncCard() {
   );
 }
 
+function VodPortalCard() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const { data } = useQuery({
+    queryKey: ["dash-vod-portal"],
+    queryFn: async () => {
+      try {
+        return await api.get("/overseerr/dashboard");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
+  const configured = !!data?.configured;
+  const reachable = !!data?.reachable;
+  const requests = data?.requests || {};
+  const issues = data?.issues || {};
+  const usersTotal = Number(data?.users_total ?? 0) || 0;
+
+  const reqTotal = Number(requests.total ?? 0) || 0;
+  const reqPending = Number(requests.pending ?? 0) || 0;
+  const reqApproved = Number(requests.approved ?? 0) || 0;
+  const reqDeclined = Number(requests.declined ?? 0) || 0;
+  const reqProcessing = Number(requests.processing ?? 0) || 0;
+  const reqAvailable = Number(requests.available ?? 0) || 0;
+  const reqMovie = Number(requests.movie ?? 0) || 0;
+  const reqTv = Number(requests.tv ?? 0) || 0;
+
+  const issTotal = Number(issues.total ?? 0) || 0;
+  const issOpen = Number(issues.open ?? 0) || 0;
+  const issClosed =
+    Number(issues.closed ?? Math.max(0, issTotal - issOpen)) || 0;
+  const issVideo = Number(issues.video ?? 0) || 0;
+  const issAudio = Number(issues.audio ?? 0) || 0;
+  const issSubs = Number(issues.subtitles ?? 0) || 0;
+  const issOthers = Number(issues.others ?? 0) || 0;
+
+  return (
+    <ChartCard
+      icon={Clapperboard}
+      title={t("dashboard.charts.vodPortal", "VoD Portal")}
+      onClick={() => navigate("/vod-portal")}
+      footer={
+        configured
+          ? reachable
+            ? `${reqTotal} ${t("dashboard.charts.requests", "requests")} • ${issOpen} ${t("dashboard.charts.openIssues", "open issues")}`
+            : t("dashboard.charts.unreachable", "Unreachable")
+          : t("dashboard.charts.notConfigured", "Not configured")
+      }
+    >
+      {!configured ? (
+        <EmptyHint
+          text={t(
+            "dashboard.charts.vodPortalNotConfigured",
+            "VoDWisharr / Overseerr not configured",
+          )}
+        />
+      ) : (
+        <>
+          <div className="flex items-center justify-around w-full px-2 sm:px-4">
+            <div className="flex flex-col items-center gap-2">
+              <MiniMulti
+                segments={[
+                  { value: reqPending, color: "#f59e0b" },
+                  { value: reqApproved, color: "#22c55e" },
+                  { value: reqProcessing, color: "#22d3ee" },
+                  { value: reqAvailable, color: "#a78bfa" },
+                  { value: reqDeclined, color: "#ef4444" },
+                ]}
+                size={100}
+                thickness={13}
+                centerLabel={reqTotal}
+              />
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+                {t("dashboard.charts.requests", "Requests")}
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <MiniMulti
+                segments={[
+                  { value: issOpen, color: "#ef4444" },
+                  { value: issClosed, color: "#22c55e" },
+                ]}
+                size={100}
+                thickness={13}
+                centerLabel={issTotal}
+              />
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+                {t("dashboard.charts.issues", "Issues")}
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <MiniRing
+                percent={usersTotal > 0 ? 100 : 0}
+                color="#22d3ee"
+                size={100}
+                thickness={13}
+                centerLabel={usersTotal}
+              />
+              <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
+                {t("dashboard.charts.users", "Users")}
+              </span>
+            </div>
+          </div>
+          <Legend
+            items={[
+              {
+                label: t("dashboard.charts.pending", "Pending"),
+                value: reqPending,
+                color: "#f59e0b",
+              },
+              {
+                label: t("dashboard.charts.approved", "Approved"),
+                value: reqApproved,
+                color: "#22c55e",
+              },
+              {
+                label: t("dashboard.charts.openIssues", "Open"),
+                value: issOpen,
+                color: "#ef4444",
+              },
+            ]}
+          />
+          <StatGrid
+            tiles={[
+              {
+                label: t("dashboard.charts.movies", "Movies"),
+                value: reqMovie,
+                color: "var(--theme-primary)",
+              },
+              {
+                label: t("dashboard.charts.tv", "TV"),
+                value: reqTv,
+                color: "#22d3ee",
+              },
+              {
+                label: t("dashboard.charts.processing", "Processing"),
+                value: reqProcessing,
+                color: "#22d3ee",
+              },
+              {
+                label: t("dashboard.charts.available", "Available"),
+                value: reqAvailable,
+                color: "#a78bfa",
+              },
+              {
+                label: t("dashboard.charts.declined", "Declined"),
+                value: reqDeclined,
+                color: "#ef4444",
+              },
+              {
+                label: t("dashboard.charts.closedIssues", "Closed"),
+                value: issClosed,
+                color: "#22c55e",
+              },
+              {
+                label: t("dashboard.charts.videoIssues", "Video"),
+                value: issVideo,
+                color: "#a78bfa",
+              },
+              {
+                label: t("dashboard.charts.audioIssues", "Audio"),
+                value: issAudio,
+                color: "#f59e0b",
+              },
+              {
+                label: t("dashboard.charts.subtitleIssues", "Subs"),
+                value: issSubs,
+                color: "#22d3ee",
+              },
+              {
+                label: t("dashboard.charts.otherIssues", "Other"),
+                value: issOthers,
+                color: "#94a3b8",
+              },
+            ]}
+          />
+        </>
+      )}
+    </ChartCard>
+  );
+}
+
 function ServersCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -2556,6 +2744,11 @@ export default function DashboardPageCharts() {
         id: "autoscan",
         label: t("dashboard.cards.autoscan", "Autoscan"),
         Component: AutoscanCard,
+      },
+      {
+        id: "vodPortal",
+        label: t("dashboard.cards.vodPortal", "VoD Portal"),
+        Component: VodPortalCard,
       },
     ],
     [t],

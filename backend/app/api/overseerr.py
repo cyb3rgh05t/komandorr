@@ -409,3 +409,122 @@ async def delete_overseerr_user(user_id: int, username: str = Depends(require_au
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete user: {str(e)}",
         )
+
+
+def _overseerr_base_url() -> str:
+    """Strip trailing /api/v1/user (legacy stored URL) so we can build any v1 path."""
+    url = (settings.OVERSEERR_URL or "").rstrip("/")
+    for suffix in ("/api/v1/user", "/api/v1"):
+        if url.endswith(suffix):
+            url = url[: -len(suffix)]
+            break
+    return url
+
+
+async def _safe_get(
+    client: httpx.AsyncClient, url: str, headers: dict, params: dict | None = None
+):
+    """GET that never raises; returns parsed JSON or None on any error."""
+    try:
+        resp = await client.get(url, headers=headers, params=params)
+        if resp.status_code == 200:
+            return resp.json()
+        logger.debug(f"Overseerr GET {url} returned {resp.status_code}")
+    except Exception as exc:
+        logger.debug(f"Overseerr GET {url} failed: {exc}")
+    return None
+
+
+@router.get("/dashboard")
+async def get_overseerr_dashboard(username: str = Depends(require_auth)):
+    """Bundled dashboard summary: request counts, issue counts, user count.
+
+    Designed for the dashboard polling card so the frontend issues only one
+    HTTP call instead of N parallel ones. Each section degrades gracefully
+    when its endpoint isn't reachable or supported.
+    """
+    if not settings.OVERSEERR_URL or not settings.OVERSEERR_API_KEY:
+        return {
+            "configured": False,
+            "reachable": False,
+            "requests": None,
+            "issues": None,
+            "users_total": 0,
+        }
+
+    base = _overseerr_base_url()
+    headers = {
+        "accept": "application/json",
+        "X-Api-Key": settings.OVERSEERR_API_KEY,
+    }
+
+    import asyncio
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        status_data, request_count, issue_count, users_first_page = (
+            await asyncio.gather(
+                _safe_get(client, f"{base}/api/v1/status", headers),
+                _safe_get(client, f"{base}/api/v1/request/count", headers),
+                _safe_get(client, f"{base}/api/v1/issue/count", headers),
+                _safe_get(
+                    client, f"{base}/api/v1/user", headers, {"take": 1, "skip": 0}
+                ),
+            )
+        )
+
+    reachable = status_data is not None or request_count is not None
+
+    # Issues fallback: if /issue/count is unsupported, derive from /issue?filter=...
+    issues = issue_count
+    if issues is None:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            open_issues, all_issues = await asyncio.gather(
+                _safe_get(
+                    client,
+                    f"{base}/api/v1/issue",
+                    headers,
+                    {"take": 1, "skip": 0, "filter": "open"},
+                ),
+                _safe_get(
+                    client,
+                    f"{base}/api/v1/issue",
+                    headers,
+                    {"take": 1, "skip": 0, "filter": "all"},
+                ),
+            )
+        if open_issues or all_issues:
+            total = (
+                (all_issues or {}).get("pageInfo", {}).get("results", 0)
+                if all_issues
+                else 0
+            )
+            open_count = (
+                (open_issues or {}).get("pageInfo", {}).get("results", 0)
+                if open_issues
+                else 0
+            )
+            issues = {
+                "total": total,
+                "open": open_count,
+                "closed": max(0, total - open_count),
+                "video": 0,
+                "audio": 0,
+                "subtitles": 0,
+                "others": 0,
+            }
+
+    # Users total — pageInfo.results is the canonical count
+    users_total = 0
+    if users_first_page:
+        page_info = users_first_page.get("pageInfo") or {}
+        users_total = int(
+            page_info.get("results") or len(users_first_page.get("results") or [])
+        )
+
+    return {
+        "configured": True,
+        "reachable": reachable,
+        "requests": request_count,
+        "issues": issues,
+        "users_total": users_total,
+    }
