@@ -1431,7 +1431,7 @@ function DownloadsCard() {
       {visibleRows.length === 0 ? (
         <EmptyHint text={t("dashboard.charts.noData", "No data available")} />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 w-full justify-items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-x-2 gap-y-3 w-full justify-items-center">
           {visibleRows.map((r) => {
             const idle = Math.max(0, r.total - r.active - r.queued - r.stuck);
             return (
@@ -1446,8 +1446,8 @@ function DownloadsCard() {
                     { value: r.stuck, color: "#ef4444" },
                     { value: idle, color: "#94a3b8" },
                   ]}
-                  size={110}
-                  thickness={12}
+                  size={76}
+                  thickness={10}
                   centerLabel={r.total}
                 />
                 <div className="min-w-0 w-full text-center">
