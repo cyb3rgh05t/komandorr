@@ -810,6 +810,21 @@ export function VpnCard({
     0,
   );
 
+  // Collect client labels (dependent container names) grouped by VPN parent
+  const clientGroups = Object.entries(depsMap || {})
+    .map(([parentId, deps]) => {
+      const parent = containers.find((c) => c.id === parentId);
+      const parentName =
+        parent?.name || parent?.docker_name || parent?.vpn_provider || "VPN";
+      const names = (Array.isArray(deps) ? deps : [])
+        .map(
+          (d) => d?.name || d?.docker_name || d?.container_name || d?.id || "",
+        )
+        .filter(Boolean);
+      return { parentId, parentName, names };
+    })
+    .filter((g) => g.names.length > 0);
+
   return (
     <div
       className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full min-h-0 overflow-auto"
@@ -903,6 +918,51 @@ export function VpnCard({
           color="#f59e0b"
         />
       </div>
+
+      {clientGroups.length > 0 && (
+        <div className="w-full flex flex-col gap-1.5 shrink-0">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted font-semibold">
+              {t("dashboard.charts.clients", "Clients")}
+            </span>
+            <span className="text-[10px] text-theme-text-muted">{clients}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            {clientGroups.map((g) => (
+              <div
+                key={`vpn-clients-${g.parentId}`}
+                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
+              >
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-[11px] font-semibold text-theme-text truncate">
+                    {g.parentName}
+                  </span>
+                  <span
+                    className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                    style={{
+                      color: "#f59e0b",
+                      backgroundColor: "rgba(245, 158, 11, 0.15)",
+                    }}
+                  >
+                    {g.names.length}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {g.names.map((n) => (
+                    <span
+                      key={`${g.parentId}-${n}`}
+                      className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-theme bg-theme-card text-theme-text truncate max-w-full"
+                      title={n}
+                    >
+                      {n}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2 mt-auto shrink-0">
         {instances.length || 1} {t("dashboard.charts.instances", "instance(s)")}
@@ -2166,16 +2226,41 @@ function AutoscanCard() {
 
   const max = Math.max(1, queue, processed, failed);
 
-  // Per-instance latest scan record (for Recent Scans minicards)
-  const recentScans = instances
-    .map((inst, i) => {
+  // Latest scan record PER TARGET (across all selected instances)
+  const recentScans = (() => {
+    const byTarget = new Map();
+    instances.forEach((inst, i) => {
       const id = inst?.id ?? inst?.instance_id ?? inst?.name ?? `as-${i}`;
       const name = inst?.name || inst?.id || `Instance ${i + 1}`;
       const hist = Array.isArray(inst?.history) ? inst.history : [];
-      const latest = hist[0] || null;
-      return { id, name, latest };
-    })
-    .filter((r) => r.latest);
+      hist.forEach((h) => {
+        const rawTarget =
+          h?.target || h?.target_name || h?.targetType || "unknown";
+        const m = String(rawTarget).match(/^[a-zA-Z0-9_\-]+/);
+        const targetKey = (m ? m[0] : String(rawTarget)).toLowerCase();
+        const ts = new Date(
+          h?.completed_at ||
+            h?.attempted_at ||
+            h?.timestamp ||
+            h?.time ||
+            h?.date ||
+            h?.created_at ||
+            0,
+        ).getTime();
+        const prev = byTarget.get(targetKey);
+        if (!prev || ts > prev._ts) {
+          byTarget.set(targetKey, {
+            target: targetKey,
+            instanceId: id,
+            instanceName: name,
+            latest: h,
+            _ts: ts,
+          });
+        }
+      });
+    });
+    return Array.from(byTarget.values()).sort((a, b) => b._ts - a._ts);
+  })();
 
   const formatScanRelative = (raw) => {
     if (!raw) return "—";
@@ -2255,8 +2340,7 @@ function AutoscanCard() {
               {t("dashboard.charts.recentScans", "Recent Scans")}
             </span>
             <span className="text-[10px] text-theme-text-muted">
-              {recentScans.length}{" "}
-              {t("dashboard.charts.instances", "instance(s)")}
+              {recentScans.length} {t("dashboard.charts.targets", "target(s)")}
             </span>
           </div>
           <div
@@ -2281,20 +2365,17 @@ function AutoscanCard() {
                 h.time ||
                 h.date ||
                 h.created_at;
-              const rawTarget = h.target || h.target_name || h.targetType || "";
-              const targetLabel = (() => {
-                const s = String(rawTarget);
-                const m = s.match(/^[a-zA-Z0-9_\-]+/);
-                return m ? m[0].toLowerCase() : s.toLowerCase();
-              })();
               return (
                 <div
-                  key={`scan-${r.id}`}
+                  key={`scan-${r.target}`}
                   className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
                 >
                   <div className="flex items-center justify-between gap-2 min-w-0">
-                    <span className="text-[11px] font-semibold text-theme-text truncate">
-                      {r.name}
+                    <span
+                      className="text-[11px] font-semibold lowercase truncate"
+                      style={{ color: "#a78bfa" }}
+                    >
+                      {r.target}
                     </span>
                     <span
                       className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
@@ -2322,16 +2403,13 @@ function AutoscanCard() {
                       {formatScanRelative(ts)}
                     </span>
                   </div>
-                  {targetLabel && (
+                  {instances.length > 1 && (
                     <div className="flex items-center gap-1 text-[10px]">
                       <span className="text-theme-text-muted/70">
-                        {t("dashboard.charts.target", "Target")}:
+                        {t("dashboard.charts.instance", "Instance")}:
                       </span>
-                      <span
-                        className="font-semibold lowercase"
-                        style={{ color: "#a78bfa" }}
-                      >
-                        {targetLabel}
+                      <span className="font-semibold text-theme-text truncate">
+                        {r.instanceName}
                       </span>
                     </div>
                   )}
