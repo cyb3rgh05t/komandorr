@@ -827,7 +827,7 @@ export function VpnCard({
 
   return (
     <div
-      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full min-h-0 overflow-auto"
+      className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full min-h-0"
       onClick={() => navigate("/vpn-proxy")}
     >
       <div className="flex items-center justify-between shrink-0">
@@ -2591,20 +2591,23 @@ function VodSyncCard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Crown
-              size={18}
-              className="absolute -top-1 left-1/2 -translate-x-1/2 z-10"
-              style={{ color: "#fbbf24", fill: "#fbbf24" }}
-            />
-            <MiniRing
-              percent={allTimePeak > 0 ? 100 : 0}
-              color="#a78bfa"
-              size={120}
-              thickness={12}
-              centerLabel={allTimePeak}
-            />
-          </div>
+          <MiniRing
+            percent={allTimePeak > 0 ? 100 : 0}
+            color="#a78bfa"
+            size={120}
+            thickness={12}
+            centerLabel={
+              <span className="flex flex-col items-center justify-center leading-none gap-0.5">
+                <Crown
+                  size={16}
+                  style={{ color: "#fbbf24", fill: "#fbbf24" }}
+                />
+                <span className="text-2xl font-bold text-theme-text leading-none">
+                  {allTimePeak}
+                </span>
+              </span>
+            }
+          />
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
               {t("dashboard.charts.highestPeak", "Highest Peak")}
