@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from app.models.storage import StorageUpdate, StorageDataPoint
 from app.services.monitor import monitor
+from app.services.redis_cache import redis_cached
 from app.utils.logger import logger
 from datetime import datetime, timezone
 
@@ -129,6 +130,7 @@ async def get_current_storage(service_id: str):
 
 
 @router.get("/summary")
+@redis_cached("storage:summary", ttl_seconds=15)
 async def get_storage_summary():
     """Get storage summary for all services"""
     services = monitor.get_all_services()

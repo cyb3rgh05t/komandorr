@@ -6,6 +6,7 @@ from datetime import datetime
 from ..middleware.auth import require_auth
 from ..config import settings
 from ..utils.logger import logger
+from ..services.redis_cache import redis_cached
 
 router = APIRouter(prefix="/api/arr-activity", tags=["arr-activity"])
 
@@ -118,6 +119,7 @@ def load_arr_config():
 
 
 @router.get("/queue")
+@redis_cached("arr:queue", ttl_seconds=5)
 async def get_combined_queue(username: str = Depends(require_auth)):
     """
     Get combined download queue from all configured *arr services
@@ -163,6 +165,7 @@ async def get_combined_queue(username: str = Depends(require_auth)):
 
 
 @router.get("/queue/status")
+@redis_cached("arr:queue:status", ttl_seconds=5)
 async def get_queue_status(username: str = Depends(require_auth)):
     """
     Get queue status summary from all configured *arr services

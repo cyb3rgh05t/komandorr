@@ -4,6 +4,7 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
+from app.services.redis_cache import redis_cached
 
 router = APIRouter(prefix="/api/vpn-proxy", tags=["vpn-proxy"])
 
@@ -133,6 +134,7 @@ async def vpn_proxy_status(
 
 
 @router.get("/containers")
+@redis_cached("vpn:containers", ttl_seconds=10)
 async def get_containers(
     vpn_id: Optional[str] = Query(None),
     username: str = Depends(require_auth),
@@ -144,6 +146,7 @@ async def get_containers(
 
 
 @router.get("/containers/vpn-info-batch")
+@redis_cached("vpn:info-batch", ttl_seconds=10)
 async def get_vpn_info_batch(
     vpn_id: Optional[str] = Query(None),
     username: str = Depends(require_auth),
@@ -166,6 +169,7 @@ async def get_dependents(
 
 
 @router.get("/containers/dependents-batch")
+@redis_cached("vpn:dependents-batch", ttl_seconds=10)
 async def get_dependents_batch(
     vpn_id: Optional[str] = Query(None),
     username: str = Depends(require_auth),

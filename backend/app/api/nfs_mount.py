@@ -5,6 +5,7 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
+from app.services.redis_cache import redis_cached
 
 router = APIRouter(prefix="/api/nfs-mount", tags=["nfs-mount"])
 
@@ -135,6 +136,7 @@ async def _check_one_status(inst: dict) -> dict:
 
 
 @router.get("/status")
+@redis_cached("nfs:status", ttl_seconds=20)
 async def nfs_mount_status(username: str = Depends(require_auth)):
     """Check status of all NFS Mount Manager instances in parallel."""
     instances = get_nfs_mount_instances()
@@ -150,6 +152,7 @@ async def nfs_mount_status(username: str = Depends(require_auth)):
 
 
 @router.get("/dashboard")
+@redis_cached("nfs:dashboard", ttl_seconds=20)
 async def get_dashboard(username: str = Depends(require_auth)):
     """Get combined dashboard data from all NFS Mount Manager instances in parallel."""
     instances = get_nfs_mount_instances()

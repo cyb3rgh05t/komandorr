@@ -35,11 +35,19 @@ import "./i18n";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Always consider data stale (rely on page-specific settings)
-      gcTime: 300000, // Keep unused data in cache for 5 minutes (renamed from cacheTime)
-      refetchOnWindowFocus: false, // Don't refetch on window focus
-      refetchOnMount: false, // Don't refetch on mount if we have data
-      refetchIntervalInBackground: false, // Pause polling when tab is hidden
+      // Daten gelten 10s als "fresh" → Navigationen zwischen Seiten zeigen sofort gecachten Stand,
+      // kein Refetch wenn der gleiche Key in mehreren Komponenten parallel angefragt wird.
+      staleTime: 10_000,
+      // Cache 30 min lang behalten, auch wenn keine Komponente sie aktiv nutzt → instant beim Zurücknavigieren.
+      gcTime: 30 * 60_000,
+      // Beim Mount NICHT neu fetchen wenn Daten noch frisch sind (siehe staleTime).
+      refetchOnMount: true,
+      // Beim Tab-Focus refetchen NUR wenn die Daten stale sind → fühlt sich live an, kein Burst.
+      refetchOnWindowFocus: true,
+      // Polling läuft auch im Hintergrund weiter → Dashboard ist beim Zurückkehren sofort aktuell.
+      refetchIntervalInBackground: true,
+      // Während eines Refetches die alten Daten weiter anzeigen statt Spinner zu zeigen.
+      placeholderData: (previousData) => previousData,
       retry: (failureCount, error) => {
         // Never retry 401 unauthorized errors
         if (error?.status === 401) return false;

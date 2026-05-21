@@ -5,6 +5,7 @@ import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
 from app.utils.logger import logger
+from app.services.redis_cache import redis_cached
 
 router = APIRouter(prefix="/api/posterizarr", tags=["posterizarr"])
 
@@ -156,6 +157,7 @@ async def test_posterizarr_connection(
 
 
 @router.get("/dashboard")
+@redis_cached("posterizarr:dashboard", ttl_seconds=10)
 async def get_dashboard(
     instance_id: Optional[str] = Query(None),
     username: str = Depends(require_auth),

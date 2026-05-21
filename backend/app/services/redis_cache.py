@@ -245,3 +245,63 @@ def cache_delete(key: str) -> bool:
 def cache_clear() -> bool:
     """Clear all cache keys (wrapper for RedisCache.clear)"""
     return redis_cache.clear()
+
+
+def redis_cached(key_prefix: str, ttl_seconds: int = 10):
+    """
+    Decorator: cache the return value of an async endpoint in Redis.
+
+    The cache key is built from `key_prefix` + sorted query/path kwargs so
+    that different instance_id / vpn_id / arr_id values are cached separately.
+
+    Usage:
+        @router.get("/queue")
+        @redis_cached("arr:queue", ttl_seconds=5)
+        async def get_queue(arr_id: str | None = Query(None)):
+            ...
+    """
+    import functools
+    import asyncio
+
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Build a stable cache suffix from kwargs (FastAPI passes query/path as kwargs).
+            parts = []
+            for k in sorted(kwargs.keys()):
+                v = kwargs[k]
+                if v is None or v == "":
+                    continue
+                # Skip non-serialisable deps (Depends() injections)
+                if hasattr(v, "__class__") and v.__class__.__name__ in (
+                    "AsyncSession",
+                    "Session",
+                    "Request",
+                    "Response",
+                ):
+                    continue
+                parts.append(f"{k}={v}")
+            suffix = ":" + "|".join(parts) if parts else ""
+            key = f"{key_prefix}{suffix}"
+
+            cached = cache_get(key)
+            if cached is not None:
+                return cached
+
+            result = await func(*args, **kwargs)
+
+            # Only cache successful (non-error) responses
+            try:
+                is_error = (
+                    isinstance(result, dict)
+                    and result.get("error") is True
+                )
+            except Exception:
+                is_error = False
+            if not is_error:
+                cache_set(key, result, ttl_seconds=ttl_seconds)
+            return result
+
+        return wrapper
+
+    return decorator
