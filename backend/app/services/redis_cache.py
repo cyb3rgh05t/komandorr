@@ -292,10 +292,7 @@ def redis_cached(key_prefix: str, ttl_seconds: int = 10):
 
             # Only cache successful (non-error) responses
             try:
-                is_error = (
-                    isinstance(result, dict)
-                    and result.get("error") is True
-                )
+                is_error = isinstance(result, dict) and result.get("error") is True
             except Exception:
                 is_error = False
             if not is_error:

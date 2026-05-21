@@ -770,10 +770,10 @@ export default function Sidebar() {
         `}
       >
         <div className="flex flex-col h-full">
-          {/* Logo - Hidden when collapsed on tablet */}
+          {/* Logo - Hidden when collapsed on tablet, but keep space for hamburger toggle */}
           <div
             className={`flex items-center justify-center overflow-hidden transition-all ${
-              isOpen ? "p-4 h-20" : "md:p-0 md:h-0 2xl:p-4 2xl:h-20"
+              isOpen ? "p-4 h-20" : "md:p-0 md:h-14 2xl:p-4 2xl:h-20"
             }`}
           >
             <img

@@ -26,6 +26,7 @@ const CircularProgress = ({
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
   const isSmall = size <= 80;
+  const isTiny = size <= 55;
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -66,13 +67,13 @@ const CircularProgress = ({
           <>
             {label && (
               <span
-                className={`font-medium text-theme-text-muted ${isSmall ? "text-[9px]" : "text-xs"} uppercase tracking-wider`}
+                className={`font-medium text-theme-text-muted ${isTiny ? "text-[8px]" : isSmall ? "text-[9px]" : "text-xs"} uppercase tracking-wider`}
               >
                 {label}
               </span>
             )}
             <div
-              className={`font-bold text-theme-text ${isSmall ? "text-lg" : "text-4xl"}`}
+              className={`font-bold text-theme-text ${isTiny ? "text-xs" : isSmall ? "text-sm" : "text-3xl"}`}
             >
               {percentage}%
             </div>
@@ -367,7 +368,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
         )}
 
         {/* Cards Container */}
-        <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 xl:gap-10 flex-1 overflow-hidden">
+        <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 flex-1 overflow-hidden">
           {topServices.map((service, index) => {
             const serviceBandwidth =
               (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
@@ -428,21 +429,21 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                     color={colorScheme.primary}
                     size={circleSize.main}
                   >
-                    <span className="text-[9px] sm:text-[10px] font-medium text-theme-text-muted uppercase tracking-wider">
+                    <span className="text-[8px] sm:text-[9px] font-medium text-theme-text-muted uppercase tracking-wider">
                       Traffic
                     </span>
-                    <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-text">
+                    <div className="text-base sm:text-lg lg:text-2xl font-bold text-theme-text leading-tight">
                       {percentage}%
                     </div>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <ArrowUp className="w-2.5 h-2.5 text-blue-400" />
-                      <span className="font-mono font-semibold text-[9px] sm:text-[10px] text-blue-400">
+                      <ArrowUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-blue-400" />
+                      <span className="font-mono font-semibold text-[8px] sm:text-[9px] text-blue-400">
                         {formatBandwidth(service.bandwidth_up || 0)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <ArrowDown className="w-2.5 h-2.5 text-green-400" />
-                      <span className="font-mono font-semibold text-[9px] sm:text-[10px] text-green-400">
+                      <ArrowDown className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-green-400" />
+                      <span className="font-mono font-semibold text-[8px] sm:text-[9px] text-green-400">
                         {formatBandwidth(service.bandwidth_down || 0)}
                       </span>
                     </div>
@@ -461,15 +462,15 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
                 {/* Service Name */}
                 <div className="text-center mb-1">
-                  <div className="text-sm sm:text-base font-semibold text-theme-text truncate group-hover:text-theme-primary transition-colors max-w-[180px] mx-auto">
+                  <div className="text-xs sm:text-sm lg:text-base font-semibold text-theme-text truncate group-hover:text-theme-primary transition-colors max-w-[180px] mx-auto">
                     {service.name}
                   </div>
                 </div>
 
                 {/* Total Traffic */}
                 <div className="flex items-center justify-center gap-1">
-                  <Activity className="w-3 h-3 text-purple-400" />
-                  <span className="font-mono font-semibold text-xs sm:text-sm text-purple-400">
+                  <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-400" />
+                  <span className="font-mono font-semibold text-[10px] sm:text-xs text-purple-400">
                     {formatBandwidth(serviceBandwidth)}
                   </span>
                 </div>
