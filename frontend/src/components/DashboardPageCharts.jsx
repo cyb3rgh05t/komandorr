@@ -1365,6 +1365,13 @@ function DownloadsCard() {
     staleTime: 5000,
   });
 
+  const { data: historyData } = useQuery({
+    queryKey: ["dash-arr-history"],
+    queryFn: () => arrActivityApi.getHistory(1, 20).catch(() => null),
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
   // /api/arr-activity/queue returns { [instanceId]: { name, type, records, totalRecords, error } }
   const allRows = useMemo(() => {
     if (!data || typeof data !== "object") return [];
@@ -1439,6 +1446,61 @@ function DownloadsCard() {
   const totalStuck = rows.reduce((a, r) => a + r.stuck, 0);
   const instanceCount = rows.length;
 
+  // Per-instance recent history (latest record + counts)
+  const historyRows = useMemo(() => {
+    if (!historyData || typeof historyData !== "object") return [];
+    return Object.entries(historyData)
+      .filter(([, s]) => s && typeof s === "object")
+      .map(([id, s]) => {
+        const records = Array.isArray(s.records) ? s.records : [];
+        let grabbed = 0;
+        let imported = 0;
+        let failed = 0;
+        records.forEach((r) => {
+          const et = (r?.eventType || "").toLowerCase();
+          if (et === "grabbed") grabbed++;
+          else if (et.includes("imported")) imported++;
+          else if (et.includes("failed") || et.includes("ignored")) failed++;
+        });
+        const latest = records[0] || null;
+        return {
+          id,
+          name: s.name || s.type || id,
+          total: Number(s.totalRecords || records.length),
+          grabbed,
+          imported,
+          failed,
+          latest,
+        };
+      })
+      .filter((r) => r.total > 0 || r.latest);
+  }, [historyData]);
+
+  const formatRelative = (iso) => {
+    if (!iso) return "—";
+    const t0 = new Date(iso).getTime();
+    if (!t0 || isNaN(t0)) return "—";
+    const diff = Date.now() - t0;
+    const sec = Math.floor(diff / 1000);
+    if (sec < 60) return `${sec}s`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h`;
+    const d = Math.floor(hr / 24);
+    return `${d}d`;
+  };
+
+  const eventBadge = (et) => {
+    const e = (et || "").toLowerCase();
+    if (e === "grabbed") return { label: "Grabbed", color: "#a78bfa" };
+    if (e.includes("imported")) return { label: "Imported", color: "#22c55e" };
+    if (e.includes("failed")) return { label: "Failed", color: "#ef4444" };
+    if (e.includes("ignored")) return { label: "Ignored", color: "#94a3b8" };
+    if (e.includes("deleted")) return { label: "Deleted", color: "#94a3b8" };
+    return { label: et || "Event", color: "var(--theme-primary)" };
+  };
+
   return (
     <ChartCard
       icon={Download}
@@ -1501,6 +1563,83 @@ function DownloadsCard() {
               </div>
             );
           })}
+        </div>
+      )}
+      {historyRows.length > 0 && (
+        <div className="w-full flex flex-col gap-1.5">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted font-semibold">
+              {t("dashboard.charts.recentHistory", "Recent History")}
+            </span>
+            <span className="text-[10px] text-theme-text-muted">
+              {historyRows.reduce((a, r) => a + r.total, 0)}{" "}
+              {t("dashboard.charts.records", "records")}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {historyRows.slice(0, 6).map((h) => {
+              const badge = h.latest ? eventBadge(h.latest.eventType) : null;
+              const title =
+                h.latest?.sourceTitle ||
+                h.latest?.movie?.title ||
+                h.latest?.series?.title ||
+                "—";
+              return (
+                <div
+                  key={`hist-${h.id}`}
+                  className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
+                >
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <span className="text-[11px] font-semibold text-theme-text truncate">
+                      {h.name}
+                    </span>
+                    {badge && (
+                      <span
+                        className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{
+                          color: badge.color,
+                          backgroundColor: `${badge.color}20`,
+                        }}
+                      >
+                        {badge.label}
+                      </span>
+                    )}
+                  </div>
+                  {h.latest ? (
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <span
+                        className="text-[10px] text-theme-text-muted truncate"
+                        title={title}
+                      >
+                        {title}
+                      </span>
+                      <span className="text-[10px] text-theme-text-muted shrink-0">
+                        {formatRelative(h.latest.date)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-theme-text-muted">
+                      {t("dashboard.charts.noData", "No data available")}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-2 text-[10px] font-medium">
+                    <span style={{ color: "#a78bfa" }} title="Grabbed">
+                      ↓ {h.grabbed}
+                    </span>
+                    <span style={{ color: "#22c55e" }} title="Imported">
+                      ✓ {h.imported}
+                    </span>
+                    <span style={{ color: "#ef4444" }} title="Failed">
+                      ✕ {h.failed}
+                    </span>
+                    <span className="text-theme-text-muted ml-auto">
+                      {h.total}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       <StatGrid
