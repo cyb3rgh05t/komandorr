@@ -376,24 +376,59 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
                   Recent Logs
                 </h3>
                 <span className="text-xs text-theme-text-muted font-mono">
-                  Last {Math.min(logs.length, 50)} entries
+                  Last {Math.min(logs.length, 200)} entries
                 </span>
               </div>
               <div
-                className="max-h-[28rem] overflow-auto bg-theme-bg/40"
+                className="max-h-[28rem] overflow-auto bg-[#0b0f17]"
                 ref={(el) => {
                   if (el) el.scrollTop = el.scrollHeight;
                 }}
               >
-                {logs.slice(-50).map((line, i) => {
-                  const raw = String(line || "");
-                  // Try to extract: timestamp [LEVEL] message
-                  const m = raw.match(
-                    /^([\d\-/: T.,Z+]+?)\s+(?:\[)?(INFO|DEBUG|WARN|WARNING|ERROR|TRACE|FATAL)(?:\])?\s+(.*)$/i,
-                  );
-                  const ts = m ? m[1].trim() : "";
-                  const level = (m ? m[2] : "").toUpperCase();
-                  const msg = m ? m[3] : raw;
+                {logs.slice(-200).map((entry, i) => {
+                  // Logs may be plain string OR object {timestamp,level,message,...}
+                  let ts = "";
+                  let level = "";
+                  let msg = "";
+                  if (entry && typeof entry === "object") {
+                    ts =
+                      entry.timestamp ||
+                      entry.time ||
+                      entry.date ||
+                      entry.created_at ||
+                      "";
+                    level = String(
+                      entry.level || entry.severity || "",
+                    ).toUpperCase();
+                    msg =
+                      entry.message ||
+                      entry.msg ||
+                      entry.text ||
+                      entry.line ||
+                      "";
+                    if (!msg) {
+                      const {
+                        timestamp,
+                        time,
+                        date,
+                        created_at,
+                        level: _l,
+                        severity,
+                        ...rest
+                      } = entry;
+                      msg = Object.keys(rest).length
+                        ? JSON.stringify(rest)
+                        : "";
+                    }
+                  } else {
+                    const raw = String(entry || "");
+                    const m = raw.match(
+                      /^([\d\-/: T.,Z+]+?)\s+(?:\[)?(INFO|DEBUG|WARN|WARNING|ERROR|TRACE|FATAL)(?:\])?\s+(.*)$/i,
+                    );
+                    ts = m ? m[1].trim() : "";
+                    level = m ? m[2].toUpperCase() : "";
+                    msg = m ? m[3] : raw;
+                  }
                   const levelStyle = (() => {
                     switch (level) {
                       case "ERROR":
@@ -411,14 +446,34 @@ function InstanceSection({ instance, tabsSlot, subTab }) {
                         return "bg-theme-hover text-theme-text-muted border-theme";
                     }
                   })();
+                  const tsDisplay = (() => {
+                    if (!ts) return "";
+                    try {
+                      const d = new Date(ts);
+                      if (!isNaN(d.getTime())) {
+                        return d.toLocaleString([], {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: false,
+                        });
+                      }
+                    } catch {
+                      /* fallthrough */
+                    }
+                    return String(ts);
+                  })();
                   return (
                     <div
                       key={i}
                       className="flex items-center gap-3 px-4 py-1 text-xs font-mono leading-tight"
                     >
-                      {ts && (
+                      {tsDisplay && (
                         <span className="text-theme-text-muted shrink-0">
-                          {ts}
+                          {tsDisplay}
                         </span>
                       )}
                       {level && (
