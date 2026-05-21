@@ -290,13 +290,23 @@ function MiniRing({
       {centerLabel != null && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
-            className={`font-bold text-theme-text leading-none ${
-              size >= 100
-                ? "text-2xl"
+            className={`font-bold text-theme-text leading-none ${(() => {
+              const isShort =
+                typeof centerLabel === "number" ||
+                (typeof centerLabel === "string" && centerLabel.length <= 4);
+              if (isShort) {
+                return size >= 100
+                  ? "text-2xl"
+                  : size >= 80
+                    ? "text-base"
+                    : "text-[11px]";
+              }
+              return size >= 100
+                ? "text-sm"
                 : size >= 80
-                  ? "text-base"
-                  : "text-[11px]"
-            }`}
+                  ? "text-xs"
+                  : "text-[10px]";
+            })()}`}
           >
             {centerLabel}
           </span>
@@ -353,13 +363,23 @@ function MiniMulti({ segments, size = 76, thickness = 9, centerLabel }) {
       {centerLabel != null && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
-            className={`font-bold text-theme-text leading-none ${
-              size >= 100
-                ? "text-2xl"
+            className={`font-bold text-theme-text leading-none ${(() => {
+              const isShort =
+                typeof centerLabel === "number" ||
+                (typeof centerLabel === "string" && centerLabel.length <= 4);
+              if (isShort) {
+                return size >= 100
+                  ? "text-2xl"
+                  : size >= 80
+                    ? "text-base"
+                    : "text-[11px]";
+              }
+              return size >= 100
+                ? "text-sm"
                 : size >= 80
-                  ? "text-base"
-                  : "text-[11px]"
-            }`}
+                  ? "text-xs"
+                  : "text-[10px]";
+            })()}`}
           >
             {centerLabel}
           </span>
