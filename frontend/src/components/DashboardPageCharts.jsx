@@ -2693,22 +2693,28 @@ function ServersCard() {
     staleTime: 5000,
   });
 
-  const trafficServices = useMemo(() => {
-    const list = Array.isArray(trafficSummary?.services)
-      ? trafficSummary.services
-      : [];
-    return [...list].sort(
-      (a, b) =>
-        (Number(b?.bandwidth_up) || 0) +
-        (Number(b?.bandwidth_down) || 0) -
-        ((Number(a?.bandwidth_up) || 0) + (Number(a?.bandwidth_down) || 0)),
-    );
+  const trafficTotals = useMemo(() => {
+    const s = trafficSummary || {};
+    return {
+      bwUp: Number(s.total_bandwidth_up) || 0,
+      bwDown: Number(s.total_bandwidth_down) || 0,
+      totalUp: Number(s.total_traffic_up) || 0,
+      totalDown: Number(s.total_traffic_down) || 0,
+      services: Number(s.services_with_traffic) || 0,
+    };
   }, [trafficSummary]);
 
   const formatBandwidth = (mbps) => {
     const v = Number(mbps) || 0;
     if (v < 1) return `${(v * 1024).toFixed(1)} KB/s`;
     return `${v.toFixed(1)} MB/s`;
+  };
+
+  const formatTotal = (gb) => {
+    const v = Number(gb) || 0;
+    if (v >= 1024) return `${(v / 1024).toFixed(2)} TB`;
+    if (v < 1) return `${(v * 1024).toFixed(1)} MB`;
+    return `${v.toFixed(2)} GB`;
   };
 
   const total = services.length;
@@ -2770,49 +2776,44 @@ function ServersCard() {
           </span>
         </div>
       </div>
-      {trafficServices.length > 0 && (
+      {trafficTotals.services > 0 && (
         <div className="w-full flex flex-col gap-1.5">
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] uppercase tracking-wide text-theme-text-muted font-semibold">
-              {t("dashboard.charts.liveTraffic", "Live Traffic")}
+              {t("dashboard.charts.globalTraffic", "Global Traffic")}
             </span>
             <span className="text-[10px] text-theme-text-muted">
-              {trafficServices.length}{" "}
+              {trafficTotals.services}{" "}
               {t("dashboard.charts.services", "service(s)")}
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {trafficServices.slice(0, 6).map((s) => (
-              <div
-                key={`traffic-${s.id}`}
-                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
-              >
-                <span
-                  className="text-[11px] font-semibold text-theme-text truncate"
-                  title={s.name || s.id}
-                >
-                  {s.name || s.id}
-                </span>
-                <div className="flex items-center justify-between gap-2 text-[10px] font-medium">
-                  <span
-                    className="flex items-center gap-1"
-                    style={{ color: "#22c55e" }}
-                    title={t("dashboard.charts.upload", "Upload")}
-                  >
-                    <ArrowUp size={11} />
-                    {formatBandwidth(s.bandwidth_up)}
-                  </span>
-                  <span
-                    className="flex items-center gap-1"
-                    style={{ color: "#22d3ee" }}
-                    title={t("dashboard.charts.download", "Download")}
-                  >
-                    <ArrowDown size={11} />
-                    {formatBandwidth(s.bandwidth_down)}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
+              <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-theme-text-muted">
+                <ArrowUp size={11} style={{ color: "#22c55e" }} />
+                {t("dashboard.charts.upload", "Upload")}
+              </span>
+              <span className="text-sm font-bold" style={{ color: "#22c55e" }}>
+                {formatBandwidth(trafficTotals.bwUp)}
+              </span>
+              <span className="text-[10px] text-theme-text-muted">
+                {t("dashboard.charts.totalSent", "Total")}{" "}
+                {formatTotal(trafficTotals.totalUp)}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
+              <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-theme-text-muted">
+                <ArrowDown size={11} style={{ color: "#22d3ee" }} />
+                {t("dashboard.charts.download", "Download")}
+              </span>
+              <span className="text-sm font-bold" style={{ color: "#22d3ee" }}>
+                {formatBandwidth(trafficTotals.bwDown)}
+              </span>
+              <span className="text-[10px] text-theme-text-muted">
+                {t("dashboard.charts.totalReceived", "Total")}{" "}
+                {formatTotal(trafficTotals.totalDown)}
+              </span>
+            </div>
           </div>
         </div>
       )}
