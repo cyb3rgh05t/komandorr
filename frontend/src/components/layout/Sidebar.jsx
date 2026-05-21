@@ -742,7 +742,9 @@ export default function Sidebar() {
       {/* Tablet/Desktop Toggle Button - Shows on md and up, hides on 2xl+ */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="hidden md:block 2xl:hidden fixed top-4 left-4 z-50 p-2 bg-theme-card rounded-lg border border-theme text-theme-text hover:bg-theme-hover transition-colors"
+        className={`hidden md:block 2xl:hidden fixed z-50 p-2 bg-theme-card rounded-lg border border-theme text-theme-text hover:bg-theme-hover transition-colors ${
+          isOpen ? "top-4 left-4" : "top-[10px] left-[14px]"
+        }`}
         title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
       >
         {isOpen ? <X size={20} /> : <Menu size={20} />}
