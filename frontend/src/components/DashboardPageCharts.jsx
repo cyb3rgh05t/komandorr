@@ -1551,13 +1551,13 @@ function UploadsCard() {
       onClick={() => navigate("/uploader")}
       footer={`${total} ${t("dashboard.charts.items", "items")}`}
     >
-      <div className="flex items-center justify-around w-full px-2 sm:px-4">
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         <div className="flex flex-col items-center gap-2">
           <MiniRing
             percent={total > 0 ? (active / total) * 100 : 0}
             color="#22d3ee"
-            size={130}
-            thickness={16}
+            size={110}
+            thickness={14}
             centerLabel={active}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1568,8 +1568,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (queued / total) * 100 : 0}
             color="#a78bfa"
-            size={130}
-            thickness={16}
+            size={110}
+            thickness={14}
             centerLabel={queued}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1580,8 +1580,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (failed / total) * 100 : 0}
             color="#ef4444"
-            size={130}
-            thickness={16}
+            size={110}
+            thickness={14}
             centerLabel={failed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
