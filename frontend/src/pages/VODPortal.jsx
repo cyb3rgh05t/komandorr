@@ -89,6 +89,7 @@ export default function VODPortal() {
 
     // Cache is stale or doesn't exist, fetch fresh data
     console.log("[VODPortal] Calling fetchUsers");
+    fetchUsers();
     fetchUserRequests();
   }, []);
 

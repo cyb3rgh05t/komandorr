@@ -772,15 +772,15 @@ export default function Sidebar() {
         <div className="flex flex-col h-full">
           {/* Logo - Hidden when collapsed on tablet */}
           <div
-            className={`flex items-center justify-center p-4 h-20 overflow-hidden transition-all ${
-              isOpen ? "" : "md:p-2 2xl:p-4"
+            className={`flex items-center justify-center overflow-hidden transition-all ${
+              isOpen ? "p-4 h-20" : "md:p-0 md:h-0 2xl:p-4 2xl:h-20"
             }`}
           >
             <img
               src="/logo.svg"
               alt="Komandorr Logo"
-              className={`h-12 w-auto object-contain transition-all ${
-                isOpen ? "" : "md:h-8 2xl:h-12"
+              className={`w-auto object-contain transition-all ${
+                isOpen ? "h-12" : "md:h-0 2xl:h-12"
               }`}
             />
           </div>
@@ -847,7 +847,17 @@ export default function Sidebar() {
                   return (
                     <div key={item.label}>
                       <button
-                        onClick={() => toggleTab(item.tabName)}
+                        onClick={() => {
+                          if (!isOpen) {
+                            setIsOpen(true);
+                            setExpandedTabs((prev) => ({
+                              ...prev,
+                              [item.tabName]: true,
+                            }));
+                          } else {
+                            toggleTab(item.tabName);
+                          }
+                        }}
                         className={`
                           w-full flex items-center gap-3 rounded-lg
                           transition-all duration-200

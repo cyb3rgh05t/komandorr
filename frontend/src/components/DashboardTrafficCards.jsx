@@ -100,52 +100,52 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
         main = 130;
         side = 55;
       } else if (width < 768) {
-        cards = 2;
-        main = 110;
-        side = 48;
+        cards = 1;
+        main = 120;
+        side = 52;
       } else if (width < 1024) {
         cards = 2;
         main = 120;
         side = 52;
       } else if (width < 1280) {
-        cards = 3;
-        main = 110;
-        side = 48;
+        cards = 2;
+        main = 120;
+        side = 52;
       } else if (width < 1536) {
-        cards = 4;
-        main = 110;
-        side = 48;
+        cards = 3;
+        main = 115;
+        side = 50;
       } else if (width < 1920) {
-        cards = 5;
+        cards = 4;
         main = 120;
         side = 52;
       } else if (width < 2560) {
-        cards = 6;
+        cards = 5;
         main = 130;
         side = 55;
       } else if (width < 3440) {
         // Ultrawide 1440p (3440x1440)
-        cards = 8;
+        cards = 7;
         main = 140;
         side = 60;
       } else if (width < 3840) {
         // Between ultrawide and 4K
-        cards = 9;
+        cards = 8;
         main = 145;
         side = 62;
       } else if (width < 5120) {
         // 4K (3840x2160)
-        cards = 10;
+        cards = 9;
         main = 150;
         side = 65;
       } else if (width < 6016) {
         // Super ultrawide (5120x1440)
-        cards = 12;
+        cards = 11;
         main = 155;
         side = 68;
       } else {
         // 6K+ displays
-        cards = 14;
+        cards = 13;
         main = 160;
         side = 70;
       }

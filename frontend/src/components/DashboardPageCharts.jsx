@@ -516,7 +516,7 @@ function PlexCard() {
         "instance(s)",
       )}`}
     >
-      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         {perInstance.map((inst) => {
           const isActive = selectedId === inst.id;
           return (
@@ -530,7 +530,7 @@ function PlexCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "hover:ring-2 hover:ring-theme-primary hover:bg-theme-hover"
               }`}
             >
               <MiniMulti
@@ -994,7 +994,7 @@ function NfsCard() {
         "instance(s)",
       )}`}
     >
-      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         {perInstance.map((inst) => {
           const isActive = selectedId === inst.id;
           return (
@@ -1008,7 +1008,7 @@ function NfsCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "hover:ring-2 hover:ring-theme-primary hover:bg-theme-hover"
               }`}
             >
               <div className="flex items-end gap-3">
@@ -1748,7 +1748,7 @@ function PosterizarrCard() {
         "instance(s)",
       )}`}
     >
-      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-3">
+      <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         {perInstance.map((inst) => {
           const isActive = selectedId === inst.id;
           return (
@@ -1762,7 +1762,7 @@ function PosterizarrCard() {
               className={`flex flex-col items-center gap-2 min-w-0 rounded-lg p-1 transition-all cursor-pointer ${
                 isActive
                   ? "ring-2 ring-theme-primary bg-theme-primary/5"
-                  : "hover:ring-2 hover:ring-theme-primary/60 hover:bg-theme-hover/50"
+                  : "hover:ring-2 hover:ring-theme-primary hover:bg-theme-hover"
               }`}
             >
               <MiniMulti
@@ -2601,7 +2601,7 @@ export default function DashboardPageCharts() {
   return (
     <div className="flex flex-col gap-3">
       {/* Card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 xl:gap-5 items-stretch">
         {orderedCards.map(({ id, label, Component }, idx) => (
           <div
             key={id}
