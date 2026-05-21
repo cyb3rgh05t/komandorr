@@ -2587,6 +2587,7 @@ const DEFAULT_DASHBOARD_CARD_ORDER = [
   "uploads",
   "posterizarr",
   "autoscan",
+  "vodPortal",
 ];
 
 const DashboardLayoutContext = createContext(null);
