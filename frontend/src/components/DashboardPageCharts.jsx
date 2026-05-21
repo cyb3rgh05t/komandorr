@@ -721,20 +721,21 @@ export function VpnCard({
               ? `/vpn-proxy/containers/vpn-info-batch?vpn_id=${encodeURIComponent(id)}`
               : "/vpn-proxy/containers/vpn-info-batch";
             const depsUrl = id
-              ? `/vpn-proxy/containers/dependents?vpn_id=${encodeURIComponent(id)}`
-              : "/vpn-proxy/containers/dependents";
-            const [info, deps] = await Promise.all([
+              ? `/vpn-proxy/containers/dependents-batch?vpn_id=${encodeURIComponent(id)}`
+              : "/vpn-proxy/containers/dependents-batch";
+            const [info, depsBatch] = await Promise.all([
               api.get(infoUrl).catch(() => ({})),
-              api.get(depsUrl).catch(() => []),
+              api.get(depsUrl).catch(() => ({})),
             ]);
             return {
               id,
               list: taggedList,
               info: info || {},
-              deps: Array.isArray(deps) ? deps : [],
+              depsBatch:
+                depsBatch && typeof depsBatch === "object" ? depsBatch : {},
             };
           } catch {
-            return { id, list: [], info: {}, deps: [] };
+            return { id, list: [], info: {}, depsBatch: {} };
           }
         }),
       );
@@ -743,21 +744,14 @@ export function VpnCard({
         (acc, r) => Object.assign(acc, r.info || {}),
         {},
       );
+      // Composite key `${instance_id}:${parent.id}` avoids collisions between
+      // VPN proxy instances that share numeric container DB ids.
       const depsMap = {};
       results.forEach((r) => {
-        r.deps.forEach((dep) => {
-          const vpnParent = dep.vpn_container_name || dep.vpn_parent;
-          if (!vpnParent) return;
-          const parent = r.list.find(
-            (c) =>
-              c.name === vpnParent ||
-              c.docker_name === vpnParent ||
-              vpnParent === `gluetun-${c.name}`,
-          );
-          if (parent) {
-            if (!depsMap[parent.id]) depsMap[parent.id] = [];
-            depsMap[parent.id].push(dep);
-          }
+        Object.entries(r.depsBatch || {}).forEach(([cid, deps]) => {
+          if (!Array.isArray(deps) || deps.length === 0) return;
+          const key = `${r.id ?? "_"}:${cid}`;
+          depsMap[key] = deps;
         });
       });
       return { containers, infoMap, depsMap };
@@ -777,13 +771,16 @@ export function VpnCard({
       ? allContainers
       : allContainers.filter((c) => c._instance_id === selectedId);
 
-  // Filter depsMap: only keep entries whose parent container is in filtered list
-  const containerIds = new Set(containers.map((c) => c.id));
+  // Filter depsMap: only keep entries whose parent container is in filtered list.
+  // Keys are composite "<instance_id>:<container_id>".
+  const containerKeys = new Set(
+    containers.map((c) => `${c._instance_id ?? "_"}:${c.id}`),
+  );
   const depsMap =
     selectedId == null
       ? allDepsMap
       : Object.fromEntries(
-          Object.entries(allDepsMap).filter(([k]) => containerIds.has(k)),
+          Object.entries(allDepsMap).filter(([k]) => containerKeys.has(k)),
         );
 
   const countableContainers = containers.filter((c) => {
@@ -812,8 +809,15 @@ export function VpnCard({
 
   // Collect client labels (dependent container names) grouped by VPN parent
   const clientGroups = Object.entries(depsMap || {})
-    .map(([parentId, deps]) => {
-      const parent = containers.find((c) => c.id === parentId);
+    .map(([key, deps]) => {
+      // key = "<instance_id>:<container_id>"
+      const [instId, rawId] = String(key).split(":");
+      const cid = Number(rawId);
+      const parent = containers.find(
+        (c) =>
+          (c._instance_id ?? "_") === instId &&
+          (c.id === cid || String(c.id) === rawId),
+      );
       const parentName =
         parent?.name || parent?.docker_name || parent?.vpn_provider || "VPN";
       const names = (Array.isArray(deps) ? deps : [])
@@ -821,7 +825,7 @@ export function VpnCard({
           (d) => d?.name || d?.docker_name || d?.container_name || d?.id || "",
         )
         .filter(Boolean);
-      return { parentId, parentName, names };
+      return { parentId: key, parentName, names };
     })
     .filter((g) => g.names.length > 0);
 
