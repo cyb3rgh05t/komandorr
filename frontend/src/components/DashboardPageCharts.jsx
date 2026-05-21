@@ -21,6 +21,8 @@ import {
   Scan,
   Server,
   Clapperboard,
+  ArrowUp,
+  ArrowDown,
   RefreshCcw,
   ChevronRight,
   ChevronUp,
@@ -2678,6 +2680,37 @@ function ServersCard() {
     staleTime: 8000,
   });
 
+  const { data: trafficSummary } = useQuery({
+    queryKey: ["dash-services-traffic"],
+    queryFn: async () => {
+      try {
+        return await api.get("/traffic/summary");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 10000,
+    staleTime: 5000,
+  });
+
+  const trafficServices = useMemo(() => {
+    const list = Array.isArray(trafficSummary?.services)
+      ? trafficSummary.services
+      : [];
+    return [...list].sort(
+      (a, b) =>
+        (Number(b?.bandwidth_up) || 0) +
+        (Number(b?.bandwidth_down) || 0) -
+        ((Number(a?.bandwidth_up) || 0) + (Number(a?.bandwidth_down) || 0)),
+    );
+  }, [trafficSummary]);
+
+  const formatBandwidth = (mbps) => {
+    const v = Number(mbps) || 0;
+    if (v < 1) return `${(v * 1024).toFixed(1)} KB/s`;
+    return `${v.toFixed(1)} MB/s`;
+  };
+
   const total = services.length;
   const online = services.filter((s) => s?.status === "online").length;
   const offline = services.filter((s) => s?.status === "offline").length;
@@ -2737,6 +2770,52 @@ function ServersCard() {
           </span>
         </div>
       </div>
+      {trafficServices.length > 0 && (
+        <div className="w-full flex flex-col gap-1.5">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted font-semibold">
+              {t("dashboard.charts.liveTraffic", "Live Traffic")}
+            </span>
+            <span className="text-[10px] text-theme-text-muted">
+              {trafficServices.length}{" "}
+              {t("dashboard.charts.services", "service(s)")}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {trafficServices.slice(0, 6).map((s) => (
+              <div
+                key={`traffic-${s.id}`}
+                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
+              >
+                <span
+                  className="text-[11px] font-semibold text-theme-text truncate"
+                  title={s.name || s.id}
+                >
+                  {s.name || s.id}
+                </span>
+                <div className="flex items-center justify-between gap-2 text-[10px] font-medium">
+                  <span
+                    className="flex items-center gap-1"
+                    style={{ color: "#22c55e" }}
+                    title={t("dashboard.charts.upload", "Upload")}
+                  >
+                    <ArrowUp size={11} />
+                    {formatBandwidth(s.bandwidth_up)}
+                  </span>
+                  <span
+                    className="flex items-center gap-1"
+                    style={{ color: "#22d3ee" }}
+                    title={t("dashboard.charts.download", "Download")}
+                  >
+                    <ArrowDown size={11} />
+                    {formatBandwidth(s.bandwidth_down)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <StatGrid
         tiles={[
           {
