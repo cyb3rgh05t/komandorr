@@ -1144,7 +1144,10 @@
       "totalUsers": "Gesamt Benutzer",
       "plexUsers": "Plex Benutzer",
       "localUsers": "Lokale Benutzer",
-      "adminUsers": "Admin Benutzer"
+      "adminUsers": "Admin Benutzer",
+      "requestsTitle": "Anfragen",
+      "issuesTitle": "Probleme",
+      "totalRequests": "Gesamt"
     },
     "userTypes": {
       "user": "Benutzer",

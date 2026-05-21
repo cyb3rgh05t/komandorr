@@ -1149,7 +1149,10 @@
       "totalUsers": "Total Users",
       "plexUsers": "Plex Users",
       "localUsers": "Local Users",
-      "adminUsers": "Admin Users"
+      "adminUsers": "Admin Users",
+      "requestsTitle": "Requests",
+      "issuesTitle": "Issues",
+      "totalRequests": "Total"
     },
     "userTypes": {
       "user": "User",

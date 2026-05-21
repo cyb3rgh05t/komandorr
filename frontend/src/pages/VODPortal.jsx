@@ -16,6 +16,18 @@ import {
   Shield,
   Crown,
   Trash2,
+  Film,
+  Tv,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  PackageCheck,
+  Inbox,
+  Volume2,
+  Subtitles,
+  HelpCircle,
 } from "lucide-react";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
@@ -25,6 +37,36 @@ import PageHeader from "../components/PageHeader";
 const CACHE_KEY = "overseerr_users_cache";
 const CACHE_TIMESTAMP_KEY = "overseerr_users_cache_timestamp";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const STAT_COLOR_MAP = {
+  cyan: { text: "text-cyan-500", iconBg: "text-cyan-500" },
+  amber: { text: "text-amber-500", iconBg: "text-amber-500" },
+  emerald: { text: "text-emerald-500", iconBg: "text-emerald-500" },
+  violet: { text: "text-violet-500", iconBg: "text-violet-500" },
+  green: { text: "text-green-500", iconBg: "text-green-500" },
+  blue: { text: "text-blue-500", iconBg: "text-blue-500" },
+  purple: { text: "text-purple-500", iconBg: "text-purple-500" },
+  rose: { text: "text-rose-500", iconBg: "text-rose-500" },
+  slate: { text: "text-slate-400", iconBg: "text-slate-400" },
+};
+
+function StatTile({ icon: Icon, color = "cyan", label, value }) {
+  const c = STAT_COLOR_MAP[color] || STAT_COLOR_MAP.cyan;
+  return (
+    <div className="bg-theme-card border border-theme rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1 truncate">
+            <Icon className={`w-3 h-3 ${c.iconBg} shrink-0`} />
+            <span className="truncate">{label}</span>
+          </p>
+          <p className={`text-2xl font-bold mt-1 ${c.text}`}>{value}</p>
+        </div>
+        <Icon className={`w-7 h-7 ${c.iconBg} shrink-0 opacity-80`} />
+      </div>
+    </div>
+  );
+}
 
 export default function VODPortal() {
   const { t } = useTranslation();
@@ -36,6 +78,7 @@ export default function VODPortal() {
   });
   const [loading, setLoading] = useState(false);
   const [overseerrStatus, setOverseerrStatus] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
   const [plexConfigured, setPlexConfigured] = useState(true);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -55,6 +98,7 @@ export default function VODPortal() {
 
     // Check VoDWisharr status and load settings first
     checkOverseerrStatus();
+    fetchDashboardStats();
     loadSettings();
 
     // Load cached data immediately for instant display
@@ -176,6 +220,15 @@ export default function VODPortal() {
       setOverseerrStatus(data);
     } catch (err) {
       console.error("Failed to check VoDWisharr status:", err);
+    }
+  };
+
+  const fetchDashboardStats = async () => {
+    try {
+      const data = await api.get("/overseerr/dashboard");
+      setDashboardStats(data);
+    } catch (err) {
+      console.error("Failed to fetch VoDWisharr dashboard stats:", err);
     }
   };
 
@@ -517,6 +570,115 @@ export default function VODPortal() {
           </div>
         </div>
       </div>
+
+      {/* Requests & Issues Stats (from /overseerr/dashboard) */}
+      {dashboardStats?.configured && dashboardStats?.reachable && (
+        <>
+          {/* Requests */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-theme-text">
+              <PackageCheck className="w-4 h-4 text-theme-primary" />
+              {t("vodPortal.stats.requestsTitle") || "Requests"}
+              <span className="text-xs font-normal text-theme-text-muted">
+                ({dashboardStats.requests?.total ?? 0})
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <StatTile
+                icon={Inbox}
+                color="cyan"
+                label={t("vodPortal.stats.totalRequests") || "Total"}
+                value={dashboardStats.requests?.total ?? 0}
+              />
+              <StatTile
+                icon={Clock}
+                color="amber"
+                label={t("dashboard.charts.pending") || "Pending"}
+                value={dashboardStats.requests?.pending ?? 0}
+              />
+              <StatTile
+                icon={CheckCircle2}
+                color="emerald"
+                label={t("dashboard.charts.approved") || "Approved"}
+                value={dashboardStats.requests?.approved ?? 0}
+              />
+              <StatTile
+                icon={Loader2}
+                color="violet"
+                label={t("dashboard.charts.processing") || "Processing"}
+                value={dashboardStats.requests?.processing ?? 0}
+              />
+              <StatTile
+                icon={PackageCheck}
+                color="green"
+                label={t("dashboard.charts.available") || "Available"}
+                value={dashboardStats.requests?.available ?? 0}
+              />
+              <StatTile
+                icon={Film}
+                color="blue"
+                label={t("dashboard.charts.movies") || "Movies"}
+                value={dashboardStats.requests?.movie ?? 0}
+              />
+              <StatTile
+                icon={Tv}
+                color="purple"
+                label={t("dashboard.charts.tv") || "TV"}
+                value={dashboardStats.requests?.tv ?? 0}
+              />
+            </div>
+          </div>
+
+          {/* Issues */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-theme-text">
+              <AlertCircle className="w-4 h-4 text-rose-500" />
+              {t("vodPortal.stats.issuesTitle") || "Issues"}
+              <span className="text-xs font-normal text-theme-text-muted">
+                ({dashboardStats.issues?.total ?? 0})
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <StatTile
+                icon={AlertCircle}
+                color="rose"
+                label={t("dashboard.charts.openIssues") || "Open"}
+                value={dashboardStats.issues?.open ?? 0}
+              />
+              <StatTile
+                icon={CheckCircle2}
+                color="emerald"
+                label={t("dashboard.charts.closedIssues") || "Closed"}
+                value={dashboardStats.issues?.closed ?? 0}
+              />
+              <StatTile
+                icon={Film}
+                color="violet"
+                label={t("dashboard.charts.videoIssues") || "Video"}
+                value={dashboardStats.issues?.video ?? 0}
+              />
+              <StatTile
+                icon={Volume2}
+                color="amber"
+                label={t("dashboard.charts.audioIssues") || "Audio"}
+                value={dashboardStats.issues?.audio ?? 0}
+              />
+              <StatTile
+                icon={Subtitles}
+                color="cyan"
+                label={t("dashboard.charts.subtitleIssues") || "Subs"}
+                value={dashboardStats.issues?.subtitles ?? 0}
+              />
+              <StatTile
+                icon={HelpCircle}
+                color="slate"
+                label={t("dashboard.charts.otherIssues") || "Other"}
+                value={dashboardStats.issues?.others ?? 0}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Create User Form */}
       <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
