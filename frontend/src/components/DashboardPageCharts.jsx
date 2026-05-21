@@ -1531,8 +1531,8 @@ function DownloadsCard() {
                     { value: r.stuck, color: "#ef4444" },
                     { value: idle, color: "#94a3b8" },
                   ]}
-                  size={76}
-                  thickness={10}
+                  size={110}
+                  thickness={13}
                   centerLabel={r.total}
                 />
                 <div className="min-w-0 w-full text-center">
@@ -1613,7 +1613,10 @@ function DownloadsCard() {
                         className="text-[10px] text-theme-text-muted truncate"
                         title={title}
                       >
-                        {title}
+                        <span className="text-theme-text-muted/70 mr-1">
+                          {t("dashboard.charts.lastItem", "Last")}:
+                        </span>
+                        <span className="text-theme-text">{title}</span>
                       </span>
                       <span className="text-[10px] text-theme-text-muted shrink-0">
                         {formatRelative(h.latest.date)}
@@ -1880,21 +1883,6 @@ function PosterizarrCard() {
   });
   const totalInst = running + idle + error;
 
-  // Latest run across selected instances (for Last Run / Mode banner)
-  const latestEntries = items
-    .map((d) => d?._latest)
-    .filter((e) => e && (e.end_time || e.start_time || e.timestamp));
-  const latestRun = latestEntries.length
-    ? latestEntries.reduce((a, b) => {
-        const ta = new Date(
-          a.end_time || a.start_time || a.timestamp || 0,
-        ).getTime();
-        const tb = new Date(
-          b.end_time || b.start_time || b.timestamp || 0,
-        ).getTime();
-        return tb > ta ? b : a;
-      })
-    : null;
   const formatLastRun = (ts) => {
     if (!ts) return "—";
     try {
@@ -1939,6 +1927,7 @@ function PosterizarrCard() {
       name: inst.name || inst.id,
       state,
       isIdle,
+      latest: d?._latest || null,
       segments: [
         { value: runningOn ? 1 : 0, color: "#22d3ee" },
         { value: manualOn ? 1 : 0, color: "#a78bfa" },
@@ -1998,28 +1987,47 @@ function PosterizarrCard() {
           );
         })}
       </div>
-      {latestRun && (
-        <div className="w-full px-2 py-1.5 rounded-lg bg-theme-hover/40 border border-theme flex items-center justify-between gap-2 text-[11px]">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-theme-text-muted">
-              {t("dashboard.charts.mode", "Mode")}:
-            </span>
-            <span className="font-semibold text-theme-text capitalize truncate">
-              {latestRun.mode || "—"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-theme-text-muted">
-              {t("dashboard.charts.lastRun", "Last Run")}:
-            </span>
-            <span className="font-semibold text-theme-text truncate">
-              {formatLastRun(
-                latestRun.end_time ||
-                  latestRun.start_time ||
-                  latestRun.timestamp,
-              )}
-            </span>
-          </div>
+      {perInstance.some((i) => i.latest) && (
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          {perInstance
+            .filter((i) => selectedId == null || selectedId === i.id)
+            .map((i) => (
+              <div
+                key={`pz-last-${i.id}`}
+                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover/40 border border-theme min-w-0"
+              >
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-[11px] font-semibold text-theme-text truncate">
+                    {i.name}
+                  </span>
+                  {i.latest?.mode && (
+                    <span
+                      className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                      style={{
+                        color: "var(--theme-primary)",
+                        backgroundColor: "var(--theme-primary, #6366f1)20",
+                      }}
+                    >
+                      {i.latest.mode}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-2 text-[10px]">
+                  <span className="text-theme-text-muted">
+                    {t("dashboard.charts.lastRun", "Last Run")}
+                  </span>
+                  <span className="font-semibold text-theme-text truncate">
+                    {i.latest
+                      ? formatLastRun(
+                          i.latest.end_time ||
+                            i.latest.start_time ||
+                            i.latest.timestamp,
+                        )
+                      : "—"}
+                  </span>
+                </div>
+              </div>
+            ))}
         </div>
       )}
       <StatGrid
@@ -2148,6 +2156,32 @@ function AutoscanCard() {
 
   const max = Math.max(1, queue, processed, failed);
 
+  // Per-instance latest scan record (for Recent Scans minicards)
+  const recentScans = instances
+    .map((inst, i) => {
+      const id = inst?.id ?? inst?.instance_id ?? inst?.name ?? `as-${i}`;
+      const name = inst?.name || inst?.id || `Instance ${i + 1}`;
+      const hist = Array.isArray(inst?.history) ? inst.history : [];
+      const latest = hist[0] || null;
+      return { id, name, latest };
+    })
+    .filter((r) => r.latest);
+
+  const formatScanRelative = (raw) => {
+    if (!raw) return "—";
+    const ts = new Date(raw).getTime();
+    if (!ts || isNaN(ts)) return "—";
+    const diff = Date.now() - ts;
+    const sec = Math.floor(diff / 1000);
+    if (sec < 60) return `${sec}s`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h`;
+    const d = Math.floor(hr / 24);
+    return `${d}d`;
+  };
+
   return (
     <ChartCard
       icon={Scan}
@@ -2204,6 +2238,97 @@ function AutoscanCard() {
           </span>
         </div>
       </div>
+      {recentScans.length > 0 && (
+        <div className="w-full flex flex-col gap-1.5">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted font-semibold">
+              {t("dashboard.charts.recentScans", "Recent Scans")}
+            </span>
+            <span className="text-[10px] text-theme-text-muted">
+              {recentScans.length}{" "}
+              {t("dashboard.charts.instances", "instance(s)")}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {recentScans.slice(0, 6).map((r) => {
+              const h = r.latest;
+              const status = String(h.status || "").toLowerCase();
+              const ok = status === "success" || status === "ok";
+              const failedScan = status === "failed" || status === "error";
+              const badgeColor = ok
+                ? "#22c55e"
+                : failedScan
+                  ? "#ef4444"
+                  : "#94a3b8";
+              const badgeLabel = h.status || "—";
+              const folder = h.folder || h.path || h.file || "—";
+              const ts =
+                h.completed_at ||
+                h.attempted_at ||
+                h.timestamp ||
+                h.time ||
+                h.date ||
+                h.created_at;
+              const rawTarget = h.target || h.target_name || h.targetType || "";
+              const targetLabel = (() => {
+                const s = String(rawTarget);
+                const m = s.match(/^[a-zA-Z0-9_\-]+/);
+                return m ? m[0].toLowerCase() : s.toLowerCase();
+              })();
+              return (
+                <div
+                  key={`scan-${r.id}`}
+                  className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
+                >
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <span className="text-[11px] font-semibold text-theme-text truncate">
+                      {r.name}
+                    </span>
+                    <span
+                      className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                      style={{
+                        color: badgeColor,
+                        backgroundColor: `${badgeColor}20`,
+                      }}
+                    >
+                      {badgeLabel}
+                    </span>
+                  </div>
+                  <div
+                    className="flex items-center justify-between gap-2 min-w-0"
+                    title={folder}
+                  >
+                    <span className="text-[10px] text-theme-text-muted truncate">
+                      <span className="text-theme-text-muted/70 mr-1">
+                        {t("dashboard.charts.lastItem", "Last")}:
+                      </span>
+                      <span className="text-theme-text font-mono">
+                        {folder}
+                      </span>
+                    </span>
+                    <span className="text-[10px] text-theme-text-muted shrink-0">
+                      {formatScanRelative(ts)}
+                    </span>
+                  </div>
+                  {targetLabel && (
+                    <div className="flex items-center gap-1 text-[10px]">
+                      <span className="text-theme-text-muted/70">
+                        {t("dashboard.charts.target", "Target")}:
+                      </span>
+                      <span
+                        className="font-semibold lowercase"
+                        style={{ color: "#a78bfa" }}
+                      >
+                        {targetLabel}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <StatGrid
         tiles={[
           {
@@ -2788,7 +2913,13 @@ function ServersCard() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
+            <div
+              className="flex flex-col gap-1 p-2 rounded-lg border min-w-0"
+              style={{
+                backgroundColor: "rgba(34, 197, 94, 0.12)",
+                borderColor: "rgba(34, 197, 94, 0.35)",
+              }}
+            >
               <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-theme-text-muted">
                 <ArrowUp size={11} style={{ color: "#22c55e" }} />
                 {t("dashboard.charts.upload", "Upload")}
@@ -2801,7 +2932,13 @@ function ServersCard() {
                 {formatTotal(trafficTotals.totalUp)}
               </span>
             </div>
-            <div className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
+            <div
+              className="flex flex-col gap-1 p-2 rounded-lg border min-w-0"
+              style={{
+                backgroundColor: "rgba(34, 211, 238, 0.12)",
+                borderColor: "rgba(34, 211, 238, 0.35)",
+              }}
+            >
               <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-theme-text-muted">
                 <ArrowDown size={11} style={{ color: "#22d3ee" }} />
                 {t("dashboard.charts.download", "Download")}
