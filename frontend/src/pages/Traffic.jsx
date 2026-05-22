@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
+import StatCard from "../components/StatCard";
 
 // Traffic chart component - Line/Area chart style for bandwidth history
 const TrafficChart = ({ data = [], type = "upload", serviceId, t }) => {
@@ -385,101 +386,41 @@ export default function Traffic() {
 
           {/* Summary Cards - Optimized for tablet */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-4">
-            {/* Total Services */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Server className="w-3 h-3 text-theme-primary" />
-                    {t("traffic.page.stats.services")}
-                  </p>
-                  <p className="text-2xl font-bold text-theme-text mt-1">
-                    {services.length}
-                  </p>
-                </div>
-                <Server className="w-8 h-8 text-theme-primary" />
-              </div>
-            </div>
-
-            {/* Upload Speed */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3 text-blue-500" />
-                    {t("traffic.page.stats.upload")}
-                  </p>
-                  <p className="text-2xl font-bold text-blue-500 mt-1">
-                    {formatBandwidth(totalBandwidthUp)}
-                  </p>
-                </div>
-                <ArrowUp className="w-8 h-8 text-blue-500" />
-              </div>
-            </div>
-
-            {/* Download Speed */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3 text-green-500" />
-                    {t("traffic.page.stats.download")}
-                  </p>
-                  <p className="text-2xl font-bold text-green-500 mt-1">
-                    {formatBandwidth(totalBandwidthDown)}
-                  </p>
-                </div>
-                <ArrowDown className="w-8 h-8 text-green-500" />
-              </div>
-            </div>
-
-            {/* Total Uploaded */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-blue-500" />
-                    {t("traffic.page.stats.uploaded")}
-                  </p>
-                  <p className="text-2xl font-bold text-blue-500 mt-1">
-                    {formatTraffic(totalTrafficUp)}
-                  </p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-blue-500" />
-              </div>
-            </div>
-
-            {/* Total Downloaded */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-green-500/50 hover:bg-green-500/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-green-500" />
-                    {t("traffic.page.stats.downloaded")}
-                  </p>
-                  <p className="text-2xl font-bold text-green-500 mt-1">
-                    {formatTraffic(totalTrafficDown)}
-                  </p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-green-500" />
-              </div>
-            </div>
-
-            {/* Total Traffic */}
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-theme-primary hover:bg-theme-primary/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Activity className="w-3 h-3 text-theme-primary" />
-                    {t("traffic.page.stats.totalTraffic")}
-                  </p>
-                  <p className="text-2xl font-bold text-theme-primary mt-1">
-                    {formatTraffic(totalTrafficUp + totalTrafficDown)}
-                  </p>
-                </div>
-                <Activity className="w-8 h-8 text-theme-primary" />
-              </div>
-            </div>
+            <StatCard
+              label={t("traffic.page.stats.services")}
+              value={services.length}
+              icon={Server}
+              valueClass="text-theme-text"
+            />
+            <StatCard
+              label={t("traffic.page.stats.upload")}
+              value={formatBandwidth(totalBandwidthUp)}
+              icon={ArrowUp}
+              color="blue-500"
+            />
+            <StatCard
+              label={t("traffic.page.stats.download")}
+              value={formatBandwidth(totalBandwidthDown)}
+              icon={ArrowDown}
+              color="green-500"
+            />
+            <StatCard
+              label={t("traffic.page.stats.uploaded")}
+              value={formatTraffic(totalTrafficUp)}
+              icon={TrendingUp}
+              color="blue-500"
+            />
+            <StatCard
+              label={t("traffic.page.stats.downloaded")}
+              value={formatTraffic(totalTrafficDown)}
+              icon={TrendingUp}
+              color="green-500"
+            />
+            <StatCard
+              label={t("traffic.page.stats.totalTraffic")}
+              value={formatTraffic(totalTrafficUp + totalTrafficDown)}
+              icon={Activity}
+            />
           </div>
 
           {/* Group Tabs */}

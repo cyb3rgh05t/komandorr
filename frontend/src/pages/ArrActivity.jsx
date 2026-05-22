@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { arrActivityApi } from "../services/arrActivityApi";
 import PageHeader from "../components/PageHeader";
+import StatCard from "../components/StatCard";
 
 const ActivityBadge = ({ status, item, t }) => {
   const statusLower = (status || "").toLowerCase();
@@ -617,126 +618,50 @@ export default function ArrActivity() {
       {/* Summary Cards */}
       {!isInitialLoading && activeTab !== "history" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <button
-            type="button"
+          <StatCard
+            label="Sonarr"
+            value={sonarrTotalQueue}
+            icon={Tv}
+            color="purple-500"
+            active={activeTab === "tvshows"}
             onClick={() => setSearchParams({ tab: "tvshows" })}
-            className={`text-left relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 ${
-              activeTab === "tvshows"
-                ? "border-purple-500/60 ring-1 ring-purple-500/40"
-                : "border-theme"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Tv className="w-3 h-3 text-purple-500" />
-                  Sonarr
-                </p>
-                <p className="text-2xl font-bold text-purple-500 mt-1">
-                  {sonarrTotalQueue}
-                </p>
-              </div>
-              <Tv className="w-8 h-8 text-purple-500" />
-            </div>
-          </button>
-
-          <button
-            type="button"
+          />
+          <StatCard
+            label="Radarr"
+            value={radarrTotalQueue}
+            icon={Film}
+            color="blue-500"
+            active={activeTab === "movies"}
             onClick={() => setSearchParams({ tab: "movies" })}
-            className={`text-left relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 ${
-              activeTab === "movies"
-                ? "border-blue-500/60 ring-1 ring-blue-500/40"
-                : "border-theme"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Film className="w-3 h-3 text-blue-500" />
-                  Radarr
-                </p>
-                <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {radarrTotalQueue}
-                </p>
-              </div>
-              <Film className="w-8 h-8 text-blue-500" />
-            </div>
-          </button>
-
-          <button
-            type="button"
+          />
+          <StatCard
+            label={t("arrActivity.totalQueue", "Total Queue")}
+            value={sonarrTotalQueue + radarrTotalQueue}
+            icon={Download}
+            color="green-500"
             onClick={() => setSearchParams({ tab: "tvshows" })}
-            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Download className="w-3 h-3 text-green-500" />
-                  {t("arrActivity.totalQueue", "Total Queue")}
-                </p>
-                <p className="text-2xl font-bold text-green-500 mt-1">
-                  {sonarrTotalQueue + radarrTotalQueue}
-                </p>
-              </div>
-              <Download className="w-8 h-8 text-green-500" />
-            </div>
-          </button>
-
-          <button
-            type="button"
+          />
+          <StatCard
+            label={t("arrActivity.active", "Active")}
+            value={activeCount}
+            icon={Download}
+            color="emerald-500"
             onClick={() => setSearchParams({ tab: "tvshows" })}
-            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Download className="w-3 h-3 text-emerald-500" />
-                  {t("arrActivity.active", "Active")}
-                </p>
-                <p className="text-2xl font-bold text-emerald-500 mt-1">
-                  {activeCount}
-                </p>
-              </div>
-              <Download className="w-8 h-8 text-emerald-500" />
-            </div>
-          </button>
-
-          <button
-            type="button"
+          />
+          <StatCard
+            label={t("arrActivity.stuck", "Stuck")}
+            value={stuckCount}
+            icon={AlertCircle}
+            color="red-500"
             onClick={() => setSearchParams({ tab: "tvshows" })}
-            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 hover:border-red-500/50"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 text-red-500" />
-                  {t("arrActivity.stuck", "Stuck")}
-                </p>
-                <p className="text-2xl font-bold text-red-500 mt-1">
-                  {stuckCount}
-                </p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-red-500" />
-            </div>
-          </button>
-
-          <Link
+          />
+          <StatCard
+            label={t("arrActivity.services", "Services")}
+            value={`${enabledCount}/${totalInstances || 0}`}
+            icon={Server}
+            color="orange-500"
             to="/settings?tab=arr"
-            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                  <Server className="w-3 h-3 text-orange-500" />
-                  {t("arrActivity.services", "Services")}
-                </p>
-                <p className="text-2xl font-bold text-orange-500 mt-1">
-                  {enabledCount}/{totalInstances || 0}
-                </p>
-              </div>
-              <Server className="w-8 h-8 text-orange-500" />
-            </div>
-          </Link>
+          />
         </div>
       )}
 

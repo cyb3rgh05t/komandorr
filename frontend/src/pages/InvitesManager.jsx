@@ -8,6 +8,7 @@ import { useItemsPerPage } from "../utils/usePersistedState";
 import ConfirmDialog from "../components/ConfirmDialog";
 import InstanceTabs, { useInstanceTabs } from "../components/InstanceTabs";
 import PageHeader from "../components/PageHeader";
+import StatCard from "../components/StatCard";
 import {
   Plus,
   Trash2,
@@ -528,23 +529,13 @@ const InvitesManager = () => {
         <div className="space-y-3">
           {/* Invite Stats Row */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            <div
+            <StatCard
+              label={t("invites.stats.totalInvites")}
+              value={stats.total_invites || 0}
+              icon={Mail}
+              valueClass="text-theme-text"
               onClick={() => setFilter("all")}
-              className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:border-theme-primary hover:bg-theme-primary/10"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-theme-primary" />
-                    {t("invites.stats.totalInvites")}
-                  </p>
-                  <p className="text-2xl font-bold text-theme-text mt-1">
-                    {stats.total_invites || 0}
-                  </p>
-                </div>
-                <Mail className="w-8 h-8 text-theme-primary" />
-              </div>
-            </div>
+            />
 
             <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all hover:border-purple-500/50 hover:bg-purple-500/10">
               <div className="flex items-center justify-between">
@@ -681,49 +672,23 @@ const InvitesManager = () => {
               </div>
             </div>
 
-            <div
+            <StatCard
+              label={t("invites.stats.usedUp")}
+              value={stats.used_up_invites || 0}
+              icon={X}
+              color="orange-500"
+              active={filter === "used-up"}
               onClick={() => setFilter("used-up")}
-              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:bg-orange-500/10 ${
-                filter === "used-up"
-                  ? "border-orange-500 ring-1 ring-orange-500/20"
-                  : "border-theme hover:border-orange-500/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <X className="w-3 h-3 text-orange-500" />
-                    {t("invites.stats.usedUp")}
-                  </p>
-                  <p className="text-2xl font-bold text-orange-500 mt-1">
-                    {stats.used_up_invites || 0}
-                  </p>
-                </div>
-                <X className="w-8 h-8 text-orange-500" />
-              </div>
-            </div>
+            />
 
-            <div
+            <StatCard
+              label={t("invites.stats.expired")}
+              value={invites.filter((inv) => inv.is_expired).length}
+              icon={Clock}
+              color="red-500"
+              active={filter === "expired"}
               onClick={() => setFilter("expired")}
-              className={`bg-theme-card border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer hover:bg-red-500/10 ${
-                filter === "expired"
-                  ? "border-red-500 ring-1 ring-red-500/20"
-                  : "border-theme hover:border-red-500/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-red-500" />
-                    {t("invites.stats.expired")}
-                  </p>
-                  <p className="text-2xl font-bold text-red-500 mt-1">
-                    {invites.filter((inv) => inv.is_expired).length}
-                  </p>
-                </div>
-                <Clock className="w-8 h-8 text-red-500" />
-              </div>
-            </div>
+            />
           </div>
         </div>
       )}

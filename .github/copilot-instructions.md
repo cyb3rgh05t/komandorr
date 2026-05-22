@@ -20,30 +20,35 @@
 
 1. **Every page starts with `<PageHeader icon={...} title={...} actions={...} />`** —
    see [`frontend/src/components/PageHeader.jsx`](../frontend/src/components/PageHeader.jsx).
-2. **Tailwind theme tokens only** — `bg-theme-card`, `text-theme-text`,
+2. **Status/summary tiles use `<StatCard />`** from
+   [`frontend/src/components/StatCard.jsx`](../frontend/src/components/StatCard.jsx).
+   Never re-inline the markup, never fork per page. Pass `to`/`onClick` for
+   clickable variants, `active` for current-view highlight. Allowed colors
+   live in the `STAT_COLORS` map — extend there if needed.
+3. **Tailwind theme tokens only** — `bg-theme-card`, `text-theme-text`,
    `border-theme-primary`, etc. Never raw colors.
-3. **i18n**: all user-visible strings via `t("ns.key", "Fallback English")`.
-4. **Icons**: `lucide-react` only.
-5. **Charts**: hand-rolled SVG (no chart library). Reference: `PeakChart` in
+4. **i18n**: all user-visible strings via `t("ns.key", "Fallback English")`.
+5. **Icons**: `lucide-react` only.
+6. **Charts**: hand-rolled SVG (no chart library). Reference: `PeakChart` in
    [`frontend/src/pages/VODStreamsHistory.jsx`](../frontend/src/pages/VODStreamsHistory.jsx).
-6. **React Query**: when a service function takes positional args, **always
+7. **React Query**: when a service function takes positional args, **always
    wrap in arrow**: `queryFn: () => fetchPlexActivities()`. Never
    `queryFn: fetchPlexActivities` — React Query passes its context object
    as the first arg, which propagates into `?instance_id=[object Object]`
    and breaks multi-instance resolution.
-7. **Polling**: `refetchIntervalInBackground: false` is the global default
+8. **Polling**: `refetchIntervalInBackground: false` is the global default
    in [`App.jsx`](../frontend/src/App.jsx). Don't override it. Use sensible
    intervals (≥ 10 s for fast data, ≥ 30 s for slow data, ≥ 60 s for NFS
    dashboards). See §8.1 of AGENTS.md.
-8. **Multi-instance configs** (Plex / Posterizarr / Autoscan / \*arr / VPN
+9. **Multi-instance configs** (Plex / Posterizarr / Autoscan / \*arr / VPN
    Proxy / NFS): `*_INSTANCES` lists in
    [`backend/app/config.py`](../backend/app/config.py). Resolution order
    when caller omits the id: `plex_sync.instance_id` → first instance.
    Explicit unknown id → `None` + warning.
-9. **Stuck-download detection** must combine `trackedDownloadStatus` +
-   `trackedDownloadState` — see §8.3 of AGENTS.md. Kept in sync across
-   Sidebar, DashboardPageCharts, and ArrActivity.
-10. **Notification flap protection**: `FAILURE_THRESHOLD = 2` consecutive
+10. **Stuck-download detection** must combine `trackedDownloadStatus` +
+    `trackedDownloadState` — see §8.3 of AGENTS.md. Kept in sync across
+    Sidebar, DashboardPageCharts, and ArrActivity.
+11. **Notification flap protection**: `FAILURE_THRESHOLD = 2` consecutive
     failures before a PROBLEM alert; recovery is immediate. See §8.2.
 
 ## Things to avoid
