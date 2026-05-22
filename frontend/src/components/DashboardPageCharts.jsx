@@ -2570,8 +2570,8 @@ function VodSyncCard() {
       }
     >
       {/* Live streams on the VOD-Sync Plex instance */}
-      <div className="flex items-center justify-center gap-8 w-full">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-center gap-6 sm:gap-10 w-full">
+        <div className="flex flex-col items-center gap-2 min-w-0">
           <MiniRing
             percent={
               allTimePeak > 0
@@ -2581,11 +2581,11 @@ function VodSyncCard() {
                   : 0
             }
             color="#22c55e"
-            size={120}
-            thickness={12}
+            size={110}
+            thickness={11}
             centerLabel={activeStreams}
           />
-          <div className="min-w-0">
+          <div className="text-center min-w-0">
             <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
               {t("dashboard.charts.liveStreams", "Live Streams")}
             </p>
@@ -2594,16 +2594,16 @@ function VodSyncCard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center gap-2 min-w-0">
           <MiniRing
             percent={allTimePeak > 0 ? 100 : 0}
             color="#a78bfa"
-            size={120}
-            thickness={12}
+            size={110}
+            thickness={11}
             centerLabel={
               <span className="flex flex-col items-center justify-center leading-none gap-0.5">
                 <Crown
-                  size={16}
+                  size={14}
                   style={{ color: "#fbbf24", fill: "#fbbf24" }}
                 />
                 <span className="text-2xl font-bold text-theme-text leading-none">
@@ -2612,7 +2612,7 @@ function VodSyncCard() {
               </span>
             }
           />
-          <div className="min-w-0">
+          <div className="text-center min-w-0">
             <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
               {t("dashboard.charts.highestPeak", "Highest Peak")}
             </p>
