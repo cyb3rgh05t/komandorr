@@ -248,6 +248,44 @@ export default function ArrActivity() {
     .filter((i) => i.type === "radarr")
     .reduce((sum, i) => sum + (i.records?.length || 0), 0);
 
+  // Stuck / Active counts across all enabled instances. Mirrors ActivityBadge logic
+  // and Sidebar/DashboardPageCharts (see AGENTS.md §8.3).
+  const { stuckCount, activeCount } = useMemo(() => {
+    let stuck = 0;
+    let active = 0;
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    enabledInstances.forEach((inst) => {
+      (inst.records || []).forEach((r) => {
+        const statusLower = (r?.status || "").toLowerCase();
+        const trackedState = (r?.trackedDownloadState || "").toLowerCase();
+        const trackedStatus = (r?.trackedDownloadStatus || "").toLowerCase();
+        const isImportBlocked =
+          (trackedStatus === "warning" || trackedStatus === "error") &&
+          (trackedState === "importblocked" ||
+            trackedState === "importpending" ||
+            trackedState === "importfailed" ||
+            trackedState === "failedpending");
+        const isCompletedBase =
+          (statusLower.includes("complet") &&
+            (r?.sizeleft === 0 || r?.sizeleft == null)) ||
+          trackedState === "importpending";
+        const addedTime = r?.added ? new Date(r.added).getTime() : 0;
+        const isOldCompleted =
+          isCompletedBase && addedTime && addedTime < fiveMinutesAgo;
+        if (isImportBlocked || isOldCompleted) {
+          stuck += 1;
+        } else if (
+          statusLower.includes("download") ||
+          statusLower.includes("import") ||
+          statusLower.includes("queued")
+        ) {
+          active += 1;
+        }
+      });
+    });
+    return { stuckCount: stuck, activeCount: active };
+  }, [enabledInstances]);
+
   const refreshAll = async () => {
     setIsRefreshing(true);
     try {
@@ -578,10 +616,18 @@ export default function ArrActivity() {
 
       {/* Summary Cards */}
       {!isInitialLoading && activeTab !== "history" && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: "tvshows" })}
+            className={`text-left relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-purple-500/10 hover:border-purple-500/50 ${
+              activeTab === "tvshows"
+                ? "border-purple-500/60 ring-1 ring-purple-500/40"
+                : "border-theme"
+            }`}
+          >
             <div className="flex items-center justify-between">
-              <div className="text-left">
+              <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Tv className="w-3 h-3 text-purple-500" />
                   Sonarr
@@ -592,11 +638,19 @@ export default function ArrActivity() {
               </div>
               <Tv className="w-8 h-8 text-purple-500" />
             </div>
-          </div>
+          </button>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50">
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: "movies" })}
+            className={`text-left relative bg-theme-card border rounded-lg p-4 transition-all hover:shadow-md hover:bg-blue-500/10 hover:border-blue-500/50 ${
+              activeTab === "movies"
+                ? "border-blue-500/60 ring-1 ring-blue-500/40"
+                : "border-theme"
+            }`}
+          >
             <div className="flex items-center justify-between">
-              <div className="text-left">
+              <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Film className="w-3 h-3 text-blue-500" />
                   Radarr
@@ -607,11 +661,15 @@ export default function ArrActivity() {
               </div>
               <Film className="w-8 h-8 text-blue-500" />
             </div>
-          </div>
+          </button>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50">
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: "tvshows" })}
+            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-green-500/10 hover:border-green-500/50"
+          >
             <div className="flex items-center justify-between">
-              <div className="text-left">
+              <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Download className="w-3 h-3 text-green-500" />
                   {t("arrActivity.totalQueue", "Total Queue")}
@@ -622,11 +680,52 @@ export default function ArrActivity() {
               </div>
               <Download className="w-8 h-8 text-green-500" />
             </div>
-          </div>
+          </button>
 
-          <div className="relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50">
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: "tvshows" })}
+            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-emerald-500/10 hover:border-emerald-500/50"
+          >
             <div className="flex items-center justify-between">
-              <div className="text-left">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <Download className="w-3 h-3 text-emerald-500" />
+                  {t("arrActivity.active", "Active")}
+                </p>
+                <p className="text-2xl font-bold text-emerald-500 mt-1">
+                  {activeCount}
+                </p>
+              </div>
+              <Download className="w-8 h-8 text-emerald-500" />
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: "tvshows" })}
+            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-red-500/10 hover:border-red-500/50"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 text-red-500" />
+                  {t("arrActivity.stuck", "Stuck")}
+                </p>
+                <p className="text-2xl font-bold text-red-500 mt-1">
+                  {stuckCount}
+                </p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+          </button>
+
+          <Link
+            to="/settings?tab=arr"
+            className="text-left relative bg-theme-card border border-theme rounded-lg p-4 transition-all hover:shadow-md hover:bg-orange-500/10 hover:border-orange-500/50"
+          >
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
                   <Server className="w-3 h-3 text-orange-500" />
                   {t("arrActivity.services", "Services")}
@@ -637,7 +736,7 @@ export default function ArrActivity() {
               </div>
               <Server className="w-8 h-8 text-orange-500" />
             </div>
-          </div>
+          </Link>
         </div>
       )}
 
