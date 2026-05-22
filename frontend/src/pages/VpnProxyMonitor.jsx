@@ -298,15 +298,32 @@ export default function VpnProxyMonitor() {
     null;
   const providerId = activeInstance?.provider_id || "";
 
+  // Warm-up: the upstream VPN-Proxy-Manager polls its O11/Stremio readers in
+  // its own background loop, so on a fresh page load the dataset fills in
+  // gradually. Hammer faster (~2 s) for the first ~10 successful fetches per
+  // instance, then settle to the normal 5 s interval. Resets on instance/VPN
+  // change so switching tabs re-warms the new dataset.
+  const [warmupCount, setWarmupCount] = useState(0);
+  useEffect(() => {
+    setWarmupCount(0);
+  }, [effectiveVpnId, activeInstanceId, providerId]);
+  const warmupActive = warmupCount < 10;
+  const dataInterval = warmupActive ? 2000 : 5000;
+
   const { data: monitorData, isFetching: monitorFetching } = useQuery({
     queryKey: ["vpn-monitor-data", effectiveVpnId, activeInstanceId],
-    queryFn: () =>
-      activeInstanceId
-        ? api.get(withVpn(`/vpn-proxy/monitoring/instance/${activeInstanceId}`))
-        : api.get(withVpn("/vpn-proxy/monitoring")),
+    queryFn: async () => {
+      const res = activeInstanceId
+        ? await api.get(
+            withVpn(`/vpn-proxy/monitoring/instance/${activeInstanceId}`),
+          )
+        : await api.get(withVpn("/vpn-proxy/monitoring"));
+      setWarmupCount((c) => c + 1);
+      return res;
+    },
     enabled: configured === true,
-    staleTime: 3000,
-    refetchInterval: 5000,
+    staleTime: warmupActive ? 0 : 3000,
+    refetchInterval: dataInterval,
     placeholderData: (prev) => prev,
   });
 
@@ -330,8 +347,8 @@ export default function VpnProxyMonitor() {
             ),
           ),
     enabled: configured === true && providerId.length > 0,
-    staleTime: 3000,
-    refetchInterval: 5000,
+    staleTime: warmupActive ? 0 : 3000,
+    refetchInterval: dataInterval,
     placeholderData: (prev) => prev,
   });
 

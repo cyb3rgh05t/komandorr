@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
+import asyncio
 import httpx
 from app.middleware.auth import require_auth
 from app.config import settings
@@ -10,6 +11,50 @@ router = APIRouter(prefix="/api/vpn-proxy", tags=["vpn-proxy"])
 
 # Track whether we already logged the "not configured" message
 _logged_not_configured = False
+
+# Tracks (vpn_id, instance_id) pairs for which we already kicked off a
+# background warm-up of the upstream VPN-Proxy-Manager monitoring cache.
+# The manager polls its O11 readers in its own background loop, so on a
+# fresh connection the first few /monitoring/instance/{id} responses are
+# only partially populated. Hitting those endpoints a few times in quick
+# succession primes its cache so subsequent client polls see a complete
+# dataset much sooner.
+_warmup_started: set[tuple[str, str]] = set()
+
+
+async def _warmup_instance(instance_id: str, vpn_id: Optional[str]) -> None:
+    """Fire-and-forget: poll instance + common providers 3x with 2s gap."""
+    providers = ["demagentatv", "stremio"]
+    for _ in range(3):
+        try:
+            tasks = [proxy_get(f"/monitoring/instance/{instance_id}", vpn_id)]
+            for prov in providers:
+                tasks.append(
+                    proxy_get(
+                        f"/monitoring/instance/{instance_id}/network-usage?provider={prov}",
+                        vpn_id,
+                    )
+                )
+            await asyncio.gather(*tasks, return_exceptions=True)
+        except Exception as e:  # pragma: no cover - best-effort
+            logger.debug(f"VPN Proxy warmup poll failed: {e}")
+        await asyncio.sleep(2)
+
+
+def _ensure_warmup(instance_id: str, vpn_id: Optional[str]) -> None:
+    """Kick off a one-shot background warm-up for this (vpn_id, instance) pair."""
+    key = (vpn_id or "", instance_id)
+    if key in _warmup_started:
+        return
+    _warmup_started.add(key)
+    try:
+        asyncio.create_task(_warmup_instance(instance_id, vpn_id))
+        logger.info(
+            f"VPN Proxy monitoring warmup started for instance={instance_id} vpn_id={vpn_id or 'default'}"
+        )
+    except RuntimeError:
+        # No running loop (shouldn't happen inside FastAPI handlers); ignore.
+        _warmup_started.discard(key)
 
 
 def get_vpn_proxy_instances() -> list[dict]:
@@ -253,7 +298,15 @@ async def get_monitoring_instances(
     if not _is_configured(vpn_id):
         return []
     try:
-        return await proxy_get("/settings/o11/instances", vpn_id) or []
+        result = await proxy_get("/settings/o11/instances", vpn_id) or []
+        # Kick off a background warm-up for every configured instance so the
+        # upstream manager's reader cache is primed before the client starts
+        # its 5 s polling cycle.
+        for inst in result:
+            iid = inst.get("id") if isinstance(inst, dict) else None
+            if iid and inst.get("configured"):
+                _ensure_warmup(str(iid), vpn_id)
+        return result
     except Exception:
         return []
 
@@ -278,6 +331,7 @@ async def get_instance_monitoring(
     """Get monitoring data for a specific O11 instance."""
     if not _is_configured(vpn_id):
         return {}
+    _ensure_warmup(instance_id, vpn_id)
     return await proxy_get(f"/monitoring/instance/{instance_id}", vpn_id) or {}
 
 
