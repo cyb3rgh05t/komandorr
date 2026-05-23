@@ -1933,6 +1933,7 @@ function PosterizarrCard() {
   let error = 0;
   let manual = 0;
   let scheduler = 0;
+  let scriptErrors = 0;
   items.forEach((d) => {
     if (d?.success === false || d?.error) {
       error += 1;
@@ -1947,6 +1948,7 @@ function PosterizarrCard() {
       status.scheduler_running === true;
     if (isRunning) running += 1;
     else idle += 1;
+    scriptErrors += Number(d?._latest?.errors) || 0;
   });
   const totalInst = running + idle + error;
 
@@ -2004,11 +2006,6 @@ function PosterizarrCard() {
       ],
     };
   });
-
-  const scriptErrors = perInstance.reduce(
-    (sum, i) => sum + (i.scriptErrors || 0),
-    0,
-  );
 
   return (
     <ChartCard
@@ -2136,11 +2133,6 @@ function PosterizarrCard() {
             label: t("dashboard.charts.idle", "Idle"),
             value: idle,
             color: "#94a3b8",
-          },
-          {
-            label: t("dashboard.charts.error", "Error"),
-            value: error,
-            color: "#ef4444",
           },
           {
             label: t("dashboard.charts.scriptErrors", "Script Errors"),
