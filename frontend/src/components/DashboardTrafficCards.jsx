@@ -368,7 +368,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
         )}
 
         {/* Cards Container */}
-        <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 flex-1 overflow-hidden">
+        <div className="flex justify-center gap-4 sm:gap-5 lg:gap-7 xl:gap-9 flex-1 overflow-hidden">
           {topServices.map((service, index) => {
             const serviceBandwidth =
               (service.bandwidth_up || 0) + (service.bandwidth_down || 0);
@@ -411,57 +411,60 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                 key={service.id || index}
                 className="relative group transition-all duration-300"
               >
-                {/* Traffic label above donuts */}
-                <div className="text-center mb-1">
-                  <span
-                    className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider"
-                    style={{ color: colorScheme.primary }}
-                  >
-                    Traffic
-                  </span>
-                </div>
-                {/* Circles row: CPU - Traffic - RAM */}
-                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  {/* CPU Circle (left) */}
-                  <div className="flex-shrink-0 self-end mb-2">
+                {/* Circles row: CPU - Traffic - RAM (each with label above) */}
+                <div className="flex items-end justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  {/* CPU column */}
+                  <div className="flex flex-col items-center flex-shrink-0 mb-2">
+                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-amber-400 mb-1">
+                      CPU
+                    </span>
                     <CircularProgress
                       percentage={cpuPercent}
                       color="#f59e0b"
                       size={circleSize.side}
-                      label="CPU"
                     />
                   </div>
 
-                  {/* Main Traffic Circle (center) */}
-                  <CircularProgress
-                    percentage={percentage}
-                    color={colorScheme.primary}
-                    size={circleSize.main}
-                  >
-                    <div className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text leading-tight">
-                      {percentage}%
-                    </div>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <ArrowUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-blue-400" />
-                      <span className="font-mono font-semibold text-[8px] sm:text-[9px] text-blue-400">
-                        {formatBandwidth(service.bandwidth_up || 0)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <ArrowDown className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-green-400" />
-                      <span className="font-mono font-semibold text-[8px] sm:text-[9px] text-green-400">
-                        {formatBandwidth(service.bandwidth_down || 0)}
-                      </span>
-                    </div>
-                  </CircularProgress>
+                  {/* Main Traffic column (center) */}
+                  <div className="flex flex-col items-center">
+                    <span
+                      className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider mb-1"
+                      style={{ color: colorScheme.primary }}
+                    >
+                      Traffic
+                    </span>
+                    <CircularProgress
+                      percentage={percentage}
+                      color={colorScheme.primary}
+                      size={circleSize.main}
+                    >
+                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text leading-tight">
+                        {percentage}%
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <ArrowUp className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-blue-400" />
+                        <span className="font-mono font-semibold text-[8px] sm:text-[9px] text-blue-400">
+                          {formatBandwidth(service.bandwidth_up || 0)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <ArrowDown className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-green-400" />
+                        <span className="font-mono font-semibold text-[8px] sm:text-[9px] text-green-400">
+                          {formatBandwidth(service.bandwidth_down || 0)}
+                        </span>
+                      </div>
+                    </CircularProgress>
+                  </div>
 
-                  {/* RAM Circle (right) */}
-                  <div className="flex-shrink-0 self-end mb-2">
+                  {/* RAM column */}
+                  <div className="flex flex-col items-center flex-shrink-0 mb-2">
+                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-cyan-400 mb-1">
+                      RAM
+                    </span>
                     <CircularProgress
                       percentage={memPercent}
                       color="#06b6d4"
                       size={circleSize.side}
-                      label="RAM"
                     />
                   </div>
                 </div>
