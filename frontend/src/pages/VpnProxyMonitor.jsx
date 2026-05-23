@@ -482,38 +482,40 @@ export default function VpnProxyMonitor() {
         icon={Activity}
         title="VPN Monitor"
         actions={
-          <>
-            {configuredInstances.length > 1 && (
-              <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 overflow-x-auto">
-                {configuredInstances.map((instance) => (
-                  <button
-                    key={instance.id}
-                    onClick={() => setActiveInstanceId(instance.id)}
-                    className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      activeInstance?.id === instance.id
-                        ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
-                        : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
-                    }`}
-                  >
-                    <Activity className="w-4 h-4" />
-                    {instance.name}
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw
-                className={`w-4 h-4 text-theme-primary ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </button>
-          </>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw
+              className={`w-4 h-4 text-theme-primary ${refreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </button>
         }
       />
+
+      {/* Provider / instance picker */}
+      {configuredInstances.length > 1 && (
+        <div className="w-full overflow-x-auto">
+          <div className="inline-flex items-center bg-theme-card border border-theme rounded-xl p-1 gap-0.5 min-w-min">
+            {configuredInstances.map((instance) => (
+              <button
+                key={instance.id}
+                onClick={() => setActiveInstanceId(instance.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  activeInstance?.id === instance.id
+                    ? "bg-theme-primary text-black shadow-md shadow-theme-primary/25"
+                    : "text-theme-text-muted hover:text-theme-text hover:bg-theme-hover/60"
+                }`}
+              >
+                <Activity className="w-4 h-4" />
+                {instance.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Komandorr-level VPN Proxy Manager instance picker */}
       {vpnInstancesList.length > 1 && (

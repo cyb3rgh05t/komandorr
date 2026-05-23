@@ -555,57 +555,77 @@ export default function Traffic() {
 
                   {/* Traffic Stats Row */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                    <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-3 hover:border-blue-500/50 transition-all shadow-sm">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="p-1 bg-blue-500/20 rounded">
+                    <div className="min-w-0 bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-3 hover:border-blue-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                        <div className="p-1 bg-blue-500/20 rounded shrink-0">
                           <ArrowUp className="w-3 h-3 text-blue-400" />
                         </div>
-                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider truncate">
                           {t("traffic.page.stats.uploadSpeed")}
                         </p>
                       </div>
-                      <p className="text-lg font-bold text-blue-400">
+                      <p
+                        className="text-lg font-bold text-blue-400 truncate"
+                        title={formatBandwidth(
+                          service.traffic?.bandwidth_up || 0,
+                        )}
+                      >
                         {formatBandwidth(service.traffic?.bandwidth_up || 0)}
                       </p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-3 hover:border-green-500/50 transition-all shadow-sm">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="p-1 bg-green-500/20 rounded">
+                    <div className="min-w-0 bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-3 hover:border-green-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                        <div className="p-1 bg-green-500/20 rounded shrink-0">
                           <ArrowDown className="w-3 h-3 text-green-400" />
                         </div>
-                        <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider">
+                        <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider truncate">
                           {t("traffic.page.stats.downloadSpeed")}
                         </p>
                       </div>
-                      <p className="text-lg font-bold text-green-400">
+                      <p
+                        className="text-lg font-bold text-green-400 truncate"
+                        title={formatBandwidth(
+                          service.traffic?.bandwidth_down || 0,
+                        )}
+                      >
                         {formatBandwidth(service.traffic?.bandwidth_down || 0)}
                       </p>
                     </div>
-                    <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded-lg p-3 hover:border-orange-500/50 transition-all shadow-sm">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="p-1 bg-orange-500/20 rounded">
+                    <div className="min-w-0 bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded-lg p-3 hover:border-orange-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                        <div className="p-1 bg-orange-500/20 rounded shrink-0">
                           <ArrowUp className="w-3 h-3 text-orange-400" />
                         </div>
-                        <p className="text-[10px] text-orange-400 font-bold uppercase tracking-wider">
+                        <p className="text-[10px] text-orange-400 font-bold uppercase tracking-wider truncate">
                           {t("traffic.page.stats.totalUpload")}
                         </p>
                       </div>
-                      <p className="text-lg font-bold text-orange-400">
+                      <p
+                        className="text-lg font-bold text-orange-400 truncate"
+                        title={formatTraffic(
+                          Math.abs(service.traffic?.total_up || 0),
+                        )}
+                      >
                         {formatTraffic(
                           Math.abs(service.traffic?.total_up || 0),
                         )}
                       </p>
                     </div>
-                    <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg p-3 hover:border-cyan-500/50 transition-all shadow-sm">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="p-1 bg-cyan-500/20 rounded">
+                    <div className="min-w-0 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg p-3 hover:border-cyan-500/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                        <div className="p-1 bg-cyan-500/20 rounded shrink-0">
                           <ArrowDown className="w-3 h-3 text-cyan-400" />
                         </div>
-                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider truncate">
                           {t("traffic.page.stats.totalDownload")}
                         </p>
                       </div>
-                      <p className="text-lg font-bold text-cyan-400">
+                      <p
+                        className="text-lg font-bold text-cyan-400 truncate"
+                        title={formatTraffic(
+                          Math.abs(service.traffic?.total_down || 0),
+                        )}
+                      >
                         {formatTraffic(
                           Math.abs(service.traffic?.total_down || 0),
                         )}

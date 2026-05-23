@@ -98,57 +98,57 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
 
       if (width < 640) {
         cards = 1;
-        main = 130;
-        side = 55;
+        main = 150;
+        side = 64;
       } else if (width < 768) {
         cards = 2;
-        main = 105;
-        side = 46;
+        main = 125;
+        side = 54;
       } else if (width < 1024) {
         cards = 2;
-        main = 115;
-        side = 50;
+        main = 135;
+        side = 58;
       } else if (width < 1280) {
         cards = 3;
-        main = 105;
-        side = 46;
+        main = 125;
+        side = 54;
       } else if (width < 1536) {
         cards = 4;
-        main = 105;
-        side = 46;
+        main = 125;
+        side = 54;
       } else if (width < 1920) {
         cards = 5;
-        main = 110;
-        side = 48;
+        main = 130;
+        side = 56;
       } else if (width < 2560) {
         cards = 6;
-        main = 120;
-        side = 52;
+        main = 140;
+        side = 60;
       } else if (width < 3440) {
         // Ultrawide 1440p (3440x1440)
         cards = 8;
-        main = 135;
-        side = 58;
+        main = 155;
+        side = 66;
       } else if (width < 3840) {
         // Between ultrawide and 4K
         cards = 9;
-        main = 140;
-        side = 60;
+        main = 160;
+        side = 68;
       } else if (width < 5120) {
         // 4K (3840x2160)
         cards = 10;
-        main = 145;
-        side = 62;
+        main = 165;
+        side = 70;
       } else if (width < 6016) {
         // Super ultrawide (5120x1440)
         cards = 12;
-        main = 150;
-        side = 65;
+        main = 170;
+        side = 74;
       } else {
         // 6K+ displays
         cards = 14;
-        main = 155;
-        side = 68;
+        main = 175;
+        side = 76;
       }
 
       return { cards, main, side };
@@ -411,6 +411,15 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                 key={service.id || index}
                 className="relative group transition-all duration-300"
               >
+                {/* Traffic label above donuts */}
+                <div className="text-center mb-1">
+                  <span
+                    className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider"
+                    style={{ color: colorScheme.primary }}
+                  >
+                    Traffic
+                  </span>
+                </div>
                 {/* Circles row: CPU - Traffic - RAM */}
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                   {/* CPU Circle (left) */}
@@ -429,10 +438,7 @@ const DashboardTrafficCards = ({ trafficData, onRefresh, refreshing }) => {
                     color={colorScheme.primary}
                     size={circleSize.main}
                   >
-                    <span className="text-[8px] sm:text-[9px] font-medium text-theme-text-muted uppercase tracking-wider">
-                      Traffic
-                    </span>
-                    <div className="text-base sm:text-lg lg:text-2xl font-bold text-theme-text leading-tight">
+                    <div className="text-lg sm:text-xl lg:text-2xl font-bold text-theme-text leading-tight">
                       {percentage}%
                     </div>
                     <div className="flex items-center gap-1 mt-0.5">

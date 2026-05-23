@@ -102,16 +102,25 @@ function StatCard({
 
   const inner = (
     <div className="flex items-center justify-between gap-3 text-left">
-      <div className="space-y-1 min-w-0">
+      <div className="space-y-1 min-w-0 flex-1">
         <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-          {Icon ? <Icon className={`w-3 h-3 ${c.text}`} /> : null}
+          {Icon ? <Icon className={`w-3 h-3 ${c.text} shrink-0`} /> : null}
           <span className="truncate">{label}</span>
         </p>
-        <p className={`text-2xl font-bold ${valueClass || c.text} truncate`}>
+        <p
+          className={`text-lg sm:text-xl lg:text-2xl font-bold ${valueClass || c.text} truncate`}
+          title={
+            typeof value === "string" || typeof value === "number"
+              ? String(value)
+              : undefined
+          }
+        >
           {value}
         </p>
       </div>
-      {Icon ? <Icon className={`w-8 h-8 ${c.text} shrink-0`} /> : null}
+      {Icon ? (
+        <Icon className={`w-6 h-6 lg:w-8 lg:h-8 ${c.text} shrink-0`} />
+      ) : null}
     </div>
   );
 
