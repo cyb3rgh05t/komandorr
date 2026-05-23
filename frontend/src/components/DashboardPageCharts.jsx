@@ -1995,6 +1995,7 @@ function PosterizarrCard() {
       state,
       isIdle,
       latest: d?._latest || null,
+      scriptErrors: Number(d?._latest?.errors) || 0,
       segments: [
         { value: runningOn ? 1 : 0, color: "#22d3ee" },
         { value: manualOn ? 1 : 0, color: "#a78bfa" },
@@ -2003,6 +2004,11 @@ function PosterizarrCard() {
       ],
     };
   });
+
+  const scriptErrors = perInstance.reduce(
+    (sum, i) => sum + (i.scriptErrors || 0),
+    0,
+  );
 
   return (
     <ChartCard
@@ -2100,6 +2106,16 @@ function PosterizarrCard() {
                       : "—"}
                   </span>
                 </div>
+                <div className="flex items-center justify-between gap-2 text-[10px]">
+                  <span className="text-theme-text-muted">
+                    {t("dashboard.charts.scriptErrors", "Script Errors")}
+                  </span>
+                  <span
+                    className={`font-semibold ${i.scriptErrors > 0 ? "text-rose-400" : "text-emerald-400"}`}
+                  >
+                    {i.scriptErrors}
+                  </span>
+                </div>
               </div>
             ))}
         </div>
@@ -2125,6 +2141,11 @@ function PosterizarrCard() {
             label: t("dashboard.charts.error", "Error"),
             value: error,
             color: "#ef4444",
+          },
+          {
+            label: t("dashboard.charts.scriptErrors", "Script Errors"),
+            value: scriptErrors,
+            color: scriptErrors > 0 ? "#fb7185" : "#22c55e",
           },
           {
             label: t("dashboard.charts.manual", "Manual"),
