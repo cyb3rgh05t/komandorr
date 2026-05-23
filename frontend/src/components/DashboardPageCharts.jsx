@@ -189,9 +189,12 @@ function EmptyHint({ text }) {
   );
 }
 
-function StatTile({ label, value, color }) {
+function StatTile({ label, value, color, tooltip }) {
+  const hasTooltip = !!tooltip;
   return (
-    <div className="bg-theme-hover/40 border border-theme rounded-lg px-3 py-2 flex flex-col items-start">
+    <div
+      className={`relative bg-theme-hover/40 border border-theme rounded-lg px-3 py-2 flex flex-col items-start ${hasTooltip ? "group cursor-help" : ""}`}
+    >
       <span
         className="text-xl font-bold leading-none"
         style={{ color: color || "var(--theme-text)" }}
@@ -201,6 +204,12 @@ function StatTile({ label, value, color }) {
       <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-1">
         {label}
       </span>
+      {hasTooltip && (
+        <div className="pointer-events-none absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block min-w-[200px] max-w-[280px] p-2 rounded-lg bg-theme-card border border-theme-primary/40 shadow-xl">
+          {tooltip}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-theme-primary/40" />
+        </div>
+      )}
     </div>
   );
 }
@@ -920,53 +929,46 @@ export function VpnCard({
           label={t("dashboard.charts.clients", "Clients")}
           value={clients}
           color="#f59e0b"
+          tooltip={
+            clientGroups.length > 0 ? (
+              <div className="flex flex-col gap-1.5">
+                {clientGroups.map((g) => (
+                  <div
+                    key={`vpn-tt-${g.parentId}`}
+                    className="flex flex-col gap-1 min-w-0"
+                  >
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <span className="text-[11px] font-semibold text-theme-text truncate">
+                        {g.parentName}
+                      </span>
+                      <span
+                        className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{
+                          color: "#f59e0b",
+                          backgroundColor: "rgba(245, 158, 11, 0.15)",
+                        }}
+                      >
+                        {g.names.length}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {g.names.map((n) => (
+                        <span
+                          key={`tt-${g.parentId}-${n}`}
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-theme bg-theme-hover text-theme-text truncate max-w-full"
+                          title={n}
+                        >
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null
+          }
         />
       </div>
-
-      {clientGroups.length > 0 && (
-        <div className="w-full flex flex-col gap-1.5 shrink-0">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] uppercase tracking-wide text-theme-text-muted font-semibold">
-              {t("dashboard.charts.clients", "Clients")}
-            </span>
-            <span className="text-[10px] text-theme-text-muted">{clients}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            {clientGroups.map((g) => (
-              <div
-                key={`vpn-clients-${g.parentId}`}
-                className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0"
-              >
-                <div className="flex items-center justify-between gap-2 min-w-0">
-                  <span className="text-[11px] font-semibold text-theme-text truncate">
-                    {g.parentName}
-                  </span>
-                  <span
-                    className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
-                    style={{
-                      color: "#f59e0b",
-                      backgroundColor: "rgba(245, 158, 11, 0.15)",
-                    }}
-                  >
-                    {g.names.length}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {g.names.map((n) => (
-                    <span
-                      key={`${g.parentId}-${n}`}
-                      className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-theme bg-theme-card text-theme-text truncate max-w-full"
-                      title={n}
-                    >
-                      {n}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2 mt-auto shrink-0">
         {instances.length || 1} {t("dashboard.charts.instances", "instance(s)")}
