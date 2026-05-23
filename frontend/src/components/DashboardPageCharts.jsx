@@ -2106,6 +2106,16 @@ function PosterizarrCard() {
                       : "—"}
                   </span>
                 </div>
+                <div className="flex items-center justify-between gap-2 text-[10px]">
+                  <span className="text-theme-text-muted">
+                    {t("dashboard.charts.scriptErrors", "Script Errors")}
+                  </span>
+                  <span
+                    className={`font-semibold ${i.scriptErrors > 0 ? "text-rose-400" : "text-emerald-400"}`}
+                  >
+                    {i.scriptErrors}
+                  </span>
+                </div>
               </div>
             ))}
         </div>
