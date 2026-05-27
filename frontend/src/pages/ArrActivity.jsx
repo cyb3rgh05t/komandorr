@@ -242,50 +242,61 @@ export default function ArrActivity() {
   const enabledInstances = instancesList.filter((i) => i.enabled);
   const enabledCount = enabledInstances.length;
   const totalInstances = instancesList.length;
-  const sonarrTotalQueue = instancesList
-    .filter((i) => i.type === "sonarr")
-    .reduce((sum, i) => sum + (i.records?.length || 0), 0);
-  const radarrTotalQueue = instancesList
-    .filter((i) => i.type === "radarr")
-    .reduce((sum, i) => sum + (i.records?.length || 0), 0);
 
+  // Per-type queue counts EXCLUDE stuck items — queue = actually downloading/waiting.
   // Stuck / Active counts across all enabled instances. Mirrors ActivityBadge logic
   // and Sidebar/DashboardPageCharts (see AGENTS.md §8.3).
-  const { stuckCount, activeCount } = useMemo(() => {
-    let stuck = 0;
-    let active = 0;
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    enabledInstances.forEach((inst) => {
-      (inst.records || []).forEach((r) => {
-        const statusLower = (r?.status || "").toLowerCase();
-        const trackedState = (r?.trackedDownloadState || "").toLowerCase();
-        const trackedStatus = (r?.trackedDownloadStatus || "").toLowerCase();
-        const isImportBlocked =
-          (trackedStatus === "warning" || trackedStatus === "error") &&
-          (trackedState === "importblocked" ||
-            trackedState === "importpending" ||
-            trackedState === "importfailed" ||
-            trackedState === "failedpending");
-        const isCompletedBase =
-          (statusLower.includes("complet") &&
-            (r?.sizeleft === 0 || r?.sizeleft == null)) ||
-          trackedState === "importpending";
-        const addedTime = r?.added ? new Date(r.added).getTime() : 0;
-        const isOldCompleted =
-          isCompletedBase && addedTime && addedTime < fiveMinutesAgo;
-        if (isImportBlocked || isOldCompleted) {
-          stuck += 1;
-        } else if (
-          statusLower.includes("download") ||
-          statusLower.includes("import") ||
-          statusLower.includes("queued")
-        ) {
-          active += 1;
-        }
+  const { stuckCount, activeCount, sonarrTotalQueue, radarrTotalQueue } =
+    useMemo(() => {
+      let stuck = 0;
+      let active = 0;
+      let sonarrQueue = 0;
+      let radarrQueue = 0;
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+      instancesList.forEach((inst) => {
+        (inst.records || []).forEach((r) => {
+          const statusLower = (r?.status || "").toLowerCase();
+          const trackedState = (r?.trackedDownloadState || "").toLowerCase();
+          const trackedStatus = (r?.trackedDownloadStatus || "").toLowerCase();
+          const isImportBlocked =
+            (trackedStatus === "warning" || trackedStatus === "error") &&
+            (trackedState === "importblocked" ||
+              trackedState === "importpending" ||
+              trackedState === "importfailed" ||
+              trackedState === "failedpending");
+          const isCompletedBase =
+            (statusLower.includes("complet") &&
+              (r?.sizeleft === 0 || r?.sizeleft == null)) ||
+            trackedState === "importpending";
+          const addedTime = r?.added ? new Date(r.added).getTime() : 0;
+          const isOldCompleted =
+            isCompletedBase && addedTime && addedTime < fiveMinutesAgo;
+          const isStuck = isImportBlocked || isOldCompleted;
+
+          if (inst.enabled && isStuck) stuck += 1;
+          else if (
+            inst.enabled &&
+            (statusLower.includes("download") ||
+              statusLower.includes("import") ||
+              statusLower.includes("queued"))
+          ) {
+            active += 1;
+          }
+
+          // Per-type queue: items that are NOT stuck (i.e. actually downloading/waiting)
+          if (!isStuck) {
+            if (inst.type === "sonarr") sonarrQueue += 1;
+            else if (inst.type === "radarr") radarrQueue += 1;
+          }
+        });
       });
-    });
-    return { stuckCount: stuck, activeCount: active };
-  }, [enabledInstances]);
+      return {
+        stuckCount: stuck,
+        activeCount: active,
+        sonarrTotalQueue: sonarrQueue,
+        radarrTotalQueue: radarrQueue,
+      };
+    }, [instancesList]);
 
   const refreshAll = async () => {
     setIsRefreshing(true);

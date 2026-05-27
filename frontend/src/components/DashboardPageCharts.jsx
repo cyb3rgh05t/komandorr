@@ -1439,7 +1439,7 @@ function DownloadsCard() {
 
   const { data: historyData } = useQuery({
     queryKey: ["dash-arr-history"],
-    queryFn: () => arrActivityApi.getHistory(1, 20).catch(() => null),
+    queryFn: () => arrActivityApi.getHistory(1, 100).catch(() => null),
     refetchInterval: 30000,
     staleTime: 15000,
   });
@@ -1511,16 +1511,19 @@ function DownloadsCard() {
   );
   const visibleRows = sortedRows.slice(0, 6);
 
-  const totalItems = rows.reduce((a, r) => a + r.total, 0);
+  // "Real" queue = currently downloading + waiting (excludes stuck/completed/idle).
   const totalActive = rows.reduce((a, r) => a + r.active, 0);
   const totalQueued = rows.reduce((a, r) => a + r.queued, 0);
-  const totalCompleted = rows.reduce((a, r) => a + r.completed, 0);
   const totalStuck = rows.reduce((a, r) => a + r.stuck, 0);
+  const totalItems = totalActive + totalQueued;
   const instanceCount = rows.length;
 
-  // Per-instance recent history (latest record + counts)
+  // Per-instance recent history (latest record + counts for TODAY only)
   const historyRows = useMemo(() => {
     if (!historyData || typeof historyData !== "object") return [];
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayMs = startOfDay.getTime();
     return Object.entries(historyData)
       .filter(([, s]) => s && typeof s === "object")
       .map(([id, s]) => {
@@ -1529,6 +1532,8 @@ function DownloadsCard() {
         let imported = 0;
         let failed = 0;
         records.forEach((r) => {
+          const ts = r?.date ? new Date(r.date).getTime() : 0;
+          if (!ts || ts < startOfDayMs) return;
           const et = (r?.eventType || "").toLowerCase();
           if (et === "grabbed") grabbed++;
           else if (et.includes("imported")) imported++;
@@ -1547,6 +1552,11 @@ function DownloadsCard() {
       })
       .filter((r) => r.total > 0 || r.latest);
   }, [historyData]);
+
+  const totalCompletedToday = historyRows.reduce(
+    (a, r) => a + (r.imported || 0),
+    0,
+  );
 
   const formatRelative = (iso) => {
     if (!iso) return "—";
@@ -1722,14 +1732,14 @@ function DownloadsCard() {
       <StatGrid
         tiles={[
           {
-            label: t("dashboard.charts.total", "Total"),
-            value: totalItems,
-            color: "var(--theme-primary)",
-          },
-          {
             label: t("dashboard.charts.instances", "Instances"),
             value: instanceCount,
             color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.total", "Total"),
+            value: totalItems,
+            color: "var(--theme-primary)",
           },
           {
             label: t("dashboard.charts.active", "Active"),
@@ -1742,8 +1752,8 @@ function DownloadsCard() {
             color: "#a78bfa",
           },
           {
-            label: t("dashboard.charts.completed", "Completed"),
-            value: totalCompleted,
+            label: t("dashboard.charts.completedToday", "Completed Today"),
+            value: totalCompletedToday,
             color: "#22c55e",
           },
           {
