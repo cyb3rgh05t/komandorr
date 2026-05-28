@@ -35,13 +35,20 @@ const ActivityBadge = ({ status, item, t }) => {
   const trackedState = (item?.trackedDownloadState || "").toLowerCase();
   const trackedStatus = (item?.trackedDownloadStatus || "").toLowerCase();
 
-  // Import-Blocker: "Downloaded - Unable to Import Automatically"
+  // Import-Blocker: "Downloaded - Unable to Import Automatically".
+  // State alone is enough for the terminal states; importpending is transient so
+  // we still require warning/error there. statusMessages populated on a completed
+  // item is also a stuck signal (Radarr writes the reason there).
+  const hasStatusMessages =
+    Array.isArray(item?.statusMessages) && item.statusMessages.length > 0;
+  const isTerminalStuckState =
+    trackedState === "importblocked" ||
+    trackedState === "importfailed" ||
+    trackedState === "failedpending";
   const isImportBlocked =
-    (trackedStatus === "warning" || trackedStatus === "error") &&
-    (trackedState === "importblocked" ||
-      trackedState === "importpending" ||
-      trackedState === "importfailed" ||
-      trackedState === "failedpending");
+    isTerminalStuckState ||
+    ((trackedStatus === "warning" || trackedStatus === "error") &&
+      trackedState === "importpending");
 
   // Completed-but-old (>5min) → stuck
   const isCompletedBase =
@@ -52,6 +59,7 @@ const ActivityBadge = ({ status, item, t }) => {
   const addedTime = item?.added ? new Date(item.added).getTime() : 0;
   const isOldCompleted =
     isCompletedBase && addedTime && addedTime < fiveMinutesAgo;
+  const isStuckByMessage = hasStatusMessages && isCompletedBase;
 
   const styles = {
     downloading: {
@@ -92,7 +100,7 @@ const ActivityBadge = ({ status, item, t }) => {
   };
 
   let style;
-  if (isImportBlocked || isOldCompleted) {
+  if (isImportBlocked || isOldCompleted || isStuckByMessage) {
     style = styles.stuck;
   } else if (statusLower.includes("download")) {
     style = styles.downloading;
@@ -258,16 +266,21 @@ export default function ArrActivity() {
           const statusLower = (r?.status || "").toLowerCase();
           const trackedState = (r?.trackedDownloadState || "").toLowerCase();
           const trackedStatus = (r?.trackedDownloadStatus || "").toLowerCase();
-          const isImportBlocked =
-            (trackedStatus === "warning" || trackedStatus === "error") &&
-            (trackedState === "importblocked" ||
-              trackedState === "importpending" ||
-              trackedState === "importfailed" ||
-              trackedState === "failedpending");
+          const hasStatusMessages =
+            Array.isArray(r?.statusMessages) && r.statusMessages.length > 0;
+          const isTerminalStuckState =
+            trackedState === "importblocked" ||
+            trackedState === "importfailed" ||
+            trackedState === "failedpending";
           const isCompletedBase =
             (statusLower.includes("complet") &&
               (r?.sizeleft === 0 || r?.sizeleft == null)) ||
             trackedState === "importpending";
+          const isImportBlocked =
+            isTerminalStuckState ||
+            ((trackedStatus === "warning" || trackedStatus === "error") &&
+              trackedState === "importpending") ||
+            (hasStatusMessages && isCompletedBase);
           const addedTime = r?.added ? new Date(r.added).getTime() : 0;
           const isOldCompleted =
             isCompletedBase && addedTime && addedTime < fiveMinutesAgo;

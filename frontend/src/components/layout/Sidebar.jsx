@@ -203,14 +203,21 @@ export default function Sidebar() {
             (record.sizeleft === 0 || record.sizeleft == null)) ||
           trackedState === "importpending";
 
-        // Import-Blocker: "Downloaded - Unable to Import Automatically"
-        // → trackedDownloadStatus=warning/error + state importBlocked/importPending/importFailed
+        // Import-Blocker: "Downloaded - Unable to Import Automatically".
+        // Terminal states alone are enough; importpending needs trackedStatus.
+        // statusMessages populated on a completed item is also stuck.
+        const hasStatusMessages =
+          Array.isArray(record.statusMessages) &&
+          record.statusMessages.length > 0;
+        const isTerminalStuckState =
+          trackedState === "importblocked" ||
+          trackedState === "importfailed" ||
+          trackedState === "failedpending";
         const isImportBlocked =
-          (trackedStatus === "warning" || trackedStatus === "error") &&
-          (trackedState === "importblocked" ||
-            trackedState === "importpending" ||
-            trackedState === "importfailed" ||
-            trackedState === "failedpending");
+          isTerminalStuckState ||
+          ((trackedStatus === "warning" || trackedStatus === "error") &&
+            trackedState === "importpending") ||
+          (hasStatusMessages && isCompleted);
 
         if (isActive) {
           if (isSonarr) sonarrActive++;

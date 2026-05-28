@@ -1471,12 +1471,19 @@ function DownloadsCard() {
             (statusLower.includes("complet") &&
               (i?.sizeleft === 0 || i?.sizeleft == null)) ||
             trackedState === "importpending";
+          // Terminal stuck states — state alone is enough, regardless of trackedStatus.
+          const isTerminalStuckState =
+            trackedState === "importblocked" ||
+            trackedState === "importfailed" ||
+            trackedState === "failedpending";
+          // statusMessages array populated on a completed item → import problem.
+          const hasStatusMessages =
+            Array.isArray(i?.statusMessages) && i.statusMessages.length > 0;
           const isImportBlocked =
-            (trackedStatus === "warning" || trackedStatus === "error") &&
-            (trackedState === "importblocked" ||
-              trackedState === "importpending" ||
-              trackedState === "importfailed" ||
-              trackedState === "failedpending");
+            isTerminalStuckState ||
+            ((trackedStatus === "warning" || trackedStatus === "error") &&
+              trackedState === "importpending") ||
+            (hasStatusMessages && isCompletedBase);
 
           if (isActive) active++;
           if (isQueued) queued++;
