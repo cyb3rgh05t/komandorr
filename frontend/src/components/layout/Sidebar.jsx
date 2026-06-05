@@ -853,6 +853,10 @@ export default function Sidebar() {
                   const hasStorageTabBadge =
                     item.tabName === "storage" && storageIssuesCount > 0;
 
+                  // Check if Posterizarr tab has any script errors (mirror Overview subtab)
+                  const hasPosterizarrTabBadge =
+                    item.tabName === "posterizarr" && posterizarrErrorCount > 0;
+
                   return (
                     <div key={item.label}>
                       <button
@@ -970,6 +974,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {totalStuckDownloads}
+                          </span>
+                        )}
+                        {hasPosterizarrTabBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {posterizarrErrorCount}
                           </span>
                         )}
                         <ChevronDown

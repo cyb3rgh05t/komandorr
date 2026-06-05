@@ -493,9 +493,9 @@ function PlexCard() {
             const res = await api.get(
               `/plex/stats/live?instance_id=${encodeURIComponent(inst.id)}`,
             );
-            return [inst.id, res || {}];
+            return [inst.id, res || null];
           } catch {
-            return [inst.id, {}];
+            return [inst.id, null];
           }
         }),
       );
@@ -552,6 +552,10 @@ function PlexCard() {
 
   if (instancesData !== undefined && instances.length === 0) return null;
 
+  // Online = instance returned non-null library data, Offline = the rest.
+  const onlineCount = instances.filter((inst) => libByInst[inst.id]).length;
+  const offlineCount = Math.max(0, instances.length - onlineCount);
+
   return (
     <ChartCard
       icon={Activity}
@@ -560,7 +564,11 @@ function PlexCard() {
       footer={`${instances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
-      )}`}
+      )} \u2022 ${onlineCount} ${t("dashboard.charts.online", "online")}${
+        offlineCount > 0
+          ? ` \u2022 ${offlineCount} ${t("dashboard.charts.offline", "offline")}`
+          : ""
+      }`}
     >
       <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         {perInstance.map((inst) => {
@@ -846,6 +854,16 @@ export function VpnCard({
   const _vpnDataReady = hasProps || instData !== undefined;
   if (_vpnDataReady && instances.length === 0) return null;
 
+  // Online instance = it has at least one container in the aggregated response
+  // (we tag every container with _instance_id during fetching).
+  const onlineInstanceIds = new Set(
+    allContainers.map((c) => c?._instance_id).filter((v) => v != null),
+  );
+  const onlineInstances = instances.filter((i) =>
+    onlineInstanceIds.has(i.id),
+  ).length;
+  const offlineInstances = Math.max(0, instances.length - onlineInstances);
+
   return (
     <div
       className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full min-h-0"
@@ -980,6 +998,18 @@ export function VpnCard({
 
       <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2 mt-auto shrink-0">
         {instances.length || 1} {t("dashboard.charts.instances", "instance(s)")}
+        {instances.length > 0 && (
+          <>
+            {" \u2022 "}
+            {onlineInstances} {t("dashboard.charts.online", "online")}
+            {offlineInstances > 0 && (
+              <>
+                {" \u2022 "}
+                {offlineInstances} {t("dashboard.charts.offline", "offline")}
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -1092,6 +1122,12 @@ function NfsCard() {
 
   if (data !== undefined && allManagers.length === 0) return null;
 
+  // The dashboard endpoint only returns managers that successfully responded,
+  // so each entry in allManagers is considered online. Without a separate
+  // "configured" list we cannot distinguish offline, so report total = online.
+  const nfsOnline = allManagers.length;
+  const nfsOffline = 0;
+
   return (
     <ChartCard
       icon={HardDrive}
@@ -1100,7 +1136,11 @@ function NfsCard() {
       footer={`${instanceCount} ${t(
         "dashboard.charts.instances",
         "instance(s)",
-      )}`}
+      )} \u2022 ${nfsOnline} ${t("dashboard.charts.online", "online")}${
+        nfsOffline > 0
+          ? ` \u2022 ${nfsOffline} ${t("dashboard.charts.offline", "offline")}`
+          : ""
+      }`}
     >
       <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         {perInstance.map((inst) => {
@@ -1601,12 +1641,26 @@ function DownloadsCard() {
 
   if (data !== undefined && instanceCount === 0) return null;
 
+  // Per-arr instance: backend returns { error } when unreachable. Anything
+  // without `error` is treated as online.
+  const arrEntries =
+    data && typeof data === "object" ? Object.values(data) : [];
+  const arrOnline = arrEntries.filter((s) => s && !s.error).length;
+  const arrOffline = Math.max(0, arrEntries.length - arrOnline);
+
   return (
     <ChartCard
       icon={Download}
       title={t("dashboard.charts.downloads", "Downloads")}
       onClick={() => navigate("/arr-activity")}
-      footer={`${totalActive} ${t(
+      footer={`${arrEntries.length} ${t(
+        "dashboard.charts.instances",
+        "instance(s)",
+      )} • ${arrOnline} ${t("dashboard.charts.online", "online")}${
+        arrOffline > 0
+          ? ` • ${arrOffline} ${t("dashboard.charts.offline", "offline")}`
+          : ""
+      } • ${totalActive} ${t(
         "dashboard.charts.active",
         "active",
       )} • ${totalStuck} ${t("dashboard.charts.stuck", "stuck")}`}
@@ -1875,7 +1929,11 @@ function UploadsCard() {
       icon={Upload}
       title={t("dashboard.charts.uploads", "Uploads")}
       onClick={() => navigate("/uploader")}
-      footer={`${total} ${t("dashboard.charts.items", "items")}`}
+      footer={`1 ${t("dashboard.charts.instance", "instance")} • ${
+        connected
+          ? t("dashboard.charts.online", "online")
+          : t("dashboard.charts.offline", "offline")
+      } • ${total} ${t("dashboard.charts.items", "items")}`}
     >
       <div className="flex items-center justify-around w-full px-2 sm:px-4">
         <div className="flex flex-col items-center gap-2">
@@ -1917,24 +1975,40 @@ function UploadsCard() {
       </div>
       {lastFile && (
         <div className="w-full px-1">
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] uppercase tracking-wide text-theme-text-muted">
-                {t("dashboard.charts.lastUpload", "Last Upload")}
-              </p>
-              <p
-                className="text-[11px] font-mono text-theme-text truncate"
-                title={lastFile}
-              >
-                {lastFile}
-              </p>
+          <div className="relative overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent p-3 shadow-sm hover:border-emerald-500/50 transition-colors">
+            <div
+              className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-600"
+              aria-hidden="true"
+            />
+            <div className="flex items-center gap-3 min-w-0 pl-2">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-500/20 ring-1 ring-emerald-500/30 shrink-0">
+                <Check className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-emerald-400">
+                    {t("dashboard.charts.lastUpload", "Last Upload")}
+                  </span>
+                  <span className="inline-flex items-center justify-center w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <p
+                  className="text-[12px] font-mono text-theme-text truncate leading-tight"
+                  title={lastFile}
+                >
+                  {lastFile}
+                </p>
+              </div>
+              {lastWhen && (
+                <div className="flex flex-col items-end shrink-0">
+                  <span className="text-[9px] uppercase tracking-wide text-theme-text-muted">
+                    {t("dashboard.charts.completed", "Completed")}
+                  </span>
+                  <span className="text-[11px] text-emerald-400 font-mono font-medium">
+                    {lastWhen}
+                  </span>
+                </div>
+              )}
             </div>
-            {lastWhen && (
-              <span className="text-[10px] text-theme-text-muted shrink-0 font-mono">
-                {lastWhen}
-              </span>
-            )}
           </div>
         </div>
       )}
@@ -2116,15 +2190,26 @@ function PosterizarrCard() {
 
   if (instData !== undefined && instances.length === 0) return null;
 
+  // byInstance[id] is null when the per-instance fetch failed.
+  const postOnline = (
+    instances.length > 0 ? instances : [{ id: "_default" }]
+  ).filter((inst) => byInstance[inst.id]).length;
+  const postTotal = instances.length || 1;
+  const postOffline = Math.max(0, postTotal - postOnline);
+
   return (
     <ChartCard
       icon={ImageIcon}
       title={t("dashboard.charts.posterizarr", "Posterizarr")}
       onClick={() => navigate("/posterizarr")}
-      footer={`${instances.length || 1} ${t(
+      footer={`${postTotal} ${t(
         "dashboard.charts.instances",
         "instance(s)",
-      )}`}
+      )} \u2022 ${postOnline} ${t("dashboard.charts.online", "online")}${
+        postOffline > 0
+          ? ` \u2022 ${postOffline} ${t("dashboard.charts.offline", "offline")}`
+          : ""
+      }`}
     >
       <div className="flex items-center justify-around w-full px-2 sm:px-4 flex-wrap gap-4 sm:gap-6 xl:gap-8">
         {perInstance.map((inst) => {
@@ -2405,6 +2490,12 @@ function AutoscanCard() {
 
   if (data !== undefined && allInstances.length === 0) return null;
 
+  // An instance is considered online when it contains a stats or config object.
+  const autoscanOnline = allInstances.filter(
+    (inst) => inst && (inst.stats || inst.config),
+  ).length;
+  const autoscanOffline = Math.max(0, allInstances.length - autoscanOnline);
+
   return (
     <ChartCard
       icon={Scan}
@@ -2421,7 +2512,11 @@ function AutoscanCard() {
       footer={`${allInstances.length} ${t(
         "dashboard.charts.instances",
         "instance(s)",
-      )}`}
+      )} \u2022 ${autoscanOnline} ${t("dashboard.charts.online", "online")}${
+        autoscanOffline > 0
+          ? ` \u2022 ${autoscanOffline} ${t("dashboard.charts.offline", "offline")}`
+          : ""
+      }`}
     >
       <div className="flex items-center justify-around w-full px-2 sm:px-4">
         <div className="flex flex-col items-center gap-2">
@@ -3478,7 +3573,7 @@ export default function DashboardPageCharts() {
             onDragStart={editMode ? handleDragStart(id) : undefined}
             onDragOver={handleDragOver}
             onDrop={editMode ? handleDrop(id) : undefined}
-            className={`relative h-full flex flex-col ${
+            className={`dashboard-card-slot relative h-full flex flex-col ${
               editMode
                 ? "ring-2 ring-theme-primary/40 ring-offset-2 ring-offset-theme-bg rounded-2xl transition-all hover:ring-theme-primary/80 cursor-move"
                 : ""
@@ -3515,7 +3610,7 @@ export default function DashboardPageCharts() {
               </div>
             )}
             <div
-              className={`flex-1 h-full ${editMode ? "pointer-events-none opacity-90" : ""}`}
+              className={`dashboard-card-content flex-1 h-full ${editMode ? "pointer-events-none opacity-90" : ""}`}
             >
               <Component />
             </div>

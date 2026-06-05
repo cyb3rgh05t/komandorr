@@ -8,6 +8,13 @@
   }
 }
 
+/* Hide a dashboard card slot entirely when its inner Card returned null
+   (i.e. the instance isn't configured). Keeps the responsive grid tight
+   instead of showing an empty placeholder tile. */
+.dashboard-card-slot:has(> .dashboard-card-content:empty) {
+  display: none;
+}
+
 /* Custom hover utilities - outside @layer to prevent Tailwind purging */
 .hover\:bg-theme-primary-10:hover {
   background-color: color-mix(
