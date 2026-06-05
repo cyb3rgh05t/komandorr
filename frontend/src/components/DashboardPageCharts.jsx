@@ -1975,39 +1975,28 @@ function UploadsCard() {
       </div>
       {lastFile && (
         <div className="w-full px-1">
-          <div className="relative overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent p-3 shadow-sm hover:border-emerald-500/50 transition-colors">
-            <div
-              className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-600"
-              aria-hidden="true"
-            />
-            <div className="flex items-center gap-3 min-w-0 pl-2">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-500/20 ring-1 ring-emerald-500/30 shrink-0">
-                <Check className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-emerald-400">
-                    {t("dashboard.charts.lastUpload", "Last Upload")}
-                  </span>
-                  <span className="inline-flex items-center justify-center w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                </div>
-                <p
-                  className="text-[12px] font-mono text-theme-text truncate leading-tight"
-                  title={lastFile}
-                >
-                  {lastFile}
-                </p>
+          <div className="bg-theme-hover/40 border border-theme rounded-lg p-2 hover:border-theme-primary/50 transition-colors">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-theme-text-muted">
+                  {t("dashboard.charts.lastUpload", "Last Upload")}
+                </span>
               </div>
               {lastWhen && (
-                <div className="flex flex-col items-end shrink-0">
-                  <span className="text-[9px] uppercase tracking-wide text-theme-text-muted">
-                    {t("dashboard.charts.completed", "Completed")}
-                  </span>
-                  <span className="text-[11px] text-emerald-400 font-mono font-medium">
-                    {lastWhen}
-                  </span>
-                </div>
+                <span className="text-[10px] text-theme-text-muted shrink-0 font-mono">
+                  {lastWhen}
+                </span>
               )}
+            </div>
+            <p
+              className="text-[11px] font-mono text-theme-text truncate leading-tight"
+              title={lastFile}
+            >
+              {lastFile}
+            </p>
+            <div className="text-[10px] text-theme-text-muted mt-1">
+              {t("dashboard.charts.completed", "Completed")}
             </div>
           </div>
         </div>
