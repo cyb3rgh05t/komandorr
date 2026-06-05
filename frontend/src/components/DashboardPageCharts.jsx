@@ -550,6 +550,8 @@ function PlexCard() {
     };
   });
 
+  if (instancesData !== undefined && instances.length === 0) return null;
+
   return (
     <ChartCard
       icon={Activity}
@@ -841,6 +843,9 @@ export function VpnCard({
     })
     .filter((g) => g.names.length > 0);
 
+  const _vpnDataReady = hasProps || instData !== undefined;
+  if (_vpnDataReady && instances.length === 0) return null;
+
   return (
     <div
       className="group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-theme-primary/60 hover:shadow-md transition-all h-full min-h-0"
@@ -1085,6 +1090,8 @@ function NfsCard() {
     };
   });
 
+  if (data !== undefined && allManagers.length === 0) return null;
+
   return (
     <ChartCard
       icon={HardDrive}
@@ -1294,6 +1301,8 @@ function StorageCard() {
   const servicesWithStorage = (services || []).filter(
     (svc) => (svc?.storage?.storage_paths || []).length > 0,
   ).length;
+
+  if (services !== undefined && pools.length === 0) return null;
 
   return (
     <ChartCard
@@ -1590,6 +1599,8 @@ function DownloadsCard() {
     return { label: et || "Event", color: "var(--theme-primary)" };
   };
 
+  if (data !== undefined && instanceCount === 0) return null;
+
   return (
     <ChartCard
       icon={Download}
@@ -1778,6 +1789,12 @@ function UploadsCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const { data: status } = useQuery({
+    queryKey: ["dash-uploader-status"],
+    queryFn: () => uploaderApi.getStatus().catch(() => null),
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
   const { data: inProgress } = useQuery({
     queryKey: ["dash-uploader-inprogress"],
     queryFn: () => uploaderApi.getInProgress().catch(() => null),
@@ -1796,6 +1813,18 @@ function UploadsCard() {
     refetchInterval: 15000,
     staleTime: 10000,
   });
+  const { data: completedToday } = useQuery({
+    queryKey: ["dash-uploader-completed-today"],
+    queryFn: () => uploaderApi.getCompletedTodayStats().catch(() => null),
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+  const { data: lastCompleted } = useQuery({
+    queryKey: ["dash-uploader-last-completed"],
+    queryFn: () => uploaderApi.getCompleted(1, 1).catch(() => null),
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
 
   const active = Number(
     inProgress?.jobs?.length ??
@@ -1804,7 +1833,42 @@ function UploadsCard() {
   const failed = Number(failedCount?.count ?? 0);
   const queued = Number(queue?.files?.length ?? 0);
   const total = active + failed + queued;
-  const idle = total === 0;
+  const todayCount = Number(completedToday?.count ?? 0);
+  const lastJob = Array.isArray(lastCompleted?.jobs)
+    ? lastCompleted.jobs[0]
+    : null;
+  const lastFile = lastJob?.file_name || "";
+  const lastWhen = lastJob?.time_end_clean || lastJob?.time_end || "";
+
+  // Hide entire card when uploader is not configured (backend marks responses
+  // with `not_configured: true` when nothing is set up).
+  const notConfigured = !!(
+    inProgress?.not_configured ||
+    queue?.not_configured ||
+    failedCount?.not_configured ||
+    completedToday?.not_configured ||
+    (status && status.connected === false && status.error === "Not configured")
+  );
+  if (notConfigured) return null;
+
+  // Status: Uploading (active>0) → Online (started, idle) → Offline (stopped/unreachable)
+  const connected = status ? status.connected !== false : true;
+  const rawStatus = (status?.status || "").toLowerCase();
+  let statusLabel;
+  let statusColor;
+  if (!connected) {
+    statusLabel = t("dashboard.charts.offline", "Offline");
+    statusColor = "#ef4444";
+  } else if (active > 0) {
+    statusLabel = t("dashboard.charts.uploading", "Uploading");
+    statusColor = "#22c55e";
+  } else if (rawStatus.includes("stopped") || rawStatus.includes("error")) {
+    statusLabel = t("dashboard.charts.offline", "Offline");
+    statusColor = "#94a3b8";
+  } else {
+    statusLabel = t("dashboard.charts.online", "Online");
+    statusColor = "#22d3ee";
+  }
 
   return (
     <ChartCard
@@ -1851,6 +1915,29 @@ function UploadsCard() {
           </span>
         </div>
       </div>
+      {lastFile && (
+        <div className="w-full px-1">
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] uppercase tracking-wide text-theme-text-muted">
+                {t("dashboard.charts.lastUpload", "Last Upload")}
+              </p>
+              <p
+                className="text-[11px] font-mono text-theme-text truncate"
+                title={lastFile}
+              >
+                {lastFile}
+              </p>
+            </div>
+            {lastWhen && (
+              <span className="text-[10px] text-theme-text-muted shrink-0 font-mono">
+                {lastWhen}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
       <StatGrid
         tiles={[
           {
@@ -1874,16 +1961,14 @@ function UploadsCard() {
             color: "#ef4444",
           },
           {
-            label: t("dashboard.charts.status", "Status"),
-            value: idle
-              ? t("dashboard.charts.idle", "Idle")
-              : t("dashboard.charts.running", "Running"),
-            color: idle ? "#94a3b8" : "#22c55e",
+            label: t("dashboard.charts.uploadedToday", "Uploaded Today"),
+            value: todayCount,
+            color: "#22c55e",
           },
           {
-            label: t("dashboard.charts.failureRate", "Failure %"),
-            value: total > 0 ? `${Math.round((failed / total) * 100)}%` : "0%",
-            color: total > 0 && failed / total >= 0.2 ? "#ef4444" : "#22c55e",
+            label: t("dashboard.charts.status", "Status"),
+            value: statusLabel,
+            color: statusColor,
           },
         ]}
       />
@@ -2028,6 +2113,8 @@ function PosterizarrCard() {
       ],
     };
   });
+
+  if (instData !== undefined && instances.length === 0) return null;
 
   return (
     <ChartCard
@@ -2315,6 +2402,8 @@ function AutoscanCard() {
     const d = Math.floor(hr / 24);
     return `${d}d`;
   };
+
+  if (data !== undefined && allInstances.length === 0) return null;
 
   return (
     <ChartCard
@@ -2775,6 +2864,8 @@ function VodPortalCard() {
   const issSubs = Number(issues.subtitles ?? 0) || 0;
   const issOthers = Number(issues.others ?? 0) || 0;
 
+  if (data !== undefined && !configured) return null;
+
   return (
     <ChartCard
       icon={Clapperboard}
@@ -2925,7 +3016,7 @@ function ServersCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { data: services = [] } = useQuery({
+  const { data: services = [], isFetched: servicesFetched } = useQuery({
     queryKey: ["dash-services"],
     queryFn: async () => {
       try {
@@ -2989,6 +3080,8 @@ function ServersCard() {
             total,
         )
       : 0;
+
+  if (servicesFetched && services.length === 0) return null;
 
   return (
     <ChartCard

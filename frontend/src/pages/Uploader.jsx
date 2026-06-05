@@ -75,18 +75,6 @@ const percentageToNumber = (value) => {
   return Number.isNaN(num) ? 0 : num;
 };
 
-const formatUptime = (str) => {
-  if (!str) return null;
-  const d = str.match(/(\d+)\s*day/i);
-  const h = str.match(/(\d+)\s*hour/i);
-  const m = str.match(/(\d+)\s*min/i);
-  const parts = [];
-  if (d) parts.push(`${d[1]}d`);
-  if (h) parts.push(`${h[1]}h`);
-  if (m) parts.push(`${m[1]}m`);
-  return parts.join(" ") || str;
-};
-
 export default function Uploader() {
   const { t } = useTranslation();
   const toast = useToast();
@@ -422,8 +410,8 @@ export default function Uploader() {
       {isInitialLoading ? (
         <div className="space-y-4">
           {/* Stat cards skeleton */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
-            {[...Array(7)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            {[...Array(6)].map((_, i) => (
               <div
                 key={i}
                 className="bg-theme-card border border-theme rounded-lg p-4"
@@ -452,7 +440,7 @@ export default function Uploader() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
             <div
               className={`bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left ${statusTone.bg}`}
             >
@@ -471,22 +459,6 @@ export default function Uploader() {
                 {React.createElement(statusIcon, {
                   className: `w-8 h-8 ${statusTone.color} shrink-0`,
                 })}
-              </div>
-            </div>
-
-            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:shadow-md transition-all text-left hover:border-indigo-500/50 hover:bg-indigo-500/10">
-              <div className="flex items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-indigo-500" />
-                    {t("uploader.uptime", "Uptime")}
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-500">
-                    {formatUptime(uploaderStatus?.uptime) ||
-                      t("uploader.unknown", "Unknown")}
-                  </p>
-                </div>
-                <Clock className="w-8 h-8 text-indigo-500 shrink-0" />
               </div>
             </div>
 
