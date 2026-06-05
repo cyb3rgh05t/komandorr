@@ -1975,28 +1975,36 @@ function UploadsCard() {
       </div>
       {lastFile && (
         <div className="w-full px-1">
-          <div className="bg-theme-hover/40 border border-theme rounded-lg p-2 hover:border-theme-primary/50 transition-colors">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-theme-text-muted">
-                  {t("dashboard.charts.lastUpload", "Last Upload")}
+          <div className="flex flex-col gap-1 p-2 rounded-lg bg-theme-hover border border-theme min-w-0">
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <span className="text-[11px] font-semibold text-theme-text truncate">
+                {t("dashboard.charts.lastUpload", "Last Upload")}
+              </span>
+              <span
+                className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                style={{
+                  color: "#22c55e",
+                  backgroundColor: "#22c55e20",
+                }}
+              >
+                {t("dashboard.charts.completed", "Completed")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <span
+                className="text-[10px] text-theme-text-muted truncate"
+                title={lastFile}
+              >
+                <span className="text-theme-text-muted/70 mr-1">
+                  {t("dashboard.charts.lastItem", "Last")}:
                 </span>
-              </div>
+                <span className="text-theme-text">{lastFile}</span>
+              </span>
               {lastWhen && (
-                <span className="text-[10px] text-theme-text-muted shrink-0 font-mono">
+                <span className="text-[10px] text-theme-text-muted shrink-0">
                   {lastWhen}
                 </span>
               )}
-            </div>
-            <p
-              className="text-[11px] font-mono text-theme-text truncate leading-tight"
-              title={lastFile}
-            >
-              {lastFile}
-            </p>
-            <div className="text-[10px] text-theme-text-muted mt-1">
-              {t("dashboard.charts.completed", "Completed")}
             </div>
           </div>
         </div>
