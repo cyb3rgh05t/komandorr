@@ -50,6 +50,18 @@
     Sidebar, DashboardPageCharts, and ArrActivity.
 11. **Notification flap protection**: `FAILURE_THRESHOLD = 2` consecutive
     failures before a PROBLEM alert; recovery is immediate. See §8.2.
+12. **Dashboard card visibility**: instance-driven cards must return `null`
+   when no instance is configured. Do not render placeholder tiles for
+   unconfigured modules.
+13. **Dashboard card footers**: include instance context as
+   `N instances • X online • Y offline` (when known). Keep existing
+   card-specific counters after this.
+14. **Sidebar badge propagation**: if a tabbed module has an error/warning
+   badge on a subtab, mirror it on the parent tab as well (Posterizarr /
+   Uploader).
+15. **Uploads Last Upload mini-card** must use the same compact card language
+   as Downloads/Autoscan recent entries (`bg-theme-hover`, `border-theme`,
+   `rounded-lg`, compact two-row list layout).
 
 ## Things to avoid
 
@@ -58,6 +70,8 @@
   `StorageCard`).
 - Hard-coding 5-second polling. Use the defaults in §4.4 of nfs-mount's
   AGENTS.md as guidance (this repo follows the same pattern).
+- Leaving empty dashboard card placeholders for unconfigured modules. The slot
+   must collapse when the card returns `null`.
 - Creating new Markdown docs without being asked. Update AGENTS.md instead.
 
 ## Commands
