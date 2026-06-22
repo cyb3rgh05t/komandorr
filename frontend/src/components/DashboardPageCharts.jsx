@@ -2928,7 +2928,11 @@ function VodSyncCard() {
                         backgroundColor,
                       }}
                     >
-                      <span className="text-[10px] font-bold text-white leading-none mt-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
+                      <span
+                        className={`text-[10px] font-bold text-white leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] ${
+                          v === 0 ? "absolute -top-3" : "mt-0.5"
+                        }`}
+                      >
                         {v}
                       </span>
                     </div>
@@ -3047,6 +3051,7 @@ function WebplayerCard() {
   const last7Values = last7.map((p) => Number(p?.value) || 0);
   const weekPeak = last7Values.length ? Math.max(...last7Values) : 0;
   const weekMin = last7Values.length ? Math.min(...last7Values) : 0;
+  const weekMinIdx = last7Values.findIndex((v) => v === weekMin);
   const weekAvg = last7Values.length
     ? Math.round(last7Values.reduce((a, b) => a + b, 0) / last7Values.length)
     : 0;
@@ -3129,8 +3134,7 @@ function WebplayerCard() {
               const v = Number(p?.value) || 0;
               const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
               const isPeak = v === weekPeak && weekPeak > 0;
-              const isMin =
-                v === weekMin && weekMin > 0 && weekPeak !== weekMin;
+              const isMin = i === weekMinIdx && weekPeak !== weekMin;
               const isWeekend = isWeekendDate(p?.fullLabel || p?.label || "");
               const label = getWeekdayLabel(p?.fullLabel || p?.label || "");
 
