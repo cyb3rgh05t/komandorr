@@ -3605,6 +3605,7 @@ const DEFAULT_DASHBOARD_CARD_ORDER = [
   "servers",
   "plex",
   "vodSync",
+  "webplayer",
   "nfs",
   "storage",
   "downloads",
