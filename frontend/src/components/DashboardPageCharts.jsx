@@ -3013,6 +3013,19 @@ function WebplayerCard() {
     staleTime: 30000,
   });
 
+  const { data: webplayerStats } = useQuery({
+    queryKey: ["dash-webplayer-full-stats"],
+    queryFn: async () => {
+      try {
+        return await api.get("/webplayer/stats");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
   const { data: liveMetrics } = useQuery({
     queryKey: ["dash-webplayer-live"],
     queryFn: async () => {
@@ -3031,6 +3044,11 @@ function WebplayerCard() {
       liveMetrics?.current_sessions ??
         liveMetrics?.activeStreams ??
         liveMetrics?.streams ??
+        liveMetrics?.transcode?.sessionsRunning ??
+        liveMetrics?.transcode?.activeSessions ??
+        liveMetrics?.sessionsRunning ??
+        webplayerStats?.transcode?.sessionsRunning ??
+        webplayerStats?.transcode?.activeSessions ??
         0,
     ) || 0;
   const allTimePeak = Number(peaks?.max_peak ?? 0) || 0;
