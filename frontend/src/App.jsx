@@ -27,6 +27,7 @@ import Posterizarr from "./pages/Posterizarr";
 import NfsMount from "./pages/NfsMount";
 import Autoscan from "./pages/Autoscan";
 import ExternalApps from "./pages/ExternalApps";
+import Webplayer from "./pages/Webplayer";
 import LoadingScreen from "./components/LoadingScreen";
 import LoginScreen from "./components/LoginScreen";
 import "./i18n";
@@ -216,6 +217,7 @@ function App() {
                       <Route path="/nfs-mount" element={<NfsMount />} />
                       <Route path="/autoscan" element={<Autoscan />} />
                       <Route path="/external-apps" element={<ExternalApps />} />
+                      <Route path="/webplayer" element={<Webplayer />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/about" element={<About />} />
                     </Routes>

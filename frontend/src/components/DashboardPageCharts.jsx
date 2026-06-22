@@ -32,6 +32,7 @@ import {
   Check,
   RotateCcw,
   Crown,
+  Tv2,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { uploaderApi } from "@/services/uploaderApi";
@@ -40,6 +41,62 @@ import { arrActivityApi } from "@/services/arrActivityApi";
 /* -------------------------------------------------------------------------- */
 /*  Shared chart helpers (custom SVG, project convention)                     */
 /* -------------------------------------------------------------------------- */
+
+// Determine if a date is weekend - handles both ISO format and German format "DD.MM."
+function isWeekendDate(dateStr) {
+  if (!dateStr) return false;
+  try {
+    // Try ISO format first (YYYY-MM-DD)
+    let d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const dayOfWeek = d.getDay();
+      return dayOfWeek === 0 || dayOfWeek === 6;
+    }
+
+    // Try German format "DD.MM."
+    const match = String(dateStr).match(/^(\d{1,2})\.(\d{1,2})\./);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10);
+      d = new Date(new Date().getFullYear(), month - 1, day);
+      if (!isNaN(d.getTime())) {
+        const dayOfWeek = d.getDay();
+        return dayOfWeek === 0 || dayOfWeek === 6;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+// Extract weekday abbreviation from date string - handles both ISO and German format
+function getWeekdayLabel(dateStr) {
+  if (!dateStr) return "";
+  try {
+    // Try ISO format first
+    let d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
+    }
+
+    // Try German format "DD.MM."
+    const match = String(dateStr).match(/^(\d{1,2})\.(\d{1,2})\./);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10);
+      d = new Date(new Date().getFullYear(), month - 1, day);
+      if (!isNaN(d.getTime())) {
+        return d
+          .toLocaleDateString(undefined, { weekday: "short" })
+          .slice(0, 2);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return String(dateStr).slice(0, 2);
+}
 
 function DonutChart({
   size = 130,
@@ -2813,7 +2870,7 @@ function VodSyncCard() {
         <div className="flex flex-col items-center gap-2 min-w-0">
           <MiniRing
             percent={allTimePeak > 0 ? 100 : 0}
-            color="#a78bfa"
+            color="#fbbf24"
             size={110}
             thickness={11}
             centerLabel={
@@ -2846,25 +2903,29 @@ function VodSyncCard() {
             {peakRows.slice(-7).map((p, i) => {
               const v = Number(p?.peak) || 0;
               const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
-              const isToday = (p?.date || "").startsWith(todayIso);
-              const d = p?.date ? new Date(p.date) : null;
-              const label = d
-                ? d
-                    .toLocaleDateString(undefined, { weekday: "short" })
-                    .slice(0, 2)
-                : "";
+              const date = p?.date || "";
+              const isPeak = v === weekPeak && weekPeak > 0;
+              const isMin =
+                v === weekMin && weekMin > 0 && weekPeak !== weekMin;
+              const isWeekend = isWeekendDate(date);
+              const label = getWeekdayLabel(date);
+
+              let backgroundColor = isWeekend ? "#4ade80" : "#06b6d4";
+              if (isMin) backgroundColor = "#fb7185";
+              if (isPeak) backgroundColor = "#fbbf24";
+
               return (
                 <div
                   key={i}
                   className="flex-1 flex flex-col items-center gap-1 min-w-0"
-                  title={`${p?.date || ""}: ${v}`}
+                  title={`${date}: ${v}`}
                 >
                   <div className="w-full flex items-end justify-center h-12 relative">
                     <div
                       className="w-full rounded-t transition-all relative flex items-start justify-center"
                       style={{
                         height: `${Math.max(2, h)}%`,
-                        backgroundColor: isToday ? "#22c55e" : "#a78bfa",
+                        backgroundColor,
                       }}
                     >
                       <span className="text-[10px] font-bold text-white leading-none mt-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
@@ -2903,6 +2964,230 @@ function VodSyncCard() {
             label: t("dashboard.charts.todayPeak", "Today"),
             value: todayPeak,
             color: "#f472b6",
+          },
+          {
+            label: t("dashboard.charts.daysTracked", "Days Tracked"),
+            value: daysTracked,
+            color: "#22c55e",
+          },
+        ]}
+      />
+    </ChartCard>
+  );
+}
+
+function WebplayerCard() {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const { data: stats } = useQuery({
+    queryKey: ["dash-webplayer-stats"],
+    queryFn: async () => {
+      try {
+        return await api.get("/webplayer/status");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+
+  const { data: peaks } = useQuery({
+    queryKey: ["dash-webplayer-peaks"],
+    queryFn: async () => {
+      try {
+        return await api.get("/webplayer/peak-stats");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 60000,
+    staleTime: 30000,
+  });
+
+  const { data: liveMetrics } = useQuery({
+    queryKey: ["dash-webplayer-live"],
+    queryFn: async () => {
+      try {
+        return await api.get("/webplayer/live-metrics");
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 10000,
+    staleTime: 5000,
+  });
+
+  const activeSessions =
+    Number(
+      liveMetrics?.current_sessions ??
+        liveMetrics?.activeStreams ??
+        liveMetrics?.streams ??
+        0,
+    ) || 0;
+  const allTimePeak = Number(peaks?.max_peak ?? 0) || 0;
+  const configured = stats?.connected === true && !stats?.not_configured;
+  const uptime = stats?.uptime ?? stats?.timestamp ?? 0;
+
+  const peakRows = Array.isArray(peaks?.daily)
+    ? peaks.daily
+    : Array.isArray(peaks)
+      ? peaks
+      : [];
+  const todayIso = new Date().toISOString().split("T")[0];
+  const todayPeak = Number(
+    peakRows.find(
+      (p) =>
+        (p?.fullLabel || p?.label || "").startsWith(todayIso) ||
+        (p?.label || "").includes("."),
+    )?.value ?? 0,
+  );
+  const last7 = peakRows.slice(-7);
+  const last7Values = last7.map((p) => Number(p?.value) || 0);
+  const weekPeak = last7Values.length ? Math.max(...last7Values) : 0;
+  const weekMin = last7Values.length ? Math.min(...last7Values) : 0;
+  const weekAvg = last7Values.length
+    ? Math.round(last7Values.reduce((a, b) => a + b, 0) / last7Values.length)
+    : 0;
+  const daysTracked = peakRows.length;
+  const lastUpdated =
+    peaks?.timestamp || stats?.timestamp
+      ? new Date(peaks?.timestamp || stats?.timestamp).toLocaleString()
+      : "—";
+
+  if (!configured) {
+    return null;
+  }
+
+  return (
+    <ChartCard
+      icon={Tv2}
+      title={t("dashboard.charts.webplayer", "Webplayer")}
+      onClick={() => navigate("/webplayer")}
+      footer={`${t("dashboard.charts.lastSync", "Last sync")}: ${lastUpdated}`}
+    >
+      {/* Current sessions and peak */}
+      <div className="flex items-start justify-center gap-6 sm:gap-10 w-full">
+        <div className="flex flex-col items-center gap-2 min-w-0">
+          <MiniRing
+            percent={
+              allTimePeak > 0
+                ? Math.min(100, (activeSessions / allTimePeak) * 100)
+                : activeSessions > 0
+                  ? 100
+                  : 0
+            }
+            color="#06b6d4"
+            size={110}
+            thickness={11}
+            centerLabel={activeSessions}
+          />
+          <div className="text-center min-w-0">
+            <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
+              {t("dashboard.charts.currentSessions", "Current Sessions")}
+            </p>
+            <p className="text-xs text-theme-text-muted">
+              {t("dashboard.charts.now", "now")}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-2 min-w-0">
+          <MiniRing
+            percent={allTimePeak > 0 ? 100 : 0}
+            color="#fbbf24"
+            size={110}
+            thickness={11}
+            centerLabel={
+              <span className="flex flex-col items-center justify-center leading-none gap-0.5">
+                <Crown
+                  size={14}
+                  style={{ color: "#fbbf24", fill: "#fbbf24" }}
+                />
+                <span className="text-2xl font-bold text-theme-text leading-none">
+                  {allTimePeak}
+                </span>
+              </span>
+            }
+          />
+          <div className="text-center min-w-0">
+            <p className="text-xs uppercase tracking-wide text-theme-text-muted leading-tight">
+              {t("dashboard.charts.peakSessions", "Peak Sessions")}
+            </p>
+            <p className="text-xs text-theme-text-muted">
+              {t("dashboard.charts.allTime", "all-time")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 7-day peak trend mini bar chart */}
+      {peakRows.length > 0 && (
+        <div className="w-full">
+          <div className="flex items-end justify-between gap-1 h-16 px-1">
+            {peakRows.slice(-7).map((p, i) => {
+              const v = Number(p?.value) || 0;
+              const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
+              const isPeak = v === weekPeak && weekPeak > 0;
+              const isMin =
+                v === weekMin && weekMin > 0 && weekPeak !== weekMin;
+              const isWeekend = isWeekendDate(p?.fullLabel || p?.label || "");
+              const label = getWeekdayLabel(p?.fullLabel || p?.label || "");
+
+              let backgroundColor = isWeekend ? "#4ade80" : "#06b6d4";
+              if (isMin) backgroundColor = "#fb7185";
+              if (isPeak) backgroundColor = "#fbbf24";
+
+              return (
+                <div
+                  key={i}
+                  className="flex-1 flex flex-col items-center gap-1 min-w-0"
+                  title={`${p?.label || ""}: ${v}`}
+                >
+                  <div className="w-full flex items-end justify-center h-12 relative">
+                    <div
+                      className="w-full rounded-t transition-all relative flex items-start justify-center"
+                      style={{
+                        height: `${Math.max(2, h)}%`,
+                        backgroundColor,
+                      }}
+                    >
+                      <span className="text-[10px] font-bold text-white leading-none mt-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
+                        {v}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-theme-text-muted leading-none">
+                    {label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <StatGrid
+        tiles={[
+          {
+            label: t("dashboard.charts.peakSessions", "Peak Sessions"),
+            value: allTimePeak,
+            color: "#fbbf24",
+          },
+          {
+            label: t("dashboard.charts.weekPeak", "7-Day Peak"),
+            value: weekPeak,
+            color: "#f97316",
+          },
+          {
+            label: t("dashboard.charts.weekAvg", "7-Day Avg"),
+            value: weekAvg,
+            color: "#22d3ee",
+          },
+          {
+            label: t("dashboard.charts.todayPeak", "Today"),
+            value: todayPeak,
+            color: "#06b6d4",
           },
           {
             label: t("dashboard.charts.daysTracked", "Days Tracked"),
@@ -3458,6 +3743,11 @@ export default function DashboardPageCharts() {
         id: "vodSync",
         label: t("dashboard.cards.vodSync", "VOD Sync"),
         Component: VodSyncCard,
+      },
+      {
+        id: "webplayer",
+        label: t("dashboard.cards.webplayer", "Webplayer"),
+        Component: WebplayerCard,
       },
       { id: "nfs", label: t("dashboard.cards.nfs", "NFS"), Component: NfsCard },
       {

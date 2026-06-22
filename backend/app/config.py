@@ -54,6 +54,11 @@ class Settings(BaseSettings):
     # Uploader Configuration
     UPLOADER_BASE_URL: str = ""
 
+    # StreamNet Webplayer Admin Dashboard Configuration
+    WEBPLAYER_BASE_URL: str = ""
+    WEBPLAYER_USERNAME: str = ""
+    WEBPLAYER_PASSWORD: str = ""
+
     # VPN Proxy Manager Configuration (multi-instance)
     VPN_PROXY_URL: str = ""
     VPN_PROXY_API_KEY: str = ""
@@ -145,6 +150,17 @@ class Settings(BaseSettings):
             uploader_config = config_data["uploader"]
             self.UPLOADER_BASE_URL = uploader_config.get(
                 "base_url", self.UPLOADER_BASE_URL
+            )
+        if "webplayer" in config_data:
+            webplayer_config = config_data["webplayer"]
+            self.WEBPLAYER_BASE_URL = webplayer_config.get(
+                "base_url", self.WEBPLAYER_BASE_URL
+            )
+            self.WEBPLAYER_USERNAME = webplayer_config.get(
+                "username", self.WEBPLAYER_USERNAME
+            )
+            self.WEBPLAYER_PASSWORD = webplayer_config.get(
+                "password", self.WEBPLAYER_PASSWORD
             )
         if "vpn_proxy" in config_data:
             vpn_proxy_config = config_data["vpn_proxy"]

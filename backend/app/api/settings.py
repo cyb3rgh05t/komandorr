@@ -52,6 +52,12 @@ class UploaderSettings(BaseModel):
     base_url: str
 
 
+class WebplayerSettings(BaseModel):
+    base_url: str
+    username: str
+    password: str
+
+
 class VpnProxyInstance(BaseModel):
     id: str
     name: str
@@ -131,6 +137,7 @@ class SettingsResponse(BaseModel):
     plex_sync: Optional[PlexSyncSettings] = None
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
+    webplayer: Optional[WebplayerSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
     nfs_mount: Optional[NfsMountSettings] = None
@@ -147,6 +154,7 @@ class SettingsUpdate(BaseModel):
     plex_sync: Optional[PlexSyncSettings] = None
     overseerr: Optional[OverseerrSettings] = None
     uploader: Optional[UploaderSettings] = None
+    webplayer: Optional[WebplayerSettings] = None
     vpn_proxy: Optional[VpnProxySettings] = None
     posterizarr: Optional[PosterizarrSettings] = None
     nfs_mount: Optional[NfsMountSettings] = None
@@ -253,6 +261,20 @@ async def get_settings(username: str = Depends(require_auth)):
         base_url=uploader_config.get(
             "base_url", getattr(settings, "UPLOADER_BASE_URL", "")
         )
+    )
+
+    # Get Webplayer settings from config or fallback to runtime/env
+    webplayer_config = config_data.get("webplayer", {})
+    webplayer_settings = WebplayerSettings(
+        base_url=webplayer_config.get(
+            "base_url", getattr(settings, "WEBPLAYER_BASE_URL", "")
+        ),
+        username=webplayer_config.get(
+            "username", getattr(settings, "WEBPLAYER_USERNAME", "")
+        ),
+        password=webplayer_config.get(
+            "password", getattr(settings, "WEBPLAYER_PASSWORD", "")
+        ),
     )
 
     # Get VPN Proxy Manager settings from config or defaults (multi-instance with backward compat)
@@ -416,6 +438,7 @@ async def get_settings(username: str = Depends(require_auth)):
         plex_sync=plex_sync_settings,
         overseerr=overseerr_settings,
         uploader=uploader_settings,
+        webplayer=webplayer_settings,
         vpn_proxy=vpn_proxy_settings,
         posterizarr=posterizarr_settings,
         nfs_mount=nfs_mount_settings,
@@ -525,6 +548,18 @@ async def update_settings(
         # Update runtime settings
         settings.UPLOADER_BASE_URL = updates.uploader.base_url
         logger.debug(f"Updated Uploader base_url to: {updates.uploader.base_url}")
+
+    # Update Webplayer settings
+    if updates.webplayer is not None:
+        config_data["webplayer"] = {
+            "base_url": updates.webplayer.base_url,
+            "username": updates.webplayer.username,
+            "password": updates.webplayer.password,
+        }
+        settings.WEBPLAYER_BASE_URL = updates.webplayer.base_url
+        settings.WEBPLAYER_USERNAME = updates.webplayer.username
+        settings.WEBPLAYER_PASSWORD = updates.webplayer.password
+        logger.debug(f"Updated Webplayer base_url to: {updates.webplayer.base_url}")
 
     # Update VPN Proxy Manager settings (multi-instance)
     if updates.vpn_proxy is not None:

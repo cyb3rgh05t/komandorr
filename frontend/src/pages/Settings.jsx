@@ -29,6 +29,7 @@ import {
   HardDrive,
   Webhook,
   FolderOpen,
+  Tv2,
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -84,6 +85,13 @@ export default function Settings() {
   // Uploader settings state
   const [uploaderUrl, setUploaderUrl] = useState("");
   const [uploaderTestStatus, setUploaderTestStatus] = useState(null);
+
+  // Webplayer settings state
+  const [webplayerUrl, setWebplayerUrl] = useState("");
+  const [webplayerUsername, setWebplayerUsername] = useState("");
+  const [webplayerPassword, setWebplayerPassword] = useState("");
+  const [showWebplayerPassword, setShowWebplayerPassword] = useState(false);
+  const [webplayerTestStatus, setWebplayerTestStatus] = useState(null);
 
   // VPN Proxy Manager settings state (multi-instance)
   const [vpnInstances, setVpnInstances] = useState([]);
@@ -260,6 +268,7 @@ export default function Settings() {
       "plex_sync",
       "overseerr",
       "uploader",
+      "webplayer",
       "vpn_proxy",
       "posterizarr",
       "nfs_mount",
@@ -355,6 +364,11 @@ export default function Settings() {
       if (data.uploader) {
         setUploaderUrl(data.uploader.base_url || "");
       }
+      if (data.webplayer) {
+        setWebplayerUrl(data.webplayer.base_url || "");
+        setWebplayerUsername(data.webplayer.username || "");
+        setWebplayerPassword(data.webplayer.password || "");
+      }
       setVpnInstances(data.vpn_proxy?.instances || []);
       setPosterizarrInstances(data.posterizarr?.instances || []);
       setNfsMountInstances(data.nfs_mount?.instances || []);
@@ -372,6 +386,13 @@ export default function Settings() {
       }
       if (data.uploader?.base_url) {
         validateUploaderOnLoad();
+      }
+      if (
+        data.webplayer?.base_url &&
+        data.webplayer?.username &&
+        data.webplayer?.password
+      ) {
+        validateWebplayerOnLoad();
       }
       if (data.vpn_proxy?.instances?.length > 0) {
         validateVpnInstancesOnLoad(data.vpn_proxy.instances);
@@ -445,6 +466,15 @@ export default function Settings() {
       setUploaderTestStatus("ok");
     } catch (error) {
       setUploaderTestStatus("fail");
+    }
+  };
+
+  const validateWebplayerOnLoad = async () => {
+    try {
+      const result = await api.get("/webplayer/status");
+      setWebplayerTestStatus(result?.connected ? "ok" : "fail");
+    } catch (error) {
+      setWebplayerTestStatus("fail");
     }
   };
 
@@ -882,6 +912,11 @@ export default function Settings() {
         uploader: {
           base_url: uploaderUrl || "",
         },
+        webplayer: {
+          base_url: webplayerUrl || "",
+          username: webplayerUsername || "",
+          password: webplayerPassword || "",
+        },
         vpn_proxy: {
           instances: vpnPayload || [],
         },
@@ -1083,6 +1118,7 @@ export default function Settings() {
       label: t("uploaderSettings.settings", "Uploader"),
       icon: Upload,
     },
+    { id: "webplayer", label: t("nav.webplayer", "Webplayer"), icon: Tv2 },
     { id: "vpn_proxy", label: "VPN Manager", icon: Shield },
     { id: "posterizarr", label: "Posterizarr", icon: Palette },
     { id: "nfs_mount", label: "NFS Manager", icon: HardDrive },
@@ -2306,6 +2342,197 @@ export default function Settings() {
                         </div>
                       )}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Webplayer Settings */}
+          {activeTab === "webplayer" && (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-theme-hover text-theme-primary">
+                  <Tv2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-theme-text">
+                    {t("nav.webplayer", "Webplayer")}
+                  </h3>
+                </div>
+              </div>
+              <div className="group bg-theme-card border border-theme rounded-xl p-4 sm:p-6 space-y-4 shadow-lg hover:shadow-xl hover:border-theme-primary/50 transition-all duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-theme-primary/5 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:from-theme-primary/10 transition-all duration-300" />
+
+                <div className="relative">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("webplayer.baseUrl", "Webplayer Base URL")}
+                      </label>
+                      <input
+                        type="url"
+                        value={webplayerUrl}
+                        onChange={(e) => {
+                          setWebplayerUrl(e.target.value);
+                          setWebplayerTestStatus(null);
+                          setPendingChanges(true);
+                        }}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="http://streamnet-tv:3000"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("webplayer.adminUsername", "Admin Username")}
+                      </label>
+                      <input
+                        type="text"
+                        value={webplayerUsername}
+                        onChange={(e) => {
+                          setWebplayerUsername(e.target.value);
+                          setWebplayerTestStatus(null);
+                          setPendingChanges(true);
+                        }}
+                        className="w-full px-4 py-2 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                        placeholder="admin"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-theme-text mb-2">
+                        {t("webplayer.adminPassword", "Admin Password")}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showWebplayerPassword ? "text" : "password"}
+                          value={webplayerPassword}
+                          onChange={(e) => {
+                            setWebplayerPassword(e.target.value);
+                            setWebplayerTestStatus(null);
+                            setPendingChanges(true);
+                          }}
+                          className="w-full px-4 py-2 pr-10 bg-theme-hover backdrop-blur-sm border border-theme hover:border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowWebplayerPassword(!showWebplayerPassword)
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors"
+                        >
+                          {showWebplayerPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (
+                            !webplayerUrl ||
+                            !webplayerUsername ||
+                            !webplayerPassword
+                          ) {
+                            toast.error(
+                              "Bitte URL, Username und Passwort eintragen",
+                            );
+                            return;
+                          }
+                          setWebplayerTestStatus("loading");
+                          try {
+                            const result = await api.post(
+                              "/webplayer/test-connection",
+                              {
+                                url: webplayerUrl,
+                                username: webplayerUsername,
+                                password: webplayerPassword,
+                              },
+                            );
+
+                            if (result?.connected) {
+                              setWebplayerTestStatus("ok");
+                              toast.success("Webplayer-Verbindung erfolgreich");
+                            } else {
+                              setWebplayerTestStatus("fail");
+                              toast.error(
+                                result?.error ||
+                                  "Webplayer-Verbindung fehlgeschlagen",
+                              );
+                            }
+                          } catch (e) {
+                            setWebplayerTestStatus("fail");
+                            toast.error(
+                              e.message ||
+                                "Webplayer-Verbindung fehlgeschlagen",
+                            );
+                          }
+                        }}
+                        disabled={
+                          webplayerTestStatus === "loading" ||
+                          !webplayerUrl ||
+                          !webplayerUsername ||
+                          !webplayerPassword
+                        }
+                        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                          webplayerTestStatus === "ok"
+                            ? "!bg-emerald-500/15 hover:!bg-emerald-500/25 !text-emerald-400 !border-emerald-500/30"
+                            : webplayerTestStatus === "fail"
+                              ? "!bg-red-500/15 hover:!bg-red-500/25 !text-red-400 !border-red-500/30"
+                              : ""
+                        }`}
+                      >
+                        {webplayerTestStatus === "loading" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            {t("webplayer.testing", "Testing...")}
+                          </span>
+                        ) : webplayerTestStatus === "ok" ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} />
+                            {t("webplayer.connectionOk", "Connected")}
+                          </span>
+                        ) : (
+                          t("webplayer.testConnection", "Test Connection")
+                        )}
+                      </button>
+                    </div>
+
+                    {webplayerTestStatus === "fail" && (
+                      <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 backdrop-blur-sm border border-red-500/30 rounded-lg p-3 mt-3">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <p>
+                          Webplayer nicht erreichbar. Bitte URL und Admin-Login
+                          prüfen.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

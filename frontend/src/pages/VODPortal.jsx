@@ -82,6 +82,7 @@ export default function VODPortal() {
   const [plexConfigured, setPlexConfigured] = useState(true);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
   const [userRequests, setUserRequests] = useState({});
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -429,6 +430,22 @@ export default function VODPortal() {
   // Users are already filtered by backend, no need for local filtering
   const filteredUsers = users;
 
+  const refreshAll = async () => {
+    if (manualRefreshing) return;
+    setManualRefreshing(true);
+    try {
+      clearUsersCache();
+      await Promise.all([
+        fetchUsers(true, true, searchTerm),
+        fetchUserRequests(),
+        fetchDashboardStats(),
+        checkOverseerrStatus(),
+      ]);
+    } finally {
+      setManualRefreshing(false);
+    }
+  };
+
   return (
     <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* VoDWisharr Status - Only show if not configured or not reachable */}
@@ -458,23 +475,20 @@ export default function VODPortal() {
         actions={
           <>
             <button
-              onClick={() => {
-                clearUsersCache();
-                fetchUsers(true, true, searchTerm); // skipCache=true, force=true
-              }}
-              disabled={usersLoading}
-              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={refreshAll}
+              disabled={manualRefreshing}
+              className="inline-flex items-center justify-center gap-2 bg-theme-card border border-theme rounded-lg px-4 py-2.5 text-sm font-semibold text-theme-text hover:text-white hover:border-theme-primary hover:bg-theme active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
                 size={16}
                 className={`text-theme-primary transition-transform duration-500 ${
-                  usersLoading ? "animate-spin" : ""
+                  manualRefreshing ? "animate-spin" : ""
                 }`}
               />
               <span className="text-xs sm:text-sm">
-                {usersLoading
-                  ? t("vodPortal.refreshing") || "Refreshing..."
-                  : t("vodPortal.refresh") || "Refresh"}
+                {manualRefreshing
+                  ? t("common.refreshing", "Refreshing...")
+                  : t("common.refresh", "Refresh")}
               </span>
             </button>
             <div className="relative w-full sm:w-64">

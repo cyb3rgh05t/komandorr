@@ -521,6 +521,41 @@ export default function Sidebar() {
     return count;
   }, [autoscanStatus, autoscanDashboard]);
 
+  // Fetch Webplayer status and stats for active sessions badge
+  const { data: webplayerStatus } = useQuery({
+    queryKey: ["webplayer-status-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/webplayer/status");
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 15000,
+    refetchInterval: 30000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const { data: webplayerStats } = useQuery({
+    queryKey: ["webplayer-stats-sidebar"],
+    queryFn: async () => {
+      try {
+        return await api.get("/webplayer/stats");
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 5000,
+    refetchInterval: 10000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+    enabled: !!webplayerStatus && webplayerStatus.not_configured !== true,
+  });
+
+  const webplayerActiveSessions =
+    Number(webplayerStats?.transcode?.sessionsRunning) || 0;
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
@@ -596,6 +631,11 @@ export default function Sidebar() {
           icon: Disc3,
         },
       ],
+    },
+    {
+      label: t("nav.webplayer", "Webplayer"),
+      icon: Tv2Icon,
+      path: "/webplayer",
     },
     {
       label: t("nav.plex"),
@@ -1281,6 +1321,11 @@ export default function Sidebar() {
                   const showPosterizarrBadge =
                     isPosterizarr && posterizarrErrorCount > 0;
 
+                  // Check for Webplayer active sessions badge
+                  const isWebplayer = item.path === "/webplayer";
+                  const showWebplayerSessionsBadge =
+                    isWebplayer && webplayerActiveSessions > 0;
+
                   return (
                     <li key={item.path} className="relative group">
                       <Link
@@ -1335,6 +1380,15 @@ export default function Sidebar() {
                             }`}
                           >
                             {posterizarrErrorCount}
+                          </span>
+                        )}
+                        {showWebplayerSessionsBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-5 px-1.5 py-0.5 text-xs font-bold rounded-full bg-green-500 text-black ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {webplayerActiveSessions}
                           </span>
                         )}
                       </Link>
