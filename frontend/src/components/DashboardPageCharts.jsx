@@ -98,6 +98,27 @@ function getWeekdayLabel(dateStr) {
   return String(dateStr).slice(0, 2);
 }
 
+function toFiniteNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function getPathValue(source, path) {
+  if (!source || !path) return undefined;
+  return path.split(".").reduce((acc, key) => {
+    if (acc == null || typeof acc !== "object") return undefined;
+    return acc[key];
+  }, source);
+}
+
+function pickNumberFromPaths(source, paths, fallback = 0) {
+  for (const path of paths) {
+    const value = toFiniteNumber(getPathValue(source, path), Number.NaN);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 function DonutChart({
   size = 130,
   thickness = 16,
@@ -3040,17 +3061,28 @@ function WebplayerCard() {
   });
 
   const activeSessions =
-    Number(
-      liveMetrics?.current_sessions ??
-        liveMetrics?.activeStreams ??
-        liveMetrics?.streams ??
-        liveMetrics?.transcode?.sessionsRunning ??
-        liveMetrics?.transcode?.activeSessions ??
-        liveMetrics?.sessionsRunning ??
-        webplayerStats?.transcode?.sessionsRunning ??
-        webplayerStats?.transcode?.activeSessions ??
-        0,
-    ) || 0;
+    pickNumberFromPaths(
+      webplayerStats,
+      [
+        "transcode.sessionsRunning",
+        "transcode.activeSessions",
+        "transcode.currentSessions",
+        "transcode.runningSessions",
+      ],
+      Number.NaN,
+    ) ||
+    pickNumberFromPaths(
+      liveMetrics,
+      [
+        "current_sessions",
+        "activeStreams",
+        "streams",
+        "sessionsRunning",
+        "transcode.sessionsRunning",
+        "transcode.activeSessions",
+      ],
+      0,
+    );
   const allTimePeak = Number(peaks?.max_peak ?? 0) || 0;
   const configured = stats?.connected === true && !stats?.not_configured;
   const uptime = stats?.uptime ?? stats?.timestamp ?? 0;
