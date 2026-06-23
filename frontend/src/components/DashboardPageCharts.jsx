@@ -2955,11 +2955,6 @@ function VodSyncCard() {
                         </span>
                       )}
                     </div>
-                    {v === 0 && (
-                      <span className="absolute top-0 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white leading-none drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
-                        {v}
-                      </span>
-                    )}
                   </div>
                   <span className="text-[9px] text-theme-text-muted leading-none">
                     {label}
@@ -3209,9 +3204,11 @@ function WebplayerCard() {
                         backgroundColor,
                       }}
                     >
-                      <span className="text-[10px] font-bold text-white leading-none mt-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
-                        {v}
-                      </span>
+                      {v > 0 && (
+                        <span className="text-[10px] font-bold text-white leading-none mt-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
+                          {v}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className="text-[9px] text-theme-text-muted leading-none">
