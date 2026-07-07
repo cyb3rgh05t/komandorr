@@ -83,7 +83,9 @@ function getWeekdayLabel(dateStr) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr).trim())) {
       d = new Date(`${String(dateStr).trim()}T00:00:00`);
       if (!isNaN(d.getTime())) {
-        return d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
+        return d
+          .toLocaleDateString(undefined, { weekday: "short" })
+          .slice(0, 2);
       }
     }
 
@@ -94,7 +96,9 @@ function getWeekdayLabel(dateStr) {
       const year = parseInt(match[3], 10);
       d = new Date(year < 100 ? 2000 + year : year, month - 1, day);
       if (!isNaN(d.getTime())) {
-        return d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
+        return d
+          .toLocaleDateString(undefined, { weekday: "short" })
+          .slice(0, 2);
       }
     }
 
@@ -3168,7 +3172,8 @@ function WebplayerCard() {
   const weeklyPeakRows = [...peakRows]
     .sort((a, b) => {
       const left = parsePeakDateValue(a?.date || a?.fullLabel || a?.label) ?? 0;
-      const right = parsePeakDateValue(b?.date || b?.fullLabel || b?.label) ?? 0;
+      const right =
+        parsePeakDateValue(b?.date || b?.fullLabel || b?.label) ?? 0;
       return left - right;
     })
     .slice(-7);
