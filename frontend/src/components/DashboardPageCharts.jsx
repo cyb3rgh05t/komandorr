@@ -151,6 +151,13 @@ function parsePeakDateValue(dateStr) {
   return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
 }
 
+function getRelativeWeekdayLabel(offsetFromToday) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - offsetFromToday);
+  return date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
+}
+
 function toFiniteNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -3252,8 +3259,22 @@ function WebplayerCard() {
               const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
               const isPeak = v === weekPeak && weekPeak > 0;
               const isMin = i === weekMinIdx && weekPeak !== weekMin;
-              const isWeekend = isWeekendDate(p?.fullLabel || p?.label || "");
-              const label = getWeekdayLabel(p?.fullLabel || p?.label || "");
+              const rawDate = p?.date || p?.fullLabel || p?.label || "";
+              const parsedDate = parsePeakDateValue(rawDate);
+              const isWeekend =
+                parsedDate != null
+                  ? isWeekendDate(rawDate)
+                  : [0, 6].includes(
+                      new Date(
+                        new Date().setDate(
+                          new Date().getDate() - (weeklyPeakRows.length - 1 - i),
+                        ),
+                      ).getDay(),
+                    );
+              const label =
+                parsedDate != null
+                  ? getWeekdayLabel(rawDate)
+                  : getRelativeWeekdayLabel(weeklyPeakRows.length - 1 - i);
 
               let backgroundColor = isWeekend ? "#4ade80" : "#06b6d4";
               if (isMin) backgroundColor = "#fb7185";
