@@ -74,14 +74,32 @@ function isWeekendDate(dateStr) {
 function getWeekdayLabel(dateStr) {
   if (!dateStr) return "";
   try {
-    // Try ISO format first
+    // Try ISO / native parse first
     let d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
       return d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
     }
 
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr).trim())) {
+      d = new Date(`${String(dateStr).trim()}T00:00:00`);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
+      }
+    }
+
+    let match = String(dateStr).match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10);
+      const year = parseInt(match[3], 10);
+      d = new Date(year < 100 ? 2000 + year : year, month - 1, day);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
+      }
+    }
+
     // Try German format "DD.MM."
-    const match = String(dateStr).match(/^(\d{1,2})\.(\d{1,2})\./);
+    match = String(dateStr).match(/^(\d{1,2})\.(\d{1,2})\./);
     if (match) {
       const day = parseInt(match[1], 10);
       const month = parseInt(match[2], 10);
@@ -96,6 +114,37 @@ function getWeekdayLabel(dateStr) {
     // ignore
   }
   return String(dateStr).slice(0, 2);
+}
+
+function parsePeakDateValue(dateStr) {
+  if (!dateStr) return null;
+
+  const text = String(dateStr).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const parsed = new Date(`${text}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  let match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    const parsed = new Date(year < 100 ? 2000 + year : year, month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  match = text.match(/^(\d{1,2})\.(\d{1,2})\./);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const parsed = new Date(new Date().getFullYear(), month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
 }
 
 function parsePeakDateValue(dateStr) {
@@ -3117,18 +3166,19 @@ function WebplayerCard() {
       ? peaks
       : [];
   const weeklyPeakRows = [...peakRows]
-    .sort(
-      (a, b) =>
-        (parsePeakDateValue(a?.date || a?.fullLabel || a?.label) ?? 0) -
-        (parsePeakDateValue(b?.date || b?.fullLabel || b?.label) ?? 0),
-    )
+    .sort((a, b) => {
+      const left = parsePeakDateValue(a?.date || a?.fullLabel || a?.label) ?? 0;
+      const right = parsePeakDateValue(b?.date || b?.fullLabel || b?.label) ?? 0;
+      return left - right;
+    })
     .slice(-7);
   const todayIso = new Date().toISOString().split("T")[0];
+  const todayValue = parsePeakDateValue(todayIso);
   const todayPeak = Number(
     peakRows.find(
       (p) =>
-        (p?.fullLabel || p?.label || "").startsWith(todayIso) ||
-        (p?.label || "").includes("."),
+        (p?.date || p?.fullLabel || p?.label || "").startsWith(todayIso) ||
+        parsePeakDateValue(p?.date || p?.fullLabel || p?.label) === todayValue,
     )?.value ?? 0,
   );
   const last7 = weeklyPeakRows;
