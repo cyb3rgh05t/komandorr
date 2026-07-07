@@ -2927,7 +2927,7 @@ function VodSyncCard() {
   const weekAvg = last7Values.length
     ? Math.round(last7Values.reduce((a, b) => a + b, 0) / last7Values.length)
     : 0;
-  const daysTracked = peakRows.length;
+  const daysTracked = peakRows.slice(-30).length;
   const lastSync = stats?.last_updated
     ? new Date(stats.last_updated).toLocaleString()
     : "—";
@@ -3195,7 +3195,7 @@ function WebplayerCard() {
   const weekAvg = last7Values.length
     ? Math.round(last7Values.reduce((a, b) => a + b, 0) / last7Values.length)
     : 0;
-  const daysTracked = peakRows.length;
+  const daysTracked = peakRows.slice(-30).length;
   const lastUpdated =
     peaks?.timestamp || stats?.timestamp
       ? new Date(peaks?.timestamp || stats?.timestamp).toLocaleString()
