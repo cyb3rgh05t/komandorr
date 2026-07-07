@@ -3277,21 +3277,17 @@ function WebplayerCard() {
               const isMin = i === weekMinIdx && weekPeak !== weekMin;
               const rawDate = p?.date || p?.fullLabel || p?.label || "";
               const parsedDate = parsePeakDateValue(rawDate);
+              const relativeOffset = weeklyPeakRows.length - 1 - i;
+              const relativeDate = new Date();
+              relativeDate.setDate(relativeDate.getDate() - relativeOffset);
               const isWeekend =
                 parsedDate != null
                   ? isWeekendDate(rawDate)
-                  : [0, 6].includes(
-                      new Date(
-                        new Date().setDate(
-                          new Date().getDate() -
-                            (weeklyPeakRows.length - 1 - i),
-                        ),
-                      ).getDay(),
-                    );
+                  : [0, 6].includes(relativeDate.getDay());
               const label =
                 parsedDate != null
                   ? getWeekdayLabel(rawDate)
-                  : getRelativeWeekdayLabel(weeklyPeakRows.length - 1 - i);
+                  : getRelativeWeekdayLabel(relativeOffset);
 
               let backgroundColor = isWeekend ? "#4ade80" : "#06b6d4";
               if (isMin) backgroundColor = "#fb7185";
