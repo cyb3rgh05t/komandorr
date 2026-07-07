@@ -3267,7 +3267,8 @@ function WebplayerCard() {
                   : [0, 6].includes(
                       new Date(
                         new Date().setDate(
-                          new Date().getDate() - (weeklyPeakRows.length - 1 - i),
+                          new Date().getDate() -
+                            (weeklyPeakRows.length - 1 - i),
                         ),
                       ).getDay(),
                     );
