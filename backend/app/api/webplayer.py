@@ -207,6 +207,7 @@ def _extract_daily_series(obj: object) -> list[dict]:
         result: list[dict] = []
         for idx, item in enumerate(obj):
             if isinstance(item, dict):
+                date = item.get("date") or item.get("day") or item.get("timestamp")
                 label = (
                     item.get("label")
                     or item.get("day")
@@ -227,7 +228,10 @@ def _extract_daily_series(obj: object) -> list[dict]:
                     number = int(float(value))
                 except Exception:
                     number = 0
-                result.append({"label": str(label), "value": number})
+                row = {"label": str(label), "value": number}
+                if date is not None:
+                    row["date"] = str(date)
+                result.append(row)
             else:
                 try:
                     number = int(float(item))
@@ -243,7 +247,10 @@ def _extract_daily_series(obj: object) -> list[dict]:
                 number = int(float(value))
             except Exception:
                 number = 0
-            result.append({"label": str(key), "value": number})
+            row = {"label": str(key), "value": number}
+            if re.match(r"^\d{4}-\d{2}-\d{2}$", str(key).strip()):
+                row["date"] = str(key)
+            result.append(row)
         return result
 
     return []

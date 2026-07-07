@@ -2856,11 +2856,19 @@ function VodSyncCard() {
     : Array.isArray(peaks)
       ? peaks
       : [];
+  const weeklyPeakRows = [...peakRows]
+    .sort(
+      (a, b) =>
+        String(a?.date || a?.fullLabel || a?.label || "").localeCompare(
+          String(b?.date || b?.fullLabel || b?.label || ""),
+        ),
+    )
+    .slice(-7);
   const todayIso = new Date().toISOString().split("T")[0];
   const todayPeak = Number(
     peakRows.find((p) => (p?.date || "").startsWith(todayIso))?.peak ?? 0,
   );
-  const last7 = peakRows.slice(-7);
+  const last7 = weeklyPeakRows;
   const last7Values = last7.map((p) => Number(p?.peak) || 0);
   const weekPeak = last7Values.length ? Math.max(...last7Values) : 0;
   const weekMin = last7Values.length ? Math.min(...last7Values) : 0;
@@ -2943,7 +2951,7 @@ function VodSyncCard() {
       {peakRows.length > 0 && (
         <div className="w-full">
           <div className="flex items-end justify-between gap-1 h-16 px-1">
-            {peakRows.slice(-7).map((p, i) => {
+            {weeklyPeakRows.map((p, i) => {
               const v = Number(p?.peak) || 0;
               const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
               const date = p?.date || "";

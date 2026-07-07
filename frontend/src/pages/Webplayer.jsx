@@ -819,19 +819,21 @@ export default function Webplayer() {
     return peakStats.daily
       .map((row, idx) => {
         const rawLabel = String(row?.label ?? idx + 1);
-        const dayType = getDayOfWeek(rawLabel);
+        const rawDate = String(row?.date ?? row?.timestamp ?? rawLabel);
+        const dayType = getDayOfWeek(rawDate);
         return {
           index: idx,
           label: formatPeakLabel(row?.label ?? idx + 1),
-          fullLabel: rawLabel,
+          fullLabel: rawDate,
+          date: rawDate,
           value: toNumber(row?.value, 0),
           dayType,
         };
       })
       .sort(
         (a, b) =>
-          (parsePeakDateValue(a.fullLabel || a.label) ?? 0) -
-          (parsePeakDateValue(b.fullLabel || b.label) ?? 0),
+          (parsePeakDateValue(a.date || a.fullLabel || a.label) ?? 0) -
+          (parsePeakDateValue(b.date || b.fullLabel || b.label) ?? 0),
       )
       .slice(-90);
   }, [peakStats]);
@@ -877,7 +879,9 @@ export default function Webplayer() {
     if (selectedMonth !== "all") {
       const monthToken = selectedMonth.split("-")[1];
       source = source.filter((item) =>
-        String(item.label || "").includes(`.${monthToken}.`),
+        String(item.date || item.fullLabel || item.label || "").includes(
+          `-${monthToken}-`,
+        ),
       );
     }
 
