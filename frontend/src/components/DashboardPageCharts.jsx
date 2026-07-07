@@ -2857,11 +2857,10 @@ function VodSyncCard() {
       ? peaks
       : [];
   const weeklyPeakRows = [...peakRows]
-    .sort(
-      (a, b) =>
-        String(a?.date || a?.fullLabel || a?.label || "").localeCompare(
-          String(b?.date || b?.fullLabel || b?.label || ""),
-        ),
+    .sort((a, b) =>
+      String(a?.date || a?.fullLabel || a?.label || "").localeCompare(
+        String(b?.date || b?.fullLabel || b?.label || ""),
+      ),
     )
     .slice(-7);
   const todayIso = new Date().toISOString().split("T")[0];
