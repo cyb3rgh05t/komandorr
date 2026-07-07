@@ -122,6 +122,28 @@ function formatMonthShortLabel(label) {
   return text.slice(0, 3);
 }
 
+function parsePeakDateValue(dateStr) {
+  if (!dateStr) return null;
+
+  const text = String(dateStr).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const parsed = new Date(`${text}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  const match = text.match(/^(\d{1,2})\.(\d{1,2})\./);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const parsed = new Date(new Date().getFullYear(), month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+}
+
 function WebplayerMonthComparisonCard({ compare, t }) {
   if (!compare) return null;
 
@@ -806,6 +828,11 @@ export default function Webplayer() {
           dayType,
         };
       })
+      .sort(
+        (a, b) =>
+          (parsePeakDateValue(a.fullLabel || a.label) ?? 0) -
+          (parsePeakDateValue(b.fullLabel || b.label) ?? 0),
+      )
       .slice(-90);
   }, [peakStats]);
 

@@ -98,6 +98,28 @@ function getWeekdayLabel(dateStr) {
   return String(dateStr).slice(0, 2);
 }
 
+function parsePeakDateValue(dateStr) {
+  if (!dateStr) return null;
+
+  const text = String(dateStr).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const parsed = new Date(`${text}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  const match = text.match(/^(\d{1,2})\.(\d{1,2})\./);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const parsed = new Date(new Date().getFullYear(), month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+  }
+
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+}
+
 function toFiniteNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -3087,6 +3109,13 @@ function WebplayerCard() {
     : Array.isArray(peaks)
       ? peaks
       : [];
+  const weeklyPeakRows = [...peakRows]
+    .sort(
+      (a, b) =>
+        (parsePeakDateValue(a?.date || a?.fullLabel || a?.label) ?? 0) -
+        (parsePeakDateValue(b?.date || b?.fullLabel || b?.label) ?? 0),
+    )
+    .slice(-7);
   const todayIso = new Date().toISOString().split("T")[0];
   const todayPeak = Number(
     peakRows.find(
@@ -3095,7 +3124,7 @@ function WebplayerCard() {
         (p?.label || "").includes("."),
     )?.value ?? 0,
   );
-  const last7 = peakRows.slice(-7);
+  const last7 = weeklyPeakRows;
   const last7Values = last7.map((p) => Number(p?.value) || 0);
   const weekPeak = last7Values.length ? Math.max(...last7Values) : 0;
   const weekMin = last7Values.length ? Math.min(...last7Values) : 0;
@@ -3178,7 +3207,7 @@ function WebplayerCard() {
       {peakRows.length > 0 && (
         <div className="w-full">
           <div className="flex items-end justify-between gap-1 h-16 px-1">
-            {peakRows.slice(-7).map((p, i) => {
+            {weeklyPeakRows.map((p, i) => {
               const v = Number(p?.value) || 0;
               const h = weekPeak > 0 ? (v / weekPeak) * 100 : 0;
               const isPeak = v === weekPeak && weekPeak > 0;
