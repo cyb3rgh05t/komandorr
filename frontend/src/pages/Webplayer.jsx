@@ -878,11 +878,22 @@ export default function Webplayer() {
 
     if (selectedMonth !== "all") {
       const monthToken = selectedMonth.split("-")[1];
-      source = source.filter((item) =>
-        String(item.date || item.fullLabel || item.label || "").includes(
-          `-${monthToken}-`,
-        ),
-      );
+      source = source.filter((item) => {
+        const raw = String(item.date || item.fullLabel || item.label || "");
+
+        // ISO: YYYY-MM-DD
+        if (raw.includes(`-${monthToken}-`)) {
+          return true;
+        }
+
+        // StreamNet labels: DD.MM. or DD.MM.YYYY
+        const dotMatch = raw.match(/^(\d{1,2})\.(\d{1,2})(?:\.|$)/);
+        if (dotMatch) {
+          return dotMatch[2].padStart(2, "0") === monthToken;
+        }
+
+        return false;
+      });
     }
 
     if (timeRange !== "all" && days > 0) {
