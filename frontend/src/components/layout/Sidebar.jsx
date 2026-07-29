@@ -157,13 +157,15 @@ export default function Sidebar() {
               ? `/plex/activities?instance_id=${encodeURIComponent(id)}`
               : "/plex/activities";
             const response = await api.get(url);
-            return [id ?? "_default", response?.activities || []];
+            return Array.isArray(response?.activities)
+              ? response.activities.length
+              : 0;
           } catch {
-            return [id ?? "_default", []];
+            return 0;
           }
         }),
       );
-      return { byInstance: Object.fromEntries(results) };
+      return { counts: results };
     },
     refetchInterval: 10000,
     staleTime: 5000,
@@ -171,10 +173,9 @@ export default function Sidebar() {
   });
 
   const plexActivityInstanceCount = useMemo(() => {
-    const byInstance = plexActivityAgg?.byInstance || {};
-    return Object.values(byInstance).reduce(
-      (total, activities) =>
-        total + (Array.isArray(activities) ? activities.length : 0),
+    const counts = plexActivityAgg?.counts || [];
+    return counts.reduce(
+      (total, count) => total + (Number(count) || 0),
       0,
     );
   }, [plexActivityAgg]);
@@ -495,13 +496,13 @@ export default function Sidebar() {
             const latest = Array.isArray(response?.history)
               ? response.history[0]
               : null;
-            return [id ?? "_default", Number(latest?.errors) || 0];
+            return Number(latest?.errors) || 0;
           } catch {
-            return [id ?? "_default", null];
+            return 0;
           }
         }),
       );
-      return { byInstance: Object.fromEntries(results) };
+      return { errors: results };
     },
     staleTime: 30000,
     refetchInterval: 60000,
@@ -510,8 +511,8 @@ export default function Sidebar() {
   });
 
   const posterizarrErrorCount = useMemo(() => {
-    const byInstance = posterizarrHistoryAgg?.byInstance || {};
-    return Object.values(byInstance).reduce(
+    const errors = posterizarrHistoryAgg?.errors || [];
+    return errors.reduce(
       (total, errors) => total + (Number(errors) || 0),
       0,
     );
