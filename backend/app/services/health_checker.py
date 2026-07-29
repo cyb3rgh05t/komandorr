@@ -430,8 +430,8 @@ class HealthChecker:
         for inst in instances:
             inst_url = inst.get("url", "")
             inst_api_key = inst.get("api_key", "")
-            inst_name = inst.get("name", inst.get("id", "unknown"))
             inst_id = inst.get("id", "")
+            inst_name = inst.get("name", inst_id or "unknown")
 
             if not inst_url or not inst_api_key:
                 continue
@@ -450,8 +450,12 @@ class HealthChecker:
                 )
                 continue
 
+            issue_key = f"posterizarr:{inst_id or inst_name}"
+
             history_items = data.get("history", [])
             if not history_items:
+                if issue_key in self._issue_last_notify_day:
+                    current_issue_keys.add(issue_key)
                 continue
 
             latest = history_items[0]
@@ -459,7 +463,6 @@ class HealthChecker:
             if error_count <= 0:
                 continue
 
-            issue_key = f"posterizarr:{inst_name}"
             current_issue_keys.add(issue_key)
             if self._issue_last_notify_day.get(issue_key) == today:
                 continue

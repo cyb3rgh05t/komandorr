@@ -140,25 +140,60 @@ export default function Sidebar() {
     ?.toLowerCase()
     .includes("not configured");
 
-  // Fetch Plex activities for VOD Streams badge
-  const { data: plexActivities = [] } = useQuery({
-    queryKey: ["plexActivities"],
+  // Fetch configured Plex instances so we can count active instances,
+  // not just the total number of sessions returned by one instance.
+  const { data: plexInstancesData } = useQuery({
+    queryKey: ["plex-instances-sidebar"],
     queryFn: async () => {
       try {
-        const response = await api.get("/plex/activities");
-        return response?.activities || [];
+        return await api.get("/plex/instances");
       } catch {
-        return [];
+        return { instances: [] };
       }
+    },
+    staleTime: 60000,
+    refetchInterval: 60000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+  const plexInstances = plexInstancesData?.instances || [];
+
+  // Fetch Plex activities per instance so the badge counts instances with
+  // active activity instead of summing raw session objects.
+  const { data: plexActivityAgg } = useQuery({
+    queryKey: [
+      "plex-activities-sidebar",
+      plexInstances.map((i) => i.id).join(","),
+    ],
+    queryFn: async () => {
+      const ids = plexInstances.length > 0 ? plexInstances.map((i) => i.id) : [null];
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const url = id
+              ? `/plex/activities?instance_id=${encodeURIComponent(id)}`
+              : "/plex/activities";
+            const response = await api.get(url);
+            return [id ?? "_default", response?.activities || []];
+          } catch {
+            return [id ?? "_default", []];
+          }
+        }),
+      );
+      return { byInstance: Object.fromEntries(results) };
     },
     refetchInterval: 10000,
     staleTime: 5000,
     placeholderData: (previousData) => previousData,
   });
 
-  const vodStreamsCount = Array.isArray(plexActivities)
-    ? plexActivities.length
-    : 0;
+  const plexActivityInstanceCount = useMemo(() => {
+    const byInstance = plexActivityAgg?.byInstance || {};
+    return Object.values(byInstance).reduce(
+      (total, activities) => total + (Array.isArray(activities) ? activities.length : 0),
+      0,
+    );
+  }, [plexActivityAgg]);
 
   // Fetch arr-activity queue for Downloads badges
   const { data: arrQueueData = {} } = useQuery({
@@ -440,15 +475,49 @@ export default function Sidebar() {
     return count;
   }, [nfsMountDashboard]);
 
-  // Fetch Posterizarr runtime history for error badge
-  const { data: posterizarrHistory } = useQuery({
-    queryKey: ["posterizarr-history-sidebar"],
+  const { data: posterizarrInstancesData } = useQuery({
+    queryKey: ["posterizarr-instances-sidebar"],
     queryFn: async () => {
       try {
-        return await api.get("/posterizarr/runtime-history?limit=1");
+        return await api.get("/posterizarr/instances");
       } catch {
-        return null;
+        return { instances: [] };
       }
+    },
+    staleTime: 60000,
+    refetchInterval: 60000,
+    retry: false,
+    placeholderData: (previousData) => previousData,
+  });
+  const posterizarrInstances = posterizarrInstancesData?.instances || [];
+
+  const { data: posterizarrHistoryAgg } = useQuery({
+    queryKey: [
+      "posterizarr-history-sidebar",
+      posterizarrInstances.map((i) => i.id).join(","),
+    ],
+    queryFn: async () => {
+      const ids =
+        posterizarrInstances.length > 0
+          ? posterizarrInstances.map((i) => i.id)
+          : [null];
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const url = id
+              ? `/posterizarr/runtime-history?instance_id=${encodeURIComponent(id)}&limit=1`
+              : "/posterizarr/runtime-history?limit=1";
+            const response = await api.get(url);
+            const latest = Array.isArray(response?.history)
+              ? response.history[0]
+              : null;
+            return [id ?? "_default", Number(latest?.errors) || 0];
+          } catch {
+            return [id ?? "_default", null];
+          }
+        }),
+      );
+      return { byInstance: Object.fromEntries(results) };
     },
     staleTime: 30000,
     refetchInterval: 60000,
@@ -457,9 +526,12 @@ export default function Sidebar() {
   });
 
   const posterizarrErrorCount = useMemo(() => {
-    if (!posterizarrHistory?.history?.length) return 0;
-    return posterizarrHistory.history[0].errors || 0;
-  }, [posterizarrHistory]);
+    const byInstance = posterizarrHistoryAgg?.byInstance || {};
+    return Object.values(byInstance).reduce(
+      (total, errors) => total + (Number(errors) || 0),
+      0,
+    );
+  }, [posterizarrHistoryAgg]);
 
   // Fetch Autoscan status + dashboard for queue + error badge
   const { data: autoscanStatus } = useQuery({
@@ -859,7 +931,7 @@ export default function Sidebar() {
                   const hasPlexActivityBadge =
                     item.tabName === "plex" &&
                     plexConfigured &&
-                    activeSessions.length > 0;
+                    plexActivityInstanceCount > 0;
 
                   // Check if Services tab has any issues
                   const hasServicesBadge =
@@ -977,7 +1049,7 @@ export default function Sidebar() {
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
-                            {activeSessions.length}
+                            {plexActivityInstanceCount}
                           </span>
                         )}
                         {hasActiveUploadsBadge && (
@@ -1051,7 +1123,7 @@ export default function Sidebar() {
                               expiredUsersCount > 0;
                             const vodActivityBadge =
                               subItem.path === "/vod-activity" &&
-                              activeSessions.length > 0;
+                              plexActivityInstanceCount > 0;
                             const servicesBadge =
                               subItem.path === "/services" && totalIssues > 0;
                             const monitorBadge =
@@ -1131,7 +1203,7 @@ export default function Sidebar() {
                             }
                             if (vodActivityBadge) {
                               badges.push({
-                                count: activeSessions.length,
+                                count: plexActivityInstanceCount,
                                 color: "bg-green-500",
                               });
                             }
