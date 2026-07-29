@@ -910,7 +910,7 @@ export default function Sidebar() {
                   const hasPlexActivityBadge =
                     item.tabName === "plex" &&
                     plexConfigured &&
-                    plexActivityInstanceCount > 0;
+                    activeSessions.length > 0;
 
                   // Check if Services tab has any issues
                   const hasServicesBadge =
@@ -1029,7 +1029,7 @@ export default function Sidebar() {
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
-                            {plexActivityInstanceCount}
+                            {activeSessions.length}
                           </span>
                         )}
                         {hasActiveUploadsBadge && (
@@ -1103,7 +1103,7 @@ export default function Sidebar() {
                               expiredUsersCount > 0;
                             const vodActivityBadge =
                               subItem.path === "/vod-activity" &&
-                              plexActivityInstanceCount > 0;
+                              activeSessions.length > 0;
                             const servicesBadge =
                               subItem.path === "/services" && totalIssues > 0;
                             const monitorBadge =
@@ -1183,7 +1183,7 @@ export default function Sidebar() {
                             }
                             if (vodActivityBadge) {
                               badges.push({
-                                count: plexActivityInstanceCount,
+                                count: activeSessions.length,
                                 color: "bg-green-500",
                               });
                             }
