@@ -140,24 +140,6 @@ export default function Sidebar() {
     ?.toLowerCase()
     .includes("not configured");
 
-  // Fetch configured Plex instances so we can count active instances,
-  // not just the total number of sessions returned by one instance.
-  const { data: plexInstancesData } = useQuery({
-    queryKey: ["plex-instances-sidebar"],
-    queryFn: async () => {
-      try {
-        return await api.get("/plex/instances");
-      } catch {
-        return { instances: [] };
-      }
-    },
-    staleTime: 60000,
-    refetchInterval: 60000,
-    retry: false,
-    placeholderData: (previousData) => previousData,
-  });
-  const plexInstances = plexInstancesData?.instances || [];
-
   // Fetch Plex activities per instance so the badge counts instances with
   // active activity instead of summing raw session objects.
   const { data: plexActivityAgg } = useQuery({
@@ -166,7 +148,8 @@ export default function Sidebar() {
       plexInstances.map((i) => i.id).join(","),
     ],
     queryFn: async () => {
-      const ids = plexInstances.length > 0 ? plexInstances.map((i) => i.id) : [null];
+      const ids =
+        plexInstances.length > 0 ? plexInstances.map((i) => i.id) : [null];
       const results = await Promise.all(
         ids.map(async (id) => {
           try {
@@ -190,7 +173,8 @@ export default function Sidebar() {
   const plexActivityInstanceCount = useMemo(() => {
     const byInstance = plexActivityAgg?.byInstance || {};
     return Object.values(byInstance).reduce(
-      (total, activities) => total + (Array.isArray(activities) ? activities.length : 0),
+      (total, activities) =>
+        total + (Array.isArray(activities) ? activities.length : 0),
       0,
     );
   }, [plexActivityAgg]);
