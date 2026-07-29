@@ -174,10 +174,7 @@ export default function Sidebar() {
 
   const plexActivityInstanceCount = useMemo(() => {
     const counts = plexActivityAgg?.counts || [];
-    return counts.reduce(
-      (total, count) => total + (Number(count) || 0),
-      0,
-    );
+    return counts.reduce((total, count) => total + (Number(count) || 0), 0);
   }, [plexActivityAgg]);
 
   // Fetch arr-activity queue for Downloads badges
@@ -512,10 +509,7 @@ export default function Sidebar() {
 
   const posterizarrErrorCount = useMemo(() => {
     const errors = posterizarrHistoryAgg?.errors || [];
-    return errors.reduce(
-      (total, errors) => total + (Number(errors) || 0),
-      0,
-    );
+    return errors.reduce((total, errors) => total + (Number(errors) || 0), 0);
   }, [posterizarrHistoryAgg]);
 
   // Fetch Autoscan status + dashboard for queue + error badge
@@ -944,7 +938,8 @@ export default function Sidebar() {
 
                   // Check if VoD Plex-Sync tab has active streams
                   const hasVodPlexSyncBadge =
-                    item.tabName === "vodplexsync" && vodStreamsCount > 0;
+                    item.tabName === "vodplexsync" &&
+                    plexActivityInstanceCount > 0;
 
                   // Check if Storage tab has any health issues
                   const hasStorageTabBadge =
@@ -1025,7 +1020,7 @@ export default function Sidebar() {
                               isOpen ? "" : "md:hidden 2xl:inline-flex"
                             }`}
                           >
-                            {vodStreamsCount}
+                            {plexActivityInstanceCount}
                           </span>
                         )}{" "}
                         {hasPlexActivityBadge && (
@@ -1154,7 +1149,7 @@ export default function Sidebar() {
                             // VoD Streams Live badge
                             const vodStreamsLiveBadge =
                               subItem.path === "/vod-streams" &&
-                              vodStreamsCount > 0;
+                              plexActivityInstanceCount > 0;
 
                             // Autoscan Overview sub-item: queue + error badges
                             const isAutoscanOverview =
@@ -1251,7 +1246,7 @@ export default function Sidebar() {
                             }
                             if (vodStreamsLiveBadge) {
                               badges.push({
-                                count: vodStreamsCount,
+                                count: plexActivityInstanceCount,
                                 color: "bg-green-500",
                               });
                             }
