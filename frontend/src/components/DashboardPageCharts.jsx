@@ -342,7 +342,14 @@ function EmptyHint({ text }) {
   );
 }
 
-function StatTile({ label, value, color, tooltip }) {
+function StatTile({
+  label,
+  value,
+  color,
+  tooltip,
+  subLabelText,
+  subLabelTitle,
+}) {
   const hasTooltip = !!tooltip;
   return (
     <div
@@ -357,6 +364,14 @@ function StatTile({ label, value, color, tooltip }) {
       <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-1">
         {label}
       </span>
+      {subLabelText && (
+        <span
+          className="text-[9px] leading-tight text-theme-text-muted/90 mt-1 w-full truncate"
+          title={subLabelTitle || subLabelText}
+        >
+          {subLabelText}
+        </span>
+      )}
       {hasTooltip && (
         <div className="pointer-events-none absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tile:block min-w-[220px] max-w-[300px] p-3 rounded-lg bg-theme-bg border border-theme-primary/50 shadow-2xl ring-1 ring-theme-primary/20 backdrop-blur">
           <div className="text-[10px] uppercase tracking-wider text-theme-primary font-semibold mb-2 pb-1.5 border-b border-theme">
@@ -982,6 +997,62 @@ export function VpnCard({
     0,
   );
 
+  const perInstanceStats = useMemo(() => {
+    return instances.map((inst) => {
+      const instanceId = inst?.id ?? inst?.name;
+      const instanceKey = String(instanceId ?? "");
+      const instanceLabel = inst?.name || instanceKey;
+
+      const instanceContainers = allContainers.filter(
+        (c) => String(c?._instance_id ?? "") === instanceKey,
+      );
+      const instanceCountable = instanceContainers.filter((c) => {
+        const s = (c?.docker_status ?? c?.state ?? c?.status ?? "")
+          .toString()
+          .toLowerCase();
+        return s !== "created";
+      });
+
+      const instanceRunning = instanceContainers.filter((c) =>
+        isVpnRunning(c?.docker_status ?? c?.state ?? c?.status),
+      ).length;
+      const instanceConnected = instanceContainers.filter((c) =>
+        isVpnInfoConnected(vpnInfoMap?.[c.id] || {}),
+      ).length;
+      const instanceStopped = instanceContainers.filter((c) =>
+        isVpnStopped(c?.docker_status ?? c?.state ?? c?.status),
+      ).length;
+      const instanceProviders = new Set(
+        instanceContainers.map((c) => c?.vpn_provider).filter(Boolean),
+      ).size;
+
+      const instanceClients = Object.entries(allDepsMap || {}).reduce(
+        (acc, [key, deps]) => {
+          const [depInst] = String(key).split(":");
+          if (depInst !== instanceKey || !Array.isArray(deps)) return acc;
+          return acc + deps.length;
+        },
+        0,
+      );
+
+      return {
+        id: instanceId,
+        label: instanceLabel,
+        total: instanceCountable.length,
+        running: instanceRunning,
+        connected: instanceConnected,
+        stopped: instanceStopped,
+        providers: instanceProviders,
+        clients: instanceClients,
+      };
+    });
+  }, [instances, allContainers, vpnInfoMap, allDepsMap]);
+
+  const showPerInstanceMiniLabels =
+    selectedId == null && perInstanceStats.length > 1;
+  const buildPerInstanceMiniLabel = (key) =>
+    perInstanceStats.map((s) => `${s.label}: ${s[key]}`).join(" • ");
+
   // Collect client labels (dependent container names) grouped by VPN parent
   const clientGroups = Object.entries(depsMap || {})
     .map(([key, deps]) => {
@@ -1083,31 +1154,59 @@ export function VpnCard({
           label={t("dashboard.charts.total", "Total")}
           value={total}
           color="var(--theme-primary)"
+          subLabelText={
+            showPerInstanceMiniLabels ? buildPerInstanceMiniLabel("total") : ""
+          }
         />
         <StatTile
           label={t("dashboard.charts.running", "Running")}
           value={running}
           color="#22c55e"
+          subLabelText={
+            showPerInstanceMiniLabels
+              ? buildPerInstanceMiniLabel("running")
+              : ""
+          }
         />
         <StatTile
           label={t("dashboard.charts.connected", "Connected")}
           value={connected}
           color="#22d3ee"
+          subLabelText={
+            showPerInstanceMiniLabels
+              ? buildPerInstanceMiniLabel("connected")
+              : ""
+          }
         />
         <StatTile
           label={t("dashboard.charts.stopped", "Stopped")}
           value={stopped}
           color="#ef4444"
+          subLabelText={
+            showPerInstanceMiniLabels
+              ? buildPerInstanceMiniLabel("stopped")
+              : ""
+          }
         />
         <StatTile
           label={t("dashboard.charts.providers", "Providers")}
           value={providers}
           color="#a78bfa"
+          subLabelText={
+            showPerInstanceMiniLabels
+              ? buildPerInstanceMiniLabel("providers")
+              : ""
+          }
         />
         <StatTile
           label={t("dashboard.charts.clients", "Clients")}
           value={clients}
           color="#f59e0b"
+          subLabelText={
+            showPerInstanceMiniLabels
+              ? buildPerInstanceMiniLabel("clients")
+              : ""
+          }
           tooltip={
             clientGroups.length > 0 ? (
               <div className="flex flex-col gap-1.5">

@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+# [Unreleased]
+
+### 🎨 UI/UX Improvements
+
+**Ping & Traffic Consolidation**
+• Combined the Ping and Traffic experience into a shared monitor view with unified status and traffic summaries
+• Added traffic mini-cards to the service item entries in the combined view
+• Removed the dedicated traffic charts from the Traffic page to keep the layout simpler
+
+**Navigation Cleanup**
+• Removed the VPN Manager monitor page from routing and sidebar navigation
+• Kept history-focused views separated where requested
+
 # [3.3.0](https://github.com/cyb3rgh05t/komandorr/compare/v3.2.0...v3.3.0) (2026-04-05)
 
 ### ✨ New Features
