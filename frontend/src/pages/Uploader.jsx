@@ -79,7 +79,7 @@ export default function Uploader() {
   const { t } = useTranslation();
   const toast = useToast();
   const [searchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "uploader";
+  const activeTab = searchParams.get("tab") || "overview";
   const [pageNumber, setPageNumber] = useState(1);
   const [queuePageNumber, setQueuePageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -547,7 +547,7 @@ export default function Uploader() {
             </div>
           </div>
 
-          {(activeTab === "uploader" || activeTab === "active") && (
+          {(activeTab === "overview" || activeTab === "active") && (
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}
@@ -682,7 +682,7 @@ export default function Uploader() {
             </Section>
           )}
 
-          {(activeTab === "uploader" || activeTab === "queue") && (
+          {(activeTab === "overview" || activeTab === "queue") && (
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}
@@ -860,7 +860,7 @@ export default function Uploader() {
             </Section>
           )}
 
-          {(activeTab === "uploader" || activeTab === "history") && (
+          {activeTab === "history" && (
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}
@@ -1038,7 +1038,7 @@ export default function Uploader() {
             </Section>
           )}
 
-          {activeTab === "failed" && (
+          {activeTab === "overview" && (
             <Section>
               <div className="bg-theme-card rounded-xl border border-theme shadow-lg overflow-hidden">
                 {/* Header */}

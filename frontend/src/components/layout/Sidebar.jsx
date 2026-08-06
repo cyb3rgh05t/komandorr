@@ -748,24 +748,14 @@ export default function Sidebar() {
       tabName: "uploader",
       items: [
         {
-          path: "/uploader?tab=active",
-          label: t("uploader.tabs.active", "Active Uploads"),
-          icon: Upload,
-        },
-        {
-          path: "/uploader?tab=queue",
-          label: t("uploader.tabs.queue", "Queue"),
-          icon: ListOrdered,
+          path: "/uploader?tab=overview",
+          label: t("uploader.tabs.overview", "Overview"),
+          icon: LayoutDashboard,
         },
         {
           path: "/uploader?tab=history",
           label: t("uploader.tabs.history", "History"),
           icon: Clock,
-        },
-        {
-          path: "/uploader?tab=failed",
-          label: t("uploader.tabs.failedItems", "Failed Items"),
-          icon: AlertCircle,
         },
       ],
     },
