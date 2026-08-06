@@ -658,10 +658,7 @@ export default function Sidebar() {
       icon: Shield,
       isTab: true,
       tabName: "vpnproxy",
-      items: [
-        { path: "/vpn-proxy", label: "VPN-Proxies", icon: Shield },
-        { path: "/vpn-proxy-monitor", label: "Monitor", icon: Activity },
-      ],
+      items: [{ path: "/vpn-proxy", label: "VPN-Proxies", icon: Shield }],
     },
     {
       label: "NFS Manager",

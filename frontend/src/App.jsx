@@ -22,7 +22,6 @@ import UserAccounts from "./pages/UserAccounts";
 import Uploader from "./pages/Uploader";
 import ArrActivity from "./pages/ArrActivity";
 import VpnProxy from "./pages/VpnProxy";
-import VpnProxyMonitor from "./pages/VpnProxyMonitor";
 import Posterizarr from "./pages/Posterizarr";
 import NfsMount from "./pages/NfsMount";
 import Autoscan from "./pages/Autoscan";
@@ -209,10 +208,6 @@ function App() {
                       <Route path="/uploader" element={<Uploader />} />
                       <Route path="/arr-activity" element={<ArrActivity />} />
                       <Route path="/vpn-proxy" element={<VpnProxy />} />
-                      <Route
-                        path="/vpn-proxy-monitor"
-                        element={<VpnProxyMonitor />}
-                      />
                       <Route path="/posterizarr" element={<Posterizarr />} />
                       <Route path="/nfs-mount" element={<NfsMount />} />
                       <Route path="/autoscan" element={<Autoscan />} />

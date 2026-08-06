@@ -750,9 +750,9 @@ export default function Monitor() {
                         </div>
                       </div>
 
-                      {/* Response Time Stats */}
-                      {service.response_time && (
-                        <div className="grid grid-cols-1 gap-3">
+                      {/* Response Time + Traffic Stats */}
+                      <div className="space-y-3">
+                        {service.response_time && (
                           <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-lg p-3">
                             <div className="flex items-center gap-1.5 mb-1">
                               <TrendingUp className="w-3 h-3 text-blue-400" />
@@ -765,8 +765,96 @@ export default function Monitor() {
                               {t("monitor.stats.ms")}
                             </p>
                           </div>
-                        </div>
-                      )}
+                        )}
+
+                        {service.traffic && (
+                          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                            <div className="min-w-0 bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-2.5 sm:p-3">
+                              <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                                <div className="p-1 bg-blue-500/20 rounded shrink-0">
+                                  <ArrowUp className="w-3 h-3 text-blue-400" />
+                                </div>
+                                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider truncate">
+                                  {t("traffic.page.stats.uploadSpeed")}
+                                </p>
+                              </div>
+                              <p
+                                className="text-sm sm:text-base font-bold text-blue-400 truncate"
+                                title={formatBandwidth(
+                                  service.traffic?.bandwidth_up || 0,
+                                )}
+                              >
+                                {formatBandwidth(
+                                  service.traffic?.bandwidth_up || 0,
+                                )}
+                              </p>
+                            </div>
+
+                            <div className="min-w-0 bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-2.5 sm:p-3">
+                              <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                                <div className="p-1 bg-green-500/20 rounded shrink-0">
+                                  <ArrowDown className="w-3 h-3 text-green-400" />
+                                </div>
+                                <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider truncate">
+                                  {t("traffic.page.stats.downloadSpeed")}
+                                </p>
+                              </div>
+                              <p
+                                className="text-sm sm:text-base font-bold text-green-400 truncate"
+                                title={formatBandwidth(
+                                  service.traffic?.bandwidth_down || 0,
+                                )}
+                              >
+                                {formatBandwidth(
+                                  service.traffic?.bandwidth_down || 0,
+                                )}
+                              </p>
+                            </div>
+
+                            <div className="min-w-0 bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded-lg p-2.5 sm:p-3">
+                              <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                                <div className="p-1 bg-orange-500/20 rounded shrink-0">
+                                  <ArrowUp className="w-3 h-3 text-orange-400" />
+                                </div>
+                                <p className="text-[10px] text-orange-400 font-bold uppercase tracking-wider truncate">
+                                  {t("traffic.page.stats.totalUpload")}
+                                </p>
+                              </div>
+                              <p
+                                className="text-sm sm:text-base font-bold text-orange-400 truncate"
+                                title={formatTraffic(
+                                  Math.abs(service.traffic?.total_up || 0),
+                                )}
+                              >
+                                {formatTraffic(
+                                  Math.abs(service.traffic?.total_up || 0),
+                                )}
+                              </p>
+                            </div>
+
+                            <div className="min-w-0 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 rounded-lg p-2.5 sm:p-3">
+                              <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                                <div className="p-1 bg-cyan-500/20 rounded shrink-0">
+                                  <ArrowDown className="w-3 h-3 text-cyan-400" />
+                                </div>
+                                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider truncate">
+                                  {t("traffic.page.stats.totalDownload")}
+                                </p>
+                              </div>
+                              <p
+                                className="text-sm sm:text-base font-bold text-cyan-400 truncate"
+                                title={formatTraffic(
+                                  Math.abs(service.traffic?.total_down || 0),
+                                )}
+                              >
+                                {formatTraffic(
+                                  Math.abs(service.traffic?.total_down || 0),
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </a>
                 ))}
