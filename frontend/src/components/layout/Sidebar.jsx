@@ -646,8 +646,11 @@ export default function Sidebar() {
       tabName: "services",
       items: [
         { path: "/services", label: t("nav.services"), icon: Server },
-        { path: "/monitor", label: t("nav.monitor"), icon: Activity },
-        { path: "/traffic", label: t("nav.traffic"), icon: TrendingUp },
+        {
+          path: "/monitor",
+          label: t("nav.monitorTraffic", "Ping & Traffic"),
+          icon: Activity,
+        },
       ],
     },
     {

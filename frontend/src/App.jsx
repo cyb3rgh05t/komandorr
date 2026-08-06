@@ -195,7 +195,7 @@ function App() {
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/services" element={<Services />} />
                       <Route path="/monitor" element={<Monitor />} />
-                      <Route path="/traffic" element={<Traffic />} />
+                      <Route path="/traffic" element={<Monitor />} />
                       <Route path="/storage" element={<Storage />} />
                       <Route path="/vod-streams" element={<VODStreams />} />
                       <Route

@@ -15,131 +15,14 @@ import {
   Loader2,
   ExternalLink,
   AlertTriangle,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import PageHeader from "../components/PageHeader";
-
-// Mini sparkline chart component - Line/Area chart style
-const MiniChart = ({ data = [], serviceId }) => {
-  if (!data || data.length === 0) {
-    return (
-      <div className="h-20 flex items-center justify-center text-theme-text-muted text-xs bg-[#0a0f1a] rounded border border-gray-800">
-        {/* Note: t() not available in this component scope, using hardcoded fallback */}
-        No data yet - waiting for measurements
-      </div>
-    );
-  }
-
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || max * 0.1 || 1;
-
-  // Create unique gradient ID for this specific chart
-  const gradientId = `gradient-${serviceId}-${Date.now()}`;
-
-  // Create SVG path for the line
-  const width = 100;
-  const height = 100;
-
-  const points = data.map((value, index) => {
-    const x = (index / Math.max(data.length - 1, 1)) * width;
-    const y = (1 - (value - min) / range) * height;
-    return `${x},${y}`;
-  });
-
-  const linePath = `M ${points.join(" L ")}`;
-  const areaPath = `M 0,${height} L ${points.join(
-    " L ",
-  )} L ${width},${height} Z`;
-
-  return (
-    <div className="relative h-20 bg-[#0a0f1a] rounded border border-gray-800/50 overflow-hidden">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-full"
-        preserveAspectRatio="none"
-      >
-        {/* Grid lines - very subtle */}
-        <line
-          x1="0"
-          y1="20"
-          x2={width}
-          y2="20"
-          stroke="rgba(255,255,255,0.02)"
-          strokeWidth="0.5"
-        />
-        <line
-          x1="0"
-          y1="40"
-          x2={width}
-          y2="40"
-          stroke="rgba(255,255,255,0.02)"
-          strokeWidth="0.5"
-        />
-        <line
-          x1="0"
-          y1="60"
-          x2={width}
-          y2="60"
-          stroke="rgba(255,255,255,0.02)"
-          strokeWidth="0.5"
-        />
-        <line
-          x1="0"
-          y1="80"
-          x2={width}
-          y2="80"
-          stroke="rgba(255,255,255,0.02)"
-          strokeWidth="0.5"
-        />
-
-        {/* Area fill with gradient - unique ID per service */}
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop
-              offset="0%"
-              style={{ stopColor: "#22c55e", stopOpacity: 0.2 }}
-            />
-            <stop
-              offset="100%"
-              style={{ stopColor: "#22c55e", stopOpacity: 0 }}
-            />
-          </linearGradient>
-        </defs>
-        <path d={areaPath} fill={`url(#${gradientId})`} />
-
-        {/* The line itself */}
-        <path
-          d={linePath}
-          fill="none"
-          stroke="#22c55e"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-
-      {/* Hover overlay for tooltip */}
-      <div className="absolute inset-0 flex">
-        {data.map((value, index) => (
-          <div
-            key={index}
-            className="flex-1 group relative"
-            title={`${value.toFixed(1)}ms`}
-          >
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900/95 border border-gray-700 rounded text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-              {value.toFixed(1)}ms
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 export default function Monitor() {
   const { t } = useTranslation();
@@ -255,6 +138,42 @@ export default function Monitor() {
     return `${Math.floor(diff / 86400)}d ago`;
   };
 
+  const formatBandwidth = (mbps) => {
+    if (!mbps) return "0 KB/s";
+    if (mbps < 1) {
+      return `${(mbps * 1024).toFixed(2)} KB/s`;
+    }
+    return `${mbps.toFixed(2)} MB/s`;
+  };
+
+  const formatTraffic = (gb) => {
+    if (!gb) return "0 MB";
+    if (gb < 1) {
+      return `${(gb * 1024).toFixed(2)} MB`;
+    }
+    if (gb > 1024) {
+      return `${(gb / 1024).toFixed(2)} TB`;
+    }
+    return `${gb.toFixed(2)} GB`;
+  };
+
+  const totalBandwidthUp = services.reduce(
+    (sum, service) => sum + (service.traffic?.bandwidth_up || 0),
+    0,
+  );
+  const totalBandwidthDown = services.reduce(
+    (sum, service) => sum + (service.traffic?.bandwidth_down || 0),
+    0,
+  );
+  const totalTrafficUp = services.reduce(
+    (sum, service) => sum + Math.abs(service.traffic?.total_up || 0),
+    0,
+  );
+  const totalTrafficDown = services.reduce(
+    (sum, service) => sum + Math.abs(service.traffic?.total_down || 0),
+    0,
+  );
+
   // Calculate stats
   const stats = {
     total: services.length,
@@ -355,7 +274,7 @@ export default function Monitor() {
         <>
           <PageHeader
             icon={Activity}
-            title={t("nav.monitor", "Monitor")}
+            title={t("nav.monitorTraffic", "Ping & Traffic")}
             actions={
               <>
                 <button
@@ -507,6 +426,66 @@ export default function Monitor() {
                   className="w-8 h-8 text-blue-500 shrink-0"
                   strokeWidth={1.5}
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Traffic Overview */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowUp className="w-3 h-3 text-blue-500" />
+                    {t("traffic.page.stats.upload")}
+                  </p>
+                  <p className="text-xl font-bold text-blue-500">
+                    {formatBandwidth(totalBandwidthUp)}
+                  </p>
+                </div>
+                <ArrowUp className="w-7 h-7 text-blue-500 shrink-0" />
+              </div>
+            </div>
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:border-green-500/50 hover:bg-green-500/10 transition-all">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <ArrowDown className="w-3 h-3 text-green-500" />
+                    {t("traffic.page.stats.download")}
+                  </p>
+                  <p className="text-xl font-bold text-green-500">
+                    {formatBandwidth(totalBandwidthDown)}
+                  </p>
+                </div>
+                <ArrowDown className="w-7 h-7 text-green-500 shrink-0" />
+              </div>
+            </div>
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:border-orange-500/50 hover:bg-orange-500/10 transition-all">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-orange-500" />
+                    {t("traffic.page.stats.uploaded")}
+                  </p>
+                  <p className="text-xl font-bold text-orange-500">
+                    {formatTraffic(totalTrafficUp)}
+                  </p>
+                </div>
+                <TrendingUp className="w-7 h-7 text-orange-500 shrink-0" />
+              </div>
+            </div>
+            <div className="bg-theme-card border border-theme rounded-lg p-4 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-theme-text-muted uppercase tracking-wider flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-cyan-500" />
+                    {t("traffic.page.stats.downloaded")}
+                  </p>
+                  <p className="text-xl font-bold text-cyan-500">
+                    {formatTraffic(totalTrafficDown)}
+                  </p>
+                </div>
+                <TrendingUp className="w-7 h-7 text-cyan-500 shrink-0" />
               </div>
             </div>
           </div>
@@ -788,71 +767,6 @@ export default function Monitor() {
                           </div>
                         </div>
                       )}
-
-                      {/* Chart Section */}
-                      <div className="bg-theme-card border border-theme rounded-lg p-4 space-y-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="p-1.5 bg-theme-primary/20 rounded">
-                            <TrendingUp
-                              size={14}
-                              className="text-theme-primary"
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-theme-text uppercase tracking-wider">
-                            {t("monitor.service.responseTimeHistory")}
-                          </span>
-                        </div>
-
-                        {/* Response Time Chart */}
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-green-500 font-medium flex items-center gap-1">
-                              <TrendingUp size={12} />
-                              {t("monitor.service.responseTime")}
-                            </span>
-                            {(() => {
-                              const history = (
-                                service.response_history || []
-                              ).map((point) => point.response_time);
-                              const displayData =
-                                history.length > 0
-                                  ? history
-                                  : service.response_time
-                                    ? [service.response_time]
-                                    : [];
-
-                              if (displayData.length > 0) {
-                                const avg =
-                                  displayData.reduce((a, b) => a + b, 0) /
-                                  displayData.length;
-                                const max = Math.max(...displayData);
-                                return (
-                                  <span className="text-xs text-theme-text-muted">
-                                    {t("monitor.service.avg")}: {avg.toFixed(1)}{" "}
-                                    {t("monitor.stats.ms")} •{" "}
-                                    {t("monitor.service.max")}: {max.toFixed(1)}{" "}
-                                    {t("monitor.stats.ms")}
-                                  </span>
-                                );
-                              }
-                              return null;
-                            })()}
-                          </div>
-                          <MiniChart
-                            serviceId={service.id}
-                            data={(() => {
-                              const history = (
-                                service.response_history || []
-                              ).map((point) => point.response_time);
-                              return history.length > 0
-                                ? history
-                                : service.response_time
-                                  ? [service.response_time]
-                                  : [];
-                            })()}
-                          />
-                        </div>
-                      </div>
                     </div>
                   </a>
                 ))}
