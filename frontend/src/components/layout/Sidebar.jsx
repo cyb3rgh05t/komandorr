@@ -795,20 +795,7 @@ export default function Sidebar() {
     {
       label: "Posterizarr",
       icon: Palette,
-      isTab: true,
-      tabName: "posterizarr",
-      items: [
-        {
-          path: "/posterizarr?tab=overview",
-          label: t("posterizarr.tabs.overview", "Overview"),
-          icon: LayoutDashboard,
-        },
-        {
-          path: "/posterizarr?tab=history",
-          label: t("posterizarr.tabs.history", "History"),
-          icon: History,
-        },
-      ],
+      path: "/posterizarr",
     },
     {
       label: "External Apps",
