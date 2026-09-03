@@ -888,9 +888,10 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
 
             logger.info(f"Total activities retrieved: {len(activities)}")
 
-            # Auto-track daily peak from activity count
-            activity_count = len(activities)
-            if activity_count > 0:
+            # Auto-track daily peak from session count only (not background activities)
+            # Only count actual streaming sessions, not background tasks/transcodes
+            session_count = len([a for a in activities if a.get("type") in ("stream", "transcode", "pause")])
+            if session_count > 0:
                 try:
                     peak_session = db.get_session()
                     try:
@@ -898,14 +899,14 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
                         stats = peak_session.query(PlexStatsDB).first()
                         if not stats:
                             stats = PlexStatsDB(
-                                peak_concurrent=activity_count,
+                                peak_concurrent=session_count,
                                 last_updated=datetime.now(timezone.utc).replace(
                                     tzinfo=None
                                 ),
                             )
                             peak_session.add(stats)
-                        elif activity_count > stats.peak_concurrent:
-                            stats.peak_concurrent = activity_count  # type: ignore
+                        elif session_count > stats.peak_concurrent:
+                            stats.peak_concurrent = session_count  # type: ignore
                             stats.last_updated = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
 
                         # Update daily peak
@@ -918,14 +919,14 @@ async def get_plex_activities(instance_id: Optional[str] = Query(None)):
                         if not daily:
                             daily = DailyPeakDB(
                                 date=today,
-                                peak_concurrent=activity_count,
+                                peak_concurrent=session_count,
                                 updated_at=datetime.now(timezone.utc).replace(
                                     tzinfo=None
                                 ),
                             )
                             peak_session.add(daily)
-                        elif activity_count > daily.peak_concurrent:
-                            daily.peak_concurrent = activity_count  # type: ignore
+                        elif session_count > daily.peak_concurrent:
+                            daily.peak_concurrent = session_count  # type: ignore
                             daily.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)  # type: ignore
 
                         peak_session.commit()

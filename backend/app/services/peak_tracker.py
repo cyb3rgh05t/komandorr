@@ -51,80 +51,72 @@ class PeakTracker:
             if not url or not token:
                 return
 
-            activity_count = 0
+            session_count = 0
             async with httpx.AsyncClient(timeout=15.0) as client:
                 headers = {"X-Plex-Token": token, "Accept": "application/json"}
 
-                # Count activities
-                try:
-                    resp = await client.get(f"{url}/activities", headers=headers)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        activities = data.get("MediaContainer", {}).get("Activity", [])
-                        activity_count += len(activities)
-                except Exception as e:
-                    logger.debug(f"Peak tracker: error fetching /activities: {e}")
-
-                # Count sessions
+                # Count active sessions (streams) only, not backend activities
+                # Activities include transcode jobs, library scans, etc. which should not
+                # be counted as concurrent streams for peak tracking.
                 try:
                     resp = await client.get(f"{url}/status/sessions", headers=headers)
                     if resp.status_code == 200:
                         data = resp.json()
                         sessions = data.get("MediaContainer", {}).get("Metadata", [])
-                        activity_count += len(sessions)
+                        session_count = len(sessions)
                 except Exception as e:
                     logger.debug(f"Peak tracker: error fetching /status/sessions: {e}")
 
-            if activity_count == 0:
+            if session_count == 0:
                 return
 
             # Update peaks in DB
             from app.database import db, PlexStatsDB, DailyPeakDB
 
-            session = db.get_session()
+            db_session = db.get_session()
             try:
                 now = datetime.now(timezone.utc).replace(tzinfo=None)
                 updated = False
 
                 # All-time peak
-                stats = session.query(PlexStatsDB).first()
+                stats = db_session.query(PlexStatsDB).first()
                 if not stats:
                     stats = PlexStatsDB(
-                        peak_concurrent=activity_count, last_updated=now
+                        peak_concurrent=session_count, last_updated=now
                     )
-                    session.add(stats)
+                    db_session.add(stats)
                     updated = True
-                elif activity_count > stats.peak_concurrent:
-                    stats.peak_concurrent = activity_count  # type: ignore
+                elif session_count > stats.peak_concurrent:
+                    stats.peak_concurrent = session_count  # type: ignore
                     stats.last_updated = now  # type: ignore
                     updated = True
 
                 # Daily peak
                 today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
                 daily = (
-                    session.query(DailyPeakDB).filter(DailyPeakDB.date == today).first()
+                    db_session.query(DailyPeakDB).filter(DailyPeakDB.date == today).first()
                 )
                 if not daily:
                     daily = DailyPeakDB(
-                        date=today, peak_concurrent=activity_count, updated_at=now
+                        date=today, peak_concurrent=session_count, updated_at=now
                     )
-                    session.add(daily)
+                    db_session.add(daily)
                     updated = True
-                elif activity_count > daily.peak_concurrent:
-                    daily.peak_concurrent = activity_count  # type: ignore
+                elif session_count > daily.peak_concurrent:
+                    daily.peak_concurrent = session_count  # type: ignore
                     daily.updated_at = now  # type: ignore
                     updated = True
 
                 if updated:
-                    session.commit()
+                    db_session.commit()
                     from app.services.redis_cache import cache_delete
 
                     cache_delete("plex:stats")
                     logger.debug(
-                        f"Peak tracker: updated peaks (count={activity_count})"
+                        f"Peak tracker: updated peaks (sessions={session_count})"
                     )
             finally:
-                session.close()
+                db_session.close()
 
         except Exception as e:
             logger.warning(f"Peak tracker error: {e}")
