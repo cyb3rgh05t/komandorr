@@ -110,6 +110,22 @@ export default function Sidebar() {
     placeholderData: (previousData) => previousData,
   });
   const plexSyncInstanceId = settingsData?.plex_sync?.instance_id || "";
+  const hasSettingsPayload =
+    !!settingsData && Object.keys(settingsData).length > 0;
+  const hasConfigList = (path) => {
+    const value = path
+      .split(".")
+      .reduce((acc, key) => (acc == null ? undefined : acc[key]), settingsData);
+    return Array.isArray(value) && value.length > 0;
+  };
+  const hasTextConfig = (path) => {
+    const value = path
+      .split(".")
+      .reduce((acc, key) => (acc == null ? undefined : acc[key]), settingsData);
+    return typeof value === "string" && value.trim().length > 0;
+  };
+  const shouldShowConfiguredFeature = (configured) =>
+    !hasSettingsPayload || configured;
 
   // Fetch Plex sessions for active session count (aggregated across all instances)
   const { data: sessionsAgg } = useQuery({
@@ -547,7 +563,9 @@ export default function Sidebar() {
     refetchInterval: 30000,
     retry: false,
     placeholderData: (previousData) => previousData,
-    enabled: (autoscanStatus?.instances?.length || 0) > 0,
+    enabled:
+      shouldShowConfiguredFeature(hasConfigList("autoscan.instances")) &&
+      (autoscanStatus?.instances?.length || 0) > 0,
   });
 
   const autoscanQueueCount = useMemo(() => {
@@ -613,6 +631,42 @@ export default function Sidebar() {
   const webplayerActiveSessions =
     Number(webplayerStats?.transcode?.sessionsRunning) || 0;
 
+  const showVpnManager = shouldShowConfiguredFeature(
+    hasConfigList("vpn_proxy.instances"),
+  );
+  const showNfsManager = shouldShowConfiguredFeature(
+    hasConfigList("nfs_mount.instances"),
+  );
+  const showStorage = shouldShowConfiguredFeature(
+    storageSummary === undefined ||
+      (Boolean(storageSummary) && storageSummary?.not_configured !== true),
+  );
+  const showWebplayer = shouldShowConfiguredFeature(
+    hasTextConfig("webplayer.base_url"),
+  );
+  const showPlex = shouldShowConfiguredFeature(hasConfigList("plex.instances"));
+  const showVodPlexSync = shouldShowConfiguredFeature(
+    hasTextConfig("plex_sync.instance_id"),
+  );
+  const showVodPortal = shouldShowConfiguredFeature(
+    hasTextConfig("overseerr.url") || hasTextConfig("overseerr.api_key"),
+  );
+  const showAutoscan = shouldShowConfiguredFeature(
+    hasConfigList("autoscan.instances"),
+  );
+  const showUploader = shouldShowConfiguredFeature(
+    hasTextConfig("uploader.base_url"),
+  );
+  const showDownloads = shouldShowConfiguredFeature(
+    hasConfigList("arr.instances"),
+  );
+  const showPosterizarr = shouldShowConfiguredFeature(
+    hasConfigList("posterizarr.instances"),
+  );
+  const showExternalApps = shouldShowConfiguredFeature(
+    hasConfigList("external_apps.apps"),
+  );
+
   // Count expired invites that are not redeemed
   const expiredUnusedCount = invites.filter(
     (invite) =>
@@ -659,19 +713,19 @@ export default function Sidebar() {
         },
       ],
     },
-    {
+    showVpnManager && {
       label: "VPN Manager",
       icon: Shield,
       isTab: true,
       tabName: "vpnproxy",
       items: [{ path: "/vpn-proxy", label: "VPN-Proxies", icon: Shield }],
     },
-    {
+    showNfsManager && {
       label: "NFS Manager",
       icon: HardDrive,
       path: "/nfs-mount",
     },
-    {
+    showStorage && {
       label: t("nav.storage", "Storage"),
       icon: HardDrive,
       isTab: true,
@@ -689,12 +743,12 @@ export default function Sidebar() {
         },
       ],
     },
-    {
+    showWebplayer && {
       label: t("nav.webplayer", "Webplayer"),
       icon: Tv2Icon,
       path: "/webplayer",
     },
-    {
+    showPlex && {
       label: t("nav.plex"),
       icon: Tv2Icon,
       isTab: true,
@@ -705,7 +759,7 @@ export default function Sidebar() {
         { path: "/invites", label: t("nav.invites"), icon: Mail },
       ],
     },
-    {
+    showVodPlexSync && {
       label: t("nav.vodPlexSync", "VoD Plex-Sync"),
       icon: FilmIcon,
       isTab: true,
@@ -723,12 +777,12 @@ export default function Sidebar() {
         },
       ],
     },
-    {
+    showVodPortal && {
       label: t("nav.vodPortal"),
       icon: TvIcon,
       path: "/vod-portal",
     },
-    {
+    showAutoscan && {
       label: "Autoscan",
       icon: Webhook,
       isTab: true,
@@ -747,7 +801,7 @@ export default function Sidebar() {
       ],
     },
 
-    {
+    showUploader && {
       label: t("nav.uploader"),
       icon: Upload,
       isTab: true,
@@ -765,7 +819,7 @@ export default function Sidebar() {
         },
       ],
     },
-    {
+    showDownloads && {
       label: t("nav.arrActivity", "Downloads"),
       icon: Download,
       isTab: true,
@@ -788,19 +842,19 @@ export default function Sidebar() {
         },
       ],
     },
-    {
+    showPosterizarr && {
       label: "Posterizarr",
       icon: Palette,
       path: "/posterizarr",
     },
-    {
+    showExternalApps && {
       label: "External Apps",
       icon: AppWindow,
       path: "/external-apps",
     },
     { path: "/settings", label: t("nav.settings"), icon: Settings },
     { path: "/about", label: t("nav.about"), icon: Info },
-  ];
+  ].filter(Boolean);
 
   const isActive = (path) => {
     // Handle paths with query params
@@ -904,6 +958,12 @@ export default function Sidebar() {
                     item.tabName === "uploader" && activeUploadsCount > 0;
                   const hasFailedUploadsBadge =
                     item.tabName === "uploader" && failedUploadsCount > 0;
+
+                  // Check if Autoscan tab has queued scans or errors
+                  const hasAutoscanQueueBadge =
+                    item.tabName === "autoscan" && autoscanQueueCount > 0;
+                  const hasAutoscanErrorBadge =
+                    item.tabName === "autoscan" && autoscanErrorCount > 0;
 
                   // Check if Downloads tab has active or stuck downloads (show separate badges)
                   const totalActiveDownloads =
@@ -1033,6 +1093,24 @@ export default function Sidebar() {
                             {failedUploadsCount}
                           </span>
                         )}
+                        {hasAutoscanQueueBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-blue-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {autoscanQueueCount}
+                          </span>
+                        )}
+                        {hasAutoscanErrorBadge && (
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white ${
+                              isOpen ? "" : "md:hidden 2xl:inline-flex"
+                            }`}
+                          >
+                            {autoscanErrorCount}
+                          </span>
+                        )}
                         {hasActiveDownloadsBadge && (
                           <span
                             className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-green-500 text-black ${
@@ -1134,14 +1212,6 @@ export default function Sidebar() {
                               subItem.path === "/vod-streams" &&
                               plexActivityInstanceCount > 0;
 
-                            // Autoscan Overview sub-item: queue + error badges
-                            const isAutoscanOverview =
-                              subItem.path === "/autoscan?tab=overview";
-                            const autoscanQueueSubBadge =
-                              isAutoscanOverview && autoscanQueueCount > 0;
-                            const autoscanErrorSubBadge =
-                              isAutoscanOverview && autoscanErrorCount > 0;
-
                             // Posterizarr Overview sub-item: error badge
                             const isPosterizarrOverview =
                               subItem.path === "/posterizarr?tab=overview";
@@ -1231,18 +1301,6 @@ export default function Sidebar() {
                               badges.push({
                                 count: plexActivityInstanceCount,
                                 color: "bg-green-500",
-                              });
-                            }
-                            if (autoscanQueueSubBadge) {
-                              badges.push({
-                                count: autoscanQueueCount,
-                                color: "bg-blue-500",
-                              });
-                            }
-                            if (autoscanErrorSubBadge) {
-                              badges.push({
-                                count: autoscanErrorCount,
-                                color: "bg-red-500",
                               });
                             }
                             if (posterizarrErrorSubBadge) {
