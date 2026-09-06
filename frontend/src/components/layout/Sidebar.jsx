@@ -94,6 +94,23 @@ export default function Sidebar() {
   });
   const plexInstances = plexInstancesData?.instances || [];
 
+  // VOD Plex-Sync uses a single configured instance (plex_sync.instance_id),
+  // unlike the Plex tab badge which aggregates across all instances.
+  const { data: settingsData } = useQuery({
+    queryKey: ["settings-plex-sync"],
+    queryFn: async () => {
+      try {
+        return await api.get("/settings");
+      } catch {
+        return {};
+      }
+    },
+    staleTime: 60000,
+    refetchInterval: 60000,
+    placeholderData: (previousData) => previousData,
+  });
+  const plexSyncInstanceId = settingsData?.plex_sync?.instance_id || "";
+
   // Fetch Plex sessions for active session count (aggregated across all instances)
   const { data: sessionsAgg } = useQuery({
     queryKey: ["plex-sessions-all", plexInstances.map((i) => i.id).join(",")],
@@ -140,42 +157,31 @@ export default function Sidebar() {
     ?.toLowerCase()
     .includes("not configured");
 
-  // Fetch Plex activities per instance so the badge counts instances with
-  // active activity instead of summing raw session objects.
+  // Fetch Plex activities for the VOD Sync instance only (matches the Live
+  // page), so the badge doesn't include streams from unrelated Plex instances.
   const { data: plexActivityAgg } = useQuery({
-    queryKey: [
-      "plex-activities-sidebar",
-      plexInstances.map((i) => i.id).join(","),
-    ],
+    queryKey: ["plex-activities-sidebar", plexSyncInstanceId],
     queryFn: async () => {
-      const ids =
-        plexInstances.length > 0 ? plexInstances.map((i) => i.id) : [null];
-      const results = await Promise.all(
-        ids.map(async (id) => {
-          try {
-            const url = id
-              ? `/plex/activities?instance_id=${encodeURIComponent(id)}`
-              : "/plex/activities";
-            const response = await api.get(url);
-            return Array.isArray(response?.activities)
-              ? response.activities.length
-              : 0;
-          } catch {
-            return 0;
-          }
-        }),
-      );
-      return { counts: results };
+      try {
+        const url = plexSyncInstanceId
+          ? `/plex/activities?instance_id=${encodeURIComponent(plexSyncInstanceId)}`
+          : "/plex/activities";
+        const response = await api.get(url);
+        return {
+          count: Array.isArray(response?.activities)
+            ? response.activities.length
+            : 0,
+        };
+      } catch {
+        return { count: 0 };
+      }
     },
     refetchInterval: 10000,
     staleTime: 5000,
     placeholderData: (previousData) => previousData,
   });
 
-  const plexActivityInstanceCount = useMemo(() => {
-    const counts = plexActivityAgg?.counts || [];
-    return counts.reduce((total, count) => total + (Number(count) || 0), 0);
-  }, [plexActivityAgg]);
+  const plexActivityInstanceCount = plexActivityAgg?.count || 0;
 
   // Fetch arr-activity queue for Downloads badges
   const { data: arrQueueData = {} } = useQuery({

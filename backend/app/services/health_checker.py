@@ -601,7 +601,7 @@ class HealthChecker:
         from app.services.monitor import monitor
         from datetime import datetime, timezone
 
-        STORAGE_WARNING_THRESHOLD = 90.0
+        STORAGE_WARNING_THRESHOLD = 95.0
         STORAGE_RISKY_STATUSES = {
             "degraded",
             "failed",

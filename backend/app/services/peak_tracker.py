@@ -81,9 +81,7 @@ class PeakTracker:
                 # All-time peak
                 stats = db_session.query(PlexStatsDB).first()
                 if not stats:
-                    stats = PlexStatsDB(
-                        peak_concurrent=session_count, last_updated=now
-                    )
+                    stats = PlexStatsDB(peak_concurrent=session_count, last_updated=now)
                     db_session.add(stats)
                     updated = True
                 elif session_count > stats.peak_concurrent:
@@ -94,7 +92,9 @@ class PeakTracker:
                 # Daily peak
                 today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
                 daily = (
-                    db_session.query(DailyPeakDB).filter(DailyPeakDB.date == today).first()
+                    db_session.query(DailyPeakDB)
+                    .filter(DailyPeakDB.date == today)
+                    .first()
                 )
                 if not daily:
                     daily = DailyPeakDB(
