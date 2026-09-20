@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
 from typing import List
 from app.models.service import TrafficUpdate, TrafficDataPoint
 from app.services.monitor import monitor
@@ -8,6 +8,10 @@ import asyncio
 import json
 
 router = APIRouter(prefix="/api/traffic", tags=["traffic"])
+
+# Deduplicate warnings for unknown/removed service IDs so a stale traffic-agent
+# doesn't spam the logs every UPDATE_INTERVAL seconds.
+_warned_unknown_service_ids: set[str] = set()
 
 
 # WebSocket connection manager for real-time traffic updates
@@ -47,14 +51,39 @@ ws_manager = TrafficConnectionManager()
 
 
 @router.post("/update")
-async def update_traffic(traffic_data: TrafficUpdate):
+async def update_traffic(traffic_data: TrafficUpdate, request: Request):
     """Receive traffic data from monitoring agent"""
     service = monitor.get_service(traffic_data.service_id)
     if not service:
-        logger.warning(
-            f"Service not found for traffic update: {traffic_data.service_id}"
+        # Warn only once per unknown ID, then return 410 Gone so the agent
+        # can detect that the service was removed and stop pushing.
+        if traffic_data.service_id not in _warned_unknown_service_ids:
+            _warned_unknown_service_ids.add(traffic_data.service_id)
+            client_ip = request.headers.get("x-forwarded-for", "").split(",")[
+                0
+            ].strip() or (request.client.host if request.client else "unknown")
+            user_agent = request.headers.get("user-agent", "unknown")
+            logger.warning(
+                f"Traffic update for unknown/removed service_id "
+                f"{traffic_data.service_id} from {client_ip} (UA: {user_agent}) — "
+                f"ignoring further updates from this agent until it is "
+                f"reconfigured or restarted."
+            )
+        raise HTTPException(
+            status_code=410,
+            detail={
+                "code": "service_unknown",
+                "service_id": traffic_data.service_id,
+                "message": (
+                    "Service was removed from komandorr. Update the traffic "
+                    "agent's SERVICE_ID or stop the agent."
+                ),
+            },
         )
-        raise HTTPException(status_code=404, detail="Service not found")
+
+    # If a previously-unknown ID was re-added, clear the dedupe flag so future
+    # deletions warn again.
+    _warned_unknown_service_ids.discard(traffic_data.service_id)
 
     # Update current traffic metrics
     if service.traffic is None:

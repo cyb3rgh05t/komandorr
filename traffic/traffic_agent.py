@@ -343,6 +343,22 @@ class TrafficMonitor:
                     f"DOWN {traffic_data['total_down']:.2f} GB{Style.RESET_ALL}"
                 )
                 return True
+            elif response.status_code in (404, 410):
+                # Service was deleted in the komandorr UI. Stop the agent so it
+                # doesn't spam the dashboard logs forever.
+                logger.separator()
+                logger.error(
+                    f"Komandorr rejected SERVICE_ID {SERVICE_ID}: the service "
+                    f"no longer exists (HTTP {response.status_code})."
+                )
+                logger.info(
+                    "Update SERVICE_ID to a valid ID from the komandorr UI, "
+                    "then restart this agent."
+                )
+                logger.debug(f"Response: {response.text}")
+                logger.separator()
+                self._save_state()
+                sys.exit(2)
             else:
                 logger.error(f"Server returned status {response.status_code}")
                 logger.debug(f"Response: {response.text}")
