@@ -120,7 +120,9 @@
       "done": "Fertig",
       "reset": "Zurücksetzen",
       "moveUp": "Nach oben",
-      "moveDown": "Nach unten"
+      "moveDown": "Nach unten",
+      "hide": "Karte ausblenden",
+      "show": "Karte einblenden"
     },
     "charts": {
       "plex": "Plex-Aktivität",

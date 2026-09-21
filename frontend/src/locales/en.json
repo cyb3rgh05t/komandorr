@@ -146,7 +146,9 @@
       "done": "Done",
       "reset": "Reset",
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "hide": "Hide card",
+      "show": "Show card"
     },
     "charts": {
       "plex": "Plex Activity",

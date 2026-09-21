@@ -33,6 +33,8 @@ import {
   RotateCcw,
   Crown,
   Tv2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { api } from "@/services/api";
 import { uploaderApi } from "@/services/uploaderApi";
@@ -288,7 +290,7 @@ function ChartCard({
 }) {
   return (
     <div
-      className={`group bg-theme-card border border-theme rounded-xl p-4 flex flex-col gap-3 h-full transition-all ${
+      className={`group bg-theme-card border border-theme rounded-xl p-3 flex flex-col gap-2 h-full transition-all ${
         onClick
           ? "cursor-pointer hover:border-theme-primary/60 hover:shadow-md"
           : ""
@@ -296,8 +298,8 @@ function ChartCard({
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          {Icon && <Icon className={`w-5 h-5 ${iconColor} shrink-0`} />}
+        <div className="flex items-center gap-1.5 min-w-0">
+          {Icon && <Icon className={`w-4 h-4 ${iconColor} shrink-0`} />}
           <h3 className="text-sm font-semibold text-theme-text truncate">
             {title}
           </h3>
@@ -307,11 +309,11 @@ function ChartCard({
         )}
       </div>
       {tabs}
-      <div className="flex-1 min-h-[150px] flex flex-col items-center justify-start gap-4 pt-3">
+      <div className="flex-1 min-h-[110px] flex flex-col items-center justify-start gap-2.5 pt-1.5">
         {children}
       </div>
       {footer && (
-        <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-2">
+        <div className="text-[11px] text-theme-text-muted text-center border-t border-theme pt-1.5">
           {footer}
         </div>
       )}
@@ -353,20 +355,20 @@ function StatTile({
   const hasTooltip = !!tooltip;
   return (
     <div
-      className={`relative bg-theme-hover/40 border border-theme rounded-lg px-3 py-2 flex flex-col items-start ${hasTooltip ? "group/tile cursor-help" : ""}`}
+      className={`relative bg-theme-hover/40 border border-theme rounded-lg px-2.5 py-1.5 flex flex-col items-start ${hasTooltip ? "group/tile cursor-help" : ""}`}
     >
       <span
-        className="text-xl font-bold leading-none"
+        className="text-lg font-bold leading-none"
         style={{ color: color || "var(--theme-text)" }}
       >
         {value}
       </span>
-      <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-1">
+      <span className="text-[10px] uppercase tracking-wide text-theme-text-muted mt-0.5">
         {label}
       </span>
       {subLabelText && (
         <span
-          className="text-[9px] leading-tight text-theme-text-muted/90 mt-1 w-full truncate"
+          className="text-[9px] leading-tight text-theme-text-muted/90 mt-0.5 w-full truncate"
           title={subLabelTitle || subLabelText}
         >
           {subLabelText}
@@ -388,7 +390,7 @@ function StatTile({
 function StatGrid({ tiles }) {
   if (!tiles || tiles.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 gap-2 w-full">
+    <div className="grid grid-cols-2 gap-1.5 w-full">
       {tiles.map((tile) => (
         <StatTile key={tile.label} {...tile} />
       ))}
@@ -434,8 +436,8 @@ function InstanceToggle({ instances, value, onChange, allLabel = "All" }) {
 function MiniRing({
   percent,
   color = "#22d3ee",
-  size = 76,
-  thickness = 9,
+  size = 62,
+  thickness = 8,
   centerLabel,
 }) {
   const radius = (size - thickness) / 2;
@@ -500,7 +502,7 @@ function MiniRing({
   );
 }
 
-function MiniMulti({ segments, size = 76, thickness = 9, centerLabel }) {
+function MiniMulti({ segments, size = 62, thickness = 8, centerLabel }) {
   const radius = (size - thickness) / 2;
   const c = 2 * Math.PI * radius;
   const total = segments.reduce((a, s) => a + (Number(s.value) || 0), 0);
@@ -760,8 +762,8 @@ function PlexCard() {
                   { value: inst.direct, color: "#22c55e" },
                   { value: inst.transcoding, color: "#f59e0b" },
                 ]}
-                size={110}
-                thickness={14}
+                size={86}
+                thickness={9}
                 centerLabel={
                   <span className="flex flex-col items-center leading-tight">
                     <span className="text-2xl font-bold text-theme-text">
@@ -1115,8 +1117,8 @@ export function VpnCard({
           <MiniRing
             percent={total > 0 ? (running / total) * 100 : 0}
             color="#22c55e"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={running}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1127,8 +1129,8 @@ export function VpnCard({
           <MiniRing
             percent={total > 0 ? (connected / total) * 100 : 0}
             color="#22d3ee"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={connected}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1139,8 +1141,8 @@ export function VpnCard({
           <MiniRing
             percent={total > 0 ? (stopped / total) * 100 : 0}
             color="#ef4444"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={stopped}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -1418,8 +1420,8 @@ function NfsCard() {
                       { value: inst.up, color: "#22c55e" },
                       { value: inst.down, color: "#ef4444" },
                     ]}
-                    size={96}
-                    thickness={12}
+                    size={76}
+                    thickness={10}
                     centerLabel={inst.total}
                   />
                   <span className="text-[9px] uppercase tracking-wide text-theme-text-muted">
@@ -1447,8 +1449,8 @@ function NfsCard() {
                       { value: inst.mUp, color: "#a78bfa" },
                       { value: inst.mDown, color: "#ef4444" },
                     ]}
-                    size={96}
-                    thickness={12}
+                    size={76}
+                    thickness={10}
                     centerLabel={inst.mTotal}
                   />
                   <span className="text-[9px] uppercase tracking-wide text-theme-text-muted">
@@ -1637,7 +1639,7 @@ function StorageCard() {
                   <MiniRing
                     percent={p.pct}
                     color={ringCol}
-                    size={56}
+                    size={46}
                     thickness={7}
                     centerLabel={`${p.pct.toFixed(0)}%`}
                   />
@@ -1935,8 +1937,8 @@ function DownloadsCard() {
                     { value: r.stuck, color: "#ef4444" },
                     { value: idle, color: "#94a3b8" },
                   ]}
-                  size={110}
-                  thickness={13}
+                  size={86}
+                  thickness={10}
                   centerLabel={r.total}
                 />
                 <div className="min-w-0 w-full text-center">
@@ -2192,8 +2194,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (active / total) * 100 : 0}
             color="#22d3ee"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={active}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2204,8 +2206,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (queued / total) * 100 : 0}
             color="#a78bfa"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={queued}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2216,8 +2218,8 @@ function UploadsCard() {
           <MiniRing
             percent={total > 0 ? (failed / total) * 100 : 0}
             color="#ef4444"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={failed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2479,8 +2481,8 @@ function PosterizarrCard() {
             >
               <MiniMulti
                 segments={inst.segments}
-                size={110}
-                thickness={14}
+                size={86}
+                thickness={9}
                 centerLabel={
                   inst.isIdle
                     ? "-"
@@ -2772,8 +2774,8 @@ function AutoscanCard() {
           <MiniRing
             percent={(queue / max) * 100}
             color="#a78bfa"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={queue}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2784,8 +2786,8 @@ function AutoscanCard() {
           <MiniRing
             percent={(processed / max) * 100}
             color="#22c55e"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={processed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -2796,8 +2798,8 @@ function AutoscanCard() {
           <MiniRing
             percent={(failed / max) * 100}
             color="#ef4444"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={failed}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3056,8 +3058,8 @@ function VodSyncCard() {
                   : 0
             }
             color="#22c55e"
-            size={110}
-            thickness={11}
+            size={86}
+            thickness={9}
             centerLabel={activeStreams}
           />
           <div className="text-center min-w-0">
@@ -3073,8 +3075,8 @@ function VodSyncCard() {
           <MiniRing
             percent={allTimePeak > 0 ? 100 : 0}
             color="#fbbf24"
-            size={110}
-            thickness={11}
+            size={86}
+            thickness={9}
             centerLabel={
               <span className="flex flex-col items-center justify-center leading-none gap-0.5">
                 <Crown
@@ -3323,8 +3325,8 @@ function WebplayerCard() {
                   : 0
             }
             color="#06b6d4"
-            size={110}
-            thickness={11}
+            size={86}
+            thickness={9}
             centerLabel={activeSessions}
           />
           <div className="text-center min-w-0">
@@ -3340,8 +3342,8 @@ function WebplayerCard() {
           <MiniRing
             percent={allTimePeak > 0 ? 100 : 0}
             color="#fbbf24"
-            size={110}
-            thickness={11}
+            size={86}
+            thickness={9}
             centerLabel={
               <span className="flex flex-col items-center justify-center leading-none gap-0.5">
                 <Crown
@@ -3531,8 +3533,8 @@ function VodPortalCard() {
                   { value: reqAvailable, color: "#a78bfa" },
                   { value: reqDeclined, color: "#ef4444" },
                 ]}
-                size={100}
-                thickness={13}
+                size={80}
+                thickness={10}
                 centerLabel={reqTotal}
               />
               <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3545,8 +3547,8 @@ function VodPortalCard() {
                   { value: issOpen, color: "#ef4444" },
                   { value: issClosed, color: "#22c55e" },
                 ]}
-                size={100}
-                thickness={13}
+                size={80}
+                thickness={10}
                 centerLabel={issTotal}
               />
               <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3557,8 +3559,8 @@ function VodPortalCard() {
               <MiniRing
                 percent={usersTotal > 0 ? 100 : 0}
                 color="#22d3ee"
-                size={100}
-                thickness={13}
+                size={80}
+                thickness={10}
                 centerLabel={usersTotal}
               />
               <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3728,8 +3730,8 @@ function ServersCard() {
           <MiniRing
             percent={total > 0 ? (online / total) * 100 : 0}
             color="#22c55e"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={online}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3740,8 +3742,8 @@ function ServersCard() {
           <MiniRing
             percent={total > 0 ? (problem / total) * 100 : 0}
             color="#f59e0b"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={problem}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3752,8 +3754,8 @@ function ServersCard() {
           <MiniRing
             percent={total > 0 ? (offline / total) * 100 : 0}
             color="#ef4444"
-            size={100}
-            thickness={13}
+            size={80}
+            thickness={10}
             centerLabel={offline}
           />
           <span className="text-[10px] uppercase tracking-wide text-theme-text-muted">
@@ -3892,6 +3894,15 @@ export function DashboardLayoutProvider({ children }) {
     }
   });
   const [editMode, setEditMode] = useState(false);
+  const [hidden, setHidden] = useState(() => {
+    try {
+      const raw = localStorage.getItem("dashboardCardHidden");
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     try {
@@ -3901,14 +3912,36 @@ export function DashboardLayoutProvider({ children }) {
     }
   }, [order]);
 
-  const resetOrder = useCallback(
-    () => setOrder(DEFAULT_DASHBOARD_CARD_ORDER),
-    [],
-  );
+  useEffect(() => {
+    try {
+      localStorage.setItem("dashboardCardHidden", JSON.stringify(hidden));
+    } catch {
+      /* ignore */
+    }
+  }, [hidden]);
+
+  const resetOrder = useCallback(() => {
+    setOrder(DEFAULT_DASHBOARD_CARD_ORDER);
+    setHidden([]);
+  }, []);
+
+  const toggleHidden = useCallback((id) => {
+    setHidden((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id],
+    );
+  }, []);
 
   const value = useMemo(
-    () => ({ order, setOrder, editMode, setEditMode, resetOrder }),
-    [order, editMode, resetOrder],
+    () => ({
+      order,
+      setOrder,
+      editMode,
+      setEditMode,
+      resetOrder,
+      hidden,
+      toggleHidden,
+    }),
+    [order, editMode, resetOrder, hidden, toggleHidden],
   );
 
   return (
@@ -3930,7 +3963,7 @@ export function useDashboardLayout() {
 
 export function DashboardLayoutToolbar() {
   const { t } = useTranslation();
-  const { editMode, setEditMode, resetOrder } = useDashboardLayout();
+  const { editMode, setEditMode, resetOrder, hidden } = useDashboardLayout();
   return (
     <>
       {editMode && (
@@ -3949,7 +3982,7 @@ export function DashboardLayoutToolbar() {
       <button
         type="button"
         onClick={() => setEditMode((v) => !v)}
-        className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 border rounded-lg text-sm font-medium transition-all shadow-sm ${
+        className={`relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 border rounded-lg text-sm font-medium transition-all shadow-sm ${
           editMode
             ? "bg-theme-primary/15 border-theme-primary/40 text-theme-primary"
             : "bg-theme-card hover:bg-theme-hover border-theme hover:border-theme-primary"
@@ -3973,6 +4006,11 @@ export function DashboardLayoutToolbar() {
             <span className="text-xs sm:text-sm">
               {t("dashboard.layout.edit", "Edit layout")}
             </span>
+            {hidden.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-theme-primary text-[10px] font-bold text-white leading-none">
+                {hidden.length}
+              </span>
+            )}
           </>
         )}
       </button>
@@ -4043,7 +4081,8 @@ export default function DashboardPageCharts() {
 
   const defaultOrder = useMemo(() => CARDS.map((c) => c.id), [CARDS]);
 
-  const { editMode, order, setOrder } = useDashboardLayout();
+  const { editMode, order, setOrder, hidden, toggleHidden } =
+    useDashboardLayout();
   const dragId = useRef(null);
 
   // Keep stored order in sync with default order if registry changes
@@ -4106,60 +4145,87 @@ export default function DashboardPageCharts() {
     [order, CARDS],
   );
 
+  const visibleCards = editMode
+    ? orderedCards
+    : orderedCards.filter(({ id }) => !hidden.includes(id));
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* Card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 xl:gap-5 items-stretch">
-        {orderedCards.map(({ id, label, Component }, idx) => (
-          <div
-            key={id}
-            draggable={editMode}
-            onDragStart={editMode ? handleDragStart(id) : undefined}
-            onDragOver={handleDragOver}
-            onDrop={editMode ? handleDrop(id) : undefined}
-            className={`dashboard-card-slot relative h-full flex flex-col ${
-              editMode
-                ? "ring-2 ring-theme-primary/40 ring-offset-2 ring-offset-theme-bg rounded-2xl transition-all hover:ring-theme-primary/80 cursor-move"
-                : ""
-            }`}
-          >
-            {editMode && (
-              <div className="absolute inset-x-0 -top-2 z-20 flex items-center justify-between gap-1 px-2 pointer-events-none">
-                <div className="pointer-events-auto inline-flex items-center gap-1 px-2 py-1 bg-theme-card border border-theme-primary/40 rounded-md shadow-md">
-                  <GripVertical className="w-3.5 h-3.5 text-theme-primary" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-theme-text">
-                    {label}
-                  </span>
-                </div>
-                <div className="pointer-events-auto inline-flex items-center gap-1 bg-theme-card border border-theme-border rounded-md shadow-md overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => moveCard(id, -1)}
-                    disabled={idx === 0}
-                    className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title={t("dashboard.layout.moveUp", "Move up")}
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveCard(id, 1)}
-                    disabled={idx === orderedCards.length - 1}
-                    className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title={t("dashboard.layout.moveDown", "Move down")}
-                  >
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-3 xl:gap-4 items-stretch">
+        {visibleCards.map(({ id, label, Component }, idx) => {
+          const isHidden = hidden.includes(id);
+          return (
             <div
-              className={`dashboard-card-content flex-1 h-full ${editMode ? "pointer-events-none opacity-90" : ""}`}
+              key={id}
+              draggable={editMode}
+              onDragStart={editMode ? handleDragStart(id) : undefined}
+              onDragOver={handleDragOver}
+              onDrop={editMode ? handleDrop(id) : undefined}
+              className={`dashboard-card-slot relative h-full flex flex-col ${
+                editMode
+                  ? "ring-2 ring-theme-primary/40 ring-offset-2 ring-offset-theme-bg rounded-2xl transition-all hover:ring-theme-primary/80 cursor-move"
+                  : ""
+              }`}
             >
-              <Component />
+              {editMode && (
+                <div className="absolute inset-x-0 -top-2 z-20 flex items-center justify-between gap-1 px-2 pointer-events-none">
+                  <div className="pointer-events-auto inline-flex items-center gap-1 px-2 py-1 bg-theme-card border border-theme-primary/40 rounded-md shadow-md">
+                    <GripVertical className="w-3.5 h-3.5 text-theme-primary" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-theme-text">
+                      {label}
+                    </span>
+                  </div>
+                  <div className="pointer-events-auto inline-flex items-center gap-1 bg-theme-card border border-theme-border rounded-md shadow-md overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => moveCard(id, -1)}
+                      disabled={idx === 0}
+                      className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      title={t("dashboard.layout.moveUp", "Move up")}
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveCard(id, 1)}
+                      disabled={idx === visibleCards.length - 1}
+                      className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      title={t("dashboard.layout.moveDown", "Move down")}
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleHidden(id)}
+                      className="p-1 text-theme-text-muted hover:text-theme-primary hover:bg-theme-hover transition-colors border-l border-theme"
+                      title={
+                        isHidden
+                          ? t("dashboard.layout.show", "Show card")
+                          : t("dashboard.layout.hide", "Hide card")
+                      }
+                    >
+                      {isHidden ? (
+                        <Eye className="w-3.5 h-3.5" />
+                      ) : (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div
+                className={`dashboard-card-content flex-1 h-full ${
+                  editMode
+                    ? `pointer-events-none ${isHidden ? "opacity-40" : "opacity-90"}`
+                    : ""
+                }`}
+              >
+                <Component />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
