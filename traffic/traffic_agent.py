@@ -117,22 +117,71 @@ class TrafficMonitor:
     """Monitor network traffic and send to Komandorr"""
 
     def __init__(self):
+        self.active_interface = self._resolve_target_interface()
+        self.max_bandwidth = self._detect_max_bandwidth()
         self.last_bytes_sent = 0
         self.last_bytes_recv = 0
         self.total_sent_gb = 0.0
         self.total_recv_gb = 0.0
         self.last_update = time.time()
-        self.max_bandwidth = self._detect_max_bandwidth()
         self._load_state()
         self._initialize_counters()
 
-    def _detect_max_bandwidth(self) -> float:
-        """Auto-detect maximum bandwidth from network interface speed
+    def _find_best_physical_interface(self) -> str:
+        """Automatically find the best active physical interface, ignoring virtual ones."""
+        virtual_prefixes = (
+            "lo",
+            "docker",
+            "br-",
+            "veth",
+            "virbr",
+            "vnet",
+            "tun",
+            "tap",
+            "wg",
+            "tailscale",
+            "nordlynx",
+            "vmnet",
+            "vboxnet",
+            "ham",
+            "isatap",
+            "teredo",
+        )
 
-        Note: Network interfaces are full-duplex, meaning the speed applies to
-        both upload and download simultaneously. A 10 Gbps NIC can do 10 Gbps up
-        AND 10 Gbps down at the same time.
-        """
+        best_interface = None
+        max_speed = -1
+
+        for iface_name, iface_stats in psutil.net_if_stats().items():
+            name_lower = iface_name.lower()
+            if "loopback" in name_lower:
+                continue
+            if any(name_lower.startswith(p) for p in virtual_prefixes):
+                logger.debug(f"Skipping virtual interface: {iface_name}")
+                continue
+
+            if iface_stats.isup and iface_stats.speed > max_speed:
+                max_speed = iface_stats.speed
+                best_interface = iface_name
+
+        if not best_interface:
+            # Absolute fallback if nothing is detected
+            best_interface = "eno1"
+
+        return best_interface
+
+    def _resolve_target_interface(self) -> str:
+        """Determine which interface to track based on config or auto-detection"""
+        if NETWORK_INTERFACE:
+            return NETWORK_INTERFACE
+        else:
+            best = self._find_best_physical_interface()
+            logger.info(
+                f"Auto-selected network interface: {Fore.MAGENTA}{best}{Style.RESET_ALL}"
+            )
+            return best
+
+    def _detect_max_bandwidth(self) -> float:
+        """Auto-detect maximum bandwidth from network interface speed"""
         if MAX_BANDWIDTH is not None:
             logger.info(
                 f"Using configured bandwidth: {Fore.YELLOW}{MAX_BANDWIDTH} MB/s{Style.RESET_ALL}"
@@ -140,78 +189,19 @@ class TrafficMonitor:
             return MAX_BANDWIDTH
 
         try:
-            # Get network interface statistics with speed info
-            if NETWORK_INTERFACE:
-                # Check specific interface
-                stats = psutil.net_if_stats().get(NETWORK_INTERFACE)
-                if stats and stats.speed > 0:
-                    # Convert Mbps to MB/s (divide by 8)
-                    # This speed applies to both upload and download (full-duplex)
-                    bandwidth_mbs = stats.speed / 8
-                    logger.info(
-                        f"Auto-detected bandwidth on {Fore.MAGENTA}{NETWORK_INTERFACE}{Style.RESET_ALL}: "
-                        f"{Fore.YELLOW}{stats.speed} Mbps ({bandwidth_mbs:.2f} MB/s){Style.RESET_ALL}"
-                    )
-                    return bandwidth_mbs
-                else:
-                    logger.warning(
-                        f"Could not detect speed for interface {NETWORK_INTERFACE}"
-                    )
-            else:
-                # Find the fastest active physical interface
-                max_speed = 0
-                detected_interface = None
-
-                # Known virtual interface prefixes/patterns to skip
-                virtual_prefixes = (
-                    "lo",
-                    "docker",
-                    "br-",
-                    "veth",
-                    "virbr",
-                    "vnet",
-                    "tun",
-                    "tap",
-                    "wg",
-                    "tailscale",
-                    "nordlynx",
-                    "vmnet",
-                    "vboxnet",
-                    "ham",
-                    "isatap",
-                    "teredo",
+            stats = psutil.net_if_stats().get(self.active_interface)
+            if stats and stats.speed > 0:
+                bandwidth_mbs = stats.speed / 8
+                logger.info(
+                    f"Auto-detected bandwidth on {Fore.MAGENTA}{self.active_interface}{Style.RESET_ALL}: "
+                    f"{Fore.YELLOW}{stats.speed} Mbps ({bandwidth_mbs:.2f} MB/s){Style.RESET_ALL}"
                 )
-
-                for iface_name, iface_stats in psutil.net_if_stats().items():
-                    name_lower = iface_name.lower()
-
-                    # Skip loopback
-                    if "loopback" in name_lower:
-                        continue
-
-                    # Skip virtual interfaces
-                    if any(name_lower.startswith(p) for p in virtual_prefixes):
-                        logger.debug(f"Skipping virtual interface: {iface_name}")
-                        continue
-
-                    # Check if interface is up and has speed info
-                    if iface_stats.isup and iface_stats.speed > max_speed:
-                        max_speed = iface_stats.speed
-                        detected_interface = iface_name
-
-                if max_speed > 0:
-                    bandwidth_mbs = max_speed / 8
-                    logger.info(
-                        f"Auto-detected bandwidth from {Fore.MAGENTA}{detected_interface}{Style.RESET_ALL}: "
-                        f"{Fore.YELLOW}{max_speed} Mbps ({bandwidth_mbs:.2f} MB/s){Style.RESET_ALL}"
-                    )
-                    return bandwidth_mbs
-
-            # Fallback to a reasonable default
-            logger.warning(
-                "Could not auto-detect bandwidth, using default: 125 MB/s (1 Gbps)"
-            )
-            return 125.0
+                return bandwidth_mbs
+            else:
+                logger.warning(
+                    f"Could not detect speed for interface {self.active_interface}, using default: 125 MB/s"
+                )
+                return 125.0
 
         except Exception as e:
             logger.warning(f"Error detecting bandwidth: {e}, using default: 125 MB/s")
@@ -255,17 +245,15 @@ class TrafficMonitor:
         self.last_bytes_recv = stats["bytes_recv"]
 
     def _get_network_stats(self) -> Dict:
-        """Get current network statistics"""
-        if NETWORK_INTERFACE:
-            # Monitor specific interface
-            stats = psutil.net_io_counters(pernic=True).get(NETWORK_INTERFACE)
-            if not stats:
-                logger.warning(
-                    f"Interface {NETWORK_INTERFACE} not found, using all interfaces"
-                )
-                stats = psutil.net_io_counters()
-        else:
-            # Monitor all interfaces combined
+        """Get current network statistics exclusively for the target interface"""
+        stats_per_nic = psutil.net_io_counters(pernic=True)
+        stats = stats_per_nic.get(self.active_interface)
+
+        if not stats:
+            # Fallback to global counters if the specific interface isn't found for some reason
+            logger.warning(
+                f"Interface {self.active_interface} not found in io_counters, falling back to global stats"
+            )
             stats = psutil.net_io_counters()
 
         return {
@@ -343,22 +331,6 @@ class TrafficMonitor:
                     f"DOWN {traffic_data['total_down']:.2f} GB{Style.RESET_ALL}"
                 )
                 return True
-            elif response.status_code in (404, 410):
-                # Service was deleted in the komandorr UI. Stop the agent so it
-                # doesn't spam the dashboard logs forever.
-                logger.separator()
-                logger.error(
-                    f"Komandorr rejected SERVICE_ID {SERVICE_ID}: the service "
-                    f"no longer exists (HTTP {response.status_code})."
-                )
-                logger.info(
-                    "Update SERVICE_ID to a valid ID from the komandorr UI, "
-                    "then restart this agent."
-                )
-                logger.debug(f"Response: {response.text}")
-                logger.separator()
-                self._save_state()
-                sys.exit(2)
             else:
                 logger.error(f"Server returned status {response.status_code}")
                 logger.debug(f"Response: {response.text}")
@@ -380,7 +352,7 @@ class TrafficMonitor:
         logger.info(f"Service ID: {Fore.YELLOW}{SERVICE_ID}{Style.RESET_ALL}")
         logger.info(f"Update Interval: {Fore.GREEN}{UPDATE_INTERVAL}s{Style.RESET_ALL}")
         logger.info(
-            f"Network Interface: {Fore.MAGENTA}{NETWORK_INTERFACE or 'All interfaces'}{Style.RESET_ALL}"
+            f"Network Interface: {Fore.MAGENTA}{self.active_interface} (Auto-detected){Style.RESET_ALL}"
         )
         logger.info(
             f"Max Bandwidth: {Fore.YELLOW}{self.max_bandwidth:.2f} MB/s{Style.RESET_ALL}"
