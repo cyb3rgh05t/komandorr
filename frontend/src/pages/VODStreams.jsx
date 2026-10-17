@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../context/ToastContext";
@@ -333,13 +333,49 @@ export default function VODStreams() {
 
   // Use a ref to track the latest peak value to avoid stale closures
   const peakConcurrentRef = useRef(peakConcurrent);
-  // Track last time we posted to the daily peak endpoint
-  const lastPeakPostTimeRef = useRef(0);
+  const currentActivityCountRef = useRef(activities.length);
+  const peakUpdateInFlightRef = useRef(false);
 
   // Update ref whenever state changes
   useEffect(() => {
     peakConcurrentRef.current = peakConcurrent;
   }, [peakConcurrent]);
+
+  const postPeakConcurrent = useCallback(async (currentCount) => {
+    if (currentCount <= 0 || peakUpdateInFlightRef.current) return;
+
+    peakUpdateInFlightRef.current = true;
+    try {
+      const result = await updatePeakConcurrent(currentCount);
+      if (result.peak_concurrent > peakConcurrentRef.current) {
+        setPeakConcurrent(result.peak_concurrent);
+        peakConcurrentRef.current = result.peak_concurrent;
+      }
+    } catch (error) {
+      console.error("Error updating peak concurrent:", error);
+    } finally {
+      peakUpdateInFlightRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    currentActivityCountRef.current = activities.length;
+  }, [activities.length]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      postPeakConcurrent(currentActivityCountRef.current);
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [postPeakConcurrent]);
+
+  useEffect(() => {
+    const currentCount = activities.length;
+    if (currentCount > peakConcurrentRef.current) {
+      postPeakConcurrent(currentCount);
+    }
+  }, [activities.length, postPeakConcurrent]);
 
   // Load peak concurrent from database on mount
   useEffect(() => {
@@ -472,33 +508,6 @@ export default function VODStreams() {
     setActivityTimestamps(newTimestamps);
     setActivityProgress(newProgress);
     setCompletedActivities(newCompleted);
-
-    // Track peak concurrent activities and daily peaks
-    // Always post every 60 seconds so daily peaks are tracked correctly
-    // Also post immediately when a new all-time peak is detected
-    const currentCount = activities.length;
-    const currentPeak = peakConcurrentRef.current;
-    const postNow = Date.now();
-    const timeSinceLastPost = postNow - lastPeakPostTimeRef.current;
-    const isNewAllTimePeak = currentCount > currentPeak;
-    const intervalElapsed = timeSinceLastPost >= 60000;
-
-    if (currentCount > 0 && (isNewAllTimePeak || intervalElapsed)) {
-      lastPeakPostTimeRef.current = postNow;
-      updatePeakConcurrent(currentCount)
-        .then((result) => {
-          // Only update all-time peak ref if it actually increased
-          if (result.peak_concurrent > peakConcurrentRef.current) {
-            setPeakConcurrent(result.peak_concurrent);
-            peakConcurrentRef.current = result.peak_concurrent;
-          }
-        })
-        .catch((error) => {
-          console.error("Error updating peak concurrent:", error);
-          // Reset timer so it retries sooner
-          lastPeakPostTimeRef.current = postNow - 50000;
-        });
-    }
   }, [activities]);
 
   const handleRefresh = async (isManual = false) => {
