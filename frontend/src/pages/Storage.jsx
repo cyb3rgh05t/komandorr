@@ -22,6 +22,28 @@ import PageHeader from "../components/PageHeader";
 const STORAGE_CRITICAL_FREE_GB = 1024;
 const STORAGE_WARNING_FREE_GB = 10 * 1024;
 
+const getStorageStatusClasses = (freeGB) => {
+  if (freeGB < STORAGE_CRITICAL_FREE_GB) {
+    return {
+      background: "bg-red-500/10 border-red-500/30",
+      text: "text-red-400",
+      bar: "bg-red-500",
+    };
+  }
+  if (freeGB <= STORAGE_WARNING_FREE_GB) {
+    return {
+      background: "bg-yellow-500/10 border-yellow-500/30",
+      text: "text-yellow-400",
+      bar: "bg-yellow-500",
+    };
+  }
+  return {
+    background: "bg-theme-hover border-theme-border",
+    text: "text-emerald-400",
+    bar: "bg-emerald-500",
+  };
+};
+
 // Format storage size to appropriate unit (B, KB, MB, GB, TB)
 // Input is in GB (gigabytes)
 const formatStorageSize = (gb) => {
@@ -182,18 +204,7 @@ const StorageServiceCard = ({ service, t }) => {
   const lowestFree = storage.storage_paths.length
     ? Math.min(...storage.storage_paths.map((path) => path.free))
     : Infinity;
-  const storageStatusColor =
-    lowestFree < STORAGE_CRITICAL_FREE_GB
-      ? "text-red-400"
-      : lowestFree <= STORAGE_WARNING_FREE_GB
-        ? "text-yellow-400"
-        : "text-green-400";
-  const usageBarColor =
-    lowestFree < STORAGE_CRITICAL_FREE_GB
-      ? "bg-red-500"
-      : lowestFree <= STORAGE_WARNING_FREE_GB
-        ? "bg-yellow-500"
-        : "bg-purple-500";
+  const storageStatus = getStorageStatusClasses(lowestFree);
 
   const healthyRaids = storage.raid_arrays.filter(
     (r) => r.status === "healthy",
@@ -295,11 +306,13 @@ const StorageServiceCard = ({ service, t }) => {
             {formatStorageSize(totalUsed)}
           </div>
         </div>
-        <div className="bg-theme-hover rounded-lg p-3 border border-theme-border">
+        <div
+          className={`rounded-lg p-3 border ${storageStatus.background}`}
+        >
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.free", "Free")}
           </div>
-          <div className={`${storageStatusColor} font-semibold text-lg`}>
+          <div className={`${storageStatus.text} font-semibold text-lg`}>
             {formatStorageSize(totalFree)}
           </div>
         </div>
@@ -317,7 +330,7 @@ const StorageServiceCard = ({ service, t }) => {
         </div>
         <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${usageBarColor}`}
+            className={`h-full rounded-full transition-all duration-500 ${storageStatus.bar}`}
             style={{ width: `${Math.min(averageUsage, 100)}%` }}
           />
         </div>
@@ -353,19 +366,24 @@ const StorageServiceCard = ({ service, t }) => {
               {storage.storage_paths.length})
             </div>
             <div className="flex flex-wrap gap-2">
-              {storage.storage_paths.map((path, idx) => (
-                <div
-                  key={idx}
-                  className="inline-flex items-center gap-2 bg-theme-hover border border-theme-border px-2.5 py-1.5 rounded text-xs"
-                >
-                  <span className="text-theme-text font-mono">
-                    {path.path.split("/").pop() || path.path}
-                  </span>
-                  <span className="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-medium">
-                    {formatStorageSize(path.total)}
-                  </span>
-                </div>
-              ))}
+              {storage.storage_paths.map((path, idx) => {
+                const pathStatus = getStorageStatusClasses(path.free);
+                return (
+                  <div
+                    key={idx}
+                    className={`inline-flex items-center gap-2 border px-2.5 py-1.5 rounded text-xs ${pathStatus.background}`}
+                  >
+                    <span className="text-theme-text font-mono">
+                      {path.path.split("/").pop() || path.path}
+                    </span>
+                    <span
+                      className={`bg-theme-bg/40 px-2 py-0.5 rounded font-medium ${pathStatus.text}`}
+                    >
+                      {formatStorageSize(path.total)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -407,20 +425,23 @@ const StorageServiceCard = ({ service, t }) => {
               {storage.storage_paths.map((path, idx) => (
                 <div
                   key={idx}
-                  className="bg-theme-hover border border-theme-border rounded p-2 text-xs"
+                  className={`border rounded p-2 text-xs ${getStorageStatusClasses(path.free).background}`}
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-theme-text font-mono">
                       {path.path}
                     </span>
-                    <span className="text-theme-text-muted">
+                    <span className={getStorageStatusClasses(path.free).text}>
                       {path.percent.toFixed(1)}%
                     </span>
                   </div>
                   <div className="text-theme-text-muted">
                     {formatStorageSize(path.used)} /{" "}
                     {formatStorageSize(path.total)} (
-                    {formatStorageSize(path.free)} free)
+                    <span className={getStorageStatusClasses(path.free).text}>
+                      {formatStorageSize(path.free)} free
+                    </span>
+                    )
                   </div>
                 </div>
               ))}

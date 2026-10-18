@@ -351,11 +351,14 @@ function StatTile({
   tooltip,
   subLabelText,
   subLabelTitle,
+  className = "",
 }) {
   const hasTooltip = !!tooltip;
   return (
     <div
-      className={`relative bg-theme-hover/40 border border-theme rounded-lg px-2.5 py-1.5 flex flex-col items-start ${hasTooltip ? "group/tile cursor-help" : ""}`}
+      className={`relative rounded-lg px-2.5 py-1.5 flex flex-col items-start border ${
+        className || "bg-theme-hover/40 border-theme"
+      } ${hasTooltip ? "group/tile cursor-help" : ""}`}
     >
       <span
         className="text-lg font-bold leading-none"
@@ -1730,11 +1733,13 @@ function StorageCard() {
             label: t("dashboard.charts.warning", "Warning"),
             value: warning,
             color: "#f59e0b",
+            className: "bg-yellow-500/10 border-yellow-500/30",
           },
           {
             label: t("dashboard.charts.critical", "Critical"),
             value: critical,
             color: "#ef4444",
+            className: "bg-red-500/10 border-red-500/30",
           },
         ]}
       />
