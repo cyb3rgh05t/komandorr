@@ -185,6 +185,7 @@
       "currentSessions": "Aktuelle Sitzungen",
       "peakSessions": "Max. Sitzungen",
       "lastSync": "Letzte Sync",
+      "lastFetch": "Letzte Datenabfrage",
       "notConfigured": "Nicht konfiguriert",
       "liveStreams": "Live-Streams",
       "now": "jetzt",

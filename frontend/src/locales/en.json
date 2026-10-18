@@ -211,6 +211,7 @@
       "currentSessions": "Current Sessions",
       "peakSessions": "Peak Sessions",
       "lastSync": "Last sync",
+      "lastFetch": "Last data fetch",
       "notConfigured": "Not configured",
       "liveStreams": "Live Streams",
       "now": "now",

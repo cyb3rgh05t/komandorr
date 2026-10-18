@@ -2957,15 +2957,9 @@ function VodSyncCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { data: stats } = useQuery({
+  const { data: stats, dataUpdatedAt: statsUpdatedAt } = useQuery({
     queryKey: ["dash-vodsync-stats"],
-    queryFn: async () => {
-      try {
-        return await api.get("/plex/stats");
-      } catch {
-        return null;
-      }
-    },
+    queryFn: () => api.get("/plex/stats"),
     refetchInterval: 30000,
     staleTime: 15000,
   });
@@ -3047,8 +3041,8 @@ function VodSyncCard() {
     ? Math.round(last7Values.reduce((a, b) => a + b, 0) / last7Values.length)
     : 0;
   const daysTracked = peakRows.slice(-30).length;
-  const lastSync = stats?.last_updated
-    ? new Date(stats.last_updated).toLocaleString()
+  const lastFetch = statsUpdatedAt
+    ? new Date(statsUpdatedAt).toLocaleString()
     : "—";
 
   const total = movies + shows;
@@ -3060,7 +3054,7 @@ function VodSyncCard() {
       onClick={() => navigate("/vod-streams-history")}
       footer={
         configured
-          ? `${t("dashboard.charts.lastSync", "Last sync")}: ${lastSync}`
+          ? `${t("dashboard.charts.lastFetch", "Last data fetch")}: ${lastFetch}`
           : t("dashboard.charts.notConfigured", "Not configured")
       }
     >
