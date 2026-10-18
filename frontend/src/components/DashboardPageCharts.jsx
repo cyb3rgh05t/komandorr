@@ -1518,6 +1518,9 @@ function NfsCard() {
   );
 }
 
+const STORAGE_CRITICAL_FREE_GB = 1024;
+const STORAGE_WARNING_FREE_GB = 10 * 1024;
+
 function StorageCard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -1589,9 +1592,22 @@ function StorageCard() {
 
   const totalPaths = pools.length;
   const avgUsage = Number(summary?.average_usage_percent ?? 0);
-  const critical = pools.filter((p) => p.pct >= 90).length;
-  const warning = pools.filter((p) => p.pct >= 75 && p.pct < 90).length;
-  const healthy = pools.filter((p) => p.pct < 75).length;
+  const critical = pools.filter((p) => p.free < STORAGE_CRITICAL_FREE_GB).length;
+  const warning = pools.filter(
+    (p) =>
+      p.free >= STORAGE_CRITICAL_FREE_GB &&
+      p.free <= STORAGE_WARNING_FREE_GB,
+  ).length;
+  const healthy = pools.filter((p) => p.free > STORAGE_WARNING_FREE_GB).length;
+  const lowestFree = pools.length
+    ? Math.min(...pools.map((pool) => pool.free))
+    : Infinity;
+  const storageStatusColor =
+    lowestFree < STORAGE_CRITICAL_FREE_GB
+      ? "#ef4444"
+      : lowestFree <= STORAGE_WARNING_FREE_GB
+        ? "#f59e0b"
+        : "#22c55e";
   const servicesWithStorage = (services || []).filter(
     (svc) => (svc?.storage?.storage_paths || []).length > 0,
   ).length;
@@ -1610,8 +1626,10 @@ function StorageCard() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
           {topPools.map((p) => {
-            const isCrit = p.pct >= 90;
-            const isWarn = p.pct >= 75 && p.pct < 90;
+            const isCrit = p.free < STORAGE_CRITICAL_FREE_GB;
+            const isWarn =
+              p.free >= STORAGE_CRITICAL_FREE_GB &&
+              p.free <= STORAGE_WARNING_FREE_GB;
             const ringCol = isCrit ? "#ef4444" : isWarn ? "#f59e0b" : "#22d3ee";
             const freeCol = isCrit
               ? "text-red-400"
@@ -1701,12 +1719,7 @@ function StorageCard() {
           {
             label: t("dashboard.charts.avg", "Avg"),
             value: `${avgUsage.toFixed(0)}%`,
-            color:
-              avgUsage >= 90
-                ? "#ef4444"
-                : avgUsage >= 75
-                  ? "#f59e0b"
-                  : "#22c55e",
+            color: storageStatusColor,
           },
           {
             label: t("dashboard.charts.healthy", "Healthy"),

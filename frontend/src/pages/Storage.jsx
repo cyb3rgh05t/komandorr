@@ -19,6 +19,9 @@ import {
 import { api } from "../services/api";
 import PageHeader from "../components/PageHeader";
 
+const STORAGE_CRITICAL_FREE_GB = 1024;
+const STORAGE_WARNING_FREE_GB = 10 * 1024;
+
 // Format storage size to appropriate unit (B, KB, MB, GB, TB)
 // Input is in GB (gigabytes)
 const formatStorageSize = (gb) => {
@@ -176,6 +179,21 @@ const StorageServiceCard = ({ service, t }) => {
   );
   const averageUsage =
     totalCapacity > 0 ? (totalUsed / totalCapacity) * 100 : 0;
+  const lowestFree = storage.storage_paths.length
+    ? Math.min(...storage.storage_paths.map((path) => path.free))
+    : Infinity;
+  const storageStatusColor =
+    lowestFree < STORAGE_CRITICAL_FREE_GB
+      ? "text-red-400"
+      : lowestFree <= STORAGE_WARNING_FREE_GB
+        ? "text-yellow-400"
+        : "text-green-400";
+  const usageBarColor =
+    lowestFree < STORAGE_CRITICAL_FREE_GB
+      ? "bg-red-500"
+      : lowestFree <= STORAGE_WARNING_FREE_GB
+        ? "bg-yellow-500"
+        : "bg-purple-500";
 
   const healthyRaids = storage.raid_arrays.filter(
     (r) => r.status === "healthy",
@@ -281,7 +299,7 @@ const StorageServiceCard = ({ service, t }) => {
           <div className="text-theme-text-muted text-xs mb-1">
             {t("storage.free", "Free")}
           </div>
-          <div className="text-green-400 font-semibold text-lg">
+          <div className={`${storageStatusColor} font-semibold text-lg`}>
             {formatStorageSize(totalFree)}
           </div>
         </div>
@@ -299,13 +317,7 @@ const StorageServiceCard = ({ service, t }) => {
         </div>
         <div className="relative h-2 bg-theme-hover rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              averageUsage > 90
-                ? "bg-red-500"
-                : averageUsage > 75
-                  ? "bg-yellow-500"
-                  : "bg-purple-500"
-            }`}
+            className={`h-full rounded-full transition-all duration-500 ${usageBarColor}`}
             style={{ width: `${Math.min(averageUsage, 100)}%` }}
           />
         </div>

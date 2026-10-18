@@ -11,6 +11,8 @@ from app.utils.logger import logger
 from app.services.notifications import notification_service
 
 _STATE_FILE = Path(__file__).parent.parent.parent / "data" / "health_state.json"
+STORAGE_WARNING_FREE_GB = 10 * 1024
+STORAGE_CRITICAL_FREE_GB = 1024
 
 
 class HealthChecker:
@@ -601,7 +603,6 @@ class HealthChecker:
         from app.services.monitor import monitor
         from datetime import datetime, timezone
 
-        STORAGE_WARNING_THRESHOLD = 95.0
         STORAGE_RISKY_STATUSES = {
             "degraded",
             "failed",
@@ -620,10 +621,11 @@ class HealthChecker:
 
             hostname = getattr(storage, "hostname", "unknown")
 
-            # Check storage paths for high usage
+            # Warn based on free space per path, not percentage used.
             for path in getattr(storage, "storage_paths", []) or []:
                 percent = float(getattr(path, "percent", 0) or 0)
-                if percent >= STORAGE_WARNING_THRESHOLD:
+                free_gb = float(getattr(path, "free", 0) or 0)
+                if free_gb <= STORAGE_WARNING_FREE_GB:
                     issue_key = f"storage_path:{hostname}:{path.path}"
                     current_issue_keys.add(issue_key)
                     if self._issue_last_notify_day.get(issue_key) == today:
@@ -633,7 +635,12 @@ class HealthChecker:
                             hostname=hostname,
                             path=path.path,
                             percent=percent,
-                            free_gb=getattr(path, "free", 0) or 0,
+                            free_gb=free_gb,
+                            severity=(
+                                "critical"
+                                if free_gb < STORAGE_CRITICAL_FREE_GB
+                                else "warning"
+                            ),
                         )
                         self._issue_last_notify_day[issue_key] = today
                         self._save_state()

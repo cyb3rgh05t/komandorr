@@ -458,17 +458,27 @@ class NotificationService:
     # ── storage events ────────────────────────────────────────────
 
     async def notify_storage_warning(
-        self, hostname: str, path: str, percent: float, free_gb: float
+        self,
+        hostname: str,
+        path: str,
+        percent: float,
+        free_gb: float,
+        severity: str = "warning",
     ) -> bool:
         # Daily gate is handled entirely in health_checker; no cooldown needed here
+        free_space = (
+            f"{free_gb / 1024:.2f} TB"
+            if free_gb >= 1024
+            else f"{free_gb:.1f} GB"
+        )
         message = self._format_message(
             "💾",
-            "Storage Warning",
+            f"Storage {severity.title()}",
             [
                 ("🖥", "Host", hostname),
                 ("📂", "Path", path),
                 ("📊", "Usage", f"{percent:.1f}%"),
-                ("💿", "Free", f"{free_gb:.1f} GB"),
+                ("💿", "Free", free_space),
             ],
         )
         return await self._dispatch("storage_warning", message)
