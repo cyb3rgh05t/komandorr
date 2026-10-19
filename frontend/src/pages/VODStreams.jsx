@@ -26,6 +26,12 @@ import {
 } from "@/services/plexService";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
+import { getPlexActivityCategory } from "../utils/plexActivities";
+
+const selectVisibleActivities = (activities) =>
+  activities.filter(
+    (activity) => getPlexActivityCategory(activity) !== "background",
+  );
 
 const ActivityBadge = ({ type, t }) => {
   const styles = {
@@ -281,10 +287,17 @@ export default function VODStreams() {
   } = useQuery({
     queryKey: ["plexActivities", syncInstanceId],
     queryFn: () => fetchPlexActivities(syncInstanceId || undefined),
+    select: selectVisibleActivities,
     staleTime: 5000,
     refetchInterval: 5000,
     placeholderData: (previousData) => previousData,
   });
+  const scanActivities = activities.filter(
+    (activity) => getPlexActivityCategory(activity) === "scan",
+  );
+  const streamActivities = activities.filter(
+    (activity) => getPlexActivityCategory(activity) === "stream",
+  );
 
   // Check if Plex is configured via sessions endpoint (shared with Sidebar)
   const { data: sessionsData } = useQuery({
@@ -333,7 +346,7 @@ export default function VODStreams() {
 
   // Use a ref to track the latest peak value to avoid stale closures
   const peakConcurrentRef = useRef(peakConcurrent);
-  const currentActivityCountRef = useRef(activities.length);
+  const currentActivityCountRef = useRef(streamActivities.length);
   const peakUpdateInFlightRef = useRef(false);
 
   // Update ref whenever state changes
@@ -359,8 +372,8 @@ export default function VODStreams() {
   }, []);
 
   useEffect(() => {
-    currentActivityCountRef.current = activities.length;
-  }, [activities.length]);
+    currentActivityCountRef.current = streamActivities.length;
+  }, [streamActivities.length]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -371,11 +384,11 @@ export default function VODStreams() {
   }, [postPeakConcurrent]);
 
   useEffect(() => {
-    const currentCount = activities.length;
+    const currentCount = streamActivities.length;
     if (currentCount > peakConcurrentRef.current) {
       postPeakConcurrent(currentCount);
     }
-  }, [activities.length, postPeakConcurrent]);
+  }, [streamActivities.length, postPeakConcurrent]);
 
   // Load peak concurrent from database on mount
   useEffect(() => {
@@ -525,41 +538,6 @@ export default function VODStreams() {
     REFRESH_INTERVAL - (Date.now() - lastRefreshTime),
   );
   const secondsUntilRefresh = Math.ceil(timeUntilNextRefresh / 1000);
-
-  // Helper function to check if activity is a library scan or background task
-  const isScanActivity = (activity) => {
-    const type = (activity.type || "").toLowerCase();
-    const title = (activity.title || "").toLowerCase();
-    const subtitle = (activity.subtitle || "").toLowerCase();
-
-    // Check type for scanner/background task patterns
-    const isTypeScanner =
-      type.includes("scanner") ||
-      type.includes("scan") ||
-      type.includes("butler") ||
-      type.includes("subscription") ||
-      type === "library.scanner" ||
-      type === "library.update.section" ||
-      type === "media.generate";
-
-    // Check title/subtitle for scanning/butler/subscription patterns
-    const isTitleScanner =
-      title.includes("scanning") ||
-      title.includes("scan ") ||
-      title.startsWith("scan") ||
-      title.includes("butler") ||
-      title.includes("subscription") ||
-      title.includes("processing") ||
-      subtitle.includes("scanning") ||
-      subtitle.includes("butler") ||
-      subtitle.includes("subscription");
-
-    return isTypeScanner || isTitleScanner;
-  };
-
-  // Separate scan activities from stream activities
-  const scanActivities = activities.filter(isScanActivity);
-  const streamActivities = activities.filter((a) => !isScanActivity(a));
 
   // Filter stream activities based on search query and active filter (excludes scans)
   const filteredActivities = streamActivities.filter((activity) => {
