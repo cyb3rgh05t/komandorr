@@ -57,3 +57,21 @@ test("hidden tasks are excluded from both displayed lists and peak counts", () =
   assert.equal(scans.length, 1);
   assert.equal(streams.length, 2);
 });
+
+test("sidebar badge counts 17 downloads, excluding 21 background tasks", () => {
+  const activities = [
+    ...Array.from({ length: 17 }, () => ({
+      type: "media.download",
+      title: "Media download by Streamnetvod",
+    })),
+    ...Array.from({ length: 21 }, () => ({
+      type: "library.subscriptions",
+      title: "Processing subscriptions",
+    })),
+    { type: "library.scanner", title: "Movies" },
+  ];
+  const count = activities.filter(
+    (activity) => getPlexActivityCategory(activity) === "stream",
+  ).length;
+  assert.equal(count, 17);
+});

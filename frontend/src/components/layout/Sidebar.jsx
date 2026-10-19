@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../services/api";
 import { uploaderApi } from "../../services/uploaderApi";
+import { getPlexActivityCategory } from "../../utils/plexActivities";
 import {
   LayoutDashboard,
   Settings,
@@ -185,7 +186,9 @@ export default function Sidebar() {
         const response = await api.get(url);
         return {
           count: Array.isArray(response?.activities)
-            ? response.activities.length
+            ? response.activities.filter(
+                (activity) => getPlexActivityCategory(activity) === "stream",
+              ).length
             : 0,
         };
       } catch {
